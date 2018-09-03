@@ -1,0 +1,81 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Button name="AnsResultRowTemplate" virtual="true" hidden="true">
+    <Size><AbsDimension x="584" y="16" /></Size>
+    <Frames>
+      <Frame>
+        <Size><AbsDimension x="140" y="16" /></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="22" y="0"/></Offset></Anchor></Anchors>
+        
+        <Layers>
+          <Layer level="BACKGROUND">
+            <FontString name="$parentPerItemText" inherits="GameFontDarkGraySmall" justifyH="RIGHT">
+              <Anchors><Anchor point="RIGHT"><Offset><AbsDimension y="1" x="-16"/></Offset></Anchor></Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+
+        <Frames>
+          <Frame name="$parentPerItemPrice" inherits="SmallMoneyFrameTemplate">
+            <Anchors><Anchor point="RIGHT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+            <Scripts>
+              <OnLoad>
+                SmallMoneyFrame_OnLoad(self);
+                MoneyFrame_SetType(self, "AUCTION");
+              </OnLoad>
+            </Scripts>
+          </Frame>
+        </Frames>
+      </Frame>
+
+      <Frame>
+        <Size><AbsDimension x="16" y="16" /></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="167" y="0" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <Texture name="$parentItemIcon">
+                <Size><AbsDimension x="16" y="16"/></Size>
+                <TexCoords left="0" right="1" top="0" bottom="1"/>
+            </Texture>
+          </Layer>
+        </Layers>
+      </Frame>
+
+      <Frame>
+        <Size><AbsDimension x="220" y="16" /></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="187" y="0"/></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <FontString name="$parentNameText" inherits="GameFontHighlightSmall" justifyH="LEFT"/>
+          </Layer>
+        </Layers>
+      </Frame>
+
+      <Frame>
+        <Size><AbsDimension x="64" y="16" /></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="410" y="0"/></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <FontString name="$parentPercent" inherits="GameFontHighlightSmall" justifyH="LEFT"/>
+          </Layer>
+        </Layers>
+      </Frame>
+
+      <Frame>
+        <Size><AbsDimension x="120" y="16" /></Size>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="440" y="0"/></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <FontString name="$parentStackPrice" inherits="GameFontHighlightSmall" justifyH="RIGHT"/>
+          </Layer>
+        </Layers>
+      </Frame>
+    </Frames>
+
+    <PushedTexture file="Interface\HelpFrame\HelpFrameButton-Highlight">
+      <TexCoords left="0.25" right="0.35" top="0.0" bottom="0.6"/>
+    </PushedTexture>
+    <HighlightTexture file="Interface\HelpFrame\HelpFrameButton-Highlight" alphaMode="ADD">
+      <TexCoords left="0.035" right="0.04" top="0.2" bottom="0.25"/>
+    </HighlightTexture>
+  </Button>
+</Ui>

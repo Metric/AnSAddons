@@ -1,0 +1,12 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Include file="UI/Templates/Frames/Buy.xml" />
+
+    <!-- Frame to handle all core events -->
+    <Frame name="AnsSnipeCore">
+        <Scripts>
+            <OnLoad>AuctionSnipe:RegisterEvents( self );</OnLoad>
+            <OnUpdate>AuctionSnipe:OnUpdate( self, elapsed );</OnUpdate>
+            <OnEvent>AuctionSnipe:EventHandler( self, event, ... );</OnEvent>
+        </Scripts>
+    </Frame>
+</Ui>
