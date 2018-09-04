@@ -4,9 +4,9 @@ AnsCore.__index = AnsCore;
 AnsCustomFilter = {};
 AnsCustomFilter.__index = AnsCustomFilter;
 
-local TUJOnlyPercentFn = "avg(tujmarket,tujrecent,tujglobalmedian,tujglobalmean)";
-local TSMOnlyPercentFn = "avg(dbmarket,dbminbuyout,dbhistorical)";
-local TUJAndTSMPercentFn = "min(avg(tujmarket,tujrecent,tujglobalmedian,tujglobalmean),avg(dbmarket,dbminbuyout,dbhistorical))";
+local TUJOnlyPercentFn = "tujmarket";
+local TSMOnlyPercentFn = "dbmarket";
+local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
 
 local DefaultFilters = {};
 local TUJTempTable = {};
