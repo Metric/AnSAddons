@@ -90,7 +90,11 @@ AnsPriceSources.avg = function(...)
 end
 
 AnsPriceSources.first = function(v1,v2)
-    return v1 > 0 or v2;
+    if (v1 > 0) then
+        return v1;
+    end
+
+    return v2;
 end
 
 function AnsPriceSources:Query(q, item)
