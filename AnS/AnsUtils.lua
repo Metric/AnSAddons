@@ -73,3 +73,21 @@ function AnsUtils:ShowBattlePetTip(link)
     BattlePetTooltip:ClearAllPoints();
     BattlePetTooltip:SetPoint(GameTooltip:GetPoint());
 end
+
+function AnsUtils:IsAddonInstalled(name)
+    return select(2, GetAddOnInfo(name)) and true or false;
+end
+
+function AnsUtils:IsAddonEnabled(name)
+    return GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, GetAddOnInfo(name)) and true or false;
+end
+
+function AnsUtils:GetTSMID(link)
+    if (AnsUtils:IsBattlePetLink(link)) then
+        local pet = AnsUtils:ParseBattlePetLink(link);
+        return "p:"..pet.speciesID;
+    else
+        local _, id = strsplit(":", link);
+        return "i:"..id;
+    end
+end

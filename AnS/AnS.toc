@@ -1,9 +1,13 @@
 ## Interface: 80000
 ## Title: AnS
-## Version: 1.0.0
+## Version: 1.0.1
 ## Notes: Core library for AuctionSnipe etc.
 ## License: MIT
-## SavedVariables: ANS_CUSTOM_FILTERS
+## SavedVariables: ANS_CUSTOM_FILTERS, ANS_GLOBAL_SETTINGS
+
+AnsSettings.lua
+AnsUtils.lua
+AnsTSMHelper.lua
 
 Data/AnsCloth.lua
 Data/AnsEnchanting.lua
@@ -13,12 +17,13 @@ Data/AnsMounts.lua
 Data/AnsOre.lua
 Data/AnsPets.lua
 
+AnsPriceSources.lua
+
 AnsFilter.lua
 AnsFilterDefault.lua
 AnsFilterView.lua
 
 AnsQuery.lua
-AnsUtils.lua
 
 AnS.lua
 AnS.xml

@@ -19,6 +19,11 @@ function AnsFilter:New(name)
     f.minSize = 0;
     f.isSub = false;
     f.subfilters = nil;
+    f.priceFn = "";
+    f.useGlobalMaxBuyout = true;
+    f.useGlobalMinStack = true;
+    f.useGlobalMinQuality = true;
+    f.useGlobalMinILevel = true;
 
     return f;
 end
@@ -147,6 +152,14 @@ function AnsFilter:IsValid(item)
         end
 
         return false;
+    end
+
+    if (self.priceFn ~= nil and self.priceFn:len() > 0) then
+        local presult = AnsPriceSources:Query(self.priceFn, item);
+
+        if (type(presult) == "boolean" and not presult) then
+            return false;
+        end
     end
 
     if (item.iLevel < self.minILevel) then

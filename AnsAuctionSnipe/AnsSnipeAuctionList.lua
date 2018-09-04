@@ -28,6 +28,54 @@ function AnsSnipeAuctionList:ShowLineTip(item)
     end
 end
 
+function AnsSnipeAuctionList:Purchase(block)
+    local orig = block.item;
+    local auction = block.item;
+    local index = block.index;
+    local left = 0;
+
+    local total = #auction.group;
+    local i;
+
+    if (not auction.sniped and total == 0) then
+        if (GetMoney() >= auction.buyoutPrice) then
+            auction.sniped = true;
+            PlaceAuctionBid("list", index, auction.buyoutPrice);
+            return true;
+        else
+            return false;
+        end
+    elseif (not auction.sniped) then
+        if (GetMoney() >= auction.buyoutPrice) then
+            auction.sniped = true;
+            PlaceAuctionBid("list", index, auction.buyoutPrice);
+        end
+    else
+        for i = 1, total do
+            local subblock = orig.group[i];
+            auction = subblock.item;
+            index = subblock.index;
+
+            if (not auction.sniped) then
+                if (GetMoney() >= auction.buyoutPrice) then
+                    auction.sniped = true;
+                    PlaceAuctionBid("list", index, auction.buyoutPrice);
+                    break;
+                end
+            end
+        end
+    end
+
+    for i = 1, total do
+        local subblock = orig.group[i];
+        if (not subblock.item.sniped) then
+            left = left + 1;
+        end 
+    end
+
+    return orig.sniped and left == 0; 
+end
+
 function AnsSnipeAuctionList:Click(item, button, down)
     local id = item:GetID();
 
@@ -48,19 +96,8 @@ function AnsSnipeAuctionList:Click(item, button, down)
         --buy it instantly
 
         local block = self.items[id];
-        local auction = block.item;
-        local index = block.index;
-
-        if (GetMoney() >= auction.buyoutPrice) then  
-            if (self.selectedEntry == id) then
-                self.selectedEntry = -1;
-            end
-        
+        if (self:Purchase(block)) then
             table.remove(self.items, id);
-
-            PlaceAuctionBid("list", index, auction.buyoutPrice);
-        else
-            print("You do not have enough gold to buy that");
         end
 
         self.buying = false;
@@ -88,9 +125,23 @@ function AnsSnipeAuctionList:UpdateRow(dataOffset, line)
         local ppu = auction.ppu;
         local price = auction.buyoutPrice;
         local count = auction.count;
+        local total = #auction.group;
         local percent = auction.percent;
         local owner = auction.owner;
+        local ai;
 
+        local realTotal = 0;
+
+        if (not auction.sniped) then
+            realTotal = realTotal + 1;
+        end
+
+        for ai = 1, total do
+            local suba = auction.group[ai];
+            if (not suba.item.sniped) then
+                realTotal = realTotal + 1;
+            end
+        end
 
         local lineEntry_itemPrice = _G[lineEntry:GetName().."PerItemPrice"];
         local lineEntry_itemText = _G[lineEntry:GetName().."PerItemText"];
@@ -98,11 +149,14 @@ function AnsSnipeAuctionList:UpdateRow(dataOffset, line)
         local lineEntry_itemStack = _G[lineEntry:GetName().."StackPrice"];
         local lineEntry_itemPercent = _G[lineEntry:GetName().."Percent"];
         local lineEntry_itemIcon = _G[lineEntry:GetName().."ItemIcon"];
+        local lineEntry_itemLevel = _G[lineEntry:GetName().."ILevel"];
 
         lineEntry_itemText:SetText("");
         lineEntry_itemName:SetText("");
         lineEntry_itemStack:SetText("");
         lineEntry_itemPercent:SetText("");
+
+        lineEntry_itemLevel:SetText(auction.iLevel);
 
         if (price == 0) then
             lineEntry_itemPrice:Hide();
@@ -120,8 +174,7 @@ function AnsSnipeAuctionList:UpdateRow(dataOffset, line)
         lineEntry_itemPercent:SetText(percent.."%");
 
         local color = ITEM_QUALITY_COLORS[auction.quality];
-        lineEntry_itemName:SetText("("..count..") "..name);
-        lineEntry_itemName:SetTextColor(color.r,color.g,color.b);
+        lineEntry_itemName:SetText("("..count..") x ("..realTotal..") "..color.hex..name);
 
         if (auction.texture ~= nil) then
             lineEntry_itemIcon:SetTexture(auction.texture);

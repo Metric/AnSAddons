@@ -43,3 +43,7 @@ Features
 How to Buy
 ==============
 Double click an auction list item, and ba da bing, ba da boom. It will purchase it if it can.
+
+TODO
+=============
+* Add other methods of input for buying items

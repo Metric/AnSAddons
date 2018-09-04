@@ -5,8 +5,11 @@ AnsQuerySort = {
     NAME = 1,
     PRICE = 2,
     PERCENT = 3,
-    RECENT = 4
+    RECENT = 4,
+    ILEVEL = 5
 };
+
+local lastFoundHash = "";
 
 local function Truncate(str)
     if(str:len() <= 63) then
@@ -30,6 +33,8 @@ function AnsQuery:New(search)
 
     query.filters = {};
 
+    query.groups = {};
+
     return query;
 end
 
@@ -41,10 +46,31 @@ function AnsQuery:AssignFilters(ilevel, buyout, quality, size)
         if (AnsFilterSelected[i]) then
             count = count + 1;
             local filter = AnsFilterList[i];
-            filter.minILevel = ilevel;
-            filter.maxBuyout = buyout;
-            filter.minQuality = quality;
-            filter.minSize = size;
+            if (filter.useGlobalMinILevel) then
+                filter.minILevel = ilevel;
+            else
+                filter.minILevel = 0;
+            end
+            if (filter.useGlobalMaxBuyout) then
+                filter.maxBuyout = buyout;
+            else
+                filter.maxBuyout = 0;
+            end
+            if (filter.useGlobalMinQuality) then
+                filter.minQuality = quality;
+            else
+                filter.minQuality = 1;
+            end
+            if (filter.useGlobalMinStack) then
+                filter.minSize = size;
+            else
+                filter.minSize = 0;
+            end
+            local fn = filter.priceFn;
+
+            if (not fn or fn:len() == 0) then
+                filter.priceFn = ANS_GLOBAL_SETTINGS.pricingFn;
+            end
             self.filters[count] = filter;
         end
     end
@@ -108,7 +134,7 @@ local function Sort_By_Price(x,y,asc)
     end
 end
 
-local function Sort_By_Time(x,y,abs)
+local function Sort_By_Time(x,y,asc)
     if (asc) then
         return x.item.time < y.item.time;
     else
@@ -116,14 +142,22 @@ local function Sort_By_Time(x,y,abs)
     end
 end
 
-local function ItemHash(item)
-    local isHigh = "false";
+local function Sort_By_iLevel(x,y,asc)
+    if (asc) then
+        return x.item.iLevel < y.item.iLevel;
+    else
+        return x.item.iLevel > y.item.iLevel;
+    end
+end
 
-    if(item.highBidder) then
-        isHigh = "true"
+local function ItemHash(item)
+    local owner = "?";
+
+    if (item.owner) then
+        owner = item.owner;
     end
 
-    return item.name..item.count..item.buyoutPrice..item.minBid..item.bid..isHigh;
+    return item.name..item.count..item.ppu..owner;
 end
 
 ----
@@ -139,6 +173,8 @@ function AnsQuery:Items(sort,asc)
             table.sort(self.auctions, function(x,y) return Sort_By_Percent(x,y,asc); end);
         elseif (sort == AnsQuerySort.RECENT) then
             table.sort(self.auctions, function(x,y) return Sort_By_Time(x,y,asc); end);
+        elseif (sort == AnsQuerySort.ILEVEL) then
+            table.sort(self.auctions, function(x,y) return Sort_By_iLevel(x,y,asc); end);
         end
     end
 
@@ -150,11 +186,16 @@ end
 ----------------------
 function AnsQuery:Capture()
     self.auctions = {};
+    self.groups = {};
     self.count, self.total = GetNumAuctionItems("list");
 
     local x;
     local analyzed = self.analyzed;
     local count = 0;
+    local groupLookup = {};
+    local doGroup = ANS_GLOBAL_SETTINGS.groupAuctions;
+
+    local foundHash = "";
 
     for x = 1, self.count do
         local auction = {};
@@ -178,6 +219,9 @@ function AnsQuery:Capture()
         auction.id = GetAuctionItemInfo("list", x);
         auction.link = GetAuctionItemLink("list", x);
         auction.time = GetAuctionItemTimeLeft("list", x);
+        auction.group = {};
+        auction.sniped = false;
+        auction.percent = 1000;
 
         if (auction.link ~= nil) then
             local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType = GetItemInfo(auction.link);
@@ -192,53 +236,74 @@ function AnsQuery:Capture()
             end
         end
 
-        --- it is actually more efficient to analyze while capturing
-        if (not analyzed[auction.name]) then
-            analyzed[auction.name] = {};
-        end
-
         if (auction.buyoutPrice > 0 and auction.saleStatus == 0) then
             local ppu = math.floor(auction.buyoutPrice / auction.count);
             auction.ppu = ppu;
 
-            if (type(TUJMarketInfo) == "function") then
-                TUJMarketInfo(auction.link, analyzed[auction.name]);
+            local hash = ItemHash(auction);
+
+            --- it is actually more efficient to analyze while capturing
+            if (not analyzed[hash]) then
+                local avg = AnsPriceSources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
+                if (not avg or avg <= 0) then avg = 1000; end;
+                analyzed[hash] = avg;
             end
 
-            if (analyzed[auction.name]["recent"]) then
-                auction.percent = math.floor(ppu / analyzed[auction.name]["recent"] * 100);
-            else
-                auction.percent = 1000;
-            end
+            auction.percent = math.floor(ppu / analyzed[hash] * 100);
 
-            if (analyzed[auction.name]["days"] ~= 252) then
-                local filterAccepted = false;
-                local k;
+            local filterAccepted = false;
+            local k;
 
-                if (#self.filters == 0) then
+            if (#self.filters == 0) then
+                local allowed = AnsPriceSources:Query(ANS_GLOBAL_SETTINGS.pricingFn, auction);
+
+                if (type(allowed) == "boolean") then
+                    if (allowed) then
+                        filterAccepted = true;
+                    end
+                else
                     filterAccepted = true;
                 end
+            end
 
-                for k = 1, #self.filters do
-                    if (self.filters[k]:IsValid(auction)) then
-                        filterAccepted = true;
-                        break;
-                    end
+            for k = 1, #self.filters do
+                if (self.filters[k]:IsValid(auction)) then
+                    filterAccepted = true;
+                    break;
                 end
+            end
 
-                if (filterAccepted) then
+            if (filterAccepted) then
+                local block = {};
+
+                block.item = auction;
+                block.page = self.index;
+                block.index = x;
+
+                if (doGroup) then
+                    local idx = groupLookup[hash];
+                    if  (idx and idx > 0) then
+                        local agroup = self.auctions[idx].item;
+                        local t = #agroup.group + 1;
+                        agroup.group[t] = block;
+                    else
+                        foundHash = foundHash..hash;
+                        count = count + 1;
+                        self.auctions[count] = block;
+                        groupLookup[hash] = count;
+                    end
+                else 
                     count = count + 1;
-                    local block = {};
-
-                    block.item = auction;
-                    block.page = self.index;
-                    block.index = x;
-
                     self.auctions[count] = block;
                 end
             end
         end
     end
+
+    if (#self.auctions > 0 and foundHash ~= lastFoundHash) then
+        PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "SFX");
+    end
+    lastFoundHash = foundHash;
 
     self.analyzed = analyzed;
 end

@@ -1,74 +1,4 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-  <Frame name="AnsOptionsFrame">
-    <Scripts>
-      <OnLoad>
-        self.name = "AnS";
-        AnsConfig:LoadMain (self);
-      </OnLoad>
-      <OnShow>local f = _G["AnsCustomFiltersFrame"];
-        if (f) then
-          self:Hide();
-          InterfaceOptionsFrame_OpenToCategory (f);
-        end
-      </OnShow>
-    </Scripts>
-  </Frame>
-
-  <Frame name="AnsCustomFilterRowTemplate" virtual="true">
-    <Size><AbsDimension x="525" y="64" /></Size>
-    <Frames>
-      <EditBox name="$parentName" autoFocus="false" inherits="InputBoxTemplate">
-        <Size><AbsDimension x="100" y="32" /></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
-        <Layers>
-          <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Filter Name">
-              <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
-                  <Offset x="0" y="10"/>
-                </Anchor>
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-        <Scripts>
-          <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent());
-          </OnTextChanged>
-        </Scripts>
-      </EditBox>
-      <EditBox name="$parentIDs" autoFocus="false" inherits="InputBoxTemplate">
-        <Size><AbsDimension x="256" y="32" /></Size>
-        <Anchors><Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
-        <Layers>
-          <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item or Pet IDs E.g.: i:33444,i:1122,p:122">
-              <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
-                  <Offset x="0" y="10"/>
-                </Anchor>
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-        <Scripts>
-          <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent());
-          </OnTextChanged>
-        </Scripts>
-      </EditBox>
-      <Button name="$parentDeleteFilter" text="Delete" inherits="UIPanelButtonTemplate">
-        <Size><AbsDimension x="64" y="32" /></Size>
-        <Anchors><Anchor point="LEFT" relativeTo="$parentIDs" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnClick>
-            AnsConfig:DeleteFilterRow(self:GetParent());
-          </OnClick>
-        </Scripts>
-      </Button>
-    </Frames>
-  </Frame>
-
   <Frame name="AnsOptionPanelTemplate" virtual="true">
     <Layers>
       <Layer level="BACKGROUND">
@@ -91,10 +21,200 @@
     </Layers>
   </Frame>
 
+  <Frame name="AnsOptionsFrame" enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate">
+    <Scripts>
+      <OnLoad>
+        AnsConfig:LoadPanel(self, nil, "AnS", "Global Settings");
+      </OnLoad>
+      <OnShow>
+        AnsConfig:LoadGlobal(self);
+      </OnShow>
+    </Scripts>
+    <Frames>
+    <EditBox name="$parentPercentString" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="256" y="16" /></Size>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parent_BTitle" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-40" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Global Percent String">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="10"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:EditedGlobal(self:GetParent());
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <EditBox name="$parentPriceString" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="256" y="16" /></Size>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPercentString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Global Filter String">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="10"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:EditedGlobal(self:GetParent());
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <SimpleHTML>
+        <FontStringHeader2 inherits="GameFontHighlightLarge"/>
+        <Size><AbsDimension x="512" y="512" /></Size>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnLoad>
+            AnsConfig:SetHelpText(self);
+          </OnLoad>
+        </Scripts>
+      </SimpleHTML>
+    </Frames>
+  </Frame>
+
+  <Frame name="AnsCustomFilterRowTemplate" virtual="true">
+    <Size><AbsDimension x="525" y="70" /></Size>
+    <Frames>
+      <EditBox name="$parentName" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="100" y="32" /></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Filter Name">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="5"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:EditedFilterRow(self:GetParent());
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <EditBox name="$parentIDs" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="256" y="32" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item or Pet IDs E.g.: i:33444,i:1122,p:122">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="5"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:EditedFilterRow(self:GetParent());
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <EditBox name="$parentPriceString" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="200" y="16" /></Size>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-10" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Filter String">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="10"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:EditedFilterRow(self:GetParent());
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMaxBuyout">
+        <Anchors>
+          <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentPriceString">
+            <Offset>
+              <AbsDimension x="5" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("G Buyout"); </OnLoad>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinStack">
+        <Anchors>
+          <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentGMaxBuyout">
+            <Offset>
+              <AbsDimension x="60" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("G Stack"); </OnLoad>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinQuality">
+        <Anchors>
+          <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentGMinStack">
+            <Offset>
+              <AbsDimension x="50" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("G Quality"); </OnLoad>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+        </Scripts>
+      </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinLevel">
+        <Anchors>
+          <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentGMinQuality">
+            <Offset>
+              <AbsDimension x="60" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("G iLevel"); </OnLoad>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+        </Scripts>
+      </CheckButton>
+      <Button name="$parentDeleteFilter" text="Delete" inherits="UIPanelButtonTemplate">
+        <Size><AbsDimension x="64" y="32" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentIDs" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            AnsConfig:DeleteFilterRow(self:GetParent());
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+  </Frame>
+
   <Frame enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate" name="AnsCustomFiltersFrame" parent="UIParent">
     <Scripts>
         <OnLoad>
-            AnsConfig:LoadPanel(self, "Custom Filters");
+            AnsConfig:LoadPanel(self, "AnS", "Custom Filters");
             AnsCustomFilterRefresh();
         </OnLoad>
         <OnShow>
@@ -139,11 +259,11 @@
         </Scripts>
       </Button>
       <ScrollFrame name="AnsCustomFilterScrollFrame" inherits="FauxScrollFrameTemplate">
-        <Size><AbsDimension x="565" y="362" /></Size>
+        <Size><AbsDimension x="565" y="375" /></Size>
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsOptionImportGroups" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-40" /></Offset></Anchor></Anchors>
         <Scripts>
           <OnVerticalScroll>
-            FauxScrollFrame_OnVerticalScroll(self, offset, 64, AnsCustomFilterRefresh);
+            FauxScrollFrame_OnVerticalScroll(self, offset, 70, AnsCustomFilterRefresh);
           </OnVerticalScroll>
         </Scripts>
       </ScrollFrame>
@@ -162,10 +282,10 @@
       <Frame name="AnsCustomFilterRow5" inherits="AnsCustomFilterRowTemplate">
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomFilterRow4" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
       </Frame>
-      <Frame name="AnsCustomFilterRow6" inherits="AnsCustomFilterRowTemplate">
+      <!--<Frame name="AnsCustomFilterRow6" inherits="AnsCustomFilterRowTemplate">
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomFilterRow5" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
       </Frame>
-      <!--<Frame name="AnsCustomFilterRow7" inherits="AnsCustomFilterRowTemplate">
+      <Frame name="AnsCustomFilterRow7" inherits="AnsCustomFilterRowTemplate">
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomFilterRow6" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
       </Frame>
       <Frame name="AnsCustomFilterRow8" inherits="AnsCustomFilterRowTemplate">

@@ -4,7 +4,7 @@
     <Frames>
       <Frame>
         <Size><AbsDimension x="140" y="16" /></Size>
-        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="22" y="0"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
         
         <Layers>
           <Layer level="BACKGROUND">
@@ -29,7 +29,7 @@
 
       <Frame>
         <Size><AbsDimension x="16" y="16" /></Size>
-        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="167" y="0" /></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentPerItemPrice" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="ARTWORK">
             <Texture name="$parentItemIcon">
@@ -41,28 +41,44 @@
       </Frame>
 
       <Frame>
-        <Size><AbsDimension x="220" y="16" /></Size>
-        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="187" y="0"/></Offset></Anchor></Anchors>
+        <Size><AbsDimension x="200" y="16" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentItemIcon" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0"/></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentNameText" inherits="GameFontHighlightSmall" justifyH="LEFT"/>
+            <FontString name="$parentNameText" inherits="GameFontHighlightSmall" justifyH="LEFT">
+              <Size><AbsDimension x="200" y="16"/></Size>;
+            </FontString>
           </Layer>
         </Layers>
       </Frame>
 
       <Frame>
-        <Size><AbsDimension x="64" y="16" /></Size>
-        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="410" y="0"/></Offset></Anchor></Anchors>
+        <Size><AbsDimension x="32" y="16" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentNameText" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0"/></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentPercent" inherits="GameFontHighlightSmall" justifyH="LEFT"/>
+            <FontString name="$parentPercent" inherits="GameFontHighlightSmall" justifyH="LEFT">
+              <Size><AbsDimension x="32" y="16" /></Size>
+            </FontString>
+          </Layer>
+        </Layers>
+      </Frame>
+
+      <Frame>
+        <Size><AbsDimension x="32" y="16" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentPercent" relativePoint="RIGHT"><Offset><AbsDimension x="40" y="0"/></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <FontString name="$parentILevel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+              <Size><AbsDimension x="32" y="16" /></Size>
+            </FontString>
           </Layer>
         </Layers>
       </Frame>
 
       <Frame>
         <Size><AbsDimension x="120" y="16" /></Size>
-        <Anchors><Anchor point="LEFT"><Offset><AbsDimension x="440" y="0"/></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentILevel" relativePoint="RIGHT"><Offset><AbsDimension x="-20" y="0"/></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="BACKGROUND">
             <FontString name="$parentStackPrice" inherits="GameFontHighlightSmall" justifyH="RIGHT"/>

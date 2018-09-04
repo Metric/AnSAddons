@@ -277,6 +277,21 @@ function AuctionSnipe:SortByRecent()
     AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
 end
 
+function AuctionSnipe:SortByILevel()
+    if (self.sortHow ~= AnsQuerySort.ILEVEL) then
+        self.sortAsc = false;
+    else
+        if (self.sortAsc) then
+            self.sortAsc = false;
+        else
+            self.sortAsc = true;
+        end
+    end
+
+    self.sortHow = AnsQuerySort.ILEVEL;
+    AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
+end
+
 ----
 --- Button Handlers for Start & Stop 
 ---

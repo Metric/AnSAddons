@@ -9,6 +9,62 @@ It also handles the configuration and storage of custom filters and importing of
 
 More to come...
 
+TSM Server Market Data Caveat
+==================
+Due to how TSM has everything privately cached except for TradeSkillMaster_AppHelper. There needs to be a slight modification to TradeSkillMaster_AppHelper in order to allow TSM to continue to work. Otherwise, AnS will absorb all the data and TSM will not have access to it.
+
+TradeSkillMaster_AppHelper/TradeSkillMaster_AppHelper.lua Modifications:
+
+Line 1 add:
+
+```
+local pulled = 0;
+```
+
+Line 23 (Before line 1 add) or Line 24 (After line 1 add) - (private.data[tag] = nil) replace with:
+
+```
+	pulled = pulled + 1;
+	if (pulled > 1) then
+		private.data[tag] = nil;
+	end
+```
+
+This is done to one, allow TSM to grab the data but also to help free memory. Sure you could just remove (private.data[tag] = nil) but then there will be duplicate data in memory.
+
+
+Filter and Percent Strings
+=========================
+A percent string must end up as a single numerical value
+
+A filter string must end up as a boolean value
+
+Lua operators can be used on strings
+```
+ >=, ~=, ==, <=, <, >, not, -, +, *, \
+```
+
+Predefined functions for use in strings:
+```
+avg, first, min, max, mod, abs, ceil, floor, round, random, log, log10, exp, sqrt
+```
+
+Predefined Item Variables:
+```
+percent, ppu, stacksize, buyout, ilevel, quality
+```
+
+Predefined TUJ Variables:
+```
+tujmarket, tujrecent, tujglobalmedian, tuglobalmean, tujage, tujdays, tujstddev, tujglobalstddev
+```
+
+Predfined TSM Variables:
+```
+dbmarket, dbminbuyout, dbhistorical
+```
+
+
 Classes
 --------------
 * AnsCore (Handles loading of saved variables etc)
@@ -18,6 +74,11 @@ Classes
 * AnsQuery (Auction House Query)
 * AnsUtils (Show pet battle tip, parse pet item link etc.)
 * AnsConfig (Handles config options etc, adding new custom filters, importing tsm groups)
+* AnsSettings (Default Settings)
+* AnsPriceSources (Allows registering multiple price sources for filter / percent strings)
+* AnsTSMHelper
+    * AnsTSMHelper.GetRealmItemData ((number or itemLink), key)
+    * possible keys: marketValue, minBuyout, historical
 
 Data
 ---------

@@ -183,24 +183,29 @@
                     </Layer>
                 </Layers>
                 <Frames>
-                    <Button name="AnsSnipeHeadingPrice" text="Price" inherits="AnsHeadingTemplate">
+                    <Button name="AnsSnipeHeadingPrice" text="PPU" inherits="AnsHeadingTemplate">
                         <Size><AbsDimension x="100" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="46" y="-21"/></Offset></Anchor></Anchors>
+                        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="-21"/></Offset></Anchor></Anchors>
                         <Scripts><OnClick>AuctionSnipe:SortByPrice()</OnClick></Scripts>
                     </Button>
                     <Button name="AnsSnipeHeadingName" text="Name" inherits="AnsHeadingTemplate">
                         <Size><AbsDimension x="108" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="172" y="-21"/></Offset></Anchor></Anchors>
+                        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingPrice" relativePoint="TOPRIGHT"><Offset><AbsDimension x="60" y="0"/></Offset></Anchor></Anchors>
                         <Scripts><OnClick>AuctionSnipe:SortByName()</OnClick></Scripts>
                     </Button>
                     <Button name="AnsSnipeHeadingPercentage" text="Percent %" inherits="AnsHeadingTemplate">
-                        <Size><AbsDimension x="108" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="386" y="-21"/></Offset></Anchor></Anchors>
+                        <Size><AbsDimension x="70" y="20"/></Size>
+                        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingName" relativePoint="TOPRIGHT"><Offset><AbsDimension x="100" y="0"/></Offset></Anchor></Anchors>
                         <Scripts><OnClick>AuctionSnipe:SortByPercent()</OnClick></Scripts>
+                    </Button>
+                    <Button name="AnsSnipeHeadingILevel" text="iLVL" inherits="AnsHeadingTemplate">
+                        <Size><AbsDimension x="50" y="20"/></Size>
+                        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingPercentage" relativePoint="TOPRIGHT"><Offset><AbsDimension x="10" y="0"/></Offset></Anchor></Anchors>
+                        <Scripts><OnClick>AuctionSnipe:SortByILevel()</OnClick></Scripts>
                     </Button>
                     <Button name="AnsSnipeHeadingRecent" text="Recent" inherits="AnsHeadingTemplate">
                         <Size><AbsDimension x="108" y="20"/></Size>
-                        <Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="-25" y="-21"/></Offset></Anchor></Anchors>
+                        <Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="-10" y="-21"/></Offset></Anchor></Anchors>
                         <Scripts><OnClick>AuctionSnipe:SortByRecent()</OnClick></Scripts>
                     </Button>
                 </Frames>
