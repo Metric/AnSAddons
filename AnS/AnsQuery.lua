@@ -92,9 +92,9 @@ function AnsQuery:Search()
 
     if (query) then
         if(self.search == "" or self.search:len() == 0)then
-            QueryAuctionItems(nil, nil, nil, self.index, 0, 1);
+            QueryAuctionItems(nil, nil, nil, self.index, false, 1);
         else
-            QueryAuctionItems(self.search, nil, nil, self.index, 0, 1);
+            QueryAuctionItems(self.search, nil, nil, self.index, false, 1);
         end
     end
 

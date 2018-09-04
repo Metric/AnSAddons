@@ -21,6 +21,31 @@
     </Layers>
   </Frame>
 
+    <Slider name="AnsSliderTemplate" orientation="HORIZONTAL" enableMouse="true" virtual="true">
+      <Size><AbsDimension x="256" y="16" /></Size>
+      <HitRectInsets left="0" right="0" top="-10" bottom="-10"/>
+      <Backdrop bgFile="Interface\Buttons\UI-SliderBar-Background"
+          edgeFile="Interface\Buttons\UI-SliderBar-Border" tile="true">
+        <EdgeSize val="8"/>
+        <TileSize val="8"/>
+        <BackgroundInsets left="3" right="3" top="6" bottom="6"/>
+      </Backdrop>
+      <ThumbTexture name="$parentThumb" file="Interface\Buttons\UI-SliderBar-Button-Horizontal">
+        <Size x="32" y="32"/>
+      </ThumbTexture>
+      <Layers>
+        <Layer level="ARTWORK">
+          <FontString name="$parentText" inherits="GameFontHighlightSmall" justifyH="LEFT" text="Rescan Time: ">
+            <Anchors>
+              <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                <Offset x="0" y="10"/>
+              </Anchor>
+            </Anchors>
+          </FontString>
+        </Layer>
+      </Layers>
+    </Slider>
+
   <Frame name="AnsOptionsFrame" enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate">
     <Scripts>
       <OnLoad>
@@ -71,10 +96,18 @@
           </OnTextChanged>
         </Scripts>
       </EditBox>
+      <Slider name="$parentRescanTime" minValue="0" maxValue="30" valueStep="1" inherits="AnsSliderTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
+          <Scripts>
+            <OnValueChanged>
+              AnsConfig:EditedGlobal(self:GetParent());
+            </OnValueChanged>
+          </Scripts>
+      </Slider>
       <SimpleHTML>
         <FontStringHeader2 inherits="GameFontHighlightLarge"/>
         <Size><AbsDimension x="512" y="512" /></Size>
-        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentRescanTime" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
         <Scripts>
           <OnLoad>
             AnsConfig:SetHelpText(self);
@@ -83,7 +116,6 @@
       </SimpleHTML>
     </Frames>
   </Frame>
-
   <Frame name="AnsCustomFilterRowTemplate" virtual="true">
     <Size><AbsDimension x="525" y="70" /></Size>
     <Frames>

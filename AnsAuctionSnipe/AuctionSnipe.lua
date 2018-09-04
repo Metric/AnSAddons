@@ -17,6 +17,8 @@ AnsQualityToText[3] = "Rare";
 AnsQualityToText[4] = "Epic";
 AnsQualityToText[5] = "Legendary";
 
+local lastScan = time();
+
 local Ans_Orig_AuctionTabClick = nil;
 local function TabClick(self, button, down)
     AuctionSnipe:TabClick(self, button, down);
@@ -66,9 +68,12 @@ end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
     if (self.isSniping) then
-        if (not self.waitingForResult and not AnsSnipeAuctionList.buying) then
+        local tdiff = time() - lastScan;
+
+        if (tdiff >= ANS_GLOBAL_SETTINGS.rescanTime and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
             if (self.query:Search()) then
                 self.waitingForResult = true;
+                lastScan = time();
             end
         end
     end

@@ -50,23 +50,34 @@ end
 
 function AnsConfig:SetHelpText(f)
     f:SetFont("Fonts\\FRIZQT__.TTF", 12); 
-    f:SetText("<html><body><h2>Available String Functions / Variables</h2><br /><p>Operators: All LUA operators</p><br /><p>Functions: avg, first, min, max, mod, abs, ceil,<br />floor, round, random, log, log10, exp, sqrt</p><br /><p>Item VARS: percent, ppu, stacksize, buyout, ilevel, quality</p><br /><p>TUJ VARS: tujmarket, tujrecent, tujglobalmedian, tujglobalmean,<br />tujage, tujdays, tujstddev, tujglobalstddev</p><br /><p>TSM VARS: dbmarket, dbminbuyout, dbhistorical</p></body></html>");
+    f:SetText("<html><body><h2>Available String Functions / Variables</h2><br /><p>Operators: All LUA operators</p><br /><p>Functions: avg, first, min, max, mod, abs, ceil,<br />floor, round, random, log, log10, exp, sqrt</p><br /><p>Item VARS: percent, ppu, stacksize, buyout, ilevel, quality</p><br /><p>TUJ VARS: tujmarket, tujrecent, tujglobalmedian, tujglobalmean,<br />tujage, tujdays, tujstddev, tujglobalstddev</p><br /><p>TSM VARS: dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday</p></body></html>");
 end
 
 function AnsConfig:LoadGlobal(f)
     local percBox = _G[f:GetName().."PercentString"];
     local pricBox = _G[f:GetName().."PriceString"];
+    local rscan = _G[f:GetName().."RescanTime"];
+    local rscanText = _G[f:GetName().."RescanTimeText"];
 
     percBox:SetText(ANS_GLOBAL_SETTINGS.percentFn);
     pricBox:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
+
+    rscan:SetValue(ANS_GLOBAL_SETTINGS.rescanTime);
+    rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
 end
 
 function AnsConfig:EditedGlobal(f)
     local percBox = _G[f:GetName().."PercentString"];
     local pricBox = _G[f:GetName().."PriceString"];
 
+    local rscan = _G[f:GetName().."RescanTime"];
+    local rscanText = _G[f:GetName().."RescanTimeText"];
+
     ANS_GLOBAL_SETTINGS.percentFn = percBox:GetText();
     ANS_GLOBAL_SETTINGS.pricingFn = pricBox:GetText();
+    ANS_GLOBAL_SETTINGS.rescanTime = math.floor(rscan:GetValue());
+
+    rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
 end
 
 function AnsConfig:LoadPanel(f, parent, name, subtitle)

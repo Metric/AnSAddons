@@ -9,28 +9,38 @@ It also handles the configuration and storage of custom filters and importing of
 
 More to come...
 
-TSM Server Market Data Caveat
+TSM Server Market Data Caveat (1.0.2)
 ==================
-Due to how TSM has everything privately cached except for TradeSkillMaster_AppHelper. There needs to be a slight modification to TradeSkillMaster_AppHelper in order to allow TSM to continue to work. Otherwise, AnS will absorb all the data and TSM will not have access to it.
+If you were on version 1.0.1 of AnS, then you will need to revert the change or simply restore TradeSkillMaster_AppHelper to its defaults.
 
-TradeSkillMaster_AppHelper/TradeSkillMaster_AppHelper.lua Modifications:
+In 1.0.2 a different way has been decided, but sadly it does still require a slight modification to a TSM lua file.
 
-Line 1 add:
+If using TSM 4:
+-------------------
 
+In TradeSkillMaster/Core/Service/AuctionDB/Core.lua after the following line:
 ```
-local pulled = 0;
+local AuctionDB = ...
 ```
-
-Line 23 (Before line 1 add) or Line 24 (After line 1 add) - (private.data[tag] = nil) replace with:
-
+Add the following global variable:
 ```
-	pulled = pulled + 1;
-	if (pulled > 1) then
-		private.data[tag] = nil;
-	end
+-- Add a global variable mod here
+AnsTSMAuctionDB = AuctionDB;
 ```
 
-This is done to one, allow TSM to grab the data but also to help free memory. Sure you could just remove (private.data[tag] = nil) but then there will be duplicate data in memory.
+If using TSM 3:
+--------------------
+
+In TradeSkillMaster_AuctionDB/TradeSkillMaster_AuctionDB.lua after the following line:
+
+```
+TSM = LibStub ...
+```
+Add the following global variable:
+```
+-- Add a global variable mod here
+AnsTSMAuctionDB = TSM;
+```
 
 
 Filter and Percent Strings
@@ -61,7 +71,7 @@ tujmarket, tujrecent, tujglobalmedian, tuglobalmean, tujage, tujdays, tujstddev,
 
 Predfined TSM Variables:
 ```
-dbmarket, dbminbuyout, dbhistorical
+dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday
 ```
 
 

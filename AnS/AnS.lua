@@ -40,6 +40,7 @@ function AnsCore:EventHandler(frame, event, ...)
 end
 
 function AnsCore:OnLoad()
+    self:MigrateGlobalSettings();
     self:MigrateCustomFilters();
     self:RegisterPriceSources();
     self:StoreDefaultFilters();
@@ -67,12 +68,13 @@ function AnsCore:RegisterPriceSources()
         end
     end
     
-    if (TSMAPI.AppHelper) then
+    if (AnsTSMAuctionDB) then
         -- do note, doing this we basically steal the data
         -- from TSM and only way to allow TSM to operate
         -- further is to remove line 23 from TradeSkillMaster_AppHelper.lua
-        tsmEnabled = AnsTSMHelper:GrabData();
-        auctiondb = AnsTSMHelper;
+        -- tsmEnabled = AnsTSMHelper:GrabData();
+        tsmEnabled = true;
+        auctiondb = AnsTSMAuctionDB;
     end
 
     if (TUJMarketInfo) then
@@ -95,12 +97,12 @@ function AnsCore:RegisterPriceSources()
         AnsPriceSources:Register("DBMarket", auctiondb.GetRealmItemData, "marketValue");
         AnsPriceSources:Register("DBMinBuyout", auctiondb.GetRealmItemData, "minBuyout");
         AnsPriceSources:Register("DBHistorical", auctiondb.GetRealmItemData, "historical");
-        --AnsPriceSources:Register("DBRegionMinBuyoutAvg", auctiondb.GetRegionItemData, "regionMinBuyout");
-        --AnsPriceSources:Register("DBRegionMarketAvg", auctiondb.GetRegionItemData, "regionMarketValue");
-        --AnsPriceSources:Register("DBRegionHistorical", auctiondb.GetRegionItemData, "regionHistorical");
-        --AnsPriceSources:Register("DBRegionSaleAvg", auctiondb.GetRegionItemData, "regionSale");
-        --AnsPriceSources:Register("DBRegionSaleRate", auctiondb.GetRegionSaleInfo, "regionSalePercent");
-        --AnsPriceSources:Register("DBRegionSoldPerDay", auctiondb.GetRegionSaleInfo, "regionSoldPerDay");
+        AnsPriceSources:Register("DBRegionMinBuyoutAvg", auctiondb.GetRegionItemData, "regionMinBuyout");
+        AnsPriceSources:Register("DBRegionMarketAvg", auctiondb.GetRegionItemData, "regionMarketValue");
+        AnsPriceSources:Register("DBRegionHistorical", auctiondb.GetRegionItemData, "regionHistorical");
+        AnsPriceSources:Register("DBRegionSaleAvg", auctiondb.GetRegionItemData, "regionSale");
+        AnsPriceSources:Register("DBRegionSaleRate", auctiondb.GetRegionSaleInfo, "regionSalePercent");
+        AnsPriceSources:Register("DBRegionSoldPerDay", auctiondb.GetRegionSaleInfo, "regionSoldPerDay");
     end
 
     if (tujEnabled) then
@@ -160,6 +162,12 @@ function AnsCore:LoadCustomFilters()
 
     AnsFilterList = temp;
     AnsFilterSelected = temp2;
+end
+
+function AnsCore:MigrateGlobalSettings()
+    if (ANS_GLOBAL_SETTINGS.rescanTime == nil) then
+        ANS_GLOBAL_SETTINGS.rescanTime = 0;
+    end
 end
 
 function AnsCore:MigrateCustomFilters()
