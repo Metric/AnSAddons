@@ -87,7 +87,21 @@ function AnsUtils:GetTSMID(link)
         local pet = AnsUtils:ParseBattlePetLink(link);
         return "p:"..pet.speciesID;
     else
+        if (type(link) == "number") then
+            return "i:"..link;
+        end
+
         local _, id = strsplit(":", link);
         return "i:"..id;
     end
+end
+
+function AnsUtils:GetAddonVersion(name)
+    local v = GetAddOnMetadata(name, "Version");
+    if (v) then
+        local maj, min = string.match(v, "(%d+).(%d+)");
+        return maj, min;
+    end
+
+    return "0","0";
 end

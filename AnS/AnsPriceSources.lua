@@ -33,8 +33,10 @@ function AnsPriceSources:GetNamesAsString()
 
     for i = 1, #self.sources do
         local s = self.sources[i];
-        str = str..sep..s.name:lower();
-        sep = ",";
+        if (s.fn ~= nil) then
+            str = str..sep..s.name:lower();
+            sep = ",";
+        end
     end
 
     -- cache for future lookups
@@ -51,10 +53,12 @@ function AnsPriceSources:GetValues(itemId)
 
     for i = 1, total do
         local s = self.sources[i];
-        local _, r = pcall(s.fn, itemId, s.key);
-        local v = r or 0;
-        values = values..sep..v;
-        sep = ",";
+        if (s.fn ~= nil) then
+            local _, r = pcall(s.fn, itemId, s.key);
+            local v = r or 0;
+            values = values..sep..v;
+            sep = ",";
+        end
     end
 
     -- cache values for faster lookup for the next time

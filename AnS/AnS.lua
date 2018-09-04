@@ -11,6 +11,35 @@ local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
 local DefaultFilters = {};
 local TUJTempTable = {};
 
+local AnsAuctionDB = {};
+local TSM_MAJOR_VERSION = AnsUtils:GetAddonVersion("TradeSkillMaster");
+
+function AnsAuctionDB.GetRealmItemData(link, key) 
+    local id = AnsUtils:GetTSMID(link);
+
+    if(TSM_MAJOR_VERSION == "3") then
+        return AnsTSMAuctionDB:GetRealmItemData(id, key)
+    else
+        return AnsTSMAuctionDB.GetRealmItemData(id, key);
+    end
+end
+
+function AnsAuctionDB.GetRegionItemData(link, key)
+    local id = AnsUtils:GetTSMID(link);
+
+    if (TSM_MAJOR_VERSION == "3") then
+        return AnsTSMAuctionDB:GetRegionItemData(id, key)
+    else
+        return AnsTSMAuctionDB.GetRegionItemData(id, key);
+    end
+end
+
+function AnsAuctionDB.GetRegionSaleInfo(link, key)
+    local r = AnsAuctionDB.GetRegionItemData(link, key);
+    if (not r) then r = 0; end;
+    return r / 100;
+end
+
 local function GetTUJPrice(itemId, key)
     TUJMarketInfo(itemId, TUJTempTable);
     return TUJTempTable[key];
@@ -60,8 +89,6 @@ function AnsCore:RegisterPriceSources()
     local tsmEnabled = false;
     local tujEnabled = false;
 
-    local auctiondb = nil;
-
     if (TSM) then
         for k,v in pairs(TSM) do
             print("TSM: "..k);
@@ -74,7 +101,6 @@ function AnsCore:RegisterPriceSources()
         -- further is to remove line 23 from TradeSkillMaster_AppHelper.lua
         -- tsmEnabled = AnsTSMHelper:GrabData();
         tsmEnabled = true;
-        auctiondb = AnsTSMAuctionDB;
     end
 
     if (TUJMarketInfo) then
@@ -94,15 +120,15 @@ function AnsCore:RegisterPriceSources()
 
     if (tsmEnabled) then
         print("found TSM pricing source");
-        AnsPriceSources:Register("DBMarket", auctiondb.GetRealmItemData, "marketValue");
-        AnsPriceSources:Register("DBMinBuyout", auctiondb.GetRealmItemData, "minBuyout");
-        AnsPriceSources:Register("DBHistorical", auctiondb.GetRealmItemData, "historical");
-        AnsPriceSources:Register("DBRegionMinBuyoutAvg", auctiondb.GetRegionItemData, "regionMinBuyout");
-        AnsPriceSources:Register("DBRegionMarketAvg", auctiondb.GetRegionItemData, "regionMarketValue");
-        AnsPriceSources:Register("DBRegionHistorical", auctiondb.GetRegionItemData, "regionHistorical");
-        AnsPriceSources:Register("DBRegionSaleAvg", auctiondb.GetRegionItemData, "regionSale");
-        AnsPriceSources:Register("DBRegionSaleRate", auctiondb.GetRegionSaleInfo, "regionSalePercent");
-        AnsPriceSources:Register("DBRegionSoldPerDay", auctiondb.GetRegionSaleInfo, "regionSoldPerDay");
+        AnsPriceSources:Register("DBMarket", AnsAuctionDB.GetRealmItemData, "marketValue");
+        AnsPriceSources:Register("DBMinBuyout", AnsAuctionDB.GetRealmItemData, "minBuyout");
+        AnsPriceSources:Register("DBHistorical", AnsAuctionDB.GetRealmItemData, "historical");
+        AnsPriceSources:Register("DBRegionMinBuyoutAvg", AnsAuctionDB.GetRegionItemData, "regionMinBuyout");
+        AnsPriceSources:Register("DBRegionMarketAvg", AnsAuctionDB.GetRegionItemData, "regionMarketValue");
+        AnsPriceSources:Register("DBRegionHistorical", AnsAuctionDB.GetRegionItemData, "regionHistorical");
+        AnsPriceSources:Register("DBRegionSaleAvg", AnsAuctionDB.GetRegionItemData, "regionSale");
+        AnsPriceSources:Register("DBRegionSaleRate", AnsAuctionDB.GetRegionSaleInfo, "regionSalePercent");
+        AnsPriceSources:Register("DBRegionSoldPerDay", AnsAuctionDB.GetRegionSaleInfo, "regionSoldPerDay");
     end
 
     if (tujEnabled) then
