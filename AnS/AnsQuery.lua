@@ -219,7 +219,7 @@ local function ItemHash(item)
         owner = item.owner;
     end
 
-    return item.name..item.count..item.ppu..owner;
+    return item.name..item.count..item.ppu;
 end
 
 ----
@@ -365,7 +365,7 @@ function AnsQuery:Capture()
                 if (doGroup) then
                     local idx = groupLookup[hash];
                     if  (idx and idx > 0) then
-                        local agroup = self.auctions[idx].item;
+                        local agroup = self.auctions[idx].item.group;
                         tinsert(agroup, block);
                     else
                         foundHash = foundHash..hash;
