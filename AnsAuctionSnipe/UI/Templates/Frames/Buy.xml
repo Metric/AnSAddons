@@ -51,11 +51,29 @@
                         </Scripts>
                     </EditBox>
 
+                    <EditBox name="AnsSnipeMinMaxPercent" autoFocus="false" numeric="true" bytes="4" inherits="InputBoxTemplate">
+                        <Size><AbsDimension x="48" y="20" /></Size>
+                        <Anchors><Anchor point="RIGHT" relativeTo="AnsSnipeSearchBox" relativePoint="LEFT"><Offset><AbsDimension x="-15" y="0" /></Offset></Anchor></Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlightSmall" text="Max %" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+											<Offset>
+												<AbsDimension x="0" y="15"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+                    </EditBox>
+
                     <Frame name="AnsSnipeMaxBuyout" inherits="MoneyInputFrameTemplate">
                         <Anchors><Anchor point="LEFT" relativeTo="AnsSnipeSearchBox" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /> </Offset></Anchor></Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-                                <FontString inherits="GameFontHighlightSmall" text="Max Buyout" justifyH="RIGHT">
+                                <FontString inherits="GameFontHighlightSmall" text="Max PPU" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
 											<Offset>
@@ -139,6 +157,13 @@
             <Frame name="AnsSnipeBottomBar">
                 <Size><AbsDimension x="160" y="22" /></Size>
                 <Anchors><Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent"><Offset><AbsDimension x="-50" y="15" /></Offset></Anchor></Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString name="AnsSnipeStatus" text="Page: 0 - Stopped..." justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors><Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent"><Offset><AbsDimension x="-50" y="0" /></Offset></Anchor></Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
                 <Frames>
                     <Button name="AnsSnipeStartButton" text="Start" inherits="UIPanelButtonTemplate" >
                         <Size><AbsDimension x="78" y="22"/> </Size>

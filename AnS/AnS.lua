@@ -4,6 +4,26 @@ AnsCore.__index = AnsCore;
 AnsCustomFilter = {};
 AnsCustomFilter.__index = AnsCustomFilter;
 
+StaticPopupDialogs["ANS_TSM_MOD"] = {
+    text = "Looks like you have TSM installed, but the required lua modification is not here for AnS to grab TSM data! See readme for details.",
+    button1 = "OKAY",
+    OnAccept = function() end,
+    timeout = 0,
+    whileDead = false,
+    hideOnEscape = true,
+    preferredIndex = 3
+};
+
+StaticPopupDialogs["ANS_NO_PRICING"] = {
+    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM (with lua mod), and Auctionator are currently supported.",
+    button1 = "OKAY",
+    OnAccept = function() end,
+    timeout = 0,
+    whileDead = false,
+    hideOnEscape = true,
+    preferredIndex = 3
+};
+
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
 local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
@@ -88,11 +108,10 @@ end
 function AnsCore:RegisterPriceSources()
     local tsmEnabled = false;
     local tujEnabled = false;
+    local auctionatorEnabled = false;
 
-    if (TSM) then
-        for k,v in pairs(TSM) do
-            print("TSM: "..k);
-        end
+    if (AnsUtils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
+       auctionatorEnabled = true; 
     end
     
     if (AnsTSMAuctionDB) then
@@ -101,6 +120,10 @@ function AnsCore:RegisterPriceSources()
         -- further is to remove line 23 from TradeSkillMaster_AppHelper.lua
         -- tsmEnabled = AnsTSMHelper:GrabData();
         tsmEnabled = true;
+    end
+
+    if (AnsUtils:IsAddonEnabled("TradeSkillMaster") and not AnsTSMAuctionDB) then
+        StaticPopup_Show("ANS_TSM_MOD");
     end
 
     if (TUJMarketInfo) then
@@ -118,8 +141,12 @@ function AnsCore:RegisterPriceSources()
         ANS_GLOBAL_SETTINGS.percentFn = TSMOnlyPercentFn;
     end
 
+    if (not tsmEnabled and not tujEnabled and not auctionatorEnabled) then
+        StaticPopup_Show("ANS_NO_PRICING");
+    end
+
     if (tsmEnabled) then
-        print("found TSM pricing source");
+        print("AnS found TSM pricing source");
         AnsPriceSources:Register("DBMarket", AnsAuctionDB.GetRealmItemData, "marketValue");
         AnsPriceSources:Register("DBMinBuyout", AnsAuctionDB.GetRealmItemData, "minBuyout");
         AnsPriceSources:Register("DBHistorical", AnsAuctionDB.GetRealmItemData, "historical");
@@ -132,7 +159,7 @@ function AnsCore:RegisterPriceSources()
     end
 
     if (tujEnabled) then
-        print("found TUJ pricing source");
+        print("AnS found TUJ pricing source");
         AnsPriceSources:Register("TUJMarket", GetTUJPrice, "market");
         AnsPriceSources:Register("TUJRecent", GetTUJPrice, "recent");
         AnsPriceSources:Register("TUJGlobalMedian", GetTUJPrice, "globalMedian");
@@ -141,6 +168,11 @@ function AnsCore:RegisterPriceSources()
         AnsPriceSources:Register("TUJDays", GetTUJPrice, "days");
         AnsPriceSources:Register("TUJStdDev", GetTUJPrice, "stddev");
         AnsPriceSources:Register("TUJGlobalStdDev", GetTUJPrice, "globalStdDev");
+    end
+
+    if (auctionatorEnabled) then
+        print("AnS found Auctionator pricing source");
+        AnsPriceSources:Register("AtrValue", Atr_GetAuctionBuyout, nil);
     end
 end
 

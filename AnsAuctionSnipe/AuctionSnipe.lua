@@ -62,6 +62,9 @@ function AuctionSnipe:Init()
     MoneyInputFrame_SetCopper(_G["AnsSnipeMaxBuyout"], 0);
     _G["AnsSnipeMinLevel"]:SetText("0");
     _G["AnsSnipeMinSize"]:SetText("0");
+
+    AnsSnipeMinMaxPercent:SetText("100");
+
     UIDropDownMenu_Initialize(_G["AnsSnipeQualityLevel"], BuildQualityDropDown);
     UIDropDownMenu_SetText(_G["AnsSnipeQualityLevel"], ITEM_QUALITY_COLORS[1].hex.."Common");
 end
@@ -72,6 +75,9 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
 
         if (tdiff >= ANS_GLOBAL_SETTINGS.rescanTime and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
             if (self.query:Search()) then
+                if (AnsSnipeStatus) then
+                    AnsSnipeStatus:SetText("Page: "..self.query.index.." - Query Sent...");
+                end
                 self.waitingForResult = true;
                 lastScan = time();
             end
@@ -115,19 +121,31 @@ end
 
 function AuctionSnipe:OnAuctionHouseClosed()
     self:Stop();
+    self.query:Reset();
+    AnsPriceSources:ClearCache();
 end
 
 function AuctionSnipe:OnAuctionUpdate(...)
     if (self.isSniping and not self.prepareToSnipe) then
-        self.query:Capture();
-        self.waitingForResult = false;
-
-        if (not self.query:IsLastPage()) then
-            self.query = self.query:LastPage();
-        else
-            AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow,self.sortAsc));
-            self.query = self.query:LastPage();
+        if (AnsSnipeStatus) then
+            AnsSnipeStatus:SetText("Page: "..self.query.index.." - Processing Data...");
         end
+        if (not self.query:IsLastPage()) then
+            self.query:LastPage();
+        elseif (self.waitingForResult) then
+            self.query:Capture();
+            AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow,self.sortAsc));
+            self.query:LastPage();
+            if (AnsSnipeStatus) then
+                AnsSnipeStatus:SetText("Page: "..self.query.index.." - Waiting to Query...");        
+            end
+        else
+            if (AnsSnipeStatus) then
+                AnsSnipeStatus:SetText("Page: "..self.query.index.." - Waiting to Query...");        
+            end
+        end
+
+        self.waitingForResult = false;
     end
     if (not self.isSniping and self.prepareToSnipe) then
         self.prepareToSnipe = false;
@@ -309,6 +327,7 @@ function AuctionSnipe:Start()
     local ilevel = tonumber(_G["AnsSnipeMinLevel"]:GetText()) or 0;
     local minSize = tonumber(_G["AnsSnipeMinSize"]:GetText()) or 0;
     local quality = self.quality;
+    local maxPercent = self:GetMaxPercent();
 
     local search = _G["AnsSnipeSearchBox"]:GetText();
     
@@ -319,7 +338,13 @@ function AuctionSnipe:Start()
         self.query:Set(search);
     end
 
-    self.query:AssignFilters(ilevel, maxBuyout, quality, minSize);
+    if (AnsSnipeStatus) then
+        AnsSnipeStatus:SetText("Page: 0 - Starting...");
+    end
+
+    self.query:ClearLastHash();
+
+    self.query:AssignFilters(ilevel, maxBuyout, quality, minSize, maxPercent);
 
     self.isSniping = false;
     self.prepareToSnipe = true;
@@ -334,6 +359,15 @@ function AuctionSnipe:Stop()
     self.isSniping = false;
     self.waitingForResult = false;
     self.prepareToSnipe = false;
+    if (AnsSnipeStatus) then
+        AnsSnipeStatus:SetText("Page: "..self.query.index.." - Stopped...");
+    end
+end
+
+function AuctionSnipe:GetMaxPercent()
+    local text = AnsSnipeMinMaxPercent:GetText();
+    local max = tonumber(text) or 100;
+    return max;
 end
 
 -- filter view refresh

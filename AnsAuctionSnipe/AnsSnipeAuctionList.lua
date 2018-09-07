@@ -13,67 +13,73 @@ end
 
 function AnsSnipeAuctionList:ShowLineTip(item)
     local index = item:GetID();
-    local auction = self.items[index].item;
-    if (auction ~= nil) then
-        if (auction.link ~= nil) then
-            GameTooltip:SetOwner(item, "ANCHOR_RIGHT");
+    if (self.items[index]) then
+        local auction = self.items[index].item;
+        if (auction ~= nil) then
+            if (auction.link ~= nil) then
+                GameTooltip:SetOwner(item, "ANCHOR_RIGHT");
 
-            if (AnsUtils:IsBattlePetLink(auction.link)) then
-                AnsUtils:ShowBattlePetTip(auction.link);
-            else
-                GameTooltip:SetHyperlink(auction.link, auction.count);
-                GameTooltip:Show();
+                if (AnsUtils:IsBattlePetLink(auction.link)) then
+                    AnsUtils:ShowBattlePetTip(auction.link);
+                else
+                    GameTooltip:SetHyperlink(auction.link, auction.count);
+                    GameTooltip:Show();
+                end
             end
         end
     end
 end
 
 function AnsSnipeAuctionList:Purchase(block)
-    local orig = block.item;
-    local auction = block.item;
-    local index = block.index;
-    local left = 0;
+    if (block) then
+        local orig = block.item;
+        local auction = block.item;
+        local index = block.index;
+        local left = 0;
 
-    local total = #auction.group;
-    local i;
+        local total = #auction.group;
+        local i;
 
-    if (not auction.sniped and total == 0) then
-        if (GetMoney() >= auction.buyoutPrice) then
-            auction.sniped = true;
-            PlaceAuctionBid("list", index, auction.buyoutPrice);
-            return true;
+        if (not auction.sniped and total == 0) then
+            if (GetMoney() >= auction.buyoutPrice) then
+                auction.sniped = true;
+                PlaceAuctionBid("list", index, auction.buyoutPrice);
+                return true;
+            else
+                return false;
+            end
+        elseif (not auction.sniped) then
+            if (GetMoney() >= auction.buyoutPrice) then
+                auction.sniped = true;
+                PlaceAuctionBid("list", index, auction.buyoutPrice);
+            end
         else
-            return false;
-        end
-    elseif (not auction.sniped) then
-        if (GetMoney() >= auction.buyoutPrice) then
-            auction.sniped = true;
-            PlaceAuctionBid("list", index, auction.buyoutPrice);
-        end
-    else
-        for i = 1, total do
-            local subblock = orig.group[i];
-            auction = subblock.item;
-            index = subblock.index;
+            for i = 1, total do
+                local subblock = orig.group[i];
+                auction = subblock.item;
+                index = subblock.index;
 
-            if (not auction.sniped) then
-                if (GetMoney() >= auction.buyoutPrice) then
-                    auction.sniped = true;
-                    PlaceAuctionBid("list", index, auction.buyoutPrice);
-                    break;
+                if (not auction.sniped) then
+                    if (GetMoney() >= auction.buyoutPrice) then
+                        auction.sniped = true;
+                        PlaceAuctionBid("list", index, auction.buyoutPrice);
+                        break;
+                    end
                 end
             end
         end
+
+        for i = 1, total do
+            local subblock = orig.group[i];
+            if (not subblock.item.sniped) then
+                left = left + 1;
+            end 
+        end
+
+        return orig.sniped and left == 0; 
     end
 
-    for i = 1, total do
-        local subblock = orig.group[i];
-        if (not subblock.item.sniped) then
-            left = left + 1;
-        end 
-    end
-
-    return orig.sniped and left == 0; 
+    return false;
 end
 
 function AnsSnipeAuctionList:Click(item, button, down)
@@ -96,11 +102,14 @@ function AnsSnipeAuctionList:Click(item, button, down)
         --buy it instantly
 
         local block = self.items[id];
-        if (self:Purchase(block)) then
-            table.remove(self.items, id);
+        if (block) then
+            if (self:Purchase(block)) then
+                table.remove(self.items, id);
+            end
         end
 
         self.buying = false;
+        clickCount = 0;
     end
 
     self:Refresh();
@@ -120,86 +129,90 @@ function AnsSnipeAuctionList:UpdateRow(dataOffset, line)
     lineEntry:SetID(dataOffset);
 
     if(dataOffset <= #self.items) then
-        local auction = self.items[dataOffset].item;
-        local name = auction.name;
-        local ppu = auction.ppu;
-        local price = auction.buyoutPrice;
-        local count = auction.count;
-        local total = #auction.group;
-        local percent = auction.percent;
-        local owner = auction.owner;
-        local ai;
+        if (self.items[dataOffset]) then
+            local auction = self.items[dataOffset].item;
+            local name = auction.name;
+            local ppu = auction.ppu;
+            local price = auction.buyoutPrice;
+            local count = auction.count;
+            local total = #auction.group;
+            local percent = auction.percent;
+            local owner = auction.owner;
+            local ai;
 
-        local realTotal = 0;
+            local realTotal = 0;
 
-        if (not auction.sniped) then
-            realTotal = realTotal + 1;
-        end
-
-        for ai = 1, total do
-            local suba = auction.group[ai];
-            if (not suba.item.sniped) then
+            if (not auction.sniped) then
                 realTotal = realTotal + 1;
             end
-        end
 
-        local lineEntry_itemPrice = _G[lineEntry:GetName().."PerItemPrice"];
-        local lineEntry_itemText = _G[lineEntry:GetName().."PerItemText"];
-        local lineEntry_itemName = _G[lineEntry:GetName().."NameText"]; 
-        local lineEntry_itemStack = _G[lineEntry:GetName().."StackPrice"];
-        local lineEntry_itemPercent = _G[lineEntry:GetName().."Percent"];
-        local lineEntry_itemIcon = _G[lineEntry:GetName().."ItemIcon"];
-        local lineEntry_itemLevel = _G[lineEntry:GetName().."ILevel"];
+            for ai = 1, total do
+                local suba = auction.group[ai];
+                if (not suba.item.sniped) then
+                    realTotal = realTotal + 1;
+                end
+            end
 
-        lineEntry_itemText:SetText("");
-        lineEntry_itemName:SetText("");
-        lineEntry_itemStack:SetText("");
-        lineEntry_itemPercent:SetText("");
+            local lineEntry_itemPrice = _G[lineEntry:GetName().."PerItemPrice"];
+            local lineEntry_itemText = _G[lineEntry:GetName().."PerItemText"];
+            local lineEntry_itemName = _G[lineEntry:GetName().."NameText"]; 
+            local lineEntry_itemStack = _G[lineEntry:GetName().."StackPrice"];
+            local lineEntry_itemPercent = _G[lineEntry:GetName().."Percent"];
+            local lineEntry_itemIcon = _G[lineEntry:GetName().."ItemIcon"];
+            local lineEntry_itemLevel = _G[lineEntry:GetName().."ILevel"];
 
-        lineEntry_itemLevel:SetText(auction.iLevel);
+            lineEntry_itemText:SetText("");
+            lineEntry_itemName:SetText("");
+            lineEntry_itemStack:SetText("");
+            lineEntry_itemPercent:SetText("");
 
-        if (price == 0) then
-            lineEntry_itemPrice:Hide();
-            lineEntry_itemText:Show();
-            lineEntry_itemText:SetText("no buyout price");
+            lineEntry_itemLevel:SetText(auction.iLevel);
+
+            if (price == 0) then
+                lineEntry_itemPrice:Hide();
+                lineEntry_itemText:Show();
+                lineEntry_itemText:SetText("no buyout price");
+            else
+                lineEntry_itemPrice:Show();
+                MoneyFrame_Update(lineEntry:GetName().."PerItemPrice", ppu);
+                lineEntry_itemText:Hide();
+            end
+
+            lineEntry_itemStack:SetText(AnsUtils:PriceToString(price));
+            lineEntry_itemStack:SetTextColor(0.6,0.6,0.6);
+
+            lineEntry_itemPercent:SetText(percent.."%");
+
+            local color = ITEM_QUALITY_COLORS[auction.quality];
+            lineEntry_itemName:SetText("("..count..") x ("..realTotal..") "..color.hex..name);
+
+            if (auction.texture ~= nil) then
+                lineEntry_itemIcon:SetTexture(auction.texture);
+                lineEntry_itemIcon:Show();
+            else
+                lineEntry_itemIcon:Hide();
+            end
+
+            if (percent >= 100) then
+                lineEntry_itemPercent:SetTextColor(1,0,0);
+            elseif (percent >= 75) then
+                lineEntry_itemPercent:SetTextColor(1,1,1);
+            elseif (percent >= 50) then
+                lineEntry_itemPercent:SetTextColor(0,1,0);
+            else
+                lineEntry_itemPercent:SetTextColor(0,0.5,1);
+            end
+
+            if (dataOffset == self.selectedEntry) then
+                lineEntry:SetButtonState("PUSHED", true);
+            else
+                lineEntry:SetButtonState("NORMAL", false);
+            end
+
+            lineEntry:Show();
         else
-            lineEntry_itemPrice:Show();
-            MoneyFrame_Update(lineEntry:GetName().."PerItemPrice", ppu);
-            lineEntry_itemText:Hide();
+            lineEntry:Hide();
         end
-
-        lineEntry_itemStack:SetText(AnsUtils:PriceToString(price));
-        lineEntry_itemStack:SetTextColor(0.6,0.6,0.6);
-
-        lineEntry_itemPercent:SetText(percent.."%");
-
-        local color = ITEM_QUALITY_COLORS[auction.quality];
-        lineEntry_itemName:SetText("("..count..") x ("..realTotal..") "..color.hex..name);
-
-        if (auction.texture ~= nil) then
-            lineEntry_itemIcon:SetTexture(auction.texture);
-            lineEntry_itemIcon:Show();
-        else
-            lineEntry_itemIcon:Hide();
-        end
-
-        if (percent >= 100) then
-            lineEntry_itemPercent:SetTextColor(1,0,0);
-        elseif (percent >= 75) then
-            lineEntry_itemPercent:SetTextColor(1,1,1);
-        elseif (percent >= 50) then
-            lineEntry_itemPercent:SetTextColor(0,1,0);
-        else
-            lineEntry_itemPercent:SetTextColor(0,0.5,1);
-        end
-
-        if (dataOffset == self.selectedEntry) then
-            lineEntry:SetButtonState("PUSHED", true);
-        else
-            lineEntry:SetButtonState("NORMAL", false);
-        end
-
-        lineEntry:Show();
     else
         lineEntry:Hide();
     end

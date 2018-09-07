@@ -9,6 +9,51 @@ AnsQuerySort = {
     ILEVEL = 5
 };
 
+local AnsRecycler = { blocks = {}, auctions = {}};
+AnsRecycler.__index = AnsRecycler;
+
+function AnsRecycler:RecycleAuction(auction)
+    local group = auction.group;
+    local gtotal = #group;
+
+    local i;
+    for i = 1, gtotal do
+        local r = tremove(group);
+        if (r) then
+            self:RecycleBlock(r);
+        end
+    end
+    tinsert(self.auctions, auction);
+end
+
+function AnsRecycler:RecycleBlock(block)
+    if (block) then
+        local item = block.item;
+        tinsert(self.blocks, block);
+
+        if (item) then
+            self:RecycleAuction(item);
+        end
+    end
+end
+
+function AnsRecycler:GetBlock() 
+
+    if (#self.blocks > 0) then
+        return tremove(self.blocks);
+    end
+    
+    return {};
+end
+
+function AnsRecycler:GetAuction()
+    if (#self.auctions > 0) then
+        return tremove(self.auctions);
+    end
+
+    return {group = {}};
+end
+
 local lastFoundHash = "";
 
 local function Truncate(str)
@@ -19,6 +64,17 @@ local function Truncate(str)
     return str:sub(1, 62);
 end
 
+function AnsQuery:ClearLastHash() 
+    lastFoundHash = "";
+end
+
+function AnsQuery:Reset()
+    lastFoundHash = "";
+    self.index = 0;
+    self.auctions = {};
+    self.filters = {};
+end
+
 function AnsQuery:New(search)
     local query = {};
     setmetatable(query, AnsQuery);
@@ -27,51 +83,62 @@ function AnsQuery:New(search)
     query.index = 0;
     query.auctions = {};
     query.count = 0;
-    query.analyzed = {};
     query.previous = nil;
     query.total = -1;
-
     query.filters = {};
 
-    query.groups = {};
+    query.minILevel = 0;
+    query.maxBuyout = 0;
+    query.quality = 1;
+    query.minStackSize = 0;
+    query.maxPercent = 100;
 
     return query;
 end
 
-function AnsQuery:AssignFilters(ilevel, buyout, quality, size)
+function AnsQuery:AssignFilters(ilevel, buyout, quality, size, maxPercent)
     self.filters = {};
+
+    self.minILevel = ilevel;
+    self.maxBuyout = buyout;
+    self.quality = quality;
+    self.minStackSize = size;
+    self.maxPercent = maxPercent;
+
     local count = 0;
     local i;
     for i = 1, #AnsFilterSelected do
         if (AnsFilterSelected[i]) then
+            local f = AnsFilterList[i]:Clone();
+
             count = count + 1;
-            local filter = AnsFilterList[i];
-            if (filter.useGlobalMinILevel) then
-                filter.minILevel = ilevel;
+            f.maxPercent = maxPercent or 100;
+            if (f.useGlobalMinILevel) then
+                f.minILevel = ilevel;
             else
-                filter.minILevel = 0;
+                f.minILevel = 0;
             end
-            if (filter.useGlobalMaxBuyout) then
-                filter.maxBuyout = buyout;
+            if (f.useGlobalMaxBuyout) then
+                f.maxBuyout = buyout;
             else
-                filter.maxBuyout = 0;
+                f.maxBuyout = 0;
             end
-            if (filter.useGlobalMinQuality) then
-                filter.minQuality = quality;
+            if (f.useGlobalMinQuality) then
+                f.minQuality = quality;
             else
-                filter.minQuality = 1;
+                f.minQuality = 1;
             end
-            if (filter.useGlobalMinStack) then
-                filter.minSize = size;
+            if (f.useGlobalMinStack) then
+                f.minSize = size;
             else
-                filter.minSize = 0;
+                f.minSize = 0;
             end
-            local fn = filter.priceFn;
+            local fn = f.priceFn;
 
             if (not fn or fn:len() == 0) then
-                filter.priceFn = ANS_GLOBAL_SETTINGS.pricingFn;
+                f.priceFn = ANS_GLOBAL_SETTINGS.pricingFn;
             end
-            self.filters[count] = filter;
+            self.filters[count] = f;
         end
     end
 end
@@ -102,12 +169,7 @@ function AnsQuery:Search()
 end
 
 function AnsQuery:Next() 
-    local query = AnsQuery:New(self.search);
-    query.index = self.index + 1;
-    query.previous = self;
-    query.total = self.total;
-    query.filters = self.filters;
-    return query;
+    self.index = self.index + 1;
 end
 
 local function Sort_By_Name(x,y,asc)
@@ -181,24 +243,48 @@ function AnsQuery:Items(sort,asc)
     return self.auctions;
 end
 
+function AnsQuery:IsValid(item) 
+    if (item.iLevel < self.minILevel) then
+        return false;
+    end
+    if (item.ppu > self.maxBuyout and self.maxBuyout > 0) then
+        return false;
+    end
+    if (item.percent > self.maxPercent) then
+        return false;
+    end
+    if (item.count < self.minStackSize) then
+        return false;
+    end
+    if (item.quality < self.quality) then
+        return false;
+    end
+
+    return true;
+end
+
 ----------------------
 -- Capture page info
 ----------------------
 function AnsQuery:Capture()
-    self.auctions = {};
-    self.groups = {};
     self.count, self.total = GetNumAuctionItems("list");
 
     local x;
-    local analyzed = self.analyzed;
-    local count = 0;
     local groupLookup = {};
     local doGroup = ANS_GLOBAL_SETTINGS.groupAuctions;
-
     local foundHash = "";
+    local auction = nil;
+    local lastTotal = #self.auctions;
+
+    for x = 1, lastTotal do
+        local r = tremove(self.auctions);
+        if (r) then
+            AnsRecycler:RecycleBlock(r);
+        end
+    end
 
     for x = 1, self.count do
-        local auction = {};
+        auction = AnsRecycler:GetAuction();
 
         auction.name,
         auction.texture,
@@ -219,7 +305,6 @@ function AnsQuery:Capture()
         auction.id = GetAuctionItemInfo("list", x);
         auction.link = GetAuctionItemLink("list", x);
         auction.time = GetAuctionItemTimeLeft("list", x);
-        auction.group = {};
         auction.sniped = false;
         auction.percent = 1000;
 
@@ -242,14 +327,10 @@ function AnsQuery:Capture()
 
             local hash = ItemHash(auction);
 
-            --- it is actually more efficient to analyze while capturing
-            if (not analyzed[hash]) then
-                local avg = AnsPriceSources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
-                if (not avg or avg <= 0) then avg = 1000; end;
-                analyzed[hash] = avg;
-            end
+            local avg = AnsPriceSources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
+            if (not avg or avg <= 0) then avg = 1; end;
 
-            auction.percent = math.floor(ppu / analyzed[hash] * 100);
+            auction.percent = math.floor(ppu / avg * 100);
 
             local filterAccepted = false;
             local k;
@@ -258,15 +339,16 @@ function AnsQuery:Capture()
                 local allowed = AnsPriceSources:Query(ANS_GLOBAL_SETTINGS.pricingFn, auction);
 
                 if (type(allowed) == "boolean") then
-                    if (allowed) then
+                    if (allowed and self:IsValid(auction)) then
                         filterAccepted = true;
                     end
                 else
-                    filterAccepted = true;
+                    filterAccepted = self:IsValid(auction);
                 end
             end
 
-            for k = 1, #self.filters do
+            local tf = #self.filters;
+            for k = 1, tf do
                 if (self.filters[k]:IsValid(auction)) then
                     filterAccepted = true;
                     break;
@@ -274,7 +356,7 @@ function AnsQuery:Capture()
             end
 
             if (filterAccepted) then
-                local block = {};
+                local block = AnsRecycler:GetBlock();
 
                 block.item = auction;
                 block.page = self.index;
@@ -284,17 +366,14 @@ function AnsQuery:Capture()
                     local idx = groupLookup[hash];
                     if  (idx and idx > 0) then
                         local agroup = self.auctions[idx].item;
-                        local t = #agroup.group + 1;
-                        agroup.group[t] = block;
+                        tinsert(agroup, block);
                     else
                         foundHash = foundHash..hash;
-                        count = count + 1;
-                        self.auctions[count] = block;
-                        groupLookup[hash] = count;
+                        tinsert(self.auctions, block);
+                        groupLookup[hash] = #self.auctions;
                     end
                 else 
-                    count = count + 1;
-                    self.auctions[count] = block;
+                    tinsert(self.auctions, block);
                 end
             end
         end
@@ -304,23 +383,17 @@ function AnsQuery:Capture()
         PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "SFX");
     end
     lastFoundHash = foundHash;
-
-    self.analyzed = analyzed;
 end
 
 function AnsQuery:IsLastPage()
+    self.count, self.total = GetNumAuctionItems("list");
     return (((self.index + 1) * NUM_AUCTION_ITEMS_PER_PAGE) >= self.total) or (self.count >= self.total);
 end
 
 function AnsQuery:LastPage() 
     local last = math.max(math.ceil(self.total / NUM_AUCTION_ITEMS_PER_PAGE) - 1, 0);
     if(self:IsLastPage() and self.index == last) then
-        return self;
-    end
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-    local query = AnsQuery:New(self.search);
-    query.total = self.total;
-    query.index = last;
-    query.filters = self.filters;
-    return query;
+        return;
+    end                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
+    self.index = last;
 end

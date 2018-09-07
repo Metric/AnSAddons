@@ -5,6 +5,23 @@
 AnsUtils = {};
 AnsUtils.__index = AnsUtils;
 
+local OP_SIM_HAND = {
+    lte = "<=",
+    gte = ">=",
+    neq = "~=",
+    uncommon = "2"
+};
+
+local OP_SHORT_HAND = {
+    lt = "<",
+    gt = ">",
+    eq = "==",
+    common = "1",
+    rare = "3",
+    epic = "4",
+    legendary = "5"
+};
+
 function AnsUtils:GSC(val) 
     local rv = math.floor(val);
 
@@ -104,4 +121,71 @@ function AnsUtils:GetAddonVersion(name)
     end
 
     return "0","0";
+end
+
+function AnsUtils:ReplaceOpShortHand(str)
+    for k, v in pairs(OP_SIM_HAND) do
+        str = gsub(str, k, v);
+    end
+    for k, v in pairs(OP_SHORT_HAND) do
+        str = gsub(str, k, v);
+    end
+    return str;
+end
+
+function AnsUtils:ReplaceMoneyShorthand(str)
+    local s, v = self:MoneyStringToCopper(str);
+
+    while (s and v) do
+        str = gsub(str, s, v);
+        s,v = self:MoneyStringToCopper(str);
+    end
+    return str;
+end
+
+function AnsUtils:MoneyStringToCopper(str)
+    local g, s, c = string.match(str, "(%d+)g(%d+)s(%d+)c");
+    local value = 0;
+
+    if (g and s and c) then
+        return g.."g"..s.."s"..c.."c", tonumber(g) * 10000 + tonumber(s) * 100 + tonumber(c);
+    end
+
+    g, s = string.match(str, "(%d+)g(%d+)s");
+
+    if (g and s) then
+        return g.."g"..s.."s", tonumber(g) * 10000 + tonumber(s) * 100;
+    end
+
+    g,c = string.match(str, "(%d+)g(%d+)c");
+
+    if (g and c) then
+        return g.."g"..c.."c", tonumber(g) * 10000 + tonumber(c);
+    end
+
+    s, c = string.match(str, "(%d+)s(%d+)c");
+
+    if (s and c) then
+        return s.."s"..c.."c", tonumber(s) * 100 + tonumber(c);
+    end
+
+    c = string.match(str, "(%d+)c");
+
+    if (c) then
+        return c.."c", tonumber(c);
+    end
+
+    s = string.match(str, "(%d+)s");
+
+    if (s) then
+        return s.."s", tonumber(s) * 100;
+    end
+
+    g = string.match(str, "(%d+)g");
+
+    if (g) then
+        return g.."g", tonumber(g) * 10000;
+    end
+
+    return nil, nil;
 end

@@ -193,6 +193,29 @@ filterEnchanting.subfilters[1] = filterEnchantingBFA;
 filterEnchanting.subfilters[2] = filterEnchantingLegion;
 filterEnchanting.subfilters[3] = filterEnchantingBasic;
 
+local filterFish = AnsFilter:New("Fish");
+filterFish.subfilters = {};
+filterFish.useGlobalMinILevel = false;
+
+local filterFishBasic = AnsFilter:New("Pre-Legion");
+filterFishBasic:ParseTSM(AnsFish.Basic);
+filterFishBasic.isSub = true;
+filterFishBasic.useGlobalMinILevel = false;
+
+local filterFishLegion = AnsFilter:New("Legion");
+filterFishLegion:ParseTSM(AnsFish.Legion);
+filterFishLegion.isSub = true;
+filterFishLegion.useGlobalMinILevel = false;
+
+local filterFishBFA = AnsFilter:New("BFA");
+filterFishBFA:ParseTSM(AnsFish.BFA);
+filterFishBFA.isSub = true;
+filterFishBFA.useGlobalMinILevel = false;
+
+filterFish.subfilters[1] = filterFishBFA;
+filterFish.subfilters[2] = filterFishLegion;
+filterFish.subfilters[3] = filterFishBasic;
+
 local filterPets = AnsFilter:New("Pets");
 filterPets.subfilters = {};
 filterPets.useGlobalMinILevel = false;
@@ -302,6 +325,18 @@ ftotal = #filterLeather.subfilters;
 for i = 1, ftotal do
     allFilterTotal = allFilterTotal + 1;
     AnsFilterList[allFilterTotal] = filterLeather.subfilters[i];
+    AnsFilterSelected[allFilterTotal] = false;
+end
+
+allFilterTotal = allFilterTotal + 1;
+AnsFilterList[allFilterTotal] = filterFish;
+AnsFilterSelected[allFilterTotal] = false;
+
+ftotal = #filterFish.subfilters;
+
+for i = 1, ftotal do
+    allFilterTotal = allFilterTotal + 1;
+    AnsFilterList[allFilterTotal] = filterFish.subfilters[i];
     AnsFilterSelected[allFilterTotal] = false;
 end
 

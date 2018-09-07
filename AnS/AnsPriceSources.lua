@@ -4,8 +4,41 @@ AnsPriceSources.__index = AnsPriceSources;
 local AnsPriceSource = {};
 AnsPriceSource.__index = AnsPriceSource;
 
-local ValuesCaches = {};
 local NameStringCache = "";
+local SourceStringCache = "";
+
+local OpCodes = {
+    percent = 0,
+    ppu = 0,
+    stacksize = 0,
+    buyout = 0,
+    ilevel = 0,
+    quality = 1
+};
+local OperationCache = {};
+
+local ParseSourceTemplate = "local %s = ops.%s or 0; ";
+
+local ParseTemplate = [[
+    return function(ops)
+        local avg, first, round,
+            min, max, mod, 
+            abs, ceil, floor, random, log, 
+            log10, exp, sqrt = AnsPriceSources.avg, AnsPriceSources.first, AnsPriceSources.round, math.min, math.max, math.mod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
+
+
+        local percent = ops.percent;
+        local ppu = ops.ppu;
+        local stacksize = ops.stacksize;
+        local buyout = ops.buyout;
+        local ilevel = ops.ilevel;
+        local quality = ops.quality;
+
+        %s
+
+        return %s;
+    end
+]];
 
 function AnsPriceSource:New(name,fn,key)
     local s = {};
@@ -14,6 +47,12 @@ function AnsPriceSource:New(name,fn,key)
     s.fn = fn;
     s.key = key;
     return s;
+end
+
+function AnsPriceSources:ClearCache()
+    NameStringCache = "";
+    SourceStringCache = "";
+    wipe(OperationCache);
 end
 
 function AnsPriceSources:Register(name, fn, key)
@@ -45,7 +84,59 @@ function AnsPriceSources:GetNamesAsString()
     return str;
 end
 
-function AnsPriceSources:GetValues(itemId)
+function AnsPriceSources:GetVarsAsString()
+    local str = "";
+    local i;
+    local total = #self.sources;
+
+    if (SourceStringCache:len() > 0) then
+        return SourceStringCache;
+    end
+
+    for i = 1, total do
+        local s = self.sources[i];
+        if (s.fn ~= nil) then
+            local name = s.name:lower();
+            local nstr = string.format(ParseSourceTemplate, name, name);
+            str = str..nstr;
+        end
+    end
+
+    SourceStringCache = str;
+
+    return str;
+end
+
+function AnsPriceSources:IsValidQuery(q)
+    -- check for matching ()
+
+    local sindex = 1;
+    sindex = string.find(q, "%s?%(%s?", sindex);
+
+    -- since no start (  was found
+    -- check for straggling )
+    if (not sindex) then
+        sindex = string.find(q, "%s?%)%s?", 1);
+
+        if (sindex) then
+            return false;
+        end
+    end
+
+    while (sindex) do
+        sindex = sindex + 1;
+        sindex = string.find(q, "%s?%)%s?", sindex);
+        if (not sindex) then
+            return false;
+        end
+        sindex = sindex + 1;
+        sindex = string.find(q, "%s?%(%s?", sindex);
+    end
+
+    return true;
+end
+
+function AnsPriceSources:GetValues(itemId, ops)
     local values = "";
     local sep = "";
     local i;
@@ -56,17 +147,9 @@ function AnsPriceSources:GetValues(itemId)
         if (s.fn ~= nil) then
             local _, r = pcall(s.fn, itemId, s.key);
             local v = r or 0;
-            values = values..sep..v;
-            sep = ",";
+            ops[s.name:lower()] = v;
         end
     end
-
-    -- cache values for faster lookup for the next time
-    -- as the pricing data will not change
-    -- unless you reload ui / logout or login
-    ValuesCaches[itemId] = values;
-
-    return values;
 end
 
 AnsPriceSources.round = function(n)
@@ -112,8 +195,14 @@ function AnsPriceSources:Query(q, item)
     local percent = item.percent;
     local ppu = item.ppu;
 
-    local names = self:GetNamesAsString();
+    OpCodes.buyout = buyout;
+    OpCodes.stacksize = stackSize;
+    OpCodes.quality = quality;
+    OpCodes.percent = percent;
+    OpCodes.ppu = ppu;
+    OpCodes.ilevel = ilvl;
 
+    local names = self:GetNamesAsString();
     if (not names or names:len() == 0 ) then
         return nil;
     end
@@ -122,19 +211,49 @@ function AnsPriceSources:Query(q, item)
         return nil;
     end
 
-    if (not ValuesCaches[itemId]) then
-        values = self:GetValues(itemId);
+    self:GetValues(itemId, OpCodes);
+
+    q = AnsUtils:ReplaceOpShortHand(q);
+    q = AnsUtils:ReplaceMoneyShorthand(q);
+    
+    local _, fn = false, nil;
+    if (not OperationCache[q]) then
+        if (not self:IsValidQuery(q)) then
+            print("AnS Invalid Filter / Pricing String: "..q);
+            return nil;
+        end
+
+        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), q);
+        fn, error = loadstring(pstr);
+
+        if(not fn and error) then
+            print("AnS Filter / Pricing String Error: "..error);
+            return nil;
+        end
+
+        _, fn = pcall(fn);
+
+        if (not _) then
+            print("AnS Invalid Filter / Pricing String: "..q);
+            return nil;
+        end
+
+        OperationCache[q] = fn;
     else
-        values = ValuesCaches[itemId];
+        fn = OperationCache[q];
     end
 
-    if (not values or values:len() == 0) then
+    if (not fn) then
         return nil;
     end
 
-    local qstr = "local percent,ilevel,quality,stacksize,buyout,ppu = "..percent..","..ilvl..","..quality..","..stackSize..","..buyout..","..ppu..";";
-          qstr = qstr.."local avg,first,min,max,mod,abs,ceil,floor,round,random,log,log10,exp,sqrt = AnsPriceSources.avg,AnsPriceSources.first,math.min,math.max,math.mod,math.abs,math.ceil,math.floor,AnsPriceSources.round,math.random,math.log,math.log10,math.exp,math.sqrt;";
-          qstr = qstr.."local "..names.." = "..values.."; return "..q..";";
-    local r = loadstring(qstr)();
+    local r = nil;
+    _, r = pcall(fn, OpCodes);
+
+    if (not _) then
+        print("AnS Invalid Filter / Pricing String: "..q);
+        return nil;
+    end
+
     return r;
 end

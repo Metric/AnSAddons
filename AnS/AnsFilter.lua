@@ -20,11 +20,44 @@ function AnsFilter:New(name)
     f.isSub = false;
     f.subfilters = nil;
     f.priceFn = "";
+    f.maxPercent = 100;
     f.useGlobalMaxBuyout = true;
     f.useGlobalMinStack = true;
     f.useGlobalMinQuality = true;
     f.useGlobalMinILevel = true;
 
+    return f;
+end
+
+function AnsFilter:Clone()
+    local f = AnsFilter:New(self.name);
+    f.minILevel = self.minILevel;
+    f.minQuality = self.minQuality;
+    f.minPetLevel = self.minPetLevel;
+    f.maxBuyout = self.maxBuyout;
+    f.ids = self.ids;
+    f.pets = self.pets;
+    f.types = self.types;
+    f.minSize = self.minSize;
+    f.isSub = self.isSub;
+
+    if (self.subfilters) then
+        f.subfilters = {};
+
+        for i, v in ipairs(self.subfilters) do
+            f.subfilters[i] = v:Clone();
+        end
+    else
+        f.subfilters = nil;
+    end
+
+    f.priceFn = self.priceFn;
+    f.maxPercent = self.maxPercent;
+    f.useGlobalMaxBuyout = self.useGlobalMaxBuyout;
+    f.useGlobalMinILevel = self.useGlobalMinILevel;
+    f.useGlobalMinQuality = self.useGlobalMinQuality;
+    f.useGlobalMinStack = self.useGlobalMinStack;
+    
     return f;
 end
 
@@ -144,7 +177,8 @@ end
 function AnsFilter:IsValid(item)
     if (self.subfilters ~= nil) then
         local fi;
-        for fi = 1, #self.subfilters do
+        local tsubs = #self.subfilters;
+        for fi = 1, tsubs do
             local filter = self.subfilters[fi];
             if (filter:IsValid(item)) then
                 return true;
@@ -168,30 +202,45 @@ function AnsFilter:IsValid(item)
     if (item.quality < self.minQuality) then
         return false;
     end
-    if (item.buyoutPrice >= self.maxBuyout and self.maxBuyout > 0) then
+    if (item.ppu >= self.maxBuyout and self.maxBuyout > 0) then
         return false;
     end
     if (item.count < self.minSize) then
         return false;
     end
-
-    if (#self.ids > 0) then
-        if (tContains(self.ids, item.id)) then
-            return true;
-        end 
+    if (item.percent > self.maxPercent) then
+        return false;
     end
 
-    if (#self.types > 0) then
-        if (tContains(self.types, item.type:lower())) then
-            return true;
+    local tids = #self.ids;
+    if (tids > 0) then
+        local i;
+        for i = 1, tids do
+            if (self.ids[i] == item.id) then
+                return true;
+            end
         end
     end
 
-    if (#self.pets > 0) then
+    local ttypes = #self.types;
+    if (ttypes > 0) then
+        local i;
+        for i = 1, ttypes do
+            if (self.types[i] == item.type:lower()) then
+                return true;
+            end
+        end
+    end
+
+    local tpets = #self.pets;
+    if (tpets > 0) then
         if (AnsUtils:IsBattlePetLink(item.link)) then
             local pet = AnsUtils:ParseBattlePetLink(item.link);
-            if (tContains(self.pets, pet.speciesID)) then
-                return true;
+            local i;
+            for i = 1, tpets do
+                if (self.pets[i] == pet.speciesID) then
+                    return true;
+                end
             end
         end
     end
