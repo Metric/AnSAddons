@@ -83,9 +83,17 @@ Features
 
  * Take it to the next level with custom filters, pricing strings, and filter strings
 
-How to Buy
+How to Buy & Other Controls
 ==============
 Double click an auction list item, and ba da bing, ba da boom. It will purchase it if it can.
+
+Or set a key binding under ESC -> Bindings -> AnS to buy selected auctions via another button.
+
+(For Advanced Users) There is now a keybinding option to buy the first listed auction item.
+
+Shift + Left Click allows you to temporarily blacklist a listing until the AH window is closed.
+
+Selecting armor, weapons, or pets, will now display the dress up window with that item.
 
 Filter and Percent/Pricing Strings
 =========================

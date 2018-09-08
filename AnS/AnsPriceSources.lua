@@ -13,8 +13,27 @@ local OpCodes = {
     stacksize = 0,
     buyout = 0,
     ilevel = 0,
-    quality = 1
+    quality = 1,
+    dbmarket = 0,
+    dbminbuyout = 0, 
+    dbhistorical = 0, 
+    dbregionmarketavg = 0, 
+    dbregionminbuyoutavg = 0, 
+    dbregionhistorical = 0, 
+    dbregionsaleavg = 0, 
+    dbregionsalerate = 0, 
+    dbregionsoldperday = 0,
+    tujmarket = 0, 
+    tujrecent = 0, 
+    tujglobalmedian = 0, 
+    tujglobalmean = 0, 
+    tujage = 0, 
+    tujdays = 0, 
+    tujstddev = 0, 
+    tujglobalstddev = 0,
+    atrvalue = 0
 };
+
 local OperationCache = {};
 
 local ParseSourceTemplate = "local %s = ops.%s or 0; ";
@@ -213,11 +232,13 @@ function AnsPriceSources:Query(q, item)
 
     self:GetValues(itemId, OpCodes);
 
-    q = AnsUtils:ReplaceOpShortHand(q);
-    q = AnsUtils:ReplaceMoneyShorthand(q);
-    
     local _, fn = false, nil;
+    local oq = q;
+
     if (not OperationCache[q]) then
+        q = AnsUtils:ReplaceOpShortHand(q);
+        q = AnsUtils:ReplaceMoneyShorthand(q);    
+
         if (not self:IsValidQuery(q)) then
             print("AnS Invalid Filter / Pricing String: "..q);
             return nil;
@@ -238,9 +259,9 @@ function AnsPriceSources:Query(q, item)
             return nil;
         end
 
-        OperationCache[q] = fn;
+        OperationCache[oq] = fn;
     else
-        fn = OperationCache[q];
+        fn = OperationCache[oq];
     end
 
     if (not fn) then

@@ -16,7 +16,7 @@
 
         <Frames>
           <Frame name="$parentPerItemPrice" inherits="SmallMoneyFrameTemplate">
-            <Anchors><Anchor point="RIGHT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+            <Anchors><Anchor point="RIGHT"><Offset><AbsDimension x="-5" y="0"/></Offset></Anchor></Anchors>
             <Scripts>
               <OnLoad>
                 SmallMoneyFrame_OnLoad(self);
@@ -29,7 +29,7 @@
 
       <Frame>
         <Size><AbsDimension x="16" y="16" /></Size>
-        <Anchors><Anchor point="LEFT" relativeTo="$parentPerItemPrice" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentPerItemPrice" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0" /></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="ARTWORK">
             <Texture name="$parentItemIcon">
@@ -41,12 +41,12 @@
       </Frame>
 
       <Frame>
-        <Size><AbsDimension x="200" y="16" /></Size>
-        <Anchors><Anchor point="LEFT" relativeTo="$parentItemIcon" relativePoint="RIGHT"><Offset><AbsDimension x="5" y="0"/></Offset></Anchor></Anchors>
+        <Size><AbsDimension x="210" y="16" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentItemIcon" relativePoint="RIGHT"><Offset><AbsDimension x="2" y="0"/></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="BACKGROUND">
             <FontString name="$parentNameText" inherits="GameFontHighlightSmall" justifyH="LEFT">
-              <Size><AbsDimension x="200" y="16"/></Size>;
+              <Size><AbsDimension x="210" y="16"/></Size>;
             </FontString>
           </Layer>
         </Layers>

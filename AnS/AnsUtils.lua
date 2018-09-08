@@ -5,6 +5,10 @@
 AnsUtils = {};
 AnsUtils.__index = AnsUtils;
 
+local TempTable = {};
+local BattlePetTempTable = {};
+local TSMID_CACHE = {};
+
 local OP_SIM_HAND = {
     lte = "<=",
     gte = ">=",
@@ -69,17 +73,18 @@ end
 function AnsUtils:ParseBattlePetLink(link)
     local _, id, level, quality, health, power, speed, other = strsplit(":", link);
     local name, icon, type = C_PetJournal.GetPetInfoBySpeciesID(tonumber(id));
-    return {
-        speciesID = tonumber(id), 
-        name = name,
-        level = tonumber(level), 
-        breedQuality = tonumber(quality), 
-        petType = type,
-        maxHealth = tonumber(health), 
-        power = tonumber(power), 
-        speed = tonumber(speed),
-        customName = nil
-    };
+    
+    BattlePetTempTable.speciesID = tonumber(id);
+    BattlePetTempTable.name = name;
+    BattlePetTempTable.level = tonumber(level);
+    BattlePetTempTable.breedQuality = tonumber(quality);
+    BattlePetTempTable.petType = type;
+    BattlePetTempTable.maxHealth = tonumber(health);
+    BattlePetTempTable.power = tonumber(power);
+    BattlePetTempTable.speed = tonumber(speed);
+    BattlePetTempTable.customName = nil;
+
+    return BattlePetTempTable;
 end
 
 function AnsUtils:ShowBattlePetTip(link)
@@ -99,17 +104,46 @@ function AnsUtils:IsAddonEnabled(name)
     return GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, GetAddOnInfo(name)) and true or false;
 end
 
+function AnsUtils:ClearTSMIDCache()
+    wipe(TSMID_CACHE);
+end
+
 function AnsUtils:GetTSMID(link)
+    if (TSMID_CACHE[link]) then
+        return TSMID_CACHE[link];
+    end
+
     if (AnsUtils:IsBattlePetLink(link)) then
         local pet = AnsUtils:ParseBattlePetLink(link);
-        return "p:"..pet.speciesID;
+        local fresult = "p:"..pet.speciesID;
+        TSMID_CACHE[link] = fresult;
+        return fresult;
     else
         if (type(link) == "number") then
             return "i:"..link;
         end
 
-        local _, id = strsplit(":", link);
-        return "i:"..id;
+        local tbl = { strsplit(":", link) };
+        local bonusCount = tbl[14];
+        local id = tbl[2];
+        local extra = "";
+
+        if (bonusCount) then
+            bonusCount = tonumber(bonusCount);
+
+            if(bonusCount and bonusCount > 0) then
+                local i;
+                local sep = ":";
+                extra = "::"..bonusCount;
+                for i = 1, bonusCount do
+                    extra = extra..sep..tbl[14+i];
+                end
+            end
+        end
+
+        local fresult = "i:"..id..extra;
+        TSMID_CACHE[link] = fresult;
+        return fresult;
     end
 end
 

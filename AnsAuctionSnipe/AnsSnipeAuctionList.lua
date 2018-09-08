@@ -3,6 +3,16 @@ AnsSnipeAuctionList.__index = AnsSnipeAuctionList;
 AnsSnipeAuctionList.selectedEntry = -1;
 AnsSnipeAuctionList.items = {};
 AnsSnipeAuctionList.buying = false;
+AnsSnipeAuctionList.isWaitingForData = false;
+AnsSnipeAuctionList.currentPage = 0;
+AnsSnipeAuctionList.queryRef = nil;
+AnsSnipeAuctionList.queryDelay = 0;
+
+ANS_WAITING_FOR_RESULTS = "ANS_WAITING";
+ANS_QUERY_PAGE = "ANS_PAGE";
+ANS_QUERY_OBJECT = "ANS_QUERY";
+
+local stepTime = 1.0/120.0;
 
 local clickTime = time();
 local clickCount = 0;
@@ -30,8 +40,16 @@ function AnsSnipeAuctionList:ShowLineTip(item)
     end
 end
 
+function AnsSnipeAuctionList:UpdateDelay()
+    self.queryDelay = self.queryDelay - stepTime;
+    self.queryDelay = math.max(self.queryDelay, 0);
+end
+
 function AnsSnipeAuctionList:Purchase(block)
     if (block) then
+        self.queryDelay = self.queryDelay + 0.5;
+        self.queryDelay = math.min(self.queryDelay, 4);
+
         local orig = block.item;
         local auction = block.item;
         local index = block.index;
@@ -42,6 +60,10 @@ function AnsSnipeAuctionList:Purchase(block)
 
         if (not auction.sniped and total == 0) then
             if (GetMoney() >= auction.buyoutPrice) then
+                if (block.page ~= self.currentPage or self.isWaitingForData) then
+                    return false;
+                end
+
                 auction.sniped = true;
                 PlaceAuctionBid("list", index, auction.buyoutPrice);
                 return true;
@@ -50,6 +72,10 @@ function AnsSnipeAuctionList:Purchase(block)
             end
         elseif (not auction.sniped) then
             if (GetMoney() >= auction.buyoutPrice) then
+                if (block.page ~= self.currentPage or self.isWaitingForData) then
+                    return false;
+                end
+
                 auction.sniped = true;
                 PlaceAuctionBid("list", index, auction.buyoutPrice);
             end
@@ -61,6 +87,10 @@ function AnsSnipeAuctionList:Purchase(block)
 
                 if (not auction.sniped) then
                     if (GetMoney() >= auction.buyoutPrice) then
+                        if (subblock.page ~= self.currentPage or self.isWaitingForData) then
+                            return false;
+                        end
+
                         auction.sniped = true;
                         PlaceAuctionBid("list", index, auction.buyoutPrice);
                         break;
@@ -97,6 +127,30 @@ function AnsSnipeAuctionList:Click(item, button, down)
 
     clickCount = clickCount + 1;
 
+    if (clickCount == 1 and IsShiftKeyDown()) then
+        local block = self.items[id];
+
+        if (block) then
+            if (self.queryRef) then
+                self.queryRef:AddToBlacklist(block.item);
+                AnsRecycler:RecycleBlock(table.remove(self.items, id));
+            end
+        end
+
+        self.selectedEntry = -1;
+        clickCount = 0;
+    end
+
+    if (clickCount == 1) then
+        local block = self.items[id];
+
+        if (block) then
+            if (not DressUpItemLink(block.item.link)) then
+                DressUpBattlePet(GetAuctionItemBattlePetInfo("list", block.index));
+            end
+        end
+    end
+
     if (clickCount == 2) then
         self.buying = true;
         --buy it instantly
@@ -104,7 +158,10 @@ function AnsSnipeAuctionList:Click(item, button, down)
         local block = self.items[id];
         if (block) then
             if (self:Purchase(block)) then
-                table.remove(self.items, id);
+                AnsRecycler:RecycleBlock(table.remove(self.items, id));
+                if (self.selectedEntry == id) then
+                    self.selectedEntry = -1;
+                end
             end
         end
 
@@ -119,6 +176,16 @@ end
 function AnsSnipeAuctionList:HideLineTip()
     GameTooltip:Hide();
     BattlePetTooltip:Hide();
+end
+
+function AnsSnipeAuctionList:SetStatus(status, val)
+    if (status == ANS_WAITING_FOR_RESULTS) then
+        self.isWaitingForData = val;
+    elseif (status == ANS_QUERY_PAGE) then
+        self.currentPage = val;
+    elseif(status == ANS_QUERY_OBJECT) then
+        self.queryRef = val;
+    end
 end
 
 ---
@@ -184,7 +251,7 @@ function AnsSnipeAuctionList:UpdateRow(dataOffset, line)
             lineEntry_itemPercent:SetText(percent.."%");
 
             local color = ITEM_QUALITY_COLORS[auction.quality];
-            lineEntry_itemName:SetText("("..count..") x ("..realTotal..") "..color.hex..name);
+            lineEntry_itemName:SetText(realTotal.." stack of "..count.." "..color.hex..name);
 
             if (auction.texture ~= nil) then
                 lineEntry_itemIcon:SetTexture(auction.texture);
@@ -230,6 +297,8 @@ function AnsSnipeAuctionList:Clear()
                 entry:Hide();
             end
         end
+
+        self:HideLineTip();
     end
 end
 

@@ -14,7 +14,6 @@ function AnsFilter:New(name)
     f.minPetLevel = 0;
     f.maxBuyout = 0;
     f.ids = {};
-    f.pets = {};
     f.types = {};
     f.minSize = 0;
     f.isSub = false;
@@ -72,12 +71,7 @@ function AnsFilter:ExportIds()
     local i;
 
     for i = 1, #self.ids do
-        str = str..sep.."i:"..self.ids[i];
-        sep = ",";
-    end
-
-    for i = 1, #self.pets do
-        str = str..sep.."p:"..self.pets[i];
+        str = str..sep..self.ids[i];
         sep = ",";
     end
 
@@ -148,27 +142,16 @@ function AnsFilter:ParseTSM(str)
     local items = { strsplit(",", str) };
     local i;
 
-    self.ids = {};
-    self.pets = {};
-
-    local pcount = 0;
-    local icount = 0;
+    wipe(self.ids);
 
     for i = 1, #items do
-        local _ , id = strsplit(":", items[i]);
+        local _, id  = strsplit(":", items[i]);
         if (id ~= nil) then
-            if (_ == "i") then
-                icount = icount + 1;
-                self.ids[icount] = tonumber(id); 
-            elseif (_ == "p") then
-                pcount = pcount + 1;
-                self.pets[pcount] = tonumber(id);
-            end
+            tinsert(self.ids, items[i]); 
         else
             local tn = tonumber(_);
             if (tn ~= nil) then
-                icount = icount + 1;
-                self.ids[icount] = tn;
+                tinsert(self.ids, "i:"..tn);
             end 
         end
     end
@@ -216,7 +199,7 @@ function AnsFilter:IsValid(item)
     if (tids > 0) then
         local i;
         for i = 1, tids do
-            if (self.ids[i] == item.id) then
+            if (self.ids[i] == item.tsmId) then
                 return true;
             end
         end
@@ -226,21 +209,8 @@ function AnsFilter:IsValid(item)
     if (ttypes > 0) then
         local i;
         for i = 1, ttypes do
-            if (self.types[i] == item.type:lower()) then
+            if (self.types[i] == item.type) then
                 return true;
-            end
-        end
-    end
-
-    local tpets = #self.pets;
-    if (tpets > 0) then
-        if (AnsUtils:IsBattlePetLink(item.link)) then
-            local pet = AnsUtils:ParseBattlePetLink(item.link);
-            local i;
-            for i = 1, tpets do
-                if (self.pets[i] == pet.speciesID) then
-                    return true;
-                end
             end
         end
     end

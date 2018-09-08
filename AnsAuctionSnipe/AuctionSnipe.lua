@@ -19,6 +19,9 @@ AnsQualityToText[5] = "Legendary";
 
 local lastScan = time();
 
+BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
+BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
+
 local Ans_Orig_AuctionTabClick = nil;
 local function TabClick(self, button, down)
     AuctionSnipe:TabClick(self, button, down);
@@ -73,8 +76,11 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
     if (self.isSniping) then
         local tdiff = time() - lastScan;
 
-        if (tdiff >= ANS_GLOBAL_SETTINGS.rescanTime and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
+        if (tdiff >= ANS_GLOBAL_SETTINGS.rescanTime and AnsSnipeAuctionList.queryDelay <= 0 and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
             if (self.query:Search()) then
+                AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, true);
+                AnsSnipeAuctionList:SetStatus(ANS_QUERY_PAGE, self.query.index);
+
                 if (AnsSnipeStatus) then
                     AnsSnipeStatus:SetText("Page: "..self.query.index.." - Query Sent...");
                 end
@@ -82,6 +88,8 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
                 lastScan = time();
             end
         end
+
+        AnsSnipeAuctionList:UpdateDelay();
     end
 end
 
@@ -127,15 +135,18 @@ end
 
 function AuctionSnipe:OnAuctionUpdate(...)
     if (self.isSniping and not self.prepareToSnipe) then
-        if (AnsSnipeStatus) then
-            AnsSnipeStatus:SetText("Page: "..self.query.index.." - Processing Data...");
-        end
         if (not self.query:IsLastPage()) then
             self.query:LastPage();
         elseif (self.waitingForResult) then
+            if (AnsSnipeStatus) then
+                AnsSnipeStatus:SetText("Page: "..self.query.index.." - Processing Data...");
+            end
+
             self.query:Capture();
             AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow,self.sortAsc));
+            AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, false);
             self.query:LastPage();
+
             if (AnsSnipeStatus) then
                 AnsSnipeStatus:SetText("Page: "..self.query.index.." - Waiting to Query...");        
             end
@@ -341,6 +352,8 @@ function AuctionSnipe:Start()
     if (AnsSnipeStatus) then
         AnsSnipeStatus:SetText("Page: 0 - Starting...");
     end
+
+    AnsSnipeAuctionList:SetStatus(ANS_QUERY_OBJECT, self.query);
 
     self.query:ClearLastHash();
 

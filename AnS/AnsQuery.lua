@@ -9,7 +9,9 @@ AnsQuerySort = {
     ILEVEL = 5
 };
 
-local AnsRecycler = { blocks = {}, auctions = {}};
+local GroupTempTable = {};
+
+AnsRecycler = { blocks = {}, auctions = {}};
 AnsRecycler.__index = AnsRecycler;
 
 function AnsRecycler:RecycleAuction(auction)
@@ -18,11 +20,12 @@ function AnsRecycler:RecycleAuction(auction)
 
     local i;
     for i = 1, gtotal do
-        local r = tremove(group);
+        local r = group[i];
         if (r) then
             self:RecycleBlock(r);
         end
     end
+    wipe(group);
     tinsert(self.auctions, auction);
 end
 
@@ -38,11 +41,9 @@ function AnsRecycler:RecycleBlock(block)
 end
 
 function AnsRecycler:GetBlock() 
-
     if (#self.blocks > 0) then
         return tremove(self.blocks);
     end
-    
     return {};
 end
 
@@ -50,7 +51,6 @@ function AnsRecycler:GetAuction()
     if (#self.auctions > 0) then
         return tremove(self.auctions);
     end
-
     return {group = {}};
 end
 
@@ -71,8 +71,10 @@ end
 function AnsQuery:Reset()
     lastFoundHash = "";
     self.index = 0;
-    self.auctions = {};
-    self.filters = {};
+    wipe(self.auctions);
+    wipe(self.filters);
+    wipe(self.blacklist);
+    AnsUtils:ClearTSMIDCache();
 end
 
 function AnsQuery:New(search)
@@ -93,11 +95,13 @@ function AnsQuery:New(search)
     query.minStackSize = 0;
     query.maxPercent = 100;
 
+    query.blacklist = {};
+
     return query;
 end
 
 function AnsQuery:AssignFilters(ilevel, buyout, quality, size, maxPercent)
-    self.filters = {};
+    wipe(self.filters);
 
     self.minILevel = ilevel;
     self.maxBuyout = buyout;
@@ -146,8 +150,6 @@ end
 function AnsQuery:Set(search) 
     self.search = Truncate(search);
     self.index = 0;
-    
-    self.auctions = {};
     self.count = 0;
     
     self.total = -1;
@@ -172,40 +174,42 @@ function AnsQuery:Next()
     self.index = self.index + 1;
 end
 
-local function Sort_By_Name(x,y,asc)
-    if (asc) then
-        return x.item.name:lower() < y.item.name:lower();
+local sortAsc = false;
+
+local function Sort_By_Name(x,y)
+    if (sortAsc) then
+        return x.item.name < y.item.name;
     else
-        return x.item.name:lower() > y.item.name:lower();
+        return x.item.name > y.item.name;
     end
 end
 
-local function Sort_By_Percent(x,y,asc)
-    if (asc) then
+local function Sort_By_Percent(x,y)
+    if (sortAsc) then
         return x.item.percent < y.item.percent;
     else
         return x.item.percent > y.item.percent;
     end
 end
 
-local function Sort_By_Price(x,y,asc)
-    if (asc) then
+local function Sort_By_Price(x,y)
+    if (sortAsc) then
         return x.item.ppu < y.item.ppu;
     else
         return x.item.ppu > y.item.ppu;
     end
 end
 
-local function Sort_By_Time(x,y,asc)
-    if (asc) then
+local function Sort_By_Time(x,y)
+    if (sortAsc) then
         return x.item.time < y.item.time;
     else
         return x.item.time > y.item.time;
     end
 end
 
-local function Sort_By_iLevel(x,y,asc)
-    if (asc) then
+local function Sort_By_iLevel(x,y)
+    if (sortAsc) then
         return x.item.iLevel < y.item.iLevel;
     else
         return x.item.iLevel > y.item.iLevel;
@@ -219,24 +223,31 @@ local function ItemHash(item)
         owner = item.owner;
     end
 
-    return item.name..item.count..item.ppu;
+    return item.link..item.count..item.ppu..owner;
 end
+
+function AnsQuery:AddToBlacklist(item)
+    self.blacklist[ItemHash(item)] = true;
+end
+
 
 ----
 -- Only sorts the auctions in this page query
 ----
 function AnsQuery:Items(sort,asc)
+    -- set local variable for sort functions
+    sortAsc = asc;
     if (self.count > 1) then
         if (sort == AnsQuerySort.NAME) then
-            table.sort(self.auctions, function(x,y) return Sort_By_Name(x,y,asc); end);
+            table.sort(self.auctions, Sort_By_Name);
         elseif (sort == AnsQuerySort.PRICE) then
-            table.sort(self.auctions, function(x,y) return Sort_By_Price(x,y,asc); end);
+            table.sort(self.auctions, Sort_By_Price);
         elseif (sort == AnsQuerySort.PERCENT) then
-            table.sort(self.auctions, function(x,y) return Sort_By_Percent(x,y,asc); end);
+            table.sort(self.auctions, Sort_By_Percent);
         elseif (sort == AnsQuerySort.RECENT) then
-            table.sort(self.auctions, function(x,y) return Sort_By_Time(x,y,asc); end);
+            table.sort(self.auctions, Sort_By_Time);
         elseif (sort == AnsQuerySort.ILEVEL) then
-            table.sort(self.auctions, function(x,y) return Sort_By_iLevel(x,y,asc); end);
+            table.sort(self.auctions, Sort_By_iLevel);
         end
     end
 
@@ -269,19 +280,23 @@ end
 function AnsQuery:Capture()
     self.count, self.total = GetNumAuctionItems("list");
 
+    wipe(GroupTempTable);
+
     local x;
-    local groupLookup = {};
+    local groupLookup = GroupTempTable;
     local doGroup = ANS_GLOBAL_SETTINGS.groupAuctions;
     local foundHash = "";
     local auction = nil;
     local lastTotal = #self.auctions;
 
     for x = 1, lastTotal do
-        local r = tremove(self.auctions);
+        local r = self.auctions[x];
         if (r) then
             AnsRecycler:RecycleBlock(r);
         end
     end
+
+    wipe(self.auctions);
 
     for x = 1, self.count do
         auction = AnsRecycler:GetAuction();
@@ -302,26 +317,43 @@ function AnsQuery:Capture()
         auction.owner,
         auction.ownerFullName,
         auction.saleStatus,
-        auction.id = GetAuctionItemInfo("list", x);
+        auction.id,
+        auction.hasAll = GetAuctionItemInfo("list", x);
         auction.link = GetAuctionItemLink("list", x);
         auction.time = GetAuctionItemTimeLeft("list", x);
         auction.sniped = false;
         auction.percent = 1000;
 
         if (auction.link ~= nil) then
+            auction.tsmId = AnsUtils:GetTSMID(auction.link);
             local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType = GetItemInfo(auction.link);
             if (itemName ~= nil) then
                 auction.iLevel = itemLevel;
-                auction.type = itemType;
-                auction.subtype = itemSubType;
+                auction.type = itemType:lower();
+                auction.subtype = itemSubType:lower();
             else
                 auction.iLevel = 0;
                 auction.type = "Unknown";
                 auction.subtype = "Unknown";
             end
+        else
+            auction.tsmId = auction.id;
+            auction.ilevel = 0;
+            auction.type = "Unknown";
+            auction.subtype = "Unknown";
         end
 
-        if (auction.buyoutPrice > 0 and auction.saleStatus == 0) then
+        local ownerName;
+        if (not auction.ownerFullName) then
+            ownerName = owner;
+        else
+            ownerName = auction.ownerFullName;
+        end
+
+        -- according to blizzard's own code for their auction house ui, hasAll fixed bug: 145328
+        -- a basic assumption based on the action performed by them, is the auction should be hidden
+        -- until it has all the information
+        if (auction.buyoutPrice > 0 and auction.saleStatus == 0 and auction.hasAll and ownerName ~= UnitName("player")) then
             local ppu = math.floor(auction.buyoutPrice / auction.count);
             auction.ppu = ppu;
 
@@ -355,6 +387,10 @@ function AnsQuery:Capture()
                 end
             end
 
+            if (self.blacklist[hash]) then
+                filterAccepted = false;
+            end
+
             if (filterAccepted) then
                 local block = AnsRecycler:GetBlock();
 
@@ -375,12 +411,16 @@ function AnsQuery:Capture()
                 else 
                     tinsert(self.auctions, block);
                 end
+            else
+                AnsRecycler:RecycleAuction(auction);
             end
+        else
+            AnsRecycler:RecycleAuction(auction);
         end
     end
 
     if (#self.auctions > 0 and foundHash ~= lastFoundHash) then
-        PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "SFX");
+        PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
     end
     lastFoundHash = foundHash;
 end
