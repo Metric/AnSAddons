@@ -8,6 +8,7 @@ AuctionSnipe.prepareToSnipe = false;
 AuctionSnipe.isInited = false;
 AuctionSnipe.TAB_ID = 1;
 AuctionSnipe.waitingForResult = false;
+AuctionSnipe.waitingQuery = -1;
 AuctionSnipe.quality = 1;
 
 local AnsQualityToText = {};
@@ -77,15 +78,13 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
         local tdiff = time() - lastScan;
 
         if (tdiff >= ANS_GLOBAL_SETTINGS.rescanTime and AnsSnipeAuctionList.queryDelay <= 0 and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
-            if (self.query:Search()) then
+            if (self.query:IsReady()) then
                 AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, true);
-                AnsSnipeAuctionList:SetStatus(ANS_QUERY_PAGE, self.query.index);
-
-                if (AnsSnipeStatus) then
-                    AnsSnipeStatus:SetText("Page: "..self.query.index.." - Query Sent...");
-                end
                 self.waitingForResult = true;
-                lastScan = time();
+                self.query:Search();
+                if (AnsSnipeStatus) then
+                    AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Query Sent...");
+                end
             end
         end
 
@@ -137,25 +136,33 @@ function AuctionSnipe:OnAuctionUpdate(...)
     if (self.isSniping and not self.prepareToSnipe) then
         if (not self.query:IsLastPage()) then
             self.query:LastPage();
-        elseif (self.waitingForResult) then
             if (AnsSnipeStatus) then
-                AnsSnipeStatus:SetText("Page: "..self.query.index.." - Processing Data...");
+                AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
+            end
+        elseif (self.waitingForResult or self.waitingQuery == self.query.id) then
+            self.waitingQuery = self.query.id;
+            if (AnsSnipeStatus) then
+                AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Processing Data...");
             end
 
             self.query:Capture();
-            AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow,self.sortAsc));
+            self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
+            AnsSnipeAuctionList.selectedEntry = -1;
+            AnsSnipeAuctionList:Refresh();
+            AnsSnipeAuctionList:SetStatus(ANS_QUERY_PAGE, self.query.id);
             AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, false);
             self.query:LastPage();
 
             if (AnsSnipeStatus) then
-                AnsSnipeStatus:SetText("Page: "..self.query.index.." - Waiting to Query...");        
+                AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
         else
             if (AnsSnipeStatus) then
-                AnsSnipeStatus:SetText("Page: "..self.query.index.." - Waiting to Query...");        
+                AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
         end
 
+        lastScan = time();
         self.waitingForResult = false;
     end
     if (not self.isSniping and self.prepareToSnipe) then
@@ -263,7 +270,8 @@ function AuctionSnipe:SortByPrice()
     end
 
     self.sortHow = AnsQuerySort.PRICE;
-    AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
+    self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
+    AnsSnipeAuctionList:Refresh();
 end
 
 function AuctionSnipe:SortByName()
@@ -278,7 +286,8 @@ function AuctionSnipe:SortByName()
     end
 
     self.sortHow = AnsQuerySort.NAME;
-    AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
+    self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
+    AnsSnipeAuctionList:Refresh();
 end
 
 function AuctionSnipe:SortByPercent()
@@ -293,7 +302,8 @@ function AuctionSnipe:SortByPercent()
     end
 
     self.sortHow = AnsQuerySort.PERCENT;
-    AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
+    self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
+    AnsSnipeAuctionList:Refresh();
 end
 
 function AuctionSnipe:SortByRecent()
@@ -308,7 +318,8 @@ function AuctionSnipe:SortByRecent()
     end
 
     self.sortHow = AnsQuerySort.RECENT;
-    AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
+    self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
+    AnsSnipeAuctionList:Refresh();
 end
 
 function AuctionSnipe:SortByILevel()
@@ -323,7 +334,8 @@ function AuctionSnipe:SortByILevel()
     end
 
     self.sortHow = AnsQuerySort.ILEVEL;
-    AnsSnipeAuctionList:SetItems(self.query:Items(self.sortHow, self.sortAsc));
+    self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
+    AnsSnipeAuctionList:Refresh();
 end
 
 ----
@@ -344,8 +356,9 @@ function AuctionSnipe:Start()
     
     self.query.index = 0;
 
+    AnsSnipeAuctionList.selectedEntry = -1;
+
     if (search ~= self.query.search) then
-        AnsSnipeAuctionList.selectedEntry = -1;
         self.query:Set(search);
     end
 

@@ -72,7 +72,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedGlobal(self:GetParent());
+            AnsConfig:EditedGlobal(self:GetParent(), "percent");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -92,7 +92,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedGlobal(self:GetParent());
+            AnsConfig:EditedGlobal(self:GetParent(), "pricing");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -100,7 +100,7 @@
         <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
           <Scripts>
             <OnValueChanged>
-              AnsConfig:EditedGlobal(self:GetParent());
+              AnsConfig:EditedGlobal(self:GetParent(), "rescan");
             </OnValueChanged>
           </Scripts>
       </Slider>
@@ -114,6 +114,19 @@
           </OnLoad>
         </Scripts>
       </SimpleHTML>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentShowDressing">
+        <Anchors>
+          <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentRescanTime">
+            <Offset>
+              <AbsDimension x="5" y="0"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("Show DressUp"); </OnLoad>
+          <OnClick>AnsConfig:EditedGlobal(self:GetParent(), "dressup")</OnClick>
+        </Scripts>
+      </CheckButton>
     </Frames>
   </Frame>
   <Frame name="AnsCustomFilterRowTemplate" virtual="true">
@@ -135,7 +148,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent());
+            AnsConfig:EditedFilterRow(self:GetParent(), "name");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -155,7 +168,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent());
+            AnsConfig:EditedFilterRow(self:GetParent(), "ids");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -175,7 +188,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent());
+            AnsConfig:EditedFilterRow(self:GetParent(), "filter");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -189,7 +202,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G Buyout"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "buyout");</OnClick>
         </Scripts>
       </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinStack">
@@ -202,7 +215,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G Stack"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "stack");</OnClick>
         </Scripts>
       </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinQuality">
@@ -215,7 +228,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G Quality"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "quality");</OnClick>
         </Scripts>
       </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinLevel">
@@ -228,7 +241,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G iLevel"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent());</OnClick>
+          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "level");</OnClick>
         </Scripts>
       </CheckButton>
       <Button name="$parentDeleteFilter" text="Delete" inherits="UIPanelButtonTemplate">

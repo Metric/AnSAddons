@@ -58,24 +58,36 @@ function AnsConfig:LoadGlobal(f)
     local pricBox = _G[f:GetName().."PriceString"];
     local rscan = _G[f:GetName().."RescanTime"];
     local rscanText = _G[f:GetName().."RescanTimeText"];
+    local showDress = _G[f:GetName().."ShowDressing"];
 
+    showDress:SetChecked(ANS_GLOBAL_SETTINGS.showDressing);
     percBox:SetText(ANS_GLOBAL_SETTINGS.percentFn);
     pricBox:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
-
     rscan:SetValue(ANS_GLOBAL_SETTINGS.rescanTime);
     rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
 end
 
-function AnsConfig:EditedGlobal(f)
+function AnsConfig:EditedGlobal(f,type)
     local percBox = _G[f:GetName().."PercentString"];
     local pricBox = _G[f:GetName().."PriceString"];
 
     local rscan = _G[f:GetName().."RescanTime"];
     local rscanText = _G[f:GetName().."RescanTimeText"];
 
-    ANS_GLOBAL_SETTINGS.percentFn = percBox:GetText();
-    ANS_GLOBAL_SETTINGS.pricingFn = pricBox:GetText();
-    ANS_GLOBAL_SETTINGS.rescanTime = math.floor(rscan:GetValue());
+    local showDress = _G[f:GetName().."ShowDressing"];
+
+    if (type == 'percent') then
+        ANS_GLOBAL_SETTINGS.percentFn = percBox:GetText();
+    end
+    if (type == "pricing") then
+        ANS_GLOBAL_SETTINGS.pricingFn = pricBox:GetText();
+    end
+    if (type == "rescan") then
+        ANS_GLOBAL_SETTINGS.rescanTime = math.floor(rscan:GetValue());
+    end
+    if (type == "dressup") then
+        ANS_GLOBAL_SETTINGS.showDressing = showDress:GetChecked();
+    end
 
     rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
 end
@@ -103,7 +115,7 @@ function AnsConfig:AddFilterRow()
     AnsCustomFilterRefresh();
 end
 
-function AnsConfig:SaveFilterRow(row)
+function AnsConfig:SaveFilterRow(row, type)
     local nameBox = _G[row:GetName().."Name"];
     local idsBox = _G[row:GetName().."IDs"];
     local priceBox = _G[row:GetName().."PriceString"];
@@ -116,20 +128,34 @@ function AnsConfig:SaveFilterRow(row)
 
     local f = ANS_CUSTOM_FILTERS[id];
     if (f ~= nil) then
-        f.name = nameBox:GetText();
-        f.ids = idsBox:GetText();
-        f.priceFn = priceBox:GetText();
-        f.globalMaxBuyout = gbuyout:GetChecked();
-        f.globalMinStack = gstack:GetChecked();
-        f.globalMinQuality = gquality:GetChecked();
-        f.globalMinILevel = glevel:GetChecked();
+        if (type == "name") then
+            f.name = nameBox:GetText();
+        end
+        if (type == "ids") then
+            f.ids = idsBox:GetText();
+        end
+        if (type == "filter") then
+            f.priceFn = priceBox:GetText();
+        end
+        if (type == "buyout") then
+            f.globalMaxBuyout = gbuyout:GetChecked();
+        end
+        if (type == "stack") then
+            f.globalMinStack = gstack:GetChecked();
+        end
+        if (type == "quality") then
+            f.globalMinQuality = gquality:GetChecked();
+        end
+        if (type == "level") then
+            f.globalMinILevel = glevel:GetChecked();
+        end
     else
         print("Unable to save custom filter row...");
     end
 end
 
-function AnsConfig:EditedFilterRow(row)
-    AnsConfig:SaveFilterRow(row);
+function AnsConfig:EditedFilterRow(row, type)
+    AnsConfig:SaveFilterRow(row, type);
 end
 
 function AnsConfig:DeleteFilterRow(row)

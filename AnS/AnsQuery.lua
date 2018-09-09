@@ -14,6 +14,88 @@ local GroupTempTable = {};
 AnsRecycler = { blocks = {}, auctions = {}};
 AnsRecycler.__index = AnsRecycler;
 
+local AnsAuction = {};
+AnsAuction.__index = AnsAuction;
+
+function AnsAuction:New()
+    local a = {};
+    setmetatable(a, AnsAuction);
+    a.group = {};
+    return a;
+end
+
+function AnsAuction:Clone()
+    local a = AnsRecycler:GetAuction();
+    a.id = self.id;
+    a.name = self.name;
+    a.texture = self.texture;
+    a.count = self.count;
+    a.quality = self.quality;
+    a.canUse = self.canUse;
+    a.level = self.level;
+    a.huh = self.huh;
+    a.minBid = self.minBid;
+    a.minIncrement = self.minIncrement;
+    a.buyoutPrice = self.buyoutPrice;
+    a.bid = self.bid;
+    a.highBidder = self.highBidder;
+    a.bidderFullName = self.bidderFullName;
+    a.owner = self.owner;
+    a.ownerFullName = self.ownerFullName;
+    a.saleStatus = self.saleStatus;
+    a.hasAll = self.hasAll;
+    a.link = self.link;
+    a.time = self.time;
+    a.sniped = self.sniped;
+    a.percent = self.percent;
+    a.tsmId = self.tsmId;
+    a.iLevel = self.iLevel;
+    a.type = self.type;
+    a.subtype = self.subtype;
+    a.ppu = self.ppu;
+
+    local tg = #self.group;
+    if (tg > 0) then
+        local i;
+
+        for i = 1, tg do
+            tinsert(a.group, self.group[i]:Clone());
+        end 
+    end
+
+    return a;
+end
+
+local AnsAuctionBlock = {};
+AnsAuctionBlock.__index = AnsAuctionBlock;
+
+function AnsAuctionBlock:New()
+    local b = {};
+    setmetatable(b, AnsAuctionBlock);
+    
+    b.page = -1;
+    b.index = -1;
+    b.item = nil;
+    b.queryId = -1;
+
+    return b;
+end
+
+function AnsAuctionBlock:Clone()
+    local b = AnsRecycler:GetBlock();
+    b.page = self.page;
+    b.index = self.index;
+    b.queryId = self.queryId;
+
+    if (self.item) then
+        b.item = self.item:Clone();
+    else
+        b.item = nil;
+    end
+
+    return b;
+end
+
 function AnsRecycler:RecycleAuction(auction)
     local group = auction.group;
     local gtotal = #group;
@@ -44,14 +126,14 @@ function AnsRecycler:GetBlock()
     if (#self.blocks > 0) then
         return tremove(self.blocks);
     end
-    return {};
+    return AnsAuctionBlock:New();
 end
 
 function AnsRecycler:GetAuction()
     if (#self.auctions > 0) then
         return tremove(self.auctions);
     end
-    return {group = {}};
+    return AnsAuction:New();
 end
 
 local lastFoundHash = "";
@@ -96,6 +178,8 @@ function AnsQuery:New(search)
     query.maxPercent = 100;
 
     query.blacklist = {};
+
+    query.id = 0;
 
     return query;
 end
@@ -156,10 +240,16 @@ function AnsQuery:Set(search)
     self.previous = nil;
 end
 
+function AnsQuery:IsReady()
+    local query, queryAll = CanSendAuctionQuery();
+    return query;
+end
+
 function AnsQuery:Search()
     local query, queryAll = CanSendAuctionQuery();
 
     if (query) then
+        self.id = math.fmod(self.id + 1, 100000);
         if(self.search == "" or self.search:len() == 0)then
             QueryAuctionItems(nil, nil, nil, self.index, false, 1);
         else
@@ -230,11 +320,14 @@ function AnsQuery:AddToBlacklist(item)
     self.blacklist[ItemHash(item)] = true;
 end
 
+function AnsQuery:AddAllToBlacklist(item)
+    self.blacklist[item.tsmId] = true;
+end
 
 ----
 -- Only sorts the auctions in this page query
 ----
-function AnsQuery:Items(sort,asc)
+function AnsQuery:Items(sort,asc,toTbl)
     -- set local variable for sort functions
     sortAsc = asc;
     if (self.count > 1) then
@@ -251,7 +344,21 @@ function AnsQuery:Items(sort,asc)
         end
     end
 
-    return self.auctions;
+    local tt = #toTbl;   
+    local t = #self.auctions;
+    local i;
+    
+    for i = 1, tt do
+        AnsRecycler:RecycleBlock(toTbl[i]);
+    end
+
+    wipe(toTbl);
+
+    for i = 1, t do
+        tinsert(toTbl, self.auctions[i]:Clone());
+    end
+
+    return toTbl;
 end
 
 function AnsQuery:IsValid(item) 
@@ -338,7 +445,7 @@ function AnsQuery:Capture()
             end
         else
             auction.tsmId = auction.id;
-            auction.ilevel = 0;
+            auction.iLevel = 0;
             auction.type = "Unknown";
             auction.subtype = "Unknown";
         end
@@ -387,7 +494,7 @@ function AnsQuery:Capture()
                 end
             end
 
-            if (self.blacklist[hash]) then
+            if (self.blacklist[hash] or self.blacklist[auction.tsmId]) then
                 filterAccepted = false;
             end
 
@@ -397,6 +504,7 @@ function AnsQuery:Capture()
                 block.item = auction;
                 block.page = self.index;
                 block.index = x;
+                block.queryId = self.id;
 
                 if (doGroup) then
                     local idx = groupLookup[hash];

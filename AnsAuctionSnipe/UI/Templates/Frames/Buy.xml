@@ -408,7 +408,7 @@
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
-                        <FontString inherits="GameFontHighlightSmall" text="Filters">
+                        <FontString name="AnsSnipeFiltersText" inherits="GameFontHighlightSmall" text="Filters">
                             <Anchors><Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"><Offset><AbsDimension x="40" y="10"/></Offset></Anchor></Anchors>
                         </FontString>
                         <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
@@ -445,6 +445,21 @@
                     </OnVerticalScroll>
                 </Scripts>
             </ScrollFrame>
+
+            <Button name="AnsSnipeFilterReset" text="Reset" inherits="UIPanelButtonTemplate">
+                <Size><AbsDimension x="52" y="22"/> </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="AnsSnipeFiltersText" relativePoint="RIGHT">
+                        <Offset><AbsDimension x="5" y="0"/></Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AnsFilterView:SelectClear();
+                        AnsFilterView:Refresh(_G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
+                    </OnClick>
+                </Scripts>
+            </Button>
 
             <Button name="AnsSnipeFilterRow1" inherits="AnsFilterRowTemplate">
                 <Anchors>

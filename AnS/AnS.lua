@@ -185,7 +185,7 @@ function AnsCore:LoadCustomFilters()
 
     for i = 1, total do
         temp[i] = DefaultFilters[i];
-        temp2[i] = AnsFilterSelected[i];
+        temp2[i] = ANS_FILTER_SELECTION[i] or AnsFilterSelected[i];
     end
 
     local fparent = AnsFilter:New("Custom");
@@ -214,7 +214,7 @@ function AnsCore:LoadCustomFilters()
             vtotal = vtotal + 1;
             total = total + 1;
             temp[total] = f;
-            temp2[total] = false;
+            temp2[total] = ANS_CUSTOM_FILTER_SELECTION[i] or false;
         end
     end
 
@@ -225,6 +225,9 @@ end
 function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.rescanTime == nil) then
         ANS_GLOBAL_SETTINGS.rescanTime = 0;
+    end
+    if (ANS_GLOBAL_SETTINGS.showDressing == nil) then
+        ANS_GLOBAL_SETTINGS.showDressing = true;
     end
 end
 

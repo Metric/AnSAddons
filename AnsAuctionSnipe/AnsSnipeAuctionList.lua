@@ -47,7 +47,8 @@ end
 
 function AnsSnipeAuctionList:Purchase(block)
     if (block) then
-        self.queryDelay = self.queryDelay + 0.5;
+
+        self.queryDelay = self.queryDelay + 1;
         self.queryDelay = math.min(self.queryDelay, 4);
 
         local orig = block.item;
@@ -60,7 +61,7 @@ function AnsSnipeAuctionList:Purchase(block)
 
         if (not auction.sniped and total == 0) then
             if (GetMoney() >= auction.buyoutPrice) then
-                if (block.page ~= self.currentPage or self.isWaitingForData) then
+                if (block.queryId ~= self.currentPage or self.isWaitingForData) then
                     return false;
                 end
 
@@ -72,7 +73,7 @@ function AnsSnipeAuctionList:Purchase(block)
             end
         elseif (not auction.sniped) then
             if (GetMoney() >= auction.buyoutPrice) then
-                if (block.page ~= self.currentPage or self.isWaitingForData) then
+                if (block.queryId ~= self.currentPage or self.isWaitingForData) then
                     return false;
                 end
 
@@ -87,7 +88,7 @@ function AnsSnipeAuctionList:Purchase(block)
 
                 if (not auction.sniped) then
                     if (GetMoney() >= auction.buyoutPrice) then
-                        if (subblock.page ~= self.currentPage or self.isWaitingForData) then
+                        if (subblock.queryId ~= self.currentPage or self.isWaitingForData) then
                             return false;
                         end
 
@@ -127,6 +128,9 @@ function AnsSnipeAuctionList:Click(item, button, down)
 
     clickCount = clickCount + 1;
 
+    self.queryDelay = self.queryDelay + 1;
+    self.queryDelay = math.min(self.queryDelay, 4);
+
     if (clickCount == 1 and IsShiftKeyDown()) then
         local block = self.items[id];
 
@@ -139,9 +143,21 @@ function AnsSnipeAuctionList:Click(item, button, down)
 
         self.selectedEntry = -1;
         clickCount = 0;
+    elseif (clickCount == 1 and IsControlKeyDown()) then
+        local block = self.items[id];
+
+        if (block) then
+            if (self.queryRef) then
+                self.queryRef:AddAllToBlacklist(block.item);
+                AnsRecycler:RecycleBlock(table.remove(self.items, id));
+            end
+        end
+
+        self.selectedEntry = -1;
+        clickCount = 0;
     end
 
-    if (clickCount == 1) then
+    if (clickCount == 1 and ANS_GLOBAL_SETTINGS.showDressing) then
         local block = self.items[id];
 
         if (block) then
@@ -158,7 +174,7 @@ function AnsSnipeAuctionList:Click(item, button, down)
         local block = self.items[id];
         if (block) then
             if (self:Purchase(block)) then
-                AnsRecycler:RecycleBlock(table.remove(self.items, id));
+                --AnsRecycler:RecycleBlock(table.remove(self.items, id));
                 if (self.selectedEntry == id) then
                     self.selectedEntry = -1;
                 end
@@ -316,9 +332,4 @@ function AnsSnipeAuctionList:Refresh()
         dataOffset = line + offset;
         self:UpdateRow(dataOffset, line);
     end
-end
-
-function AnsSnipeAuctionList:SetItems(items)
-    self.items = items;
-    self:Refresh();
 end

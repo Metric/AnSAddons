@@ -1,3 +1,11 @@
+AnS Changes 1.0.5.1
+-----------
+* Queries now have a rolling query id from 0 - 99999. To help detect if the item is within the current query context.
+* You can now disable the DressUp window in AnS global settings. ESC -> Interface -> Addons -> AnS -> Show DressUp Toggle
+* Filter selection for predefined and custom filters is now saved.
+* Fixed possible bug of config settings getting erased during trying to load into text boxes etc.
+
+
 AnS Changes 1.0.5
 -----------
 

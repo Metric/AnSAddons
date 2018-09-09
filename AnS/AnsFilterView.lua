@@ -3,8 +3,17 @@ AnsFilterView.__index = AnsFilterView;
 
 function AnsFilterView:SelectClear()
     local i;
+    local t = #AnsFilterSelected;
+    local tc = #ANS_CUSTOM_FILTERS;
+    local customStart = t - tc + 1;
+
     for i = 1, #AnsFilterSelected do
         AnsFilterSelected[i] = false;
+        if (i < customStart) then
+            ANS_FILTER_SELECTION[i] = false;
+        else
+            ANS_CUSTOM_FILTER_SELECTION[i - customStart + 1] = false;
+        end
     end
 end
 
@@ -60,10 +69,20 @@ function AnsFilterView:Click(row, frame, templateName)
     local filter = AnsFilterList[id];
     local text = _G[row:GetName().."NormalText"];
 
+    local t = #AnsFilterSelected;
+    local tc = #ANS_CUSTOM_FILTERS;
+    local customStart = t - tc + 1;
+
     if (AnsFilterSelected[id]) then
         AnsFilterSelected[id] = false;
     else
         AnsFilterSelected[id] = true;
+    end
+
+    if (id < customStart) then
+        ANS_FILTER_SELECTION[id] = AnsFilterSelected[id];
+    else
+        ANS_CUSTOM_FILTER_SELECTION[id - customStart + 1] = AnsFilterSelected[id];
     end
 
     self:Refresh(frame, templateName);

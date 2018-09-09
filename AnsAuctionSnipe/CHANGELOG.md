@@ -1,3 +1,16 @@
+AnS [Auction Sniper] CHANGES 1.0.5.1
+-------------------
+
+* Added reset button for filter list to clear them all.
+* No longer auto removes a listing once all stacks are bought, in order to prevent misclicking / buying the wrong thing. Instead, it will go down to 0 and stay, until the next query goes through. It may seem like the item is still there on the next update, and that is because your purchase may just have been sent, and the query happened slightly before it. But, luckily it should show them going down as your purchases go through.
+* Changed the delay to be 1 second added everytime you click an item listing or try to purchase it, instead of 0.5s. Still up to a maximum of 4 seconds. (This only applies to the delay before a new query is sent, and not the actual clicking / purchasing of the item)
+* Whenever a new query is loaded, the selected item is now reset to nothing, in order to prevent accidental buying of the wrong item, when clicking or through button presses. 
+* You can now CTRL-LEFT Click to temporarily blacklist that item type completely until the AH is closed. e.g. ctrl left click on a linen cloth listing. It will be removed and no further linen cloth listings will display until the AH is closed.
+* Left side filter selection is now saved.
+* The visual and interactive listing in the UI is now a deep copy of the query listing. Previousely they shared the same listing source.
+* With the above change, each query now has a unique id that is rolling from 0 - 99999. This id is now used to check to make sure the given item is within the current query context when trying to purchase. If it is not, then the purchase action is ignored. This should help prevent buying items that have taken the place of the item trying to be purchased, after the listing has changed. Spam clicking / buying was affected by the aformentioned problem.  
+
+
 AnS [Auction Sniper] CHANGES 1.0.5
 -------------------
 
