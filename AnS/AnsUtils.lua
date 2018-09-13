@@ -115,7 +115,7 @@ function AnsUtils:GetTSMID(link)
 
     if (AnsUtils:IsBattlePetLink(link)) then
         local pet = AnsUtils:ParseBattlePetLink(link);
-        local fresult = "p:"..pet.speciesID;
+        local fresult = "p:"..pet.speciesID..":"..pet.level..":"..pet.breedQuality;
         TSMID_CACHE[link] = fresult;
         return fresult;
     else

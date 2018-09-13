@@ -4,7 +4,10 @@ ANS_GLOBAL_SETTINGS = {
     pricingFn = "tujdays ~= 252",
     groupAuctions = true,
     rescanTime = 0,
-    showDressing = true
+    showDressing = true,
+    dingSound = true,
+    safeBuy = true,
+    safeDelay = 2,
 };
 ANS_FILTER_SELECTION = {};
 ANS_CUSTOM_FILTER_SELECTION = {};

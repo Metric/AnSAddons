@@ -1,3 +1,10 @@
+AnS Changes 1.0.5.3
+-----------
+* Added full support for TSM pet ids of p:speciesId:petLevel:petQuality. E.g. p:123:1:2 or p:123:1
+* Added support for TSM variables: dbglobalminbuyoutavg, dbglobalmarketavg, dbglobalhistorical, dbglobalsaleavg, dbglobalsalerate, dbglobalsoldperday.
+* No longer requires AnsTSMAuctionDB variable modification in TSM LUA files.
+
+
 AnS Changes 1.0.5.1
 -----------
 * Queries now have a rolling query id from 0 - 99999. To help detect if the item is within the current query context.

@@ -1,3 +1,13 @@
+AnS [Auction Sniper] CHANGES 1.0.5.3
+---------------------
+* You can disable Safe Buy in ESC -> Interface -> Addons -> AnS -> Safe Buy Toggle.
+    * Safe Buy prevents you from purchasing after a query is sent. So, you don't end up with the wrong item.
+* Added option on sniper window to turn off ding
+* Added where you can edit global filter string on sniper window
+* Fixed issue where it would sometimes get stuck on waiting for query indefinitely
+* Added option to control max value of safe query delay for spam clicking. (Only applies if Safe Buy is on)
+
+
 AnS [Auction Sniper] CHANGES 1.0.5.1
 -------------------
 

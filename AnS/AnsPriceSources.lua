@@ -23,6 +23,12 @@ local OpCodes = {
     dbregionsaleavg = 0, 
     dbregionsalerate = 0, 
     dbregionsoldperday = 0,
+    dbglobalminbuyoutavg = 0,
+    dbglobalmarketavg = 0,
+    dbglobalhistorical = 0,
+    dbglobalsaleavg = 0,
+    dbglobalsalerate = 0,
+    dbglobalsoldperday = 0,
     tujmarket = 0, 
     tujrecent = 0, 
     tujglobalmedian = 0, 
@@ -164,7 +170,7 @@ function AnsPriceSources:GetValues(itemId, ops)
     for i = 1, total do
         local s = self.sources[i];
         if (s.fn ~= nil) then
-            local _, r = pcall(s.fn, itemId, s.key);
+            local _, r = pcall(s.fn, itemId, s.key, s.name:lower());
             local v = r or 0;
             ops[s.name:lower()] = v;
         end

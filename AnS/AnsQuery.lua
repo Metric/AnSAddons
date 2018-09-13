@@ -527,7 +527,7 @@ function AnsQuery:Capture()
         end
     end
 
-    if (#self.auctions > 0 and foundHash ~= lastFoundHash) then
+    if (#self.auctions > 0 and foundHash ~= lastFoundHash and ANS_GLOBAL_SETTINGS.dingSound) then
         PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
     end
     lastFoundHash = foundHash;

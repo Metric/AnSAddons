@@ -8,17 +8,18 @@ Requires AnS
 
 (Optional) Undermine Journal addon for percentage calculations.
 
-(Optional) TSM for pricing, but LUA modification required. See the TSM Market Caveat in AnS readme.
+(Optional) TSM for percentage calculations.
 
 (Optional) Auctionator addon for percentage calculations.
 
-TSM Server Market Data Caveat (1.0.2+)
+TSM Server Market Data Caveat (1.0.2 - 1.0.5.1). NO LONGER NEEDED IF USING AnS 1.0.5.3+
 ==================
 If you were on version 1.0.1 of AnS, then you will need to revert the change or simply restore TradeSkillMaster_AppHelper to its defaults.
 
-In 1.0.2 and above a different way has been decided, but sadly it does still require a slight modification to a TSM lua file.
+NO LONGER NEEDED IF USING AnS 1.0.5.3+
+=====================================
 
-If using TSM 4:
+If using TSM 4: NO LONGER NEEDED IF USING AnS 1.0.5.3+
 -------------------
 In TradeSkillMaster/Core/Service/AuctionDB/Core.lua after the following line:
 
@@ -32,7 +33,7 @@ Add the following global variable:
 AnsTSMAuctionDB = AuctionDB;
 ```
 
-If using TSM 3:
+If using TSM 3: NO LONGER NEEDED IF USING AnS 1.0.5.3+
 --------------------
 In TradeSkillMaster_AuctionDB/TradeSkillMaster_AuctionDB.lua after the following line:
 
@@ -93,6 +94,8 @@ Or set a key binding under ESC -> Bindings -> AnS to buy selected auctions via a
 
 Shift + Left Click allows you to temporarily blacklist a listing until the AH window is closed.
 
+CTRL + Left Click allows you to temporarily blacklist the item type until the AH window is closed.
+
 Selecting armor, weapons, or pets, will now display the dress up window with that item.
 
 Filter and Percent/Pricing Strings
@@ -128,7 +131,7 @@ tujmarket, tujrecent, tujglobalmedian, tujglobalmean, tujage, tujdays, tujstddev
 Predefined TSM Variables:
 
 ```
-dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday
+dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday, dbglobalminbuyoutavg, dbglobalmarketavg, dbglobalhistorical, dbglobalsaleavg, dbglobalsalerate, dbglobalsoldperday
 ```
 
 Predefined Auctionator Variables:
@@ -315,7 +318,3 @@ Without shorthand
 ```
 (stacksize == 200) or (ppu > 200 * 10000 and ppu < 250 * 10000)
 ```
-
-TODO
-=============
-* Add other methods of input for buying items

@@ -67,6 +67,7 @@ function AuctionSnipe:Init()
     _G["AnsSnipeMinLevel"]:SetText("0");
     _G["AnsSnipeMinSize"]:SetText("0");
 
+    AnsSnipeDingSound:SetChecked(ANS_GLOBAL_SETTINGS.dingSound);
     AnsSnipeMinMaxPercent:SetText("100");
 
     UIDropDownMenu_Initialize(_G["AnsSnipeQualityLevel"], BuildQualityDropDown);
@@ -76,20 +77,26 @@ end
 function AuctionSnipe:OnUpdate(frame, elapsed)
     if (self.isSniping) then
         local tdiff = time() - lastScan;
+        local notDelayed = AnsSnipeAuctionList.queryDelay <= 0 or not ANS_GLOBAL_SETTINGS.safeBuy;
+        local scanReady = tdiff >= ANS_GLOBAL_SETTINGS.rescanTime;
 
-        if (tdiff >= ANS_GLOBAL_SETTINGS.rescanTime and AnsSnipeAuctionList.queryDelay <= 0 and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
+        if (scanReady and notDelayed and not self.waitingForResult and not AnsSnipeAuctionList.buying) then
             if (self.query:IsReady()) then
-                AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, true);
+                AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, ANS_GLOBAL_SETTINGS.safeBuy);
+                
                 self.waitingForResult = true;
                 self.query:Search();
+
                 if (AnsSnipeStatus) then
                     AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Query Sent...");
                 end
+
+                lastScan = time();
             end
         end
-
-        AnsSnipeAuctionList:UpdateDelay();
     end
+    
+    AnsSnipeAuctionList:UpdateDelay();
 end
 
 
@@ -132,6 +139,10 @@ function AuctionSnipe:OnAuctionHouseClosed()
     AnsPriceSources:ClearCache();
 end
 
+---
+--- Auction Update Handler
+---
+
 function AuctionSnipe:OnAuctionUpdate(...)
     if (self.isSniping and not self.prepareToSnipe) then
         if (not self.query:IsLastPage()) then
@@ -139,17 +150,16 @@ function AuctionSnipe:OnAuctionUpdate(...)
             if (AnsSnipeStatus) then
                 AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
-        elseif (self.waitingForResult or self.waitingQuery == self.query.id) then
+        elseif (self.waitingForResult) then
             self.waitingQuery = self.query.id;
             if (AnsSnipeStatus) then
                 AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Processing Data...");
             end
-
+            AnsSnipeAuctionList:SetStatus(ANS_QUERY_PAGE, self.query.id);
             self.query:Capture();
             self.query:Items(self.sortHow,self.sortAsc,AnsSnipeAuctionList.items);
             AnsSnipeAuctionList.selectedEntry = -1;
             AnsSnipeAuctionList:Refresh();
-            AnsSnipeAuctionList:SetStatus(ANS_QUERY_PAGE, self.query.id);
             AnsSnipeAuctionList:SetStatus(ANS_WAITING_FOR_RESULTS, false);
             self.query:LastPage();
 
@@ -161,15 +171,18 @@ function AuctionSnipe:OnAuctionUpdate(...)
                 AnsSnipeStatus:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
         end
-
-        lastScan = time();
-        self.waitingForResult = false;
     end
     if (not self.isSniping and self.prepareToSnipe) then
         self.prepareToSnipe = false;
         self.isSniping = true;
     end
+
+    self.waitingForResult = false;
 end
+
+---
+--- Tab Click Override
+---
 
 function AuctionSnipe:TabClick(btn, index, down)
     if (index == nil or type(index) == "string") then
@@ -385,10 +398,24 @@ function AuctionSnipe:Stop()
     self.isSniping = false;
     self.waitingForResult = false;
     self.prepareToSnipe = false;
+    self.waitingQuery = 0;
+    AnsSnipeAuctionList.queryDelay = 0;
     if (AnsSnipeStatus) then
         AnsSnipeStatus:SetText("Page: "..self.query.index.." - Stopped...");
     end
 end
+
+---
+--- Updates ding
+---
+
+function AuctionSnipe:DingSound(f)
+    ANS_GLOBAL_SETTINGS.dingSound = f:GetChecked();
+end
+
+--
+-- Helper to get max percent from text box as number
+--
 
 function AuctionSnipe:GetMaxPercent()
     local text = AnsSnipeMinMaxPercent:GetText();

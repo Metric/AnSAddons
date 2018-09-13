@@ -72,7 +72,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedGlobal(self:GetParent(), "percent");
+            AnsConfig:Edit(self, "percent");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -92,7 +92,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedGlobal(self:GetParent(), "pricing");
+            AnsConfig:Edit(self, "pricing");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -100,7 +100,7 @@
         <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
           <Scripts>
             <OnValueChanged>
-              AnsConfig:EditedGlobal(self:GetParent(), "rescan");
+              AnsConfig:Edit(self, "rescan");
             </OnValueChanged>
           </Scripts>
       </Slider>
@@ -124,9 +124,30 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("Show DressUp"); </OnLoad>
-          <OnClick>AnsConfig:EditedGlobal(self:GetParent(), "dressup")</OnClick>
+          <OnClick>AnsConfig:Edit(self, "dressup")</OnClick>
         </Scripts>
       </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentSafeBuy">
+        <Anchors>
+          <Anchor point="BOTTOMLEFT"  relativePoint="TOPLEFT" relativeTo="$parentShowDressing">
+            <Offset>
+              <AbsDimension x="0" y="5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("Safe Buy"); </OnLoad>
+          <OnClick>AnsConfig:Edit(self, "safebuy")</OnClick>
+        </Scripts>
+      </CheckButton>
+      <Slider name="$parentSafeScanDelay" minValue="0" maxValue="2" valueStep="1" inherits="AnsSliderTemplate">
+        <Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parentSafeBuy" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="5" /></Offset></Anchor></Anchors>
+          <Scripts>
+            <OnValueChanged>
+              AnsConfig:Edit(self, "safedelay");
+            </OnValueChanged>
+          </Scripts>
+      </Slider>
     </Frames>
   </Frame>
   <Frame name="AnsCustomFilterRowTemplate" virtual="true">

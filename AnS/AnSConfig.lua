@@ -50,46 +50,49 @@ end
 
 function AnsConfig:SetHelpText(f)
     f:SetFont("Fonts\\FRIZQT__.TTF", 12); 
-    f:SetText("<html><body><h2>Available String Functions / Variables</h2><br /><p>Operators: All LUA operators</p><br /><p>Functions: avg, first, min, max, mod, abs, ceil,<br />floor, round, random, log, log10, exp, sqrt</p><br /><p>Item VARS: percent, ppu, stacksize, buyout, ilevel, quality</p><br /><p>TUJ VARS: tujmarket, tujrecent, tujglobalmedian, tujglobalmean,<br />tujage, tujdays, tujstddev, tujglobalstddev</p><br /><p>TSM VARS: dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday</p><br /><p>Auctionator VARS: atrvalue</p></body></html>");
+    f:SetText("<html><body><h2>Available String Functions / Variables</h2><br /><p>Operators: All LUA operators</p><br /><p>Functions: avg, first, min, max, mod, abs, ceil,<br />floor, round, random, log, log10, exp, sqrt</p><br /><p>Item VARS: percent, ppu, stacksize, buyout, ilevel, quality</p><br /><p>TUJ VARS: tujmarket, tujrecent, tujglobalmedian, tujglobalmean,<br />tujage, tujdays, tujstddev, tujglobalstddev</p><br /><p>TSM VARS: dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday, dbglobalminbuyoutavg, dbglobalmarketavg, dbglobalhistorical, dbglobalsaleavg, dbglobalsalerate, dbglobalsoldperday</p><br /><p>Auctionator VARS: atrvalue</p></body></html>");
 end
 
 function AnsConfig:LoadGlobal(f)
     local percBox = _G[f:GetName().."PercentString"];
     local pricBox = _G[f:GetName().."PriceString"];
     local rscan = _G[f:GetName().."RescanTime"];
-    local rscanText = _G[f:GetName().."RescanTimeText"];
+    local rscanText = _G[rscan:GetName().."Text"];
     local showDress = _G[f:GetName().."ShowDressing"];
+    local safeBuy = _G[f:GetName().."SafeBuy"];
+    local safeDelay = _G[f:GetName().."SafeScanDelay"];
+    local safeDelayText = _G[safeDelay:GetName().."Text"];
 
+
+    safeBuy:SetChecked(ANS_GLOBAL_SETTINGS.safeBuy);
     showDress:SetChecked(ANS_GLOBAL_SETTINGS.showDressing);
     percBox:SetText(ANS_GLOBAL_SETTINGS.percentFn);
     pricBox:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
     rscan:SetValue(ANS_GLOBAL_SETTINGS.rescanTime);
+    safeDelay:SetValue(ANS_GLOBAL_SETTINGS.safeDelay);
+
+    safeDelayText:SetText("New Query Max Safe Delay: " ..ANS_GLOBAL_SETTINGS.safeDelay.."s");
     rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
 end
 
-function AnsConfig:EditedGlobal(f,type)
-    local percBox = _G[f:GetName().."PercentString"];
-    local pricBox = _G[f:GetName().."PriceString"];
-
-    local rscan = _G[f:GetName().."RescanTime"];
-    local rscanText = _G[f:GetName().."RescanTimeText"];
-
-    local showDress = _G[f:GetName().."ShowDressing"];
-
-    if (type == 'percent') then
-        ANS_GLOBAL_SETTINGS.percentFn = percBox:GetText();
-    end
+function AnsConfig:Edit(f, type) 
     if (type == "pricing") then
-        ANS_GLOBAL_SETTINGS.pricingFn = pricBox:GetText();
+        ANS_GLOBAL_SETTINGS.pricingFn = f:GetText();
+    elseif (type == "percent") then
+        ANS_GLOBAL_SETTINGS.percentFn = f:GetText();
+    elseif (type == "rescan") then
+        local rscan = _G[f:GetName().."Text"];
+        ANS_GLOBAL_SETTINGS.rescanTime = math.floor(f:GetValue());
+        rscan:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
+    elseif (type == "dressup") then
+        ANS_GLOBAL_SETTINGS.showDressing = f:GetChecked();
+    elseif (type == "safebuy") then
+        ANS_GLOBAL_SETTINGS.safeBuy = f:GetChecked();
+    elseif (type == "safedelay") then
+        local safeText = _G[f:GetName().."Text"];
+        ANS_GLOBAL_SETTINGS.safeDelay = math.floor(f:GetValue());
+        safeText:SetText("New Query Max Safe Delay: "..ANS_GLOBAL_SETTINGS.safeDelay.."s");
     end
-    if (type == "rescan") then
-        ANS_GLOBAL_SETTINGS.rescanTime = math.floor(rscan:GetValue());
-    end
-    if (type == "dressup") then
-        ANS_GLOBAL_SETTINGS.showDressing = showDress:GetChecked();
-    end
-
-    rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
 end
 
 function AnsConfig:LoadPanel(f, parent, name, subtitle)

@@ -4,16 +4,6 @@ AnsCore.__index = AnsCore;
 AnsCustomFilter = {};
 AnsCustomFilter.__index = AnsCustomFilter;
 
-StaticPopupDialogs["ANS_TSM_MOD"] = {
-    text = "Looks like you have TSM installed, but the required lua modification is not here for AnS to grab TSM data! See readme for details.",
-    button1 = "OKAY",
-    OnAccept = function() end,
-    timeout = 0,
-    whileDead = false,
-    hideOnEscape = true,
-    preferredIndex = 3
-};
-
 StaticPopupDialogs["ANS_NO_PRICING"] = {
     text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM (with lua mod), and Auctionator are currently supported.",
     button1 = "OKAY",
@@ -34,30 +24,24 @@ local TUJTempTable = {};
 local AnsAuctionDB = {};
 local TSM_MAJOR_VERSION = AnsUtils:GetAddonVersion("TradeSkillMaster");
 
-function AnsAuctionDB.GetRealmItemData(link, key) 
+function AnsAuctionDB.GetTSMPrice(link, key, name) 
     local id = AnsUtils:GetTSMID(link);
 
     if(TSM_MAJOR_VERSION == "3") then
-        return AnsTSMAuctionDB:GetRealmItemData(id, key)
+        return TSMAPI:GetCustomPriceValue(name, id);
     else
-        return AnsTSMAuctionDB.GetRealmItemData(id, key);
+        return TSM_API.GetCustomPriceValue(name, id);
     end
 end
 
-function AnsAuctionDB.GetRegionItemData(link, key)
-    local id = AnsUtils:GetTSMID(link);
-
+function AnsAuctionDB.GetSaleInfo(link, key, name)
+    local r = AnsAuctionDB.GetTSMPrice(link, key, name);
     if (TSM_MAJOR_VERSION == "3") then
-        return AnsTSMAuctionDB:GetRegionItemData(id, key)
+        if (not r) then r = 0; end;
+        return r / 100;
     else
-        return AnsTSMAuctionDB.GetRegionItemData(id, key);
+        return r;
     end
-end
-
-function AnsAuctionDB.GetRegionSaleInfo(link, key)
-    local r = AnsAuctionDB.GetRegionItemData(link, key);
-    if (not r) then r = 0; end;
-    return r / 100;
 end
 
 local function GetTUJPrice(itemId, key)
@@ -114,16 +98,8 @@ function AnsCore:RegisterPriceSources()
        auctionatorEnabled = true; 
     end
     
-    if (AnsTSMAuctionDB) then
-        -- do note, doing this we basically steal the data
-        -- from TSM and only way to allow TSM to operate
-        -- further is to remove line 23 from TradeSkillMaster_AppHelper.lua
-        -- tsmEnabled = AnsTSMHelper:GrabData();
+    if (TSM_API or TSMAPI) then
         tsmEnabled = true;
-    end
-
-    if (AnsUtils:IsAddonEnabled("TradeSkillMaster") and not AnsTSMAuctionDB) then
-        StaticPopup_Show("ANS_TSM_MOD");
     end
 
     if (TUJMarketInfo) then
@@ -147,15 +123,21 @@ function AnsCore:RegisterPriceSources()
 
     if (tsmEnabled) then
         print("AnS found TSM pricing source");
-        AnsPriceSources:Register("DBMarket", AnsAuctionDB.GetRealmItemData, "marketValue");
-        AnsPriceSources:Register("DBMinBuyout", AnsAuctionDB.GetRealmItemData, "minBuyout");
-        AnsPriceSources:Register("DBHistorical", AnsAuctionDB.GetRealmItemData, "historical");
-        AnsPriceSources:Register("DBRegionMinBuyoutAvg", AnsAuctionDB.GetRegionItemData, "regionMinBuyout");
-        AnsPriceSources:Register("DBRegionMarketAvg", AnsAuctionDB.GetRegionItemData, "regionMarketValue");
-        AnsPriceSources:Register("DBRegionHistorical", AnsAuctionDB.GetRegionItemData, "regionHistorical");
-        AnsPriceSources:Register("DBRegionSaleAvg", AnsAuctionDB.GetRegionItemData, "regionSale");
-        AnsPriceSources:Register("DBRegionSaleRate", AnsAuctionDB.GetRegionSaleInfo, "regionSalePercent");
-        AnsPriceSources:Register("DBRegionSoldPerDay", AnsAuctionDB.GetRegionSaleInfo, "regionSoldPerDay");
+        AnsPriceSources:Register("DBMarket", AnsAuctionDB.GetTSMPrice, "marketValue");
+        AnsPriceSources:Register("DBMinBuyout", AnsAuctionDB.GetTSMPrice, "minBuyout");
+        AnsPriceSources:Register("DBHistorical", AnsAuctionDB.GetTSMPrice, "historical");
+        AnsPriceSources:Register("DBRegionMinBuyoutAvg", AnsAuctionDB.GetTSMPrice, "regionMinBuyout");
+        AnsPriceSources:Register("DBRegionMarketAvg", AnsAuctionDB.GetTSMPrice, "regionMarketValue");
+        AnsPriceSources:Register("DBRegionHistorical", AnsAuctionDB.GetTSMPrice, "regionHistorical");
+        AnsPriceSources:Register("DBRegionSaleAvg", AnsAuctionDB.GetTSMPrice, "regionSale");
+        AnsPriceSources:Register("DBRegionSaleRate", AnsAuctionDB.GetSaleInfo, "regionSalePercent");
+        AnsPriceSources:Register("DBRegionSoldPerDay", AnsAuctionDB.GetSaleInfo, "regionSoldPerDay");
+        AnsPriceSources:Register("DBGlobalMinBuyoutAvg", AnsAuctionDB.GetTSMPrice, "globalMinBuyout");
+        AnsPriceSources:Register("DBGlobalMarketAvg", AnsAuctionDB.GetTSMPrice, "globalMarketValue");
+        AnsPriceSources:Register("DBGlobalHistorical", AnsAuctionDB.GetTSMPrice, "globalHistorical");
+        AnsPriceSources:Register("DBGlobalSaleAvg", AnsAuctionDB.GetTSMPrice, "globalSale");
+        AnsPriceSources:Register("DBGlobalSaleRate", AnsAuctionDB.GetSaleInfo, "globalSalePercent");
+        AnsPriceSources:Register("DBGlobalSoldPerDay", AnsAuctionDB.GetSaleInfo, "globalSoldPerDay");
     end
 
     if (tujEnabled) then
@@ -228,6 +210,15 @@ function AnsCore:MigrateGlobalSettings()
     end
     if (ANS_GLOBAL_SETTINGS.showDressing == nil) then
         ANS_GLOBAL_SETTINGS.showDressing = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.dingSound == nil) then
+        ANS_GLOBAL_SETTINGS.dingSound = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.safeBuy == nil) then
+        ANS_GLOBAL_SETTINGS.safeBuy = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.safeDelay == nil) then
+        ANS_GLOBAL_SETTINGS.safeDelay = 2;
     end
 end
 

@@ -12,7 +12,7 @@ ANS_WAITING_FOR_RESULTS = "ANS_WAITING";
 ANS_QUERY_PAGE = "ANS_PAGE";
 ANS_QUERY_OBJECT = "ANS_QUERY";
 
-local stepTime = 1.0/120.0;
+local stepTime = 1;
 
 local clickTime = time();
 local clickCount = 0;
@@ -47,9 +47,10 @@ end
 
 function AnsSnipeAuctionList:Purchase(block)
     if (block) then
+        local fps = math.floor(GetFramerate());
 
-        self.queryDelay = self.queryDelay + 1;
-        self.queryDelay = math.min(self.queryDelay, 4);
+        self.queryDelay = self.queryDelay + fps;
+        self.queryDelay = math.min(self.queryDelay, fps * ANS_GLOBAL_SETTINGS.safeDelay);
 
         local orig = block.item;
         local auction = block.item;
@@ -128,8 +129,10 @@ function AnsSnipeAuctionList:Click(item, button, down)
 
     clickCount = clickCount + 1;
 
-    self.queryDelay = self.queryDelay + 1;
-    self.queryDelay = math.min(self.queryDelay, 4);
+    local fps = math.floor(GetFramerate());
+
+    self.queryDelay = self.queryDelay + fps;
+    self.queryDelay = math.min(self.queryDelay, fps * ANS_GLOBAL_SETTINGS.safeDelay);
 
     if (clickCount == 1 and IsShiftKeyDown()) then
         local block = self.items[id];
@@ -180,9 +183,8 @@ function AnsSnipeAuctionList:Click(item, button, down)
                 end
             end
         end
-
-        self.buying = false;
         clickCount = 0;
+        self.buying = false;
     end
 
     self:Refresh();

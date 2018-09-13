@@ -16,7 +16,7 @@
         <Frames>
             <Frame name="AnsSnipeSearchBar">
                 <Size><AbsDimension x="605" y="22" /></Size>
-                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="190" y="-60" /></Offset></Anchor></Anchors>
+                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="190" y="-55" /></Offset></Anchor></Anchors>
                 <Frames>
                     <EditBox name="AnsSnipeSearchBox" autoFocus="false" inherits="InputBoxTemplate" bytes="63">
                         <Size><AbsDimension x="100" y="20"/></Size>
@@ -150,6 +150,50 @@
 								</FontString>
 							</Layer>
                         </Layers>
+                    </EditBox>
+                    <CheckButton inherits="UIRadioButtonTemplate" name="AnsSnipeDingSound">
+                        <Anchors>
+                            <Anchor point="TOPLEFT"  relativePoint="BOTTOMLEFT" relativeTo="AnsSnipeMinSize">
+                                <Offset>
+                                <AbsDimension x="-2" y="0"/>
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>_G[self:GetName().."Text"]:SetText("Ding Sound"); </OnLoad>
+                            <OnClick>AuctionSnipe:DingSound(self)</OnClick>
+                        </Scripts>
+                    </CheckButton>
+                    <EditBox name="AnsSnipeQuickFilterEdit" autoFocus="false" inherits="InputBoxTemplate">
+                        <Size><AbsDimension x="220" y="24" /></Size>
+                        <Anchors>
+							<Anchor point="TOPLEFT" relativeTo="AnsSnipeSearchBox" relativePoint="BOTTOMLEFT">
+								<Offset>
+									<AbsDimension x="110" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlightSmall" text="Global Filter String" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+											<Offset>
+												<AbsDimension x="-110" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnShow>
+                                self:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
+                            </OnShow>
+                            <OnTextChanged>
+                                AnsConfig:Edit(self, "pricing");
+                            </OnTextChanged>
+                        </Scripts>
                     </EditBox>
                 </Frames>
             </Frame>

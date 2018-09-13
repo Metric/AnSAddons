@@ -35,7 +35,6 @@ function AnsFilter:Clone()
     f.minPetLevel = self.minPetLevel;
     f.maxBuyout = self.maxBuyout;
     f.ids = self.ids;
-    f.pets = self.pets;
     f.types = self.types;
     f.minSize = self.minSize;
     f.isSub = self.isSub;
@@ -199,7 +198,7 @@ function AnsFilter:IsValid(item)
     if (tids > 0) then
         local i;
         for i = 1, tids do
-            if (self.ids[i] == item.tsmId) then
+            if (self.ids[i] == item.tsmId or string.find(self.ids[i], item.tsmId)) then
                 return true;
             end
         end
