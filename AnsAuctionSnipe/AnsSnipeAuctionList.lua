@@ -21,6 +21,23 @@ function AnsSnipeAuctionListRefresh()
     AnsSnipeAuctionList:Refresh();
 end
 
+local function PlaceAuctionBuyoutSafe(type, index, auction)
+    if auction and not auction.sniped then
+        local itemLink = GetAuctionItemLink(type, index)
+        if itemLink and auction.link == itemLink then
+            local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
+            _, _, _, hasAllInfo = GetAuctionItemInfo(type, index)
+            if hasAllInfo and count == auction.count and buyoutPrice and 
+              buyoutPrice <= auction.buyoutPrice and GetMoney() >= buyoutPrice then
+                PlaceAuctionBid(type, index, buyoutPrice)
+                auction.sniped = true;
+                return true
+            end
+        end
+    end
+    return false
+end
+
 function AnsSnipeAuctionList:ShowLineTip(item)
     local index = item:GetID();
     if (self.items[index]) then
@@ -61,26 +78,17 @@ function AnsSnipeAuctionList:Purchase(block)
         local i;
 
         if (not auction.sniped and total == 0) then
-            if (GetMoney() >= auction.buyoutPrice) then
-                if (block.queryId ~= self.currentPage or self.isWaitingForData) then
-                    return false;
-                end
-
-                auction.sniped = true;
-                PlaceAuctionBid("list", index, auction.buyoutPrice);
-                return true;
-            else
+            if (block.queryId ~= self.currentPage or self.isWaitingForData) then
                 return false;
             end
-        elseif (not auction.sniped) then
-            if (GetMoney() >= auction.buyoutPrice) then
-                if (block.queryId ~= self.currentPage or self.isWaitingForData) then
-                    return false;
-                end
 
-                auction.sniped = true;
-                PlaceAuctionBid("list", index, auction.buyoutPrice);
+            return PlaceAuctionBuyoutSafe("list", index, auction);
+        elseif (not auction.sniped) then
+            if (block.queryId ~= self.currentPage or self.isWaitingForData) then
+                return false;
             end
+
+            PlaceAuctionBuyoutSafe("list", index, auction);
         else
             for i = 1, total do
                 local subblock = orig.group[i];
@@ -88,13 +96,11 @@ function AnsSnipeAuctionList:Purchase(block)
                 index = subblock.index;
 
                 if (not auction.sniped) then
-                    if (GetMoney() >= auction.buyoutPrice) then
-                        if (subblock.queryId ~= self.currentPage or self.isWaitingForData) then
-                            return false;
-                        end
+                    if (subblock.queryId ~= self.currentPage or self.isWaitingForData) then
+                        return false;
+                    end
 
-                        auction.sniped = true;
-                        PlaceAuctionBid("list", index, auction.buyoutPrice);
+                    if PlaceAuctionBuyoutSafe("list", index, auction) then
                         break;
                     end
                 end
