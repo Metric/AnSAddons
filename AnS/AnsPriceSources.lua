@@ -6,6 +6,7 @@ AnsPriceSource.__index = AnsPriceSource;
 
 local NameStringCache = "";
 local SourceStringCache = "";
+local CustomVarStringCache = "";
 
 local OpCodes = {
     percent = 0,
@@ -13,6 +14,7 @@ local OpCodes = {
     stacksize = 0,
     buyout = 0,
     ilevel = 0,
+    vendorsell = 0,
     quality = 1,
     dbmarket = 0,
     dbminbuyout = 0, 
@@ -40,16 +42,19 @@ local OpCodes = {
     atrvalue = 0
 };
 
+local VarCodes = {};
+
 local OperationCache = {};
 
 local ParseSourceTemplate = "local %s = ops.%s or 0; ";
+local ParseVarsTemplate = "local %s = %s or 0; ";
 
 local ParseTemplate = [[
     return function(ops)
-        local avg, first, round,
+        local ifgte, iflte, iflt, ifgt, ifeq, ifneq, check, avg, first, round,
             min, max, mod, 
             abs, ceil, floor, random, log, 
-            log10, exp, sqrt = AnsPriceSources.avg, AnsPriceSources.first, AnsPriceSources.round, math.min, math.max, math.mod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
+            log10, exp, sqrt = AnsPriceSources.ifgte, AnsPriceSources.iflte, AnsPriceSources.iflt, AnsPriceSources.ifgt, AnsPriceSources.ifeq, AnsPriceSources.ifneq, AnsPriceSources.check, AnsPriceSources.avg, AnsPriceSources.first, AnsPriceSources.round, math.min, math.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
 
         local percent = ops.percent;
@@ -58,6 +63,9 @@ local ParseTemplate = [[
         local buyout = ops.buyout;
         local ilevel = ops.ilevel;
         local quality = ops.quality;
+        local vendorsell = ops.vendorsell;
+
+        %s
 
         %s
 
@@ -77,7 +85,25 @@ end
 function AnsPriceSources:ClearCache()
     NameStringCache = "";
     SourceStringCache = "";
+    CustomVarStringCache = "";
     wipe(OperationCache);
+end
+
+function AnsPriceSources:LoadCustomVars()
+    wipe(VarCodes);
+    local i;
+    for i = 1, #ANS_CUSTOM_VARS do
+        local v = ANS_CUSTOM_VARS[i];
+        local value = v.value;
+
+        if (value and value:len() > 0) then
+            value = AnsUtils:ReplaceOpShortHand(value);
+            value = AnsUtils:ReplaceShortHandPercent(value);
+            value = AnsUtils:ReplaceMoneyShorthand(value); 
+
+            tinsert(VarCodes, {name = v.name, value = value});
+        end
+    end
 end
 
 function AnsPriceSources:Register(name, fn, key)
@@ -105,6 +131,27 @@ function AnsPriceSources:GetNamesAsString()
 
     -- cache for future lookups
     NameStringCache = str;
+
+    return str;
+end
+
+function AnsPriceSources:GetCustomVarsAsString()
+    local str = "";
+    local i;
+    local total = #VarCodes;
+
+    if (CustomVarStringCache:len() > 0) then
+        return CustomVarStringCache;
+    end
+
+    for i = 1, total do
+        local cvar = VarCodes[i];
+
+        local nstr = string.format(ParseVarsTemplate, cvar.name, cvar.value);
+        str = str..nstr;
+    end
+
+    CustomVarStringCache = str;
 
     return str;
 end
@@ -202,11 +249,67 @@ AnsPriceSources.avg = function(...)
 end
 
 AnsPriceSources.first = function(v1,v2)
-    if (v1 > 0) then
+    if (math.floor(v1) > 0) then
         return v1;
     end
 
     return v2;
+end
+
+AnsPriceSources.check = function(v1,v2,v3)
+    if (math.floor(v1) > 0) then
+        return v2;
+    else
+        return v3;
+    end
+end
+
+AnsPriceSources.iflte = function(v1, v2, v3, v4)
+    if (v1 <= v2) then
+        return v3;
+    else
+        return v4;
+    end
+end
+
+AnsPriceSources.ifgte = function(v1, v2, v3, v4)
+    if (v1 >= v2) then
+        return v3;
+    else
+        return v4;
+    end
+end
+
+AnsPriceSources.iflt = function(v1, v2, v3, v4)
+    if (v1 < v2) then
+        return v3;
+    else
+        return v4;
+    end
+end
+
+AnsPriceSources.ifgt = function(v1, v2, v3, v4)
+    if (v1 > v2) then
+        return v3;
+    else
+        return v4;
+    end
+end
+
+AnsPriceSources.ifeq = function(v1, v2, v3, v4)
+    if (v1 == v2) then
+        return v3;
+    else
+        return v4;
+    end
+end
+
+AnsPriceSources.ifneq = function(v1, v2, v3, v4)
+    if (v1 ~= v2) then
+        return v3;
+    else
+        return v4;
+    end
 end
 
 function AnsPriceSources:Query(q, item)
@@ -226,6 +329,7 @@ function AnsPriceSources:Query(q, item)
     OpCodes.percent = percent;
     OpCodes.ppu = ppu;
     OpCodes.ilevel = ilvl;
+    OpCodes.vendorsell = item.vendorsell;
 
     local names = self:GetNamesAsString();
     if (not names or names:len() == 0 ) then
@@ -243,14 +347,18 @@ function AnsPriceSources:Query(q, item)
 
     if (not OperationCache[q]) then
         q = AnsUtils:ReplaceOpShortHand(q);
+        q = AnsUtils:ReplaceShortHandPercent(q);
         q = AnsUtils:ReplaceMoneyShorthand(q);    
+
+        --print(q);
 
         if (not self:IsValidQuery(q)) then
             print("AnS Invalid Filter / Pricing String: "..q);
             return nil;
         end
 
-        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), q);
+        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
+
         fn, error = loadstring(pstr);
 
         if(not fn and error) then

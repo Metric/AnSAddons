@@ -1,7 +1,7 @@
 ## Interface: 80000
 ## Title: AnS [AuctionSnipe]
-## Version: 1.0.5.3
-## Notes: A lightweight addon for auction sniping; Relies on Undermine Journal for pricing.
+## Version: 1.0.5.4
+## Notes: A lightweight addon for auction sniping; Relies on Undermine Journal, TSM, or auctionator for pricing.
 ## License: MIT
 ## Dependencies: AnS
 

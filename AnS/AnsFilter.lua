@@ -15,6 +15,7 @@ function AnsFilter:New(name)
     f.maxBuyout = 0;
     f.ids = {};
     f.types = {};
+    f.subtypes = {};
     f.minSize = 0;
     f.isSub = false;
     f.subfilters = nil;
@@ -24,6 +25,8 @@ function AnsFilter:New(name)
     f.useGlobalMinStack = true;
     f.useGlobalMinQuality = true;
     f.useGlobalMinILevel = true;
+
+    f.isCustom = false;
 
     return f;
 end
@@ -36,6 +39,7 @@ function AnsFilter:Clone()
     f.maxBuyout = self.maxBuyout;
     f.ids = self.ids;
     f.types = self.types;
+    f.subtypes = self.subtypes;
     f.minSize = self.minSize;
     f.isSub = self.isSub;
 
@@ -48,6 +52,8 @@ function AnsFilter:Clone()
     else
         f.subfilters = nil;
     end
+
+    f.isCustom = self.isCustom;
 
     f.priceFn = self.priceFn;
     f.maxPercent = self.maxPercent;
@@ -173,25 +179,27 @@ function AnsFilter:IsValid(item)
     if (self.priceFn ~= nil and self.priceFn:len() > 0) then
         local presult = AnsPriceSources:Query(self.priceFn, item);
 
-        if (type(presult) == "boolean" and not presult) then
+        if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and presult <= 0)) then
             return false;
         end
     end
 
-    if (item.iLevel < self.minILevel) then
-        return false;
-    end
-    if (item.quality < self.minQuality) then
-        return false;
-    end
-    if (item.ppu >= self.maxBuyout and self.maxBuyout > 0) then
-        return false;
-    end
-    if (item.count < self.minSize) then
-        return false;
-    end
-    if (item.percent > self.maxPercent) then
-        return false;
+    if (not self.isCustom) then
+        if (item.iLevel < self.minILevel and self.useGlobalMinILevel) then
+            return false;
+        end
+        if (item.quality < self.minQuality and self.useGlobalMinQuality) then
+            return false;
+        end
+        if (item.ppu >= self.maxBuyout and self.maxBuyout > 0 and self.useGlobalMaxBuyout) then
+            return false;
+        end
+        if (item.count < self.minSize and self.useGlobalMinStack) then
+            return false;
+        end
+        if (item.percent > self.maxPercent) then
+            return false;
+        end
     end
 
     local tids = #self.ids;
@@ -209,7 +217,17 @@ function AnsFilter:IsValid(item)
         local i;
         for i = 1, ttypes do
             if (self.types[i] == item.type) then
-                return true;
+                local tstypes = #self.subtypes;
+                if (tstypes > 0) then
+                    local j;
+                    for j = 1, tstypes do
+                        if (self.subtypes[j] == item.subtype) then
+                            return true;
+                        end
+                    end
+                else
+                    return true;
+                end
             end
         end
     end

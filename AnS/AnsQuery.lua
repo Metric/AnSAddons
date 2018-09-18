@@ -53,6 +53,7 @@ function AnsAuction:Clone()
     a.type = self.type;
     a.subtype = self.subtype;
     a.ppu = self.ppu;
+    a.vendorsell = self.vendorsell;
 
     local tg = #self.group;
     if (tg > 0) then
@@ -193,40 +194,21 @@ function AnsQuery:AssignFilters(ilevel, buyout, quality, size, maxPercent)
     self.minStackSize = size;
     self.maxPercent = maxPercent;
 
-    local count = 0;
     local i;
     for i = 1, #AnsFilterSelected do
         if (AnsFilterSelected[i]) then
             local f = AnsFilterList[i]:Clone();
-
-            count = count + 1;
             f.maxPercent = maxPercent or 100;
-            if (f.useGlobalMinILevel) then
-                f.minILevel = ilevel;
-            else
-                f.minILevel = 0;
-            end
-            if (f.useGlobalMaxBuyout) then
-                f.maxBuyout = buyout;
-            else
-                f.maxBuyout = 0;
-            end
-            if (f.useGlobalMinQuality) then
-                f.minQuality = quality;
-            else
-                f.minQuality = 1;
-            end
-            if (f.useGlobalMinStack) then
-                f.minSize = size;
-            else
-                f.minSize = 0;
-            end
+            f.minILevel = ilevel;
+            f.maxBuyout = buyout;
+            f.minQuality = quality;
+            f.minSize = size;
             local fn = f.priceFn;
 
-            if (not fn or fn:len() == 0) then
+            if ((fn == nil or fn:len() == 0) and not f.isCustom) then
                 f.priceFn = ANS_GLOBAL_SETTINGS.pricingFn;
             end
-            self.filters[count] = f;
+            tinsert(self.filters, f);
         end
     end
 end
@@ -433,21 +415,25 @@ function AnsQuery:Capture()
 
         if (auction.link ~= nil) then
             auction.tsmId = AnsUtils:GetTSMID(auction.link);
-            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType = GetItemInfo(auction.link);
+            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
             if (itemName ~= nil) then
                 auction.iLevel = itemLevel;
                 auction.type = itemType:lower();
                 auction.subtype = itemSubType:lower();
+                auction.vendorsell = vendorsell;
             else
                 auction.iLevel = 0;
                 auction.type = "Unknown";
                 auction.subtype = "Unknown";
+                auction.vendorsell = 0;
             end
+            
         else
             auction.tsmId = auction.id;
             auction.iLevel = 0;
             auction.type = "Unknown";
             auction.subtype = "Unknown";
+            auction.vendorsell = 0;
         end
 
         local ownerName;
@@ -467,7 +453,7 @@ function AnsQuery:Capture()
             local hash = ItemHash(auction);
 
             local avg = AnsPriceSources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
-            if (not avg or avg <= 0) then avg = 1; end;
+            if (not avg or avg <= 0) then avg = auction.vendorsell or 1; end;
 
             auction.percent = math.floor(ppu / avg * 100);
 

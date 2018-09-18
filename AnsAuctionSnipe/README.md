@@ -83,6 +83,8 @@ Features
     * Name filter for further refinement
 
  * Take it to the next level with custom filters, pricing strings, and filter strings
+ * For a list of item types and sub-types to use in your custom filters, instead of item ids see: http://wowwiki.wikia.com/wiki/ItemType
+
 
 How to Buy & Other Controls
 ==============
@@ -97,6 +99,9 @@ Shift + Left Click allows you to temporarily blacklist a listing until the AH wi
 CTRL + Left Click allows you to temporarily blacklist the item type until the AH window is closed.
 
 Selecting armor, weapons, or pets, will now display the dress up window with that item.
+
+* Want to use the key bindings through TSM macros instead? Use the following functions: AuctionSnipe:BuySelected() and AuctionSnipe:BuyFirst()
+
 
 Filter and Percent/Pricing Strings
 =========================
@@ -113,13 +118,13 @@ Lua operators can be used on strings
 Predefined functions for use in strings:
 
 ```
-avg, first, min, max, mod, abs, ceil, floor, round, random, log, log10, exp, sqrt
+first, check, iflte, iflt, ifgte, ifgt, ifeq, ifneq, avg, min, max, mod, abs, ceil, floor, round, random, log, log10, exp, sqrt
 ```
 
 Predefined Item Variables:
 
 ```
-percent, ppu, stacksize, buyout, ilevel, quality
+vendorsell, percent, ppu, stacksize, buyout, ilevel, quality
 ```
 
 Predefined TUJ Variables:
@@ -139,6 +144,26 @@ Predefined Auctionator Variables:
 ```
 atrvalue
 ```
+
+Custom VARS
+========
+Custom variables can now be defined in ESC -> Interface -> Addons -> AnS -> Custom VARS
+
+All the same info regarding filter and percent strings apply to these as well.
+
+Percent Shorthand Now Supported
+================================
+You can do the following just like TSM:
+
+```
+10% dbmarketvalue
+```
+```
+20% dbminbuyout
+```
+
+etc..
+
 
 Filter and Percent/Pricing Strings Update:
 ========================================

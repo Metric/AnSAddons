@@ -1,0 +1,25 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Button name="AnsDropdownItemTemplate" frameStrata="HIGH"  virtual="true">
+         <ButtonText justifyH="LEFT" inherits="AnsGameFontNormalGray">
+            <Anchors>
+                <Anchor point="LEFT" x="5" y="0" />
+            </Anchors>
+        </ButtonText>
+        <NormalFont inherits="AnsGameFontNormalGray" />
+        <HighlightFont inherits="AnsGameFontNormalDark" />
+        <PushedTexture>
+            <Color r="0" g="0" b="0" a="0.05" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </PushedTexture>
+        <HighlightTexture>
+            <Color r="0" g="0" b="0" a="0.05" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+    </Button>
+</Ui>

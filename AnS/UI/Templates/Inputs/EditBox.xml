@@ -1,0 +1,18 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <EditBox name="AnsEditBoxTemplate" virtual="true">
+        <FontString name="$parentText" inherits="GameFontNormalDark" />
+        <Layers>
+            <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                    <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                </Anchors>
+            </Texture>
+            <FontString name="$parentLabel" inherits="GameFontNormal">
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="16" />
+                </Anchors>
+            </FontString>
+        </Layers>
+    </EditBox>
+</Ui>

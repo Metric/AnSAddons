@@ -1,0 +1,94 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <ScrollFrame name="AnsFauxScrollFrameTemplate" virtual="true" inherits="UIPanelScrollFrameCodeTemplate">
+        <Scripts>
+            <OnScrollRangeChanged function=""/>
+        </Scripts>
+        <ScrollChild>
+            <Frame hidden="true" name="$parentScrollChildFrame" parentKey="ScrollChildFrame">
+                <Size x="300" y="334"/>
+            </Frame>
+        </ScrollChild>
+        <Frames>
+            <Slider name="$parentScrollBar" orientation="vertical" parentKey="ScrollBar">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="0" y="0" />
+                    <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                </Anchors>
+                <Size x="3" />
+                <ThumbTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Size x="3" y="16" />
+                    <Color r="1" g="1" b="1" a="0.75" />
+                </ThumbTexture>
+                <Frames>
+                    <Button hidden="true" name="$parentScrollUpButton">
+                    </Button>
+                    <Button hidden="true" name="$parentScrollDownButton">
+                    </Button>
+                </Frames>
+                <Scripts>
+                    <OnValueChanged function="UIPanelScrollBar_OnValueChanged"/>
+                </Scripts>
+            </Slider>
+        </Frames>
+    </ScrollFrame>
+    <Button name="AnsRecordRowMinTemplate" frameStrata="HIGH" virtual="true" hidden="true">
+        <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Color r="1" g="1" b="1" a="0.25" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.10" />
+                </Texture>
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="110" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="6" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentWho" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="64" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT" x="0" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentType" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="64" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentWho" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentStack" justifyH="RIGHT" inherits="AnsGameFontSmall">
+                    <Size x="64" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentType" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentAmount" inherits="AnsGameFontSmall" justifyH="RIGHT">
+                    <Size x="100" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-6" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
+</Ui>

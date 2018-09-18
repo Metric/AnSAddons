@@ -24,6 +24,7 @@ BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
 BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
 
 local Ans_Orig_AuctionTabClick = nil;
+
 local function TabClick(self, button, down)
     AuctionSnipe:TabClick(self, button, down);
 end
@@ -33,6 +34,7 @@ local function QualitySelected(self, arg1, arg2, checked)
     UIDropDownMenu_SetText(_G["AnsSnipeQualityLevel"], ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
     CloseDropDownMenus();
 end
+
 local function BuildQualityDropDown(frame, level, menuList)
     local info = UIDropDownMenu_CreateInfo();
     info.func = QualitySelected;
@@ -43,6 +45,42 @@ local function BuildQualityDropDown(frame, level, menuList)
         local text = c.hex..AnsQualityToText[i];
         info.text, info.arg1 = text, i;
         UIDropDownMenu_AddButton(info);
+    end
+end
+
+function AuctionSnipe:BuySelected()
+    local s = AnsSnipeAuctionList;
+    if (s and _G["AnsSnipeMainPanel"]:IsShown()) then
+        if (s.selectedEntry > -1 and #s.items > 0) then
+            local block = s.items[s.selectedEntry];
+            if (block) then
+                if (s:Purchase(block)) then
+                    --AnsRecycler:RecycleBlock(tremove(s.items, s.selectedEntry));
+                    s.selectedEntry = -1;
+                end
+
+                s:Refresh();
+            end
+        end
+    end 
+end
+
+function AuctionSnipe:BuyFirst()
+    local s = AnsSnipeAuctionList;
+    if (s and _G["AnsSnipeMainPanel"]:IsShown()) then
+        if (#s.items > 0) then
+            local block = s.items[1];
+            if (block) then
+                if(s:Purchase(block)) then
+                    --AnsRecycler:RecycleBlock(tremove(s.items, 1));
+                    if (s.selectedEntry == 1) then
+                        s.selectedEntry = -1;
+                    end
+                end
+
+                s:Refresh();
+            end
+        end
     end
 end
 

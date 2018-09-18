@@ -1,3 +1,11 @@
+AnS [Auction Sniper] CHANGES 1.0.5.4
+--------------------- 
+* Big thanks to tieonlinux for submitting a pull request, which prevents purchasing the wrong item.
+* Removed recent column header as it was confusing and served no purpose at this point.
+* Stack price has been replaced with seller name, if it is known, otherwise you will see a ? instead.
+    * Please let me know, if you want this reverted.
+* Created function access for TSM macro bindings for mouse wheel etc. for the two available key bindings: AuctionSnipe:BuySelected() and AuctionSnipe:BuyFirst(). 
+
 AnS [Auction Sniper] CHANGES 1.0.5.3
 ---------------------
 * You can disable Safe Buy in ESC -> Interface -> Addons -> AnS -> Safe Buy Toggle.

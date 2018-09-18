@@ -5,7 +5,7 @@ AnsCustomFilter = {};
 AnsCustomFilter.__index = AnsCustomFilter;
 
 StaticPopupDialogs["ANS_NO_PRICING"] = {
-    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM (with lua mod), and Auctionator are currently supported.",
+    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, and Auctionator are currently supported.",
     button1 = "OKAY",
     OnAccept = function() end,
     timeout = 0,
@@ -60,6 +60,8 @@ function AnsCustomFilter:New(name,ids)
     f.globalMinStack = true;
     f.globalMinQuality = true;
     f.globalMinILevel = true;
+    f.types = "";
+    f.subtypes = "";
 
     return f;
 end
@@ -78,9 +80,11 @@ function AnsCore:OnLoad()
     self:RegisterPriceSources();
     self:StoreDefaultFilters();
     self:LoadCustomFilters();
+    self:LoadCustomVars();
 end
 
 function AnsCore:StoreDefaultFilters()
+    ANS_FILTER_SELECTION = ANS_FILTER_SELECTION or {};
     local i;
     local total = #AnsFilterList;
 
@@ -158,6 +162,12 @@ function AnsCore:RegisterPriceSources()
     end
 end
 
+function AnsCore:LoadCustomVars()
+    ANS_CUSTOM_VARS = ANS_CUSTOM_VARS or {};
+    AnsPriceSources:ClearCache();
+    AnsPriceSources:LoadCustomVars();
+end
+
 function AnsCore:LoadCustomFilters()
     local i;
     local total = #DefaultFilters;
@@ -181,17 +191,30 @@ function AnsCore:LoadCustomFilters()
 
     for i = 1, #ANS_CUSTOM_FILTERS do
         local cf = ANS_CUSTOM_FILTERS[i];
-        if (cf.ids ~= nil and cf.ids:len() > 0) then
+        if ((cf.ids and cf.ids:len() > 0) or (cf.types and cf.types:len() > 0)) then
             local f = AnsFilter:New(cf.name);
             f.isSub = true;
             f.priceFn = cf.priceFn;
             
+            f.isCustom = true;
+
             f.useGlobalMaxBuyout = cf.globalMaxBuyout;
             f.useGlobalMinStack = cf.globalMinStack;
             f.useGlobalMinQuality = cf.globalMinQuality;
             f.useGlobalMinILevel = cf.globalMinILevel;
 
-            f:ParseTSM(cf.ids);
+            if (cf.types and cf.types:len() > 0) then
+                f.types = { strsplit(",", string.gsub(cf.types:lower(), " ", "")) };
+            end
+
+            if (cf.subtypes and cf.subtypes:len() > 0) then
+                f.subtypes = { strsplit(",", string.gsub(cf.subtypes:lower(), " ", "")) };
+            end
+
+            if (cf.ids and cf.ids:len() > 0) then
+                f:ParseTSM(cf.ids);
+            end
+
             fparent.subfilters[vtotal] = f;
             vtotal = vtotal + 1;
             total = total + 1;
@@ -223,6 +246,9 @@ function AnsCore:MigrateGlobalSettings()
 end
 
 function AnsCore:MigrateCustomFilters()
+    ANS_CUSTOM_FILTERS = ANS_CUSTOM_FILTERS or {};
+    ANS_CUSTOM_FILTER_SELECTION = ANS_CUSTOM_FILTER_SELECTION or {};
+
     local i;
     local total = #ANS_CUSTOM_FILTERS;
 
@@ -246,6 +272,13 @@ function AnsCore:MigrateCustomFilters()
 
         if (f.globalMinILevel == nil) then 
             f.globalMinILevel = true;
+        end
+
+        if (f.types == nil) then
+            f.types = "";
+        end
+        if (f.subtypes == nil) then
+            f.subtypes = "";
         end
     end
 end

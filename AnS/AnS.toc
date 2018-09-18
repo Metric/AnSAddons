@@ -1,32 +1,51 @@
 ## Interface: 80000
 ## Title: AnS
-## Version: 1.0.5.3
+## Version: 1.0.5.4
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
-## SavedVariables: ANS_CUSTOM_FILTERS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION, ANS_CUSTOM_FILTER_SELECTION
+## SavedVariables: ANS_CUSTOM_FILTERS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION, ANS_CUSTOM_FILTER_SELECTION
 
+## Components
+UI\Templates\Fonts.xml
+UI\Templates\Inputs\EditBox.xml
+UI\Templates\Buttons\Buttons.xml
+UI\Templates\Buttons\DropdownItem.xml
+UI\Templates\Buttons\Dropdown.xml
+UI\Templates\Buttons\RecordRowMin.xml
+UI\Templates\Frames\RecordsHeadingMin.xml
+UI\Templates\Frames\Graph.xml
+
+UI\Components\Common\AnsDropdown.lua
+UI\Components\AnsGraph.lua
+
+## General Settings & Utils
 AnsSettings.lua
 AnsUtils.lua
 
-Data/AnsFish.lua
-Data/AnsCloth.lua
-Data/AnsEnchanting.lua
-Data/AnsHerb.lua
-Data/AnsLeather.lua
-Data/AnsMounts.lua
-Data/AnsOre.lua
-Data/AnsPets.lua
+## Base Data
+Data\AnsFish.lua
+Data\AnsCloth.lua
+Data\AnsEnchanting.lua
+Data\AnsHerb.lua
+Data\AnsLeather.lua
+Data\AnsMounts.lua
+Data\AnsOre.lua
+Data\AnsPets.lua
 
+## Filters & Pricing
 AnsPriceSources.lua
 
 AnsFilter.lua
 AnsFilterDefault.lua
 AnsFilterView.lua
 
+## Auction Queries
 AnsQuery.lua
 
+## AnS Core
 AnS.lua
 AnS.xml
 
+## AnS Config -- This will be moving to separate modules eventually.
 AnsConfig.lua
 AnsConfig.xml

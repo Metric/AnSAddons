@@ -5,9 +5,13 @@
 AnsUtils = {};
 AnsUtils.__index = AnsUtils;
 
+AnsMinimapIcon = {};
+AnsMinimapIcon.__index = AnsMinimapIcon;
+
 local TempTable = {};
 local BattlePetTempTable = {};
 local TSMID_CACHE = {};
+local TempBonusID = {};
 
 local OP_SIM_HAND = {
     lte = "<=",
@@ -25,6 +29,93 @@ local OP_SHORT_HAND = {
     epic = "4",
     legendary = "5"
 };
+
+--- Minimap  Icon ---
+
+function AnsMinimapIcon:New(name, icon, clickFn, onMoveFn, angle, tooltipLines)
+    local micon = {};
+    setmetatable(micon, AnsMinimapIcon);
+    micon.clickFn = clickFn;
+    micon.tooltipLines = tooltipLines;
+    micon.name = name;
+    micon.angle = angle or 45;
+    micon.onMoveFn = onMoveFn;
+
+    micon.frame = CreateFrame("BUTTON", name, Minimap, "AnsMiniButtonTemplate");
+    micon.frame:SetScript("OnClick", micon.clickFn);
+    micon.frame:SetScript("OnDragStart", function() micon:OnDragStart() end);
+    micon.frame:SetScript("OnDragStop", function() micon:OnDragStop() end);
+    micon.frame:SetScript("OnUpdate", function() micon:OnUpdate() end);
+    micon.frame:SetScript("OnEnter", function() micon:ShowTip() end);
+    micon.frame:SetScript("OnLeave", function() micon:HideTip() end);
+
+    micon.isDragging = false;
+
+    local ictex = _G[micon.frame:GetName().."Icon"];
+    ictex:SetTexture(icon);
+
+    micon:Reposition();
+
+    return micon;
+end
+
+function AnsMinimapIcon:ShowTip()
+    local tip = GameTooltip;
+    if (self.tooltipLines and #self.tooltipLines > 0) then
+        tip:ClearLines();
+        tip:SetOwner(self.frame, "ANCHOR_LEFT");
+
+        for i,v in ipairs(self.tooltipLines) do
+            tip:AddLine(v, 1, 1, 1, false);
+        end
+
+        tip:Show();
+    end
+end
+
+function AnsMinimapIcon:HideTip()
+    GameTooltip:Hide();
+end
+
+function AnsMinimapIcon:Reposition()
+    if (self.onMoveFn) then
+        self.onMoveFn(self.angle);
+    end
+    self.frame:SetPoint("TOPLEFT", "Minimap", "TOPLEFT", 52 - (80*cos(self.angle)), (80*sin(self.angle)) - 52);
+end
+
+function AnsMinimapIcon:OnUpdate()
+    if (self.isDragging) then
+        local xpos, ypos = GetCursorPosition();
+        local xmin, ymin = Minimap:GetLeft(), Minimap:GetBottom();
+
+        xpos = xmin-xpos/UIParent:GetScale() + 72;
+        ypos = ypos/UIParent:GetScale() - ymin - 72;
+
+        self.angle = math.deg(math.atan2(ypos,xpos));
+        self:Reposition();
+    end
+end
+
+function AnsMinimapIcon:OnDragStart()
+    self.frame:LockHighlight();
+    self.isDragging = true;
+end
+
+function AnsMinimapIcon:OnDragStop()
+    self.frame:UnlockHighlight();
+    self.isDragging = false;
+end
+
+function AnsMinimapIcon:Hide() 
+    self.frame:Hide();
+end
+
+function AnsMinimapIcon:Show()
+    self.frame:Show();
+end
+
+--- Standard Utils ---
 
 function AnsUtils:GSC(val) 
     local rv = math.floor(val);
@@ -48,19 +139,19 @@ function AnsUtils:PriceToString(val)
     local st = "";
 
     if (gold ~= 0) then
-        st = gold.."g ";
+        st = "|cFFFFFFFF"..gold.."|cFFD7BC45g ";
     end
 
     if (st ~= "") then
-        st = st..format("%02is ", silver);
+        st = st.."|cFFFFFFFF"..format("%02i|cFF9C9B9Cs ", silver);
     elseif (silver ~= 0) then
-        st = st..silver.."s ";
+        st = st.."|cFFFFFFFF"..silver.."|cFF9C9B9Cs ";
     end
 
     if (st ~= "") then
-        st = st..format("%02ic", copper);
+        st = st.."|cFFFFFFFF"..format("%02i|cFF9B502Fc", copper);
     elseif (copper ~= 0) then
-        st = st..copper.."c";
+        st = st.."|cFFFFFFFF"..copper.."|cFF9B502Fc";
     end
 
     return st;
@@ -132,12 +223,20 @@ function AnsUtils:GetTSMID(link)
             bonusCount = tonumber(bonusCount);
 
             if(bonusCount and bonusCount > 0) then
+                wipe(TempBonusID);
+
                 local i;
-                local sep = ":";
-                extra = "::"..bonusCount;
                 for i = 1, bonusCount do
-                    extra = extra..sep..tbl[14+i];
+                    local num = tonumber(tbl[14+i]);
+
+                    if (num) then
+                        tinsert(TempBonusID, num);
+                    end
                 end
+
+                table.sort(TempBonusID, function(x,y) return x < y; end);
+
+                extra = "::"..bonusCount..":"..strjoin(":", unpack(TempBonusID));
             end
         end
 
@@ -159,10 +258,10 @@ end
 
 function AnsUtils:ReplaceOpShortHand(str)
     for k, v in pairs(OP_SIM_HAND) do
-        str = gsub(str, k, v);
+        str = gsub(str, k.."[^%(]", v);
     end
     for k, v in pairs(OP_SHORT_HAND) do
-        str = gsub(str, k, v);
+        str = gsub(str, k.."[^%(^e]", v);
     end
     return str;
 end
@@ -174,6 +273,25 @@ function AnsUtils:ReplaceMoneyShorthand(str)
         str = gsub(str, s, v);
         s,v = self:MoneyStringToCopper(str);
     end
+    return str;
+end
+
+function AnsUtils:ReplaceShortHandPercent(str)
+    local s = string.match(str, "(%d+)%%");
+
+    while (s) do
+        local num = tonumber(s);
+
+        if (num) then
+            local perc = num / 100;
+            str = string.gsub(str, s.."%%", perc.." *");
+        else
+            break;
+        end
+
+        s = string.match(str, "(%d+)%%");
+    end
+
     return str;
 end
 

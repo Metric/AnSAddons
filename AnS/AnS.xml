@@ -1,7 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <!-- Template Includes -->
-    <Include file="UI/Templates/Fonts.xml" />
-
     <Include file="UI/Templates/Buttons/FilterRow.xml" />
     <Include file="UI/Templates/Buttons/ResultRow.xml" />
     <Include file="UI/Templates/Buttons/Heading.xml" />

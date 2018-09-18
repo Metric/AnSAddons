@@ -1,36 +1,12 @@
 <Bindings>
     <Binding name="ANSSNIPEBUYSELECT" runOnUp="true" header="[Auction Snipe]" category="AnS">
-        local s = AnsSnipeAuctionList;
-        if (s and _G["AnsSnipeMainPanel"]:IsShown() and keystate == "up") then
-            if (s.selectedEntry > -1 and #s.items > 0) then
-                local block = s.items[s.selectedEntry];
-                if (block) then
-                    if (s:Purchase(block)) then
-                        --AnsRecycler:RecycleBlock(tremove(s.items, s.selectedEntry));
-                        s.selectedEntry = -1;
-                    end
-
-                    s:Refresh();
-                end
-            end
+        if (keystate == "up") then
+            AuctionSnipe:BuySelected();
         end
     </Binding>
     <Binding name="ANSSNIPEBUYFIRST" runOnUp="true" category="AnS">
-        local s = AnsSnipeAuctionList;
-        if (s and _G["AnsSnipeMainPanel"]:IsShown() and keystate == "up") then
-            if (#s.items > 0) then
-                local block = s.items[1];
-                if (block) then
-                    if(s:Purchase(block)) then
-                        --AnsRecycler:RecycleBlock(tremove(s.items, 1));
-                        if (s.selectedEntry == 1) then
-                            s.selectedEntry = -1;
-                        end
-                    end
-
-                    s:Refresh();
-                end
-            end
+        if (keystate == "up") then
+            AuctionSnipe:BuyFirst();
         end
     </Binding>
 </Bindings>

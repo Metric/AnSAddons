@@ -150,8 +150,64 @@
       </Slider>
     </Frames>
   </Frame>
+
+  <Frame name="AnsCustomVarRowTemplate" virtual="true">
+    <Size x="512" y="32" />
+    <Frames>
+      <EditBox name="$parentName" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="100" y="32" /></Size>
+        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="VAR Name">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="5"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:SaveVarRow(self:GetParent(), "name");
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <EditBox name="$parentValue" autoFocus="false" inherits="InputBoxTemplate">
+        <Size><AbsDimension x="200" y="32" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="VAR Value">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="5"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:SaveVarRow(self:GetParent(), "value");
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <Button name="$parentDeleteVar" text="Delete" inherits="UIPanelButtonTemplate">
+        <Size><AbsDimension x="64" y="32" /></Size>
+        <Anchors><Anchor point="LEFT" relativeTo="$parentValue" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            AnsConfig:DeleteVarRow(self:GetParent());
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+  </Frame>
+
   <Frame name="AnsCustomFilterRowTemplate" virtual="true">
-    <Size><AbsDimension x="525" y="70" /></Size>
+    <Size><AbsDimension x="525" y="100" /></Size>
     <Frames>
       <EditBox name="$parentName" autoFocus="false" inherits="InputBoxTemplate">
         <Size><AbsDimension x="100" y="32" /></Size>
@@ -169,7 +225,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent(), "name");
+            AnsConfig:SaveFilterRow(self:GetParent(), "name");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -189,7 +245,7 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent(), "ids");
+            AnsConfig:SaveFilterRow(self:GetParent(), "ids");
           </OnTextChanged>
         </Scripts>
       </EditBox>
@@ -209,11 +265,55 @@
         </Layers>
         <Scripts>
           <OnTextChanged>
-            AnsConfig:EditedFilterRow(self:GetParent(), "filter");
+            AnsConfig:SaveFilterRow(self:GetParent(), "filter");
           </OnTextChanged>
         </Scripts>
       </EditBox>
-      <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMaxBuyout">
+      <EditBox name="$parentTypes" autoFocus="false" inherits="InputBoxTemplate">
+        <Size x="100" y="16" />
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="$parentPriceString" relativePoint="RIGHT" x="10" y="0" />
+        </Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item Types">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="10"/>
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:SaveFilterRow(self:GetParent(), "types");
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <EditBox name="$parentSubTypes" autoFocus="false" inherits="InputBoxTemplate">
+        <Size x="100" y="16" />
+        <Anchors>
+          <Anchor point="LEFT" relativeTo="$parentTypes" relativePoint="RIGHT" x="10" y="0" />
+        </Anchors>
+        <Layers>
+          <Layer level="ARTWORK">
+            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item Sub-Types">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
+                  <Offset x="0" y="10" />
+                </Anchor>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <Scripts>
+          <OnTextChanged>
+            AnsConfig:SaveFilterRow(self:GetParent(), "subtypes");
+          </OnTextChanged>
+        </Scripts>
+      </EditBox>
+      <!--<CheckButton inherits="UIRadioButtonTemplate" name="$parentGMaxBuyout">
         <Anchors>
           <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentPriceString">
             <Offset>
@@ -223,7 +323,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G Buyout"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "buyout");</OnClick>
+          <OnClick>AnsConfig:SaveFilterRow(self:GetParent(), "buyout");</OnClick>
         </Scripts>
       </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinStack">
@@ -236,7 +336,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G Stack"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "stack");</OnClick>
+          <OnClick>AnsConfig:SaveFilterRow(self:GetParent(), "stack");</OnClick>
         </Scripts>
       </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinQuality">
@@ -249,7 +349,7 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G Quality"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "quality");</OnClick>
+          <OnClick>AnsConfig:SaveFilterRow(self:GetParent(), "quality");</OnClick>
         </Scripts>
       </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinLevel">
@@ -262,15 +362,86 @@
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("G iLevel"); </OnLoad>
-          <OnClick>AnsConfig:EditedFilterRow(self:GetParent(), "level");</OnClick>
+          <OnClick>AnsConfig:SaveFilterRow(self:GetParent(), "level");</OnClick>
         </Scripts>
-      </CheckButton>
+      </CheckButton>-->
       <Button name="$parentDeleteFilter" text="Delete" inherits="UIPanelButtonTemplate">
         <Size><AbsDimension x="64" y="32" /></Size>
         <Anchors><Anchor point="LEFT" relativeTo="$parentIDs" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
         <Scripts>
           <OnClick>
             AnsConfig:DeleteFilterRow(self:GetParent());
+          </OnClick>
+        </Scripts>
+      </Button>
+    </Frames>
+  </Frame>
+
+  <Frame enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate" name="AnsCustomVarsFrame" parent="UIParent">
+    <Scripts>
+      <OnLoad>
+            AnsConfig:LoadPanel(self, "AnS", "Custom VARS");
+            AnsCustomVarsRefresh();
+        </OnLoad>
+        <OnShow>
+          AnsCustomVarsRefresh();
+        </OnShow>
+    </Scripts>
+    <Frames>
+      <ScrollFrame name="AnsCustomVarsScrollFrame" inherits="FauxScrollFrameTemplate">
+        <Size><AbsDimension x="565" y="425" /></Size>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarsFrame_BTitle" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-40" /></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnVerticalScroll>
+            FauxScrollFrame_OnVerticalScroll(self, offset, 32, AnsCustomVarsRefresh);
+          </OnVerticalScroll>
+        </Scripts>
+      </ScrollFrame>
+      <Frame name="AnsCustomVarRow1" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarsScrollFrame" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow2" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow1" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow3" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow2" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow4" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow3" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow5" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow4" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow6" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow5" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow7" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow6" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow8" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow7" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow9" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow8" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow10" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow9" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow11" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow10" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow12" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow11" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Frame name="AnsCustomVarRow13" inherits="AnsCustomVarRowTemplate">
+        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow12" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
+      </Frame>
+      <Button name="AnsAddCustomVar" text="New VAR" inherits="UIPanelButtonTemplate">
+        <Size><AbsDimension x="100" y="32" /></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="AnsCustomVarsScrollFrame" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="20" y="-20" /></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnClick>
+            AnsConfig:AddVarRow();
           </OnClick>
         </Scripts>
       </Button>
@@ -329,7 +500,7 @@
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsOptionImportGroups" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-40" /></Offset></Anchor></Anchors>
         <Scripts>
           <OnVerticalScroll>
-            FauxScrollFrame_OnVerticalScroll(self, offset, 70, AnsCustomFilterRefresh);
+            FauxScrollFrame_OnVerticalScroll(self, offset, 100, AnsCustomFilterRefresh);
           </OnVerticalScroll>
         </Scripts>
       </ScrollFrame>
@@ -345,10 +516,10 @@
       <Frame name="AnsCustomFilterRow4" inherits="AnsCustomFilterRowTemplate">
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomFilterRow3" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
       </Frame>
-      <Frame name="AnsCustomFilterRow5" inherits="AnsCustomFilterRowTemplate">
+      <!--<Frame name="AnsCustomFilterRow5" inherits="AnsCustomFilterRowTemplate">
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomFilterRow4" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
       </Frame>
-      <!--<Frame name="AnsCustomFilterRow6" inherits="AnsCustomFilterRowTemplate">
+      <Frame name="AnsCustomFilterRow6" inherits="AnsCustomFilterRowTemplate">
         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsCustomFilterRow5" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
       </Frame>
       <Frame name="AnsCustomFilterRow7" inherits="AnsCustomFilterRowTemplate">

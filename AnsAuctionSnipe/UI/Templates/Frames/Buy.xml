@@ -39,15 +39,11 @@
 
                         <Scripts>
                             <OnEnterPressed>
-                                AuctionSnipe:Start();
                                 self:ClearFocus();
                             </OnEnterPressed>
                             <OnEscapePressed>
                                 self:ClearFocus();
                             </OnEscapePressed>
-                            <OnShow>
-                                self:SetFocus();
-                            </OnShow>
                         </Scripts>
                     </EditBox>
 
@@ -67,6 +63,14 @@
 								</FontString>
 							</Layer>
                         </Layers>
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
                     </EditBox>
 
                     <Frame name="AnsSnipeMaxBuyout" inherits="MoneyInputFrameTemplate">
@@ -150,6 +154,14 @@
 								</FontString>
 							</Layer>
                         </Layers>
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
                     </EditBox>
                     <CheckButton inherits="UIRadioButtonTemplate" name="AnsSnipeDingSound">
                         <Anchors>
@@ -193,6 +205,12 @@
                             <OnTextChanged>
                                 AnsConfig:Edit(self, "pricing");
                             </OnTextChanged>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
                         </Scripts>
                     </EditBox>
                 </Frames>
@@ -272,11 +290,11 @@
                         <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingPercentage" relativePoint="TOPRIGHT"><Offset><AbsDimension x="10" y="0"/></Offset></Anchor></Anchors>
                         <Scripts><OnClick>AuctionSnipe:SortByILevel()</OnClick></Scripts>
                     </Button>
-                    <Button name="AnsSnipeHeadingRecent" text="Recent" inherits="AnsHeadingTemplate">
+                    <!--<Button name="AnsSnipeHeadingRecent" text="Recent" inherits="AnsHeadingTemplate">
                         <Size><AbsDimension x="108" y="20"/></Size>
                         <Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="-10" y="-21"/></Offset></Anchor></Anchors>
                         <Scripts><OnClick>AuctionSnipe:SortByRecent()</OnClick></Scripts>
-                    </Button>
+                    </Button>-->
                 </Frames>
             </Frame>
 

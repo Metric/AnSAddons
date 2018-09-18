@@ -1,0 +1,109 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+     <Button name="AnsIconCloseTemplate" virtual="true">
+        <Size x="18" y="18" />
+        <NormalTexture file="Interface\AddOns\AnS\Images\icons">
+            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
+            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="1" />
+        </HighlightTexture>
+     </Button>
+     <Button name="AnsTabTemplate" virtual="true">
+        <Size x="100" y="20" />
+        <ButtonText name="$parentText" justifyV="CENTER" inherits="AnsGameFontWhiteTrans" justifyH="CENTER">
+            <Size x="100" y="20" />
+        </ButtonText>
+        <NormalFont inherits="AnsGameFontWhiteTrans" />
+        <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Size x="100" y="20" />
+            <Color r="0.01" g="0.02" b="0.04" a="0" />
+        </NormalTexture>
+        <PushedTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Size x="100" y="20" />
+            <Color r="0.01" g="0.02" b="0.04" a="1" />
+        </PushedTexture>
+     </Button>
+     <Button name="AnsSolidCircleTemplate" virtual="true">
+        <Size x="4" y="4" />
+        <NormalTexture name="$parentIcon" file="Interface\AddOns\AnS\Images\icons">
+            <TexCoords left="0" right="0.5" top="1" bottom="0.5" />
+            <Size x="4" y="4" />
+        </NormalTexture>
+     </Button>
+     <Button name="AnsUnderlineTemplate" virtual="true">
+        <ButtonText name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="LEFT" />
+        <NormalFont inherits="AnsGameFontWhiteTrans" />
+        <NormalTexture file="Interface\Buttons\WHITE8X8">
+            <Anchors>
+                <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+            <Size y="1" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\Buttons\WHITE8X8">
+            <Anchors>
+                <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+            <Size y="1" />
+            <Color r="0" g="1" b="0.93" />
+        </HighlightTexture>
+     </Button>
+     <CheckButton name="AnsCheckboxTemplate" virtual="true">
+        <Size x="16" y="16" />
+        <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Size x="16" y="16" />
+        </NormalTexture>
+        <CheckedTexture file="Interface\Buttons\WHITE8X8">
+            <Anchors>
+                <Anchor point="TOPLEFT" x="2" y="2" />
+            </Anchors>
+            <Size x="12" y="12" />
+            <Color r="0" g="0" b="0" a="1" />
+        </CheckedTexture>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Size x="16" y="16" />
+                </Texture>
+            </Layer>
+        </Layers>
+     </CheckButton>
+     <Button name="AnsMiniButtonTemplate" parent="Minimap" virtual="true">
+        <Size x="33" y="33" />
+        <Layers>
+			<Layer level="ARTWORK">
+				<Texture name="$parentIcon">
+					<Size x="21" y="21" />
+					<Anchors>
+						<Anchor point="TOPLEFT" x="6" y="-6" />
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+					<Size x="56" y="56" />
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+        <HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight">
+            <Size x="33" y="33 " />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Scripts>
+            <OnLoad>
+				self:RegisterForClicks("LeftButtonUp","RightButtonUp")
+				self:RegisterForDrag("LeftButton","RightButton")
+			</OnLoad>
+        </Scripts>
+     </Button>
+</Ui>

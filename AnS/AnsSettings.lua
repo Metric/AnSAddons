@@ -1,4 +1,5 @@
 ANS_CUSTOM_FILTERS = {};
+ANS_CUSTOM_VARS = {};
 ANS_GLOBAL_SETTINGS = {
     percentFn = "",
     pricingFn = "tujdays ~= 252",
