@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-    <EditBox name="AnsEditBoxTemplate" virtual="true">
+    <EditBox name="AnsEditBoxTemplate" inherits="InputBoxScriptTemplate" virtual="true">
         <FontString name="$parentText" inherits="GameFontNormalDark" />
         <Layers>
             <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">

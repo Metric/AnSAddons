@@ -1,0 +1,139 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsAuctionSellTemplate" virtual="true">
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0"/>
+            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+        </Anchors>
+
+        <Frames>
+        <!-- here to hold spacing and for alignment of other fraems -->
+            <Frame name="$parentSearchBar">
+                <Size x="605" y="22" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="215" y="-40" />
+                </Anchors>
+            </Frame>
+
+            <Frame name="$parentBottomBar">
+                <Size x="160" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-50" y="15" />
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString name="$parentStatus" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="RIGHT" relativePoint="LEFT" x="-50" y="0" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+
+            <!-- auction post button -->
+            <Button name="$parentPostAuction" inherits="UIPanelButtonTemplate" text="Post">
+                <Size x="191" y="20" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="18" y="39" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AnsAuctions:PostAuction();
+                    </OnClick>
+                </Scripts>
+            </Button>
+
+            <Frame name="$parentHeader" clipChildren="true">
+                <Size x="605" y="64" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSearchBar" relativePoint="BOTTOMLEFT"  x="0" y="10" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <Texture name="$parentMiddle" file="Interface\Glues\CharacterCreate\CharacterCreate-LabelFrame">
+                            <Size x="605" y="64" />
+                            <TexCoords left="0.2" right="0.8" top="0" bottom="1" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="172" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-21"/>
+                        </Anchors>
+                    </Button>
+                    <Button name="$parentLevel" text="iLvL" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="32" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="TOPRIGHT" x="32" y="0"/>
+                        </Anchors>
+                    </Button>
+                    <Button name="$parentPosts" text="Posts" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="32" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentLevel" relativePoint="TOPRIGHT" x="5" y="0"/>
+                        </Anchors>
+                    </Button>
+                    <Button name="$parentStack" text="Stack" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="32" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentPosts" relativePoint="TOPRIGHT" x="5" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button name="$parentSeller" text="Seller" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="64" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentStack" relativePoint="TOPRIGHT" x="5" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button name="$parentPercent" text="%" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="32" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-20" y="-21" />
+                        </Anchors>
+                    </Button>
+                    <Button name="$parentPPU" text="PPU" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="64" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeTo="$parentPercent" relativePoint="TOPLEFT" x="5" y="0" />
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
+
+            <Frame name="$parentAuctions">
+                <Size x="605" y="300" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentHeader" x="0" y="15" />
+                </Anchors>
+                <Frames>
+                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                        <Size x="610" y="300"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0"/>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                    <Size x="31" y="256"/>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-2" y="5"/>
+                                    </Anchors>
+                                    <TexCoords left="0" right="0.484375" top="0" bottom="1.0"/>
+                                </Texture>
+                                <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                    <Size x="31" y="106" />
+                                    <Anchors>
+                                        <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-2" y="-2" />
+                                    </Anchors>
+                                    <TexCoords left="0.515625" right="1.0" top="0" bottom="0.4140625"/>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </ScrollFrame>
+                </Frames>
+            </Frame>
+        </Frames>
+    </Frame>
+</Ui>

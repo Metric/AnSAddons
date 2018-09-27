@@ -1,42 +1,27 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Button name="AnsFilterRowTemplate" virtual="true">
-        <Size>
-			<AbsDimension x="136" y="20"/>
-		</Size>
-		<Layers>
-			<Layer level="BACKGROUND">
-				<Texture name="$parentLine" file="Interface\AuctionFrame\UI-AuctionFrame-FilterLines">
-					<Size>
-						<AbsDimension x="7" y="20"/>
-					</Size>
-					<Anchors>
-						<Anchor point="LEFT">
-							<Offset>
-								<AbsDimension x="13" y="0"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-					<TexCoords left="0" right="0.4375" top="0" bottom="0.625"/>
-				</Texture>
-			</Layer>
-		</Layers>
+        <Size x="136" y="20"/>
         <NormalTexture name="$parentNormalTexture" file="Interface\AuctionFrame\UI-AuctionFrame-FilterBg">
 			<TexCoords left="0" right="0.53125" top="0" bottom="0.625"/>
 		</NormalTexture>
 		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD"/>
-		<ButtonText name="$parentNormalText">
-			<Size>
-				<AbsDimension x="125" y="8"/>
-			</Size>
-			<Anchors>
-				<Anchor point="LEFT">
-					<Offset>
-						<AbsDimension x="4" y="0"/>
-					</Offset>
-				</Anchor>
-			</Anchors>
-		</ButtonText>
-		<NormalFont style="GameFontNormalSmallLeft"/>
-		<HighlightFont style="GameFontHighlightSmallLeft"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" inherits="GameFontNormalSmallLeft">
+                    <Size x="125" y="8" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="4" y="0" />
+                    </Anchors>
+                </FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentExpander" text="+" inherits="UIPanelButtonTemplate">
+				<Size x="16" y="14" />
+				<Anchors>
+					<Anchor point="RIGHT" x="0" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+				</Anchors>
+			</Button>
+		</Frames>
     </Button>
 </Ui>

@@ -5,6 +5,7 @@
 ## License: MIT
 ## Dependencies: AnS
 
-AnsSnipeAuctionList.lua
+UI\Components\AuctionList.lua
+
 AuctionSnipe.lua
 AuctionSnipe.xml

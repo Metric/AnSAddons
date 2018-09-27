@@ -1,37 +1,26 @@
 AnsConfig = {};
 AnsConfig.__index = AnsConfig;
 
-local function AnsCustomFilterUpdateRow(dataOffset, line)
-    local row = _G["AnsCustomFilterRow"..line];
-    local nameBox = _G[row:GetName().."Name"];
-    local idsBox = _G[row:GetName().."IDs"];
-    local priceBox = _G[row:GetName().."PriceString"];
-    --local gbuyout = _G[row:GetName().."GMaxBuyout"];
-    --local gstack = _G[row:GetName().."GMinStack"];
-    --local glevel = _G[row:GetName().."GMinLevel"];
-    --local gquality = _G[row:GetName().."GMinQuality"];
-    local types = _G[row:GetName().."Types"];
-    local subtypes = _G[row:GetName().."SubTypes"];
+local selectedFilter = nil;
+local rootFilter = {
+    name = "Base",
+    expanded = true,
+    selected = false,
+    children = {}
+};
+local filterTreeItems = { rootFilter };
+local Filter = AnsCore.API.Filter;
 
-    if (dataOffset <= #ANS_CUSTOM_FILTERS) then
-        local f = ANS_CUSTOM_FILTERS[dataOffset];
-        row:SetID(dataOffset);
-
-        nameBox:SetText(f.name);
-        idsBox:SetText(f.ids);
-        priceBox:SetText(f.priceFn);
-        --gbuyout:SetChecked(f.globalMaxBuyout);
-        --gstack:SetChecked(f.globalMinStack);
-        --glevel:SetChecked(f.globalMinILevel);
-        --gquality:SetChecked(f.globalMinQuality);
-        types:SetText(f.types or "");
-        subtypes:SetText(f.subtypes or "");
-
-        row:Show();
-    else
-        row:Hide();
-    end
-end
+StaticPopupDialogs["ANS_DELETE_FILTER_CONFIRM"] = {
+    text = "Deleting this filter, will also delete all child filters as well.",
+    button1 = "DELETE",
+    button2 = "CANCEL",
+    OnAccept = function() AnsConfig:DeleteFilter() end,
+    timeout = 0,
+    whileDead = false,
+    hideOnEscape = true,
+    preferredIndex = 3
+};
 
 local function AnsCustomVarUpdateRow(dataOffset, line)
     local row = _G["AnsCustomVarRow"..line];
@@ -55,8 +44,6 @@ function AnsCustomVarsRefresh()
     local line;
     local fTotal = #ANS_CUSTOM_VARS;
 
-    FauxScrollFrame_Update(AnsCustomVarsScrollFrame, fTotal, 13, 32);
-
     local dataOffset = 0;
     local offset = FauxScrollFrame_GetOffset(AnsCustomVarsScrollFrame);
 
@@ -64,26 +51,16 @@ function AnsCustomVarsRefresh()
         dataOffset = offset + line;
         AnsCustomVarUpdateRow(dataOffset, line);
     end
-end
 
-function AnsCustomFilterRefresh()
-    local line;
-    local fTotal = #ANS_CUSTOM_FILTERS;
-
-    FauxScrollFrame_Update(AnsCustomFilterScrollFrame, fTotal, 4, 100);
-
-    local dataOffset = 0;
-    local offset = FauxScrollFrame_GetOffset(AnsCustomFilterScrollFrame);
-
-    for line = 1, 4 do
-        dataOffset = offset + line;
-        AnsCustomFilterUpdateRow(dataOffset, line);
-    end
+    FauxScrollFrame_Update(AnsCustomVarsScrollFrame, fTotal, 13, 32);
 end
 
 local function AnsConfigFinalize()
-    AnsCore:LoadCustomFilters();
+    AnsCore:LoadFilters();
     AnsCore:LoadCustomVars();
+
+    wipe(filterTreeItems);
+    AnsConfig.filterView:ReleaseView();
 end
 
 function AnsConfig:SetHelpText(f)
@@ -147,13 +124,63 @@ function AnsConfig:LoadPanel(f, parent, name, subtitle)
     InterfaceOptions_AddCategory (f);
 end
 
-function AnsConfig:AddFilterRow()
-    local id = #ANS_CUSTOM_FILTERS + 1;
-    local f = AnsCustomFilter:New("Custom"..id, "");
-    ANS_CUSTOM_FILTERS[id] = f;
+function AnsConfig:AddFilter()
+    local i;
+    if (selectedFilter and selectedFilter.filter) then
+        i = #selectedFilter.filter.children + 1;
+        local t = {
+            name = selectedFilter.filter.name.."Custom"..i,
+            ids = "",
+            children = {},
+            useMaxPPU = false,
+            useMinLevel = false,
+            useQuality = false,
+            useMinStack = false,
+            usePercent = true,
+            priceFn = "",
+            types = "",
+            subtypes = ""
+        };
+        tinsert(selectedFilter.filter.children, t);
+    else
+        i = #ANS_FILTERS + 1;
+        local t = {
+            name = "Custom"..i,
+            ids = "",
+            children = {},
+            useMaxPPU = false,
+            useMinLevel = false,
+            useQuality = false,
+            useMinStack = false,
+            usePercent = true,
+            priceFn = "",
+            types = "",
+            subtypes = ""
+        };
+        tinsert(ANS_FILTERS, t);
+    end
 
-    FauxScrollFrame_SetOffset(AnsCustomFilterScrollFrame, math.max(id - 4, 0));
-    AnsCustomFilterRefresh();
+    -- update tree view
+    self:FilterRefresh();
+end
+
+function AnsConfig:FilterRefresh()
+    if (not self.filterView) then
+        local TreeView = AnsCore.API.UI.TreeView;
+        self.filterView = TreeView:New(_G["AnsFiltersFrame"], 
+            nil, 
+            function(item) AnsConfig:SelectFilter(item); end,
+            function(item) AnsConfig:MoveFilterUp(item); end,
+            function(item) AnsConfig:MoveFilterDown(item); end);
+    end
+
+    if (#filterTreeItems == 0) then
+        tinsert(filterTreeItems, rootFilter);
+    end
+
+    self:BuildFilterTree();
+    self.filterView.items = filterTreeItems;
+    self.filterView:Refresh();
 end
 
 function AnsConfig:AddVarRow()
@@ -185,7 +212,7 @@ function AnsConfig:SaveVarRow(row, type)
     end
 end
 
-function AnsConfig:SaveFilterRow(row, type)
+function AnsConfig:SaveFilter(row, type)
     local nameBox = _G[row:GetName().."Name"];
     local idsBox = _G[row:GetName().."IDs"];
     local priceBox = _G[row:GetName().."PriceString"];
@@ -193,14 +220,14 @@ function AnsConfig:SaveFilterRow(row, type)
     local gstack = _G[row:GetName().."GMinStack"];
     local glevel = _G[row:GetName().."GMinLevel"];
     local gquality = _G[row:GetName().."GMinQuality"];
+    local gpercent = _G[row:GetName().."GPercent"];
     local subtypes = _G[row:GetName().."SubTypes"];
     local types = _G[row:GetName().."Types"];
 
-    local id = row:GetID();
-
-    local f = ANS_CUSTOM_FILTERS[id];
-    if (f ~= nil) then
+    if (selectedFilter and selectedFilter.filter) then
+        local f = selectedFilter.filter;
         if (type == "name") then
+            selectedFilter.name = nameBox:GetText();
             f.name = nameBox:GetText();
         end
         if (type == "ids") then
@@ -210,24 +237,29 @@ function AnsConfig:SaveFilterRow(row, type)
             f.priceFn = priceBox:GetText();
         end
         if (type == "buyout") then
-            f.globalMaxBuyout = gbuyout:GetChecked();
+            f.useMaxPPU = gbuyout:GetChecked();
         end
         if (type == "stack") then
-            f.globalMinStack = gstack:GetChecked();
+            f.useMinStack = gstack:GetChecked();
         end
         if (type == "quality") then
-            f.globalMinQuality = gquality:GetChecked();
+            f.useQuality = gquality:GetChecked();
         end
         if (type == "level") then
-            f.globalMinILevel = glevel:GetChecked();
+            f.useMinLevel = glevel:GetChecked();
+        end
+        if (type == "percent") then
+            f.usePercent = gpercent:GetChecked();
         end
         if (type == "subtypes") then
             f.subtypes = subtypes:GetText();
         elseif (type == "types") then
             f.types = types:GetText();
         end
-    else
-        print("Unable to save custom filter row...");
+
+        -- this is more efficient then doing self:FilterRefresh()
+        -- as we only need to update the one
+        self.filterView:UpdateByData(selectedFilter);
     end
 end
 
@@ -238,11 +270,31 @@ function AnsConfig:DeleteVarRow(row)
     AnsCustomVarsRefresh();
 end
 
-function AnsConfig:DeleteFilterRow(row)
-    local id = row:GetID();
-    table.remove(ANS_CUSTOM_FILTERS, id);
-    FauxScrollFrame_SetOffset(AnsCustomFilterScrollFrame, math.max(#ANS_CUSTOM_FILTERS - 4, 0));
-    AnsCustomFilterRefresh();
+function AnsConfig:DeleteFilter()
+    if (selectedFilter and selectedFilter.filter) then
+        local f = selectedFilter.filter;
+        local parent = selectedFilter.parent;
+
+        if (parent) then
+            for i,v in ipairs(parent.children) do
+                if (v == f) then
+                    tremove(parent.children, i);
+                    break;
+                end
+            end
+        else
+            for i,v in ipairs(ANS_FILTERS) do
+                if (v == f) then
+                    tremove(ANS_FILTERS, i);
+                    break;
+                end
+            end
+        end
+
+        self:SelectFilter(nil);
+        -- update tree view!
+        self:FilterRefresh();
+    end
 end
 
 function AnsConfig:ImportGroups(editor)
@@ -250,24 +302,224 @@ function AnsConfig:ImportGroups(editor)
     local text = editor:GetText();
 
     if (text:len() > 0) then
-        local filters = AnsFilter:ParseTSMGroups(text);
-
-        local total = #ANS_CUSTOM_FILTERS;
-
+        local filters = Filter:ParseTSMGroups(text);
         for i = 1, #filters do
             local f = filters[i];
 
             local ids = f:ExportIds();
             if (ids ~= nil and ids:len() > 0) then
-                local cf = AnsCustomFilter:New(f.name, ids);
-                total = total + 1;
-                ANS_CUSTOM_FILTERS[total] = cf;
+                local t = {
+                    name = f.name,
+                    ids = ids,
+                    useMaxPPU = false,
+                    useMinLevel = false,
+                    useMinStack = false,
+                    useQuality = false,
+                    usePercent = true,
+                    priceFn = "",
+                    types = "",
+                    subtypes = "",
+                    children = {}
+                };
+                
+                if (selectedFilter and selectedFilter.filter) then
+                    local sf = selectedFilter.filter;
+                    tinsert(sf.children, t);
+                else
+                    tinsert(ANS_FILTERS, t);
+                end
             end
         end
 
         editor:SetText("");
 
-        FauxScrollFrame_SetOffset(AnsCustomFilterScrollFrame, math.max(total - 4, 0));
-        AnsCustomFilterRefresh();
+        -- update tree view
+        self:FilterRefresh();
+    end
+end
+
+function AnsConfig:MoveFilterUp(s)
+    local p = s.parent;
+
+    if (not p) then
+        p = ANS_FILTERS;
+    else
+        p = s.parent.children;
+    end
+
+    local idx = 0;
+
+    for i,v in ipairs(p) do
+        if (v == s.filter) then
+            idx = i;
+            break;
+        end
+    end
+
+    if (idx - 1 > 0) then
+        tremove(p, idx);
+        tinsert(p, idx - 1, s.filter);
+
+        self:FilterRefresh();
+    end
+end
+
+function AnsConfig:MoveFilterDown(s)
+    local p = s.parent;
+    
+    if (not p) then
+        p = ANS_FILTERS;
+    else
+        p = s.parent.children;
+    end
+
+    local idx = 0;
+
+    for i,v in ipairs(p) do
+        if (v == s.filter) then
+            idx = i;
+            break;
+        end
+    end
+
+    if (idx > 0 and idx + 1 <= #p) then
+        tremove(p, idx);
+        tinsert(p, idx + 1, s.filter);
+
+        self:FilterRefresh();
+    end
+end
+
+function AnsConfig:SelectFilter(s)
+    selectedFilter = s;
+    local details = _G["AnsFiltersFrameFilterDetails"];
+
+    if (selectedFilter and selectedFilter.filter) then
+        local f = selectedFilter.filter;  
+
+        local nameBox = _G[details:GetName().."Name"];
+        local idsBox = _G[details:GetName().."IDs"];
+        local priceBox = _G[details:GetName().."PriceString"];
+        local gbuyout = _G[details:GetName().."GMaxBuyout"];
+        local gstack = _G[details:GetName().."GMinStack"];
+        local glevel = _G[details:GetName().."GMinLevel"];
+        local gquality = _G[details:GetName().."GMinQuality"];
+        local gpercent = _G[details:GetName().."GPercent"];
+        local subtypes = _G[details:GetName().."SubTypes"];
+        local types = _G[details:GetName().."Types"];
+
+        nameBox:SetText(f.name);
+        idsBox:SetText(f.ids);
+        priceBox:SetText(f.priceFn);
+        gbuyout:SetChecked(f.useMaxPPU);
+        gstack:SetChecked(f.useMinStack);
+        glevel:SetChecked(f.useMinLevel);
+        gquality:SetChecked(f.useQuality);
+        gpercent:SetChecked(f.usePercent);
+        types:SetText(f.types);
+        subtypes:SetText(f.subtypes);
+
+        details:Show();
+    else
+        details:Hide();
+    end
+
+    self:FilterRefresh();
+end
+
+function AnsConfig:BuildFilterTree()
+    local filters = ANS_FILTERS;
+    local root = rootFilter.children;
+
+    rootFilter.selected = rootFilter == selectedFilter;
+
+    if (#filters < #root) then
+        local i;
+        for i = #filters + 1, #root do
+            tremove(root);
+        end
+    end
+
+    self:UpdateSubTreeFilters(filters, root, nil);
+end
+
+function AnsConfig:UpdateSubTreeFilters(children, parentC, parentFilter)
+    for i, v in ipairs(children) do
+        local pf = parentC[i];
+        local selected = false;
+
+        if (selectedFilter) then
+            selected = v == selectedFilter.filter;
+        end
+
+        if (pf) then
+            pf.selected = selected;
+            pf.parent = parentFilter;
+
+            if (pf.name ~= v.name) then
+                pf.expanded = false;
+                pf.name = v.name;
+                
+                pf.filter = v;
+                pf.children = {};
+
+                if (#v.children > 0) then
+                    self:BuildSubTreeFilters(v.children, pf.children, v);
+                end
+            else
+                if(#v.children > 0) then
+                    if (#v.children < #pf.children) then
+                        local i;
+                        for i = #v.children + 1, #pf.children do
+                            tremove(pf.children);
+                        end
+                    end
+
+                    self:UpdateSubTreeFilters(v.children, pf.children, v);
+                else
+                    pf.children = {};
+                end
+            end
+        else
+            local t = {
+                name = v.name,
+                selected = selected,
+                expanded = false,
+                parent = parentFilter,
+                filter = v,
+                children = {}
+            };
+
+            if (#v.children > 0) then
+                self:BuildSubTreeFilters(v.children, t.children, v);
+            end
+
+            tinsert(parentC, t);
+        end
+    end
+end
+
+function AnsConfig:BuildSubTreeFilters(children, parentC, parentFilter)
+    for i,v in ipairs(children) do
+        local selected = false;
+
+        if (selectedFilter) then
+            selected = v == selectedFilter.filter;
+        end
+
+        local t = {
+            name = v.name,
+            selected = selected,
+            expanded = false,
+            parent = parentFilter,
+            filter = v,
+            children = {}
+        };
+
+        if (#v.children > 0) then
+            self:BuildSubTreeFilters(v.children, t.children, v);
+        end
+
+        tinsert(parentC, t);
     end
 end

@@ -12,6 +12,32 @@
             <Color r="1" g="1" b="1" a="1" />
         </HighlightTexture>
      </Button>
+     <Button name="AnsUpTemplate" virtual="true">
+        <Size x="12" y="12" />
+        <NormalTexture file="Interface\AddOns\AnS\Images\icons">
+            <Size x="12" y="12" />
+            <TexCoords left="1" right="0.5" top="0.5" bottom="0" />
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
+            <Size x="12" y="12" />
+            <TexCoords left="1" right="0.5" top="0.5" bottom="0" />
+            <Color r="1" g="1" b="1" a="1" />
+        </HighlightTexture>
+     </Button>
+     <Button name="AnsDownTemplate" virtual="true">
+        <Size x="12" y="12" />
+        <NormalTexture file="Interface\AddOns\AnS\Images\icons">
+            <Size x="12" y="12" />
+            <TexCoords left="1" right="0.5" top="0" bottom="0.5" />
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
+            <Size x="12" y="12" />
+            <TexCoords left="1" right="0.5" top="0" bottom="0.5" />
+            <Color r="1" g="1" b="1" a="1" />
+        </HighlightTexture>
+     </Button>
      <Button name="AnsTabTemplate" virtual="true">
         <Size x="100" y="20" />
         <ButtonText name="$parentText" justifyV="CENTER" inherits="AnsGameFontWhiteTrans" justifyH="CENTER">
@@ -73,6 +99,40 @@
             </Layer>
         </Layers>
      </CheckButton>
+     <Button name="AnsTreeRowTemplate" virtual="true">
+        <Size x="200" y="20"/>
+		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD"/>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentText" inherits="GameFontNormalSmallLeft">
+                    <Size x="172" y="8" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="4" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+		<Frames>
+			<Button name="$parentExpander" text="+" inherits="UIPanelButtonTemplate">
+				<Size x="16" y="14" />
+				<Anchors>
+					<Anchor point="RIGHT" x="0" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+				</Anchors>
+			</Button>
+            <Button name="$parentMoveDown" inherits="AnsDownTemplate">
+                <Size x="12" y="12" />
+                <Anchors>
+                    <Anchor point="RIGHT" />
+                </Anchors>
+            </Button>
+            <Button name="$parentMoveUp" inherits="AnsUpTemplate">
+                <Size x="12" y="12" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativeTo="$parentMoveDown" relativePoint="LEFT" x="0" y="0" />
+                </Anchors>
+            </Button>
+		</Frames>
+    </Button>
      <Button name="AnsMiniButtonTemplate" parent="Minimap" virtual="true">
         <Size x="33" y="33" />
         <Layers>

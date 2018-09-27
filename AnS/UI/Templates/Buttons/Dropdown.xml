@@ -40,7 +40,7 @@
                     </Layer>
                 </Layers>
                 <Frames>
-                    <ScrollFrame name="$parentScrollFrame" inherits="UIPanelScrollFrameCodeTemplate">
+                    <ScrollFrame name="$parentScrollFrame" frameStrata="LOW" inherits="UIPanelScrollFrameCodeTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
                         </Anchors>
@@ -48,19 +48,19 @@
                             <OnScrollRangeChanged function=""/>
                         </Scripts>
                         <ScrollChild>
-                            <Frame hidden="true" name="$parentScrollChildFrame" parentKey="ScrollChildFrame">
+                            <Frame hidden="true" frameStrata="LOW" name="$parentScrollChildFrame" parentKey="ScrollChildFrame">
                                 <Size x="300" y="334"/>
                             </Frame>
                         </ScrollChild>
                         <Frames>
-                            <Slider name="$parentScrollBar" orientation="vertical" parentKey="ScrollBar">
+                            <Slider name="$parentScrollBar" frameStrata="HIGH" orientation="vertical" parentKey="ScrollBar">
                                 <Anchors>
                                     <Anchor point="TOPRIGHT" x="0" y="0" />
                                     <Anchor point="BOTTOMRIGHT" x="0" y="0" />
                                 </Anchors>
-                                <Size x="3" />
+                                <Size x="5" />
                                 <ThumbTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
-                                    <Size x="3" y="16" />
+                                    <Size x="5" y="16" />
                                     <Color r="0" g="0" b="0" a="0.75" />
                                 </ThumbTexture>
                                 <Frames>

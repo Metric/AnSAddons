@@ -1,12 +1,11 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <!-- Template Includes -->
     <Include file="UI/Templates/Buttons/FilterRow.xml" />
-    <Include file="UI/Templates/Buttons/ResultRow.xml" />
-    <Include file="UI/Templates/Buttons/Heading.xml" />
+    <Include file="UI/Templates/Buttons/AuctionRow.xml" />
+    <Include file="UI/Templates/Buttons/AuctionHeading.xml" />
     <Include file="UI/Templates/Buttons/SmallButton.xml" />
-    <Include file="UI/Templates/Dialogs/Default.xml" />
 
-    <Frame name="AnsCore">
+    <Frame>
         <Scripts>
             <OnLoad>AnsCore:RegisterEvents(self);</OnLoad>
             <OnEvent>AnsCore:EventHandler(self, event, ... );</OnEvent>;

@@ -31,7 +31,7 @@
             </Slider>
         </Frames>
     </ScrollFrame>
-    <Button name="AnsRecordRowMinTemplate" frameStrata="HIGH" virtual="true" hidden="true">
+    <Button name="AnsRecordRowMinTemplate" virtual="true" hidden="true">
         <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Color r="1" g="1" b="1" a="0.25" />
             <Anchors>

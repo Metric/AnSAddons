@@ -1,37 +1,29 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Frame name="AnsSnipeBuyTemplate" virtual="true">
         <Anchors>
-            <Anchor point="TOPLEFT">
-                <Offset>
-                    <AbsDimension x="0" y="0"/>
-                </Offset>
-            </Anchor>
-            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT">
-                <Offset>
-                    <AbsDimension x="0" y="0"/>
-                </Offset>
-            </Anchor>
+            <Anchor point="TOPLEFT" x="0" y="0"/>
+            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
         </Anchors>
 
         <Frames>
-            <Frame name="AnsSnipeSearchBar">
-                <Size><AbsDimension x="605" y="22" /></Size>
-                <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="190" y="-55" /></Offset></Anchor></Anchors>
+            <Frame name="$parentSearchBar">
+                <Size x="605" y="22" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="190" y="-55" />
+                </Anchors>
                 <Frames>
-                    <EditBox name="AnsSnipeSearchBox" autoFocus="false" inherits="InputBoxTemplate" bytes="63">
-                        <Size><AbsDimension x="100" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+                    <EditBox name="$parentSearch" autoFocus="false" inherits="InputBoxTemplate" bytes="63">
+                        <Size x="100" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0"/>
+                        </Anchors>
                         <FontString inherits="ChatFontNormal" />
 
                         <Layers>
                             <Layer level="ARTWORK">
 								<FontString inherits="GameFontHighlightSmall" text="Name Filter" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="0" y="15"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
 								</FontString>
 							</Layer>
@@ -47,18 +39,16 @@
                         </Scripts>
                     </EditBox>
 
-                    <EditBox name="AnsSnipeMinMaxPercent" autoFocus="false" numeric="true" bytes="4" inherits="InputBoxTemplate">
-                        <Size><AbsDimension x="48" y="20" /></Size>
-                        <Anchors><Anchor point="RIGHT" relativeTo="AnsSnipeSearchBox" relativePoint="LEFT"><Offset><AbsDimension x="-15" y="0" /></Offset></Anchor></Anchors>
+                    <EditBox name="$parentMaxPercent" autoFocus="false" numeric="true" bytes="4" inherits="InputBoxTemplate">
+                        <Size x="48" y="20" />
+                        <Anchors>
+                            <Anchor point="RIGHT" relativeTo="$parentSearch" relativePoint="LEFT" x="-15" y="0" />
+                        </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
 								<FontString inherits="GameFontHighlightSmall" text="Max %" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="0" y="15"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
 								</FontString>
 							</Layer>
@@ -73,83 +63,63 @@
                         </Scripts>
                     </EditBox>
 
-                    <Frame name="AnsSnipeMaxBuyout" inherits="MoneyInputFrameTemplate">
-                        <Anchors><Anchor point="LEFT" relativeTo="AnsSnipeSearchBox" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /> </Offset></Anchor></Anchors>
+                    <Frame name="$parentMaxPPU" inherits="MoneyInputFrameTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentSearch" relativePoint="RIGHT" x="10" y="0" />
+                        </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
                                 <FontString inherits="GameFontHighlightSmall" text="Max PPU" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="0" y="15"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
 								</FontString>
                             </Layer>
                         </Layers>
                     </Frame>
 
-                    <EditBox name="AnsSnipeMinLevel" letters="3" numeric="true" autoFocus="false" inherits="InputBoxTemplate">
-                        <Size><AbsDimension x="32" y="24" /></Size>
+                    <EditBox name="$parentMinLevel" letters="3" numeric="true" autoFocus="false" inherits="InputBoxTemplate">
+                        <Size x="32" y="24" />
                         <Anchors>
-							<Anchor point="LEFT" relativeTo="AnsSnipeMaxBuyout" relativePoint="RIGHT">
-								<Offset>
-									<AbsDimension x="10" y="0"/>
-								</Offset>
-							</Anchor>
+							<Anchor point="LEFT" relativeTo="$parentMaxPPU" relativePoint="RIGHT" x="10" y="0"/>
 						</Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
 								<FontString inherits="GameFontHighlightSmall" text="Min iLevel" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="0" y="15"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
 								</FontString>
 							</Layer>
                         </Layers>
                     </EditBox>
 
-                    <Frame name="AnsSnipeQualityLevel" inherits="UIDropDownMenuTemplate">
-                        <Size><AbsDimension x="100" y="32" /></Size>
-                        <Anchors><Anchor point="LEFT" relativeTo="AnsSnipeMinLevel" relativePoint="RIGHT"><Offset><AbsDimension x="20" y="0" /></Offset></Anchor></Anchors>
+                    <Frame name="$parentQuality" inherits="UIDropDownMenuTemplate">
+                        <Size x="100" y="32" />
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentMinLevel" relativePoint="RIGHT" x="20" y="0" />
+                        </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
 								<FontString inherits="GameFontHighlightSmall" text="Min Quality" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="24" y="15"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="24" y="15"/>
 									</Anchors>
 								</FontString>
 							</Layer>
                         </Layers>
                     </Frame>
 
-                    <EditBox name="AnsSnipeMinSize" letters="4" numeric="true" autoFocus="false" inherits="InputBoxTemplate">
-                        <Size><AbsDimension x="64" y="24" /></Size>
+                    <EditBox name="$parentMinSize" letters="4" numeric="true" autoFocus="false" inherits="InputBoxTemplate">
+                        <Size x="64" y="24" />
                         <Anchors>
-							<Anchor point="LEFT" relativeTo="AnsSnipeQualityLevel" relativePoint="RIGHT">
-								<Offset>
-									<AbsDimension x="65" y="0"/>
-								</Offset>
-							</Anchor>
+							<Anchor point="LEFT" relativeTo="$parentQuality" relativePoint="RIGHT" x="65" y="0"/>
 						</Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
 								<FontString inherits="GameFontHighlightSmall" text="Min Stack Size" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="0" y="15"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15" />
 									</Anchors>
 								</FontString>
 							</Layer>
@@ -163,37 +133,25 @@
                             </OnEscapePressed>
                         </Scripts>
                     </EditBox>
-                    <CheckButton inherits="UIRadioButtonTemplate" name="AnsSnipeDingSound">
+                    <CheckButton inherits="UIRadioButtonTemplate" name="$parentDingSound">
                         <Anchors>
-                            <Anchor point="TOPLEFT"  relativePoint="BOTTOMLEFT" relativeTo="AnsSnipeMinSize">
-                                <Offset>
-                                <AbsDimension x="-2" y="0"/>
-                                </Offset>
-                            </Anchor>
+                            <Anchor point="TOPLEFT"  relativePoint="BOTTOMLEFT" relativeTo="$parentMinSize" x="-2" y="0" />
                         </Anchors>
                         <Scripts>
-                            <OnLoad>_G[self:GetName().."Text"]:SetText("Ding Sound"); </OnLoad>
+                            <OnLoad>_G[self:GetName().."Text"]:SetText("Ding Sound");</OnLoad>
                             <OnClick>AuctionSnipe:DingSound(self)</OnClick>
                         </Scripts>
                     </CheckButton>
-                    <EditBox name="AnsSnipeQuickFilterEdit" autoFocus="false" inherits="InputBoxTemplate">
-                        <Size><AbsDimension x="220" y="24" /></Size>
+                    <EditBox name="$parentGlobalFilter" autoFocus="false" inherits="InputBoxTemplate">
+                        <Size x="220" y="24" />
                         <Anchors>
-							<Anchor point="TOPLEFT" relativeTo="AnsSnipeSearchBox" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="110" y="0"/>
-								</Offset>
-							</Anchor>
+							<Anchor point="TOPLEFT" relativeTo="$parentSearch" relativePoint="BOTTOMLEFT" x="110" y="0"/>
 						</Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
 								<FontString inherits="GameFontHighlightSmall" text="Global Filter String" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
-											<Offset>
-												<AbsDimension x="-110" y="0"/>
-											</Offset>
-										</Anchor>
+										<Anchor point="LEFT" relativePoint="LEFT" x="-110" y="0"/>
 									</Anchors>
 								</FontString>
 							</Layer>
@@ -216,38 +174,37 @@
                 </Frames>
             </Frame>
 
-            <Frame name="AnsSnipeBottomBar">
-                <Size><AbsDimension x="160" y="22" /></Size>
-                <Anchors><Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parent"><Offset><AbsDimension x="-50" y="15" /></Offset></Anchor></Anchors>
+            <Frame name="$parentBottomBar">
+                <Size x="160" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-50" y="15" />
+                </Anchors>
                 <Layers>
                     <Layer level="OVERLAY">
-                        <FontString name="AnsSnipeStatus" text="Page: 0 - Stopped..." justifyH="CENTER" inherits="GameFontHighlightSmall">
-                            <Anchors><Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parent"><Offset><AbsDimension x="-50" y="0" /></Offset></Anchor></Anchors>
+                        <FontString name="$parentStatus" text="Page: 0 - Stopped..." justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="RIGHT" relativePoint="LEFT" x="-50" y="0" />
+                            </Anchors>
                         </FontString>
                     </Layer>
                 </Layers>
                 <Frames>
-                    <Button name="AnsSnipeStartButton" text="Start" inherits="UIPanelButtonTemplate" >
-                        <Size><AbsDimension x="78" y="22"/> </Size>
+                    <Button name="$parentStart" text="Start" inherits="UIPanelButtonTemplate">
+                        <Size x="78" y="22" />
                         <Anchors>
-                            <Anchor point="RIGHT" relativePoint="RIGHT">
-                                <Offset><AbsDimension x="0" y="0"/></Offset>
-                            </Anchor>
+                            <Anchor point="RIGHT" relativePoint="RIGHT" x="0" y="0"/>
                         </Anchors>
                         <Scripts>
                             <OnClick>
                                 AuctionSnipe:Start();
-                                _G["AnsSnipeSearchBox"]:ClearFocus();
                             </OnClick>
                         </Scripts>
                     </Button>
 
-                    <Button name="AnsSnipeStopButton" text="Stop" inherits="UIPanelButtonTemplate">
-                        <Size><AbsDimension x="78" y="22"/> </Size>
+                    <Button name="$parentStop" text="Stop" inherits="UIPanelButtonTemplate">
+                        <Size x="78" y="22" />
                         <Anchors>
-                            <Anchor point="RIGHT" relativeTo="AnsSnipeStartButton" relativePoint="LEFT">
-                                <Offset><AbsDimension x="-5" y="0"/></Offset>
-                            </Anchor>
+                            <Anchor point="RIGHT" relativeTo="$parentStart" relativePoint="LEFT" x="-5" y="0" />
                         </Anchors>
                         <Scripts>
                             <OnClick>
@@ -258,481 +215,126 @@
                 </Frames>
             </Frame>
 
-            <Frame name="AnsSnipeHeadingsBar">
-                <Size><AbsDimension x="630" y="64"/></Size>
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeSearchBar" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-10"/></Offset></Anchor></Anchors>
+            <Frame name="$parentHeader">
+                <Size x="630" y="64" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentSearchBar" relativePoint="BOTTOMLEFT"  x="0" y="-10" />
+                </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
                         <Texture name="$parentMiddle" file="Interface\Glues\CharacterCreate\CharacterCreate-LabelFrame">
-                            <Size><AbsDimension x="605" y="64"/></Size>
-                            <TexCoords left="0.2" right="0.8" top="0" bottom="1"/>
+                            <Size x="605" y="64" />
+                            <TexCoords left="0.2" right="0.8" top="0" bottom="1" />
                         </Texture>
                     </Layer>
                 </Layers>
                 <Frames>
-                    <Button name="AnsSnipeHeadingPrice" text="PPU" inherits="AnsHeadingTemplate">
-                        <Size><AbsDimension x="100" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="-21"/></Offset></Anchor></Anchors>
-                        <Scripts><OnClick>AuctionSnipe:SortByPrice()</OnClick></Scripts>
+                    <Button name="$parentPrice" text="PPU" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-21"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>AuctionSnipe:SortByPrice()</OnClick>
+                        </Scripts>
                     </Button>
-                    <Button name="AnsSnipeHeadingName" text="Name" inherits="AnsHeadingTemplate">
-                        <Size><AbsDimension x="108" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingPrice" relativePoint="TOPRIGHT"><Offset><AbsDimension x="60" y="0"/></Offset></Anchor></Anchors>
-                        <Scripts><OnClick>AuctionSnipe:SortByName()</OnClick></Scripts>
+                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="108" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentPrice" relativePoint="TOPRIGHT" x="60" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>AuctionSnipe:SortByName()</OnClick>
+                        </Scripts>
                     </Button>
-                    <Button name="AnsSnipeHeadingPercentage" text="Percent %" inherits="AnsHeadingTemplate">
-                        <Size><AbsDimension x="70" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingName" relativePoint="TOPRIGHT"><Offset><AbsDimension x="100" y="0"/></Offset></Anchor></Anchors>
-                        <Scripts><OnClick>AuctionSnipe:SortByPercent()</OnClick></Scripts>
+                    <Button name="$parentPercent" text="Percent %" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="70" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="TOPRIGHT" x="100" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>AuctionSnipe:SortByPercent()</OnClick>
+                        </Scripts>
                     </Button>
-                    <Button name="AnsSnipeHeadingILevel" text="iLVL" inherits="AnsHeadingTemplate">
-                        <Size><AbsDimension x="50" y="20"/></Size>
-                        <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingPercentage" relativePoint="TOPRIGHT"><Offset><AbsDimension x="10" y="0"/></Offset></Anchor></Anchors>
-                        <Scripts><OnClick>AuctionSnipe:SortByILevel()</OnClick></Scripts>
+                    <Button name="$parentLevel" text="iLvL" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="50" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentPercent" relativePoint="TOPRIGHT" x="10" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:SortByILevel()
+                            </OnClick>
+                        </Scripts>
                     </Button>
-                    <!--<Button name="AnsSnipeHeadingRecent" text="Recent" inherits="AnsHeadingTemplate">
-                        <Size><AbsDimension x="108" y="20"/></Size>
-                        <Anchors><Anchor point="TOPRIGHT"><Offset><AbsDimension x="-10" y="-21"/></Offset></Anchor></Anchors>
-                        <Scripts><OnClick>AuctionSnipe:SortByRecent()</OnClick></Scripts>
-                    </Button>-->
                 </Frames>
             </Frame>
 
-            <ScrollFrame name="AnsSnipeScrollFrame" inherits="FauxScrollFrameTemplate">
-                <Size><AbsDimension x="605" y="256"/></Size>
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeHeadingsBar" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="10"/></Offset></Anchor></Anchors>
+            <ScrollFrame name="$parentItems" inherits="FauxScrollFrameTemplate">
+                <Size x="605" y="256"/>
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT"  x="0" y="10"/>
+                </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
                         <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-                            <Size>
-                                <AbsDimension x="31" y="256"/>
-                            </Size>
+                            <Size x="31" y="256"/>
                             <Anchors>
-                                <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
-                                    <Offset>
-                                        <AbsDimension x="-2" y="5"/>
-                                    </Offset>
-                                </Anchor>
+                                <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-2" y="5"/>
                             </Anchors>
                             <TexCoords left="0" right="0.484375" top="0" bottom="1.0"/>
                         </Texture>
                         <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-                            <Size>
-                                <AbsDimension x="31" y="106"/>
-                            </Size>
+                            <Size x="31" y="106" />
                             <Anchors>
-                                <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT">
-                                    <Offset>
-                                        <AbsDimension x="-2" y="-2"/>
-                                    </Offset>
-                                </Anchor>
+                                <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-2" y="-2" />
                             </Anchors>
                             <TexCoords left="0.515625" right="1.0" top="0" bottom="0.4140625"/>
                         </Texture>
                     </Layer>
                 </Layers>
-                <Scripts>
-                    <OnVerticalScroll>
-                        FauxScrollFrame_OnVerticalScroll( self, offset, 16, AnsSnipeAuctionListRefresh)
-                    </OnVerticalScroll>
-                </Scripts>
             </ScrollFrame>
 
-            <Button name="AnsSnipeAuction1" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeScrollFrame" relativePoint="TOPLEFT"><Offset><AbsDimension x="8" y="0"/></Offset></Anchor></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction2"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction1"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction3"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction2"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction4"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction3"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction5"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction4"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction6"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction5"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>    
-            </Button>
-            <Button name="AnsSnipeAuction7"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction6"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction8"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction7"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction9"  inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction8"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction10" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction9"  relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction11" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction10" relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction12" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction11" relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction13" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction12" relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction14" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction13" relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeAuction15" inherits="AnsResultRowTemplate">
-                <Anchors><Anchor point="TOPLEFT" relativeTo="AnsSnipeAuction14" relativePoint="BOTTOMLEFT"/></Anchors>
-                <Scripts>
-                    <OnClick>AnsSnipeAuctionList:Click(self, button, down)</OnClick>
-                    <OnEnter>AnsSnipeAuctionList:ShowLineTip(self)</OnEnter>
-                    <OnLeave>AnsSnipeAuctionList:HideLineTip()</OnLeave>
-                </Scripts>
-            </Button>
-
-            <ScrollFrame name="AnsSnipeFiltersScrollFrame" inherits="FauxScrollFrameTemplate">
-                <Size><AbsDimension x="160" y="305" /></Size>
+            <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                <Size x="138" y="305" />
                 <Anchors>
-                    <Anchor point="TOPRIGHT" relativePoint="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="158" y="-105"/>
-                        </Offset>
-                    </Anchor>
+                    <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="22" y="-105"/>
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
-                        <FontString name="AnsSnipeFiltersText" inherits="GameFontHighlightSmall" text="Filters">
-                            <Anchors><Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT"><Offset><AbsDimension x="40" y="10"/></Offset></Anchor></Anchors>
+                        <FontString name="$parentLabel" inherits="GameFontHighlightSmall" text="Filters">
+                            <Anchors><Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="40" y="10"/></Anchors>
                         </FontString>
                         <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-                            <Size>
-                                <AbsDimension x="31" y="256"/>
-                            </Size>
+                            <Size x="31" y="256"/>
                             <Anchors>
-                                <Anchor point="TOPLEFT" relativePoint="TOPRIGHT">
-                                    <Offset>
-                                        <AbsDimension x="-2" y="5"/>
-                                    </Offset>
-                                </Anchor>
+                                <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-2" y="5"/>
                             </Anchors>
                             <TexCoords left="0" right="0.484375" top="0" bottom="1.0"/>
                         </Texture>
                         <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
-                            <Size>
-                                <AbsDimension x="31" y="106"/>
-                            </Size>
+                            <Size x="31" y="106"/>
                             <Anchors>
-                                <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT">
-                                    <Offset>
-                                        <AbsDimension x="-2" y="-2"/>
-                                    </Offset>
-                                </Anchor>
+                                <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-2" y="-2"/>
                             </Anchors>
                             <TexCoords left="0.515625" right="1.0" top="0" bottom="0.4140625"/>
                         </Texture>
                     </Layer>
                 </Layers>
-                <Scripts>
-                    <OnVerticalScroll>
-                        FauxScrollFrame_OnVerticalScroll(self, offset, 20, AnsSnipeFilterViewRefresh);
-                    </OnVerticalScroll>
-                </Scripts>
+                <Frames>
+                    <Button name="$parentReset" text="Reset" inherits="UIPanelButtonTemplate">
+                        <Size x="52" y="22" />
+                        <Anchors>
+                            <Anchor point="LEFT" x="5" y="0" relativeTo="$parentLabel" relativePoint="RIGHT" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:ClearFilters();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                </Frames>
             </ScrollFrame>
-
-            <Button name="AnsSnipeFilterReset" text="Reset" inherits="UIPanelButtonTemplate">
-                <Size><AbsDimension x="52" y="22"/> </Size>
-                <Anchors>
-                    <Anchor point="LEFT" relativeTo="AnsSnipeFiltersText" relativePoint="RIGHT">
-                        <Offset><AbsDimension x="5" y="0"/></Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:SelectClear();
-                        AnsFilterView:Refresh(_G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-
-            <Button name="AnsSnipeFilterRow1" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT">
-                        <Offset>
-                            <AbsDimension x="23" y="-105"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow2" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow1" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow3" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow2" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow4" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow3" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow5" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow4" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow6" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow5" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow7" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow6" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow8" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow7" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow9" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow8" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow10" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow9" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow11" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow10" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow12" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow11" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow13" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow12" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow14" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow13" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
-            <Button name="AnsSnipeFilterRow15" inherits="AnsFilterRowTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeFilterRow14" relativePoint="BOTTOMLEFT">
-                        <Offset>
-                            <AbsDimension x="0" y="0"/>
-                        </Offset>
-                    </Anchor>
-                </Anchors>
-                <Scripts>
-                    <OnClick>
-                        AnsFilterView:Click(self, _G["AnsSnipeFiltersScrollFrame"], "AnsSnipeFilterRow");
-                    </OnClick>
-                </Scripts>
-            </Button>
         </Frames>
     </Frame>
 </Ui>

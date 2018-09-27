@@ -1,3 +1,9 @@
+AnS [Auction Sniper] CHANGES 1.0.6
+---------------------
+* Filter list is now a tree view.
+* Code refactored to remove most things from global namespace
+
+
 AnS [Auction Sniper] CHANGES 1.0.5.4
 --------------------- 
 * Big thanks to tieonlinux for submitting a pull request, which prevents purchasing the wrong item.

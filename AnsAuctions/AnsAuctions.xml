@@ -1,0 +1,10 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <!-- Frame to handle all core events -->
+    <Frame name="AnsAuctionsCore">
+        <Scripts>
+            <OnLoad>AnsAuctions:RegisterEvents( self );</OnLoad>
+            <OnUpdate>AnsAuctions:OnUpdate( self, elapsed );</OnUpdate>
+            <OnEvent>AnsAuctions:EventHandler( self, event, ... );</OnEvent>
+        </Scripts>
+    </Frame>
+</Ui>

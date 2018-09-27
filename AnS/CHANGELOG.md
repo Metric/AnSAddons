@@ -1,3 +1,27 @@
+AnS Changes 1.0.6
+--------------------
+* Code refactored to remove most things from global namespace
+    * Can be accessed from AnsCore.API instead
+    * If you find any issues please post them on reddit post or message me on reddit
+* Custom Filters in ESC -> Interface -> Addons -> AnS is now called Filters
+* Filters can now have sub filters and the default filters are now fully editable
+    * Try to keep the child sub depth reasonable to about 4.
+    * Try to keep the parent root name unique as it is used as path for keeping track of currently selected filters in the sniping window now.
+    * When pressing the New button, the filter will be added to the selected filter as a sub filter.
+* Fixed issue with Pet filters not working properly because ids were not correct
+    * Pet filters now uses muffins list of level 1s and 25s
+* Due to filter changes and editing of default filters, the previous changes on custom filters of no longer using global has been reverted. Filters now use global unless specifically checked off on its settings. 
+* Your custom filters should be moved over to the new format automatically, if not let me know.
+* Due to the new filter format, your previously saved selected filters on the sniping window will be cleared in order to support the new format. 
+* Fixed issue where if only selecting a parent filter, the global settings were not passed down to the subfilters properly.
+* Properly adds a default percent string if using Auctionator and nothing else.
+
+AnS Changes 1.0.5.5
+----------
+* Fixed issue where other items were showing when using a item id not associated to it.
+* Fixed issue where you couldn't use any words with a space in it, in the new filter types and subtypes on custom filters.
+* No longer automatically focuses the name filter box on the sniper window
+
 AnS Changes 1.0.5.4
 -----------
 * Can now define your own custom variables under ESC -> Interface -> Addons -> AnS -> Custom VARS. Anything related to filter strings or percent strings applies to these as well.

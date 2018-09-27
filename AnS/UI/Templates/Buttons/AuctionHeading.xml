@@ -1,0 +1,17 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Button name="AnsAuctionHeadingTemplate" virtual="true">
+    <ButtonText name="$parentText">
+      <Anchors>
+        <Anchor point="LEFT" x="8" y="0"/>
+      </Anchors>
+    </ButtonText>
+    <NormalFont style="GameFontHighlightSmall"/>
+    <HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD">
+      <Size x="5" y="24"/>
+      <Anchors>
+        <Anchor point="LEFT" x="0" y="0"/>
+        <Anchor point="RIGHT" x="4" y="0"/>
+      </Anchors>
+    </HighlightTexture>
+  </Button>
+</Ui>

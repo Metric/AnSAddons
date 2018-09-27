@@ -1,8 +1,27 @@
+local Ans = select(2, ...);
+
+local TUJDB = Ans.Database.TUJ;
+local TSMDB = Ans.Database.TSM;
+
+local Sources = Ans.Sources;
+
+local Utils = Ans.Utils;
+
+local Data = Ans.Data;
+
+local Filter = Ans.Filter;
+
+local AHTabs = {};
+local AHTabIndexToTab = {};
+
 AnsCore = {};
 AnsCore.__index = AnsCore;
 
-AnsCustomFilter = {};
-AnsCustomFilter.__index = AnsCustomFilter;
+Ans.Filters = {};
+
+AnsCore.API = Ans;
+
+local AH_TAB_CLICK = nil;
 
 StaticPopupDialogs["ANS_NO_PRICING"] = {
     text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, and Auctionator are currently supported.",
@@ -14,56 +33,67 @@ StaticPopupDialogs["ANS_NO_PRICING"] = {
     preferredIndex = 3
 };
 
+local function AHTabClick(self, button, down)
+    AH_TAB_CLICK(self, button, down);
+    AnsCore:AHTabClick(self, button, down);
+end
+
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
 local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
+local ATRPercentFn = "atrvalue";
+local ATRTSMPercentFn = "min(atrvalue,dbmarket)";
+local ATRTUJPercentFn = "min(atrvalue,tujmarket)";
 
-local DefaultFilters = {};
-local TUJTempTable = {};
-
-local AnsAuctionDB = {};
-local TSM_MAJOR_VERSION = AnsUtils:GetAddonVersion("TradeSkillMaster");
-
-function AnsAuctionDB.GetTSMPrice(link, key, name) 
-    local id = AnsUtils:GetTSMID(link);
-
-    if(TSM_MAJOR_VERSION == "3") then
-        return TSMAPI:GetCustomPriceValue(name, id);
-    else
-        return TSM_API.GetCustomPriceValue(name, id);
+function AnsCore:AHTabClick(t, button, down)
+    for k, v in pairs(AHTabs) do
+        if (v.onClose) then
+            v.onClose();
+        end
     end
-end
 
-function AnsAuctionDB.GetSaleInfo(link, key, name)
-    local r = AnsAuctionDB.GetTSMPrice(link, key, name);
-    if (TSM_MAJOR_VERSION == "3") then
-        if (not r) then r = 0; end;
-        return r / 100;
-    else
-        return r;
+    local id = t:GetID();
+
+    if (AHTabIndexToTab[id]) then
+        local n = AHTabIndexToTab[id];
+        local tab = AHTabs[n];
+
+        if (tab and tab.onShow) then
+            tab.onShow();
+            PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB);
+        end
     end
+
+    PanelTemplates_SetTab(AuctionFrame, id);
 end
 
-local function GetTUJPrice(itemId, key)
-    TUJMarketInfo(itemId, TUJTempTable);
-    return TUJTempTable[key];
-end
+function AnsCore:AddAHTab(name, showFn, closeFn)
+    local n = AuctionFrame.numTabs + 1;
+    local framename = "AuctionFrameTab"..n;
+    local frame = CreateFrame("BUTTON", framename, AuctionFrame, "AuctionTabTemplate");
 
-function AnsCustomFilter:New(name,ids)
-    local f = {};
-    setmetatable(f, AnsCustomFilter);
-    
-    f.name = name;
-    f.ids = ids;
-    f.priceFn = "tujdays ~= 252";
-    f.globalMaxBuyout = true;
-    f.globalMinStack = true;
-    f.globalMinQuality = true;
-    f.globalMinILevel = true;
-    f.types = "";
-    f.subtypes = "";
+    frame:SetID(n);
+    frame:SetText(name);
+    frame:SetNormalFontObject(_G["AnsFontOrange"]);
+    frame:SetPoint("LEFT", _G["AuctionFrameTab"..(n-1)], "RIGHT", -8, 0);
 
-    return f;
+    PanelTemplates_SetNumTabs(AuctionFrame, n);
+    PanelTemplates_EnableTab(AuctionFrame, n);
+
+    if (AH_TAB_CLICK == nil) then
+        -- setup hook
+        AH_TAB_CLICK = AuctionFrameTab_OnClick;
+        AuctionFrameTab_OnClick = AHTabClick;
+    end
+
+    local ansTab = {
+        name = name,
+        onShow = showFn,
+        onClose = closeFn
+    };
+
+    AHTabs[name] = ansTab;
+    AHTabIndexToTab[n] = name;
 end
 
 function AnsCore:RegisterEvents(frame)
@@ -71,26 +101,16 @@ function AnsCore:RegisterEvents(frame)
 end
 
 function AnsCore:EventHandler(frame, event, ...)
-    if (event == "VARIABLES_LOADED") then AnsCore:OnLoad(); end;
+    if (event == "VARIABLES_LOADED") then self:OnLoad(); end;
 end
 
 function AnsCore:OnLoad()
     self:MigrateGlobalSettings();
+    self:CreateDefaultFilters();
     self:MigrateCustomFilters();
     self:RegisterPriceSources();
-    self:StoreDefaultFilters();
-    self:LoadCustomFilters();
+    self:LoadFilters();
     self:LoadCustomVars();
-end
-
-function AnsCore:StoreDefaultFilters()
-    ANS_FILTER_SELECTION = ANS_FILTER_SELECTION or {};
-    local i;
-    local total = #AnsFilterList;
-
-    for i = 1, total do
-        DefaultFilters[i] = AnsFilterList[i];
-    end
 end
 
 function AnsCore:RegisterPriceSources()
@@ -98,7 +118,7 @@ function AnsCore:RegisterPriceSources()
     local tujEnabled = false;
     local auctionatorEnabled = false;
 
-    if (AnsUtils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
+    if (Utils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
        auctionatorEnabled = true; 
     end
     
@@ -111,14 +131,23 @@ function AnsCore:RegisterPriceSources()
     end
 
     if (tujEnabled and tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
-        print("setting default tuj and tsm percent fn");
+        print("AnS: setting default tuj and tsm percent fn");
         ANS_GLOBAL_SETTINGS.percentFn = TUJAndTSMPercentFn;
-    elseif (tujEnabled and not tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
-        print("setting default tuj percent fn");
+    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+        print("AnS: setting default tuj percent fn");
         ANS_GLOBAL_SETTINGS.percentFn = TUJOnlyPercentFn;
-    elseif (tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
-        print("setting default tsm percent fn");
+    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+        print("AnS: setting default tsm percent fn");
         ANS_GLOBAL_SETTINGS.percentFn = TSMOnlyPercentFn;
+    elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+        print("AnS: setting default auctionator percent fn");
+        ANS_GLOBAL_SETTINGS.percentFn = ATRPercentFn;
+    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+        print("AnS: setting default auctionator and tuj percent fn");
+        ANS_GLOBAL_SETTINGS.percentFn = ATRTUJPercentFn;
+    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+        print("AnS: setting default auctionator and tsm percent fn");
+        ANS_GLOBAL_SETTINGS.percentFn = ATRTSMPercentFn;
     end
 
     if (not tsmEnabled and not tujEnabled and not auctionatorEnabled) then
@@ -126,105 +155,93 @@ function AnsCore:RegisterPriceSources()
     end
 
     if (tsmEnabled) then
-        print("AnS found TSM pricing source");
-        AnsPriceSources:Register("DBMarket", AnsAuctionDB.GetTSMPrice, "marketValue");
-        AnsPriceSources:Register("DBMinBuyout", AnsAuctionDB.GetTSMPrice, "minBuyout");
-        AnsPriceSources:Register("DBHistorical", AnsAuctionDB.GetTSMPrice, "historical");
-        AnsPriceSources:Register("DBRegionMinBuyoutAvg", AnsAuctionDB.GetTSMPrice, "regionMinBuyout");
-        AnsPriceSources:Register("DBRegionMarketAvg", AnsAuctionDB.GetTSMPrice, "regionMarketValue");
-        AnsPriceSources:Register("DBRegionHistorical", AnsAuctionDB.GetTSMPrice, "regionHistorical");
-        AnsPriceSources:Register("DBRegionSaleAvg", AnsAuctionDB.GetTSMPrice, "regionSale");
-        AnsPriceSources:Register("DBRegionSaleRate", AnsAuctionDB.GetSaleInfo, "regionSalePercent");
-        AnsPriceSources:Register("DBRegionSoldPerDay", AnsAuctionDB.GetSaleInfo, "regionSoldPerDay");
-        AnsPriceSources:Register("DBGlobalMinBuyoutAvg", AnsAuctionDB.GetTSMPrice, "globalMinBuyout");
-        AnsPriceSources:Register("DBGlobalMarketAvg", AnsAuctionDB.GetTSMPrice, "globalMarketValue");
-        AnsPriceSources:Register("DBGlobalHistorical", AnsAuctionDB.GetTSMPrice, "globalHistorical");
-        AnsPriceSources:Register("DBGlobalSaleAvg", AnsAuctionDB.GetTSMPrice, "globalSale");
-        AnsPriceSources:Register("DBGlobalSaleRate", AnsAuctionDB.GetSaleInfo, "globalSalePercent");
-        AnsPriceSources:Register("DBGlobalSoldPerDay", AnsAuctionDB.GetSaleInfo, "globalSoldPerDay");
+        print("AnS: found TSM pricing source");
+        Sources:Register("DBMarket", TSMDB.GetPrice, "marketValue");
+        Sources:Register("DBMinBuyout", TSMDB.GetPrice, "minBuyout");
+        Sources:Register("DBHistorical", TSMDB.GetPrice, "historical");
+        Sources:Register("DBRegionMinBuyoutAvg", TSMDB.GetPrice, "regionMinBuyout");
+        Sources:Register("DBRegionMarketAvg", TSMDB.GetPrice, "regionMarketValue");
+        Sources:Register("DBRegionHistorical", TSMDB.GetPricee, "regionHistorical");
+        Sources:Register("DBRegionSaleAvg", TSMDB.GetPrice, "regionSale");
+        Sources:Register("DBRegionSaleRate", TSMDB.GetSaleInfo, "regionSalePercent");
+        Sources:Register("DBRegionSoldPerDay", TSMDB.GetSaleInfo, "regionSoldPerDay");
+        Sources:Register("DBGlobalMinBuyoutAvg", TSMDB.GetPrice, "globalMinBuyout");
+        Sources:Register("DBGlobalMarketAvg", TSMDB.GetPrice, "globalMarketValue");
+        Sources:Register("DBGlobalHistorical", TSMDB.GetPrice, "globalHistorical");
+        Sources:Register("DBGlobalSaleAvg", TSMDB.GetPrice, "globalSale");
+        Sources:Register("DBGlobalSaleRate", TSMDB.GetSaleInfo, "globalSalePercent");
+        Sources:Register("DBGlobalSoldPerDay", TSMDB.GetSaleInfo, "globalSoldPerDay");
     end
 
     if (tujEnabled) then
-        print("AnS found TUJ pricing source");
-        AnsPriceSources:Register("TUJMarket", GetTUJPrice, "market");
-        AnsPriceSources:Register("TUJRecent", GetTUJPrice, "recent");
-        AnsPriceSources:Register("TUJGlobalMedian", GetTUJPrice, "globalMedian");
-        AnsPriceSources:Register("TUJGlobalMean", GetTUJPrice, "globalMean");
-        AnsPriceSources:Register("TUJAge", GetTUJPrice, "age");
-        AnsPriceSources:Register("TUJDays", GetTUJPrice, "days");
-        AnsPriceSources:Register("TUJStdDev", GetTUJPrice, "stddev");
-        AnsPriceSources:Register("TUJGlobalStdDev", GetTUJPrice, "globalStdDev");
+        print("AnS: found TUJ pricing source");
+        Sources:Register("TUJMarket", TUJDB.GetPrice, "market");
+        Sources:Register("TUJRecent", TUJDB.GetPrice, "recent");
+        Sources:Register("TUJGlobalMedian", TUJDB.GetPrice, "globalMedian");
+        Sources:Register("TUJGlobalMean", TUJDB.GetPrice, "globalMean");
+        Sources:Register("TUJAge", TUJDB.GetPrice, "age");
+        Sources:Register("TUJDays", TUJDB.GetPrice, "days");
+        Sources:Register("TUJStdDev", TUJDB.GetPrice, "stddev");
+        Sources:Register("TUJGlobalStdDev", TUJDB.GetPrice, "globalStdDev");
     end
 
     if (auctionatorEnabled) then
-        print("AnS found Auctionator pricing source");
-        AnsPriceSources:Register("AtrValue", Atr_GetAuctionBuyout, nil);
+        print("AnS: found Auctionator pricing source");
+        Sources:Register("AtrValue", Atr_GetAuctionBuyout, nil);
     end
 end
 
 function AnsCore:LoadCustomVars()
     ANS_CUSTOM_VARS = ANS_CUSTOM_VARS or {};
-    AnsPriceSources:ClearCache();
-    AnsPriceSources:LoadCustomVars();
+    Sources:ClearCache();
+    Sources:LoadCustomVars();
 end
 
-function AnsCore:LoadCustomFilters()
-    local i;
-    local total = #DefaultFilters;
+function AnsCore:LoadFilters()
+    wipe(Ans.Filters);
 
-    local temp = {};
-    local temp2 = {};
+    for i, f in ipairs(ANS_FILTERS) do
+        local filter = Filter:New(f.name);
+        
+        filter.priceFn = f.priceFn;
+        filter.useGlobalMaxBuyout = f.useMaxPPU;
+        filter.useGlobalMinILevel = f.useMinLevel;
+        filter.useGlobalMinQuality = f.useQuality;
+        filter.useGlobalMinStack = f.useMinStack;
+        filter.useGlobalPercent = f.usePercent;
+        filter:ParseTSM(f.ids);
+        filter:ParseTypes(f.types);
+        filter.ParseSubtypes(f.subtypes);
 
-    for i = 1, total do
-        temp[i] = DefaultFilters[i];
-        temp2[i] = ANS_FILTER_SELECTION[i] or AnsFilterSelected[i];
+        if (#f.children > 0) then
+            self:LoadSubFilters(f.children, filter);
+        end
+
+        tinsert(Ans.Filters, filter);
     end
+end
 
-    local fparent = AnsFilter:New("Custom");
-    fparent.subfilters = {};
+function AnsCore:LoadSubFilters(filters, parent)
+    for i, f in ipairs(filters) do
+        local filter = Filter:New(f.name);
+        filter.priceFn = f.priceFn;
+        filter.useGlobalMaxBuyout = f.useMaxPPU;
+        filter.useGlobalMinILevel = f.useMinLevel;
+        filter.useGlobalMinQuality = f.useQuality;
+        filter.useGlobalMinStack = f.useMinStack;
+        filter.useGlobalPercent = f.usePercent;
+        filter:ParseTSM(f.ids);
+        filter:ParseTypes(f.types);
+        filter:ParseSubtypes(f.subtypes);
 
-    total = total + 1;
-    temp[total] = fparent;
-    temp2[total] = false;
+        parent:AddChild(filter);
 
-    local vtotal = 1;
-
-    for i = 1, #ANS_CUSTOM_FILTERS do
-        local cf = ANS_CUSTOM_FILTERS[i];
-        if ((cf.ids and cf.ids:len() > 0) or (cf.types and cf.types:len() > 0)) then
-            local f = AnsFilter:New(cf.name);
-            f.isSub = true;
-            f.priceFn = cf.priceFn;
-            
-            f.isCustom = true;
-
-            f.useGlobalMaxBuyout = cf.globalMaxBuyout;
-            f.useGlobalMinStack = cf.globalMinStack;
-            f.useGlobalMinQuality = cf.globalMinQuality;
-            f.useGlobalMinILevel = cf.globalMinILevel;
-
-            if (cf.types and cf.types:len() > 0) then
-                f.types = { strsplit(",", string.gsub(cf.types:lower(), " ", "")) };
-            end
-
-            if (cf.subtypes and cf.subtypes:len() > 0) then
-                f.subtypes = { strsplit(",", string.gsub(cf.subtypes:lower(), " ", "")) };
-            end
-
-            if (cf.ids and cf.ids:len() > 0) then
-                f:ParseTSM(cf.ids);
-            end
-
-            fparent.subfilters[vtotal] = f;
-            vtotal = vtotal + 1;
-            total = total + 1;
-            temp[total] = f;
-            temp2[total] = ANS_CUSTOM_FILTER_SELECTION[i] or false;
+        -- probably should do this as a stack
+        -- but for now will do recursive
+        if (#f.children > 0) then
+            self:LoadSubFilters(f.children, filter);
         end
     end
-
-    AnsFilterList = temp;
-    AnsFilterSelected = temp2;
 end
 
 function AnsCore:MigrateGlobalSettings()
@@ -247,38 +264,97 @@ end
 
 function AnsCore:MigrateCustomFilters()
     ANS_CUSTOM_FILTERS = ANS_CUSTOM_FILTERS or {};
-    ANS_CUSTOM_FILTER_SELECTION = ANS_CUSTOM_FILTER_SELECTION or {};
 
-    local i;
-    local total = #ANS_CUSTOM_FILTERS;
+    if (#ANS_CUSTOM_FILTERS > 0) then
+        for i, v in ipairs(ANS_CUSTOM_FILTERS) do
+            local t = {
+                name = v.name,
+                ids = v.ids,
+                children = {},
+                useMaxPPU = false,
+                useMinLevel = false,
+                useQuality = false,
+                useMinStack = false,
+                usePercent = true,
+                priceFn = v.priceFn,
+                types = v.types,
+                subtypes = v.subtypes,
+            };
 
-    for i = 1, total do
-        local f = ANS_CUSTOM_FILTERS[i];
-        if (f.priceFn == nil) then
-            f.priceFn = "";
-        end
-
-        if (f.globalMaxBuyout == nil) then
-            f.globalMaxBuyout = true;
-        end
-
-        if (f.globalMinStack == nil) then
-            f.globalMinStack = true;
-        end
-
-        if (f.globalMinQuality == nil) then
-            f.globalMinQuality = true;
-        end
-
-        if (f.globalMinILevel == nil) then 
-            f.globalMinILevel = true;
-        end
-
-        if (f.types == nil) then
-            f.types = "";
-        end
-        if (f.subtypes == nil) then
-            f.subtypes = "";
+            tinsert(ANS_FILTERS, t);
         end
     end
+
+    -- migrating away from custom filters
+    -- and combined them with all filters
+    ANS_CUSTOM_FILTERS = {};
+end
+
+function AnsCore:RestoreDefaultFilters()
+    self:RestoreFilter(Data, ANS_FILTERS);
+end
+
+function AnsCore:RestoreFilter(children, parent)
+    for i,v in ipairs(children) do
+        local restored = false;
+
+        for i2, v2 in ipairs(parent) do
+            if (v2.name == v.name) then
+                v2.ids = v.ids;
+                v2.useMaxPPU = v.useMaxPPU;
+                v2.useMinLevel = v.useMinLevel;
+                v2.useQuality = v.useQuality;
+                v2.useMinStack = v.useMinStack;
+                v2.usePercent = v.usePercent;
+                v2.priceFn = v.priceFn;
+                v2.types = v.types;
+                v2.subtypes = v.subtypes;
+                
+                if (v.children and #v.children > 0) then
+                    self:RestoreFilter(v.children, v2.children);
+                end
+
+                restored = true;
+                break;
+            end
+        end
+
+        if (not restored) then
+            self:PopulateFilter(v, parent);
+        end
+    end
+end
+
+function AnsCore:CreateDefaultFilters()
+    if (not ANS_FILTERS or #ANS_FILTERS == 0) then
+        ANS_FILTERS = {};
+        -- reset filter selection as a new method will now
+        -- be used
+        ANS_FILTER_SELECTION = {};
+        self:RestoreFilter(Data, ANS_FILTERS);
+    end
+end
+
+function AnsCore:PopulateFilter(v, parent)
+    local t = {
+        name = v.name,
+        ids = v.ids,
+        children = {},
+        useMaxPPU = v.useMaxPPU,
+        useMinLevel = v.useMinLevel,
+        useQuality = v.useQuality,
+        useMinStack = v.useMinStack,
+        usePercent = v.usePercent,
+        priceFn = v.priceFn,
+        types = v.types,
+        subtypes = v.subtypes,
+    };
+
+    if (v.children and #v.children > 0) then
+        for i2, v2 in ipairs(v.children) do
+            self:PopulateFilter(v2, t.children);
+        end 
+    end
+
+    tinsert(parent, t);
 end

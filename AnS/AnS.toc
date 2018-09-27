@@ -3,7 +3,26 @@
 ## Version: 1.0.5.4
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
-## SavedVariables: ANS_CUSTOM_FILTERS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION, ANS_CUSTOM_FILTER_SELECTION
+## SavedVariables: ANS_CUSTOM_FILTERS, ANS_FILTERS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION
+
+## Default Settings
+Core\Settings.lua
+
+#e Data
+Data\Core.lua
+Data\Armor.lua
+Data\Weapons.lua
+Data\Consumable.lua
+Data\Container.lua
+Data\Recipes.lua
+Data\Herbs.lua
+Data\Ore.lua
+Data\Cloth.lua
+Data\Leather.lua
+Data\Enchanting.lua
+Data\Fish.lua
+Data\Mounts.lua
+Data\Pets.lua
 
 ## Components
 UI\Templates\Fonts.xml
@@ -12,35 +31,33 @@ UI\Templates\Buttons\Buttons.xml
 UI\Templates\Buttons\DropdownItem.xml
 UI\Templates\Buttons\Dropdown.xml
 UI\Templates\Buttons\RecordRowMin.xml
+UI\Templates\Buttons\AuctionTreeRow.xml
 UI\Templates\Frames\RecordsHeadingMin.xml
 UI\Templates\Frames\Graph.xml
 
-UI\Components\Common\AnsDropdown.lua
-UI\Components\AnsGraph.lua
+UI\Components\Core.lua
+UI\Components\Common\Dropdown.lua
+UI\Components\Graph.lua
+UI\Components\TreeView.lua
 
-## General Settings & Utils
-AnsSettings.lua
-AnsUtils.lua
+## General Utils
+Core\Utils.lua
 
-## Base Data
-Data\AnsFish.lua
-Data\AnsCloth.lua
-Data\AnsEnchanting.lua
-Data\AnsHerb.lua
-Data\AnsLeather.lua
-Data\AnsMounts.lua
-Data\AnsOre.lua
-Data\AnsPets.lua
+## Auction Database Sources
+Core\Auction\Database\Core.lua
+Core\Auction\Database\TSM.lua
+Core\Auction\Database\TUJ.lua
 
-## Filters & Pricing
-AnsPriceSources.lua
-
-AnsFilter.lua
-AnsFilterDefault.lua
-AnsFilterView.lua
+## Filters & Price Sources
+Core\PriceSource.lua
+Core\Sources.lua
+Core\Auction\Filter.lua
 
 ## Auction Queries
-AnsQuery.lua
+Core\Auction\Query.lua
+
+## BagScanner
+Core\BagScanner.lua
 
 ## AnS Core
 AnS.lua

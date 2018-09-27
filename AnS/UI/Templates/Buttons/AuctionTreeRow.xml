@@ -1,0 +1,72 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+  <Button name="AnsAuctionTreeRowTemplate" virtual="true" hidden="true">
+    <Size x="605" y="20" />
+    <PushedTexture file="Interface\HelpFrame\HelpFrameButton-Highlight">
+      <TexCoords left="0.25" right="0.35" top="0.0" bottom="0.6"/>
+    </PushedTexture>
+    <HighlightTexture file="Interface\HelpFrame\HelpFrameButton-Highlight" alphaMode="ADD">
+      <TexCoords left="0.035" right="0.04" top="0.2" bottom="0.25"/>
+    </HighlightTexture>
+    <Layers>
+        <Layer level="ARTWORK">
+            <FontString name="$parentText" justifyH="LEFT" inherits="GameFontHighlightSmall">
+                <Size x="172" y="8" />
+                <Anchors>
+                    <Anchor point="LEFT" x="4" y="0" />
+                </Anchors>
+            </FontString>
+            <Texture name="$parentItemIcon">
+                <Size x="16" y="16"/>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentText" relativePoint="RIGHT" x="0" y="0" />
+                </Anchors>
+                <TexCoords left="0" right="1" top="0" bottom="1"/>
+            </Texture>
+            <FontString name="$parentLevel" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+              <Size x="32" y="16" />
+              <Anchors>
+                <Anchor point="LEFT" relativeTo="$parentItemIcon" relativePoint="RIGHT" x="15" y="0" />
+              </Anchors>
+            </FontString>
+            <FontString name="$parentPosts" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+              <Size x="32" y="16" />
+              <Anchors>
+                <Anchor point="LEFT" relativeTo="$parentLevel" relativePoint="RIGHT" x="5" y="0" />
+              </Anchors>
+            </FontString>
+            <FontString name="$parentStack" inherits="GameFontHighlightSmall" justifyH="RIGHT">
+              <Size x="32" y="16" />
+              <Anchors>
+                <Anchor point="LEFT" relativeTo="$parentPosts" relativePoint="RIGHT" x="5" y="0" />
+              </Anchors>
+            </FontString>
+            <FontString name="$parentSeller" inherits="GameFontHighlightSmall" justifyH="LEFT">
+              <Size x="64" y="16" />
+              <Anchors>
+                <Anchor point="LEFT" relativeTo="$parentStack" relativePoint="RIGHT" x="15" y="0" />
+              </Anchors>
+            </FontString>
+            <FontString name="$parentPercent" inherits="GameFontHighlightSmall" justifyH="LEFT">
+              <Size x="32" y="16" />
+              <Anchors>
+                <Anchor point="RIGHT" relativePoint="RIGHT" x="0" y="0" />
+              </Anchors>
+            </FontString>
+            <FontString name="$parentPPU" justifyH="RIGHT" inherits="GameFontHighlightSmall">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativeTo="$parentPercent" relativePoint="LEFT" x="-10" y="0" />
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+    <Frames>
+        <Button name="$parentExpander" text="+" inherits="UIPanelButtonTemplate">
+            <Size x="16" y="14" />
+            <Anchors>
+                <Anchor point="RIGHT" x="0" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+            </Anchors>
+        </Button>
+    </Frames>
+  </Button>
+</Ui>

@@ -12,33 +12,37 @@ More to come...
 Classes
 --------------
 * AnsCore (Handles loading of saved variables etc)
-* AnsFilter (Auction House Query Filtering)
-* AnsFilterView (Helper for rendering filters for selecting etc.)
-* AnsCustomFilter (Data storage for custom filters)
-* AnsQuery (Auction House Query)
-* AnsUtils (Show pet battle tip, parse pet item link etc.)
+* AnsCore.API.Filter (Auction House Query Filtering)
+* AnsCore.API.Query (Auction House Query)
+* AnsCore.API.Utils (Show pet battle tip, parse pet item link etc.)
 * AnsConfig (Handles config options etc, adding new custom filters, importing tsm groups)
-* AnsSettings (Default Settings)
-* AnsPriceSources (Allows registering multiple price sources for filter / percent strings)
+* AnsCore.API.Sources (Allows registering multiple price sources for filter / percent strings)
+* AnsCore.API.BagScanner (Scanning items in bags)
+* AnsCore.API.UI.Dropdown
+* AnsCore.API.UI.TreeView
+* AnsCore.API.UI.Graph
 
 Data
 ---------
-* AnsCloth
-* AnsFish
-* AnsHerb
-* AnsEnchanting
-* AnsLeather
-* AnsMounts
-* AnsOre
-* AnsPets
-* AnsFilterDefault (Default Filter Setup for Queries)
+* Cloth
+* Fish
+* Herbs
+* Enchanting
+* Leather
+* Mounts
+* Ore
+* Pets
+* Consumable
+* Armor
+* Weapons
+* Recipes
+* Container
 
 UI Templates
 --------------
 * AnsFilterRowTemplate (For filters listing)
-* AnsResultRowTemplate (For auction listings)
-* AnsHeaderTemplate (For auction sort etc)
-* AnsDialogTemplate (Default dialog template)
+* AnsAuctionRowTemplate (For auction listings)
+* AnsAuctionHeadingTemplate (For auction sort etc)
 * SmallButtonTemplate
 
 Font Templates
@@ -53,11 +57,10 @@ TODO
     * Ingots / Bars
     * Gems
     * Meat
-    * Consumables Sub Filters
+    * Consumables
 
 * Create other addon modules:
     * Analytics
-    * Auctioning (Regular purchasing etc)
     * Crafting (Profits / Loss per Craft)
 
 * Even Bigger Goals:
