@@ -365,6 +365,17 @@
           </OnClick>
         </Scripts>
       </Button>
+      <Button name="$parentMoveFilter" text="Move" inherits="UIPanelButtonTemplate">
+        <Size x="100" y="32" />
+        <Anchors>
+          <Anchor point="TOPLEFT" relativeTo="$parentGPercent" relativePoint="BOTTOMLEFT" x="0" y="-5" />
+        </Anchors>
+        <Scripts>
+          <OnClick>
+            AnsConfig:ToggleFilterMove(self);
+          </OnClick>
+        </Scripts>
+      </Button>
     </Frames>
   </Frame>
 
@@ -566,6 +577,28 @@
         <Anchors>
           <Anchor point="TOPLEFT" relativeTo="$parentTreeView" relativePoint="TOPRIGHT" x="45" y="0" />
         </Anchors>
+      </Frame>
+      <Frame name="$parentMoveSelect" frameLevel="9001" hidden="true">
+        <Size x="225" y="375" />
+        <Layers>
+            <Layer level="BACKGROUND">
+              <Texture file="Interface\Buttons\WHITE8X8">
+                <Color r="0" g="0" b="0" a="1" />
+                <Anchors>
+                  <Anchor point="TOPLEFT" x="0" y="0" />
+                  <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                </Anchors>
+              </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+          <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+            <Size x="200" y="375" />
+            <Anchors>
+              <Anchor point="TOPLEFT" x="0" y="0" />
+            </Anchors>
+          </ScrollFrame>
+        </Frames>
       </Frame>
     </Frames>
   </Frame>

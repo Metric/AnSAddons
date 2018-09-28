@@ -173,6 +173,14 @@ function AnsConfig:FilterRefresh()
             function(item) AnsConfig:MoveFilterUp(item); end,
             function(item) AnsConfig:MoveFilterDown(item); end);
     end
+    if (not self.moveFilterView) then
+        local TreeView = AnsCore.API.UI.TreeView;
+        self.moveFilterView = TreeView:New(_G["AnsFiltersFrameMoveSelect"],
+        nil,
+        function(item) AnsConfig:MoveFilterTo(item); end,
+        nil, nil,
+        function(row, item) AnsConfig:RenderMoveFilterRow(row, item); end);
+    end
 
     if (#filterTreeItems == 0) then
         tinsert(filterTreeItems, rootFilter);
@@ -181,6 +189,72 @@ function AnsConfig:FilterRefresh()
     self:BuildFilterTree();
     self.filterView.items = filterTreeItems;
     self.filterView:Refresh();
+    self.moveFilterView.items = filterTreeItems;
+    self.moveFilterView:Refresh();
+end
+
+function AnsConfig:ToggleFilterMove(frame)
+    local view = _G["AnsFiltersFrameMoveSelect"];
+
+    if (view:IsShown()) then
+        view:Hide();
+    else
+        view:Show();
+        view:ClearAllPoints();
+        view:SetPoint("BOTTOMLEFT", frame, "TOPLEFT", 0, 0);
+    end
+end
+
+function AnsConfig:MoveFilterTo(item)
+    if (selectedFilter and selectedFilter.filter) then
+        -- can't move it into ourself
+        if (item.filter == selectedFilter.filter) then
+            return;
+        end
+
+        local f = selectedFilter.filter;
+        local parent = selectedFilter.parent;
+
+        if (parent) then
+            for i,v in ipairs(parent.children) do
+                if (v == f) then
+                    tremove(parent.children, i);
+                    break;
+                end
+            end
+        else
+            for i,v in ipairs(ANS_FILTERS) do
+                if (v == f) then
+                    tremove(ANS_FILTERS, i);
+                    break;
+                end
+            end
+        end
+
+        if (item.filter) then
+            tinsert(item.filter.children, f);
+            selectedFilter.parent = item.filter;
+        else
+            tinsert(ANS_FILTERS, f);
+            selectedFilter.parent = nil;
+        end
+
+        _G["AnsFiltersFrameMoveSelect"]:Hide();
+
+        self:FilterRefresh();
+    end
+end
+
+function AnsConfig:RenderMoveFilterRow(row, item)
+    local moveUp = _G[row:GetName().."MoveUp"];
+    local moveDown = _G[row:GetName().."MoveDown"];
+
+    if (moveUp) then
+        moveUp:Hide();
+    end
+    if (moveDown) then
+        moveDown:Hide();
+    end
 end
 
 function AnsConfig:AddVarRow()

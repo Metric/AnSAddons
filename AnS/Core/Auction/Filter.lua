@@ -36,6 +36,69 @@ function Filter:New(name)
     return f;
 end
 
+function Filter:GetSubTypes()
+    local tbl = Utils:GetTable();
+    
+    tinsert(tbl, self);
+
+    while (#tbl > 0) do
+        local v = tremove(tbl, 1);
+
+        if (#v.subtypes > 0) then
+            Utils:ReleaseTable(tbl);
+            return v.subtypes;
+        elseif (v.parent) then
+            tinsert(tbl, v.parent);
+        end
+    end
+
+    Utils:ReleaseTable(tbl);
+
+    return self.subtypes;
+end
+
+function Filter:GetTypes()
+    local tbl = Utils:GetTable();
+    
+    tinsert(tbl, self);
+
+    while (#tbl > 0) do
+        local v = tremove(tbl, 1);
+
+        if (#v.types > 0) then
+            Utils:ReleaseTable(tbl);
+            return v.types;
+        elseif (v.parent) then
+            tinsert(tbl, v.parent);
+        end
+    end
+
+    Utils:ReleaseTable(tbl);
+
+    return self.types;
+end
+
+function Filter:GetPriceFn()
+    local tbl = Utils:GetTable();
+    
+    tinsert(tbl, self);
+
+    while (#tbl > 0) do
+        local v = tremove(tbl, 1);
+
+        if (v.priceFn and string.gsub(v.priceFn, " ", ""):len() > 0) then
+            Utils:ReleaseTable(tbl);
+            return v.priceFn;
+        elseif (v.parent) then
+            tinsert(tbl, v.parent);
+        end
+    end
+
+    Utils:ReleaseTable(tbl);
+
+    return self.priceFn;
+end
+
 function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricingFn)
     self.maxPercent = maxPercent or 100;
     self.minILevel = ilevel;
@@ -43,7 +106,7 @@ function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricing
     self.minSize = size;
     self.minQuality = quality;
 
-    if (not self.priceFn or string.gsub(self.priceFn, " ", ""):len() == 0) then
+    if (self:GetPriceFn():len() == 0) then
         self.priceFn = pricingFn;
     end
 
@@ -62,10 +125,6 @@ function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricing
             v.minSize = size;
             v.maxBuyout = buyout;
             v.minQuality = quality;
-
-            if (not v.priceFn or string.gsub(v.priceFn, " ", ""):len() == 0) then
-                v.priceFn = pricingFn;
-            end
 
             if (#v.subfilters > 0) then
                 for i, v2 in ipairs(v.subfilters) do
@@ -281,8 +340,10 @@ function Filter:IsValid(item)
         end
     end
 
-    if (self.priceFn ~= nil and self.priceFn:len() > 0) then
-        local presult = Sources:Query(self.priceFn, item);
+    local priceFn = self:GetPriceFn();
+
+    if (priceFn ~= nil and priceFn:len() > 0) then
+        local presult = Sources:Query(priceFn, item);
 
         if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and presult <= 0)) then
             return false;
@@ -320,16 +381,19 @@ function Filter:IsValid(item)
         end
     end
 
-    local ttypes = #self.types;
+    local types = self:GetTypes();
+    local subtypes = self:GetSubTypes();
+    local ttypes = #types;
+    local tstypes = #subtypes;
+    
     if (ttypes > 0) then
         local i;
         for i = 1, ttypes do
-            if (self.types[i] == item.type) then
-                local tstypes = #self.subtypes;
+            if (types[i] == item.type) then
                 if (tstypes > 0) then
                     local j;
                     for j = 1, tstypes do
-                        if (self.subtypes[j] == item.subtype) then
+                        if (subtypes[j] == item.subtype) then
                             return true;
                         end
                     end

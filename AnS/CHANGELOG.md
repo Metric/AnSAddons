@@ -1,3 +1,9 @@
+AnS Changes 1.0.6.1
+--------------------
+* Fixed misspelled variable when trying to access dbregionhistorical
+* Filters can now be moved from group to group via the move button
+* Child filters that have blank types, subtypes, or a filter string, will now inherit the parents when sniping
+
 AnS Changes 1.0.6
 --------------------
 * Code refactored to remove most things from global namespace

@@ -161,7 +161,7 @@ function AnsCore:RegisterPriceSources()
         Sources:Register("DBHistorical", TSMDB.GetPrice, "historical");
         Sources:Register("DBRegionMinBuyoutAvg", TSMDB.GetPrice, "regionMinBuyout");
         Sources:Register("DBRegionMarketAvg", TSMDB.GetPrice, "regionMarketValue");
-        Sources:Register("DBRegionHistorical", TSMDB.GetPricee, "regionHistorical");
+        Sources:Register("DBRegionHistorical", TSMDB.GetPrice, "regionHistorical");
         Sources:Register("DBRegionSaleAvg", TSMDB.GetPrice, "regionSale");
         Sources:Register("DBRegionSaleRate", TSMDB.GetSaleInfo, "regionSalePercent");
         Sources:Register("DBRegionSoldPerDay", TSMDB.GetSaleInfo, "regionSoldPerDay");
