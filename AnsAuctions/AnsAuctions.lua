@@ -56,6 +56,10 @@ function AnsAuctions:PostAuction()
     AuctionsSell:PostSelected();
 end
 
+function AnsAuctions:BuyAuction()
+    AuctionsBuy:ConfirmPurchase();
+end
+
 function AnsAuctions:StartBuyScan()
     AuctionsBuy:StartScan();
 end

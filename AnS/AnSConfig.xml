@@ -9,7 +9,7 @@
             </Anchor>
           </Anchors>
         </FontString>
-        <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" justifyV="TOP" name="$parent_BTitle">
+        <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" justifyV="TOP" name="$parent_BTitle">
           <Anchors>
             <Anchor point="TOPLEFT">
               <Offset x="20" y="-40"/>
@@ -35,7 +35,7 @@
       </ThumbTexture>
       <Layers>
         <Layer level="ARTWORK">
-          <FontString name="$parentText" inherits="GameFontHighlightSmall" justifyH="LEFT" text="Rescan Time: ">
+          <FontString name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Rescan Time: ">
             <Anchors>
               <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                 <Offset x="0" y="10"/>
@@ -61,7 +61,7 @@
         <Anchors><Anchor point="TOPLEFT" relativeTo="$parent_BTitle" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-40" /></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Global Percent String">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Global Percent String">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset x="0" y="10"/>
@@ -81,7 +81,7 @@
         <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPercentString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Global Filter String">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Global Filter String">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset x="0" y="10"/>
@@ -140,8 +140,21 @@
           <OnClick>AnsConfig:Edit(self, "safebuy")</OnClick>
         </Scripts>
       </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentUseCoinIcons">
+        <Anchors>
+          <Anchor point="BOTTOMLEFT"  relativePoint="TOPLEFT" relativeTo="$parentSafeBuy">
+            <Offset>
+              <AbsDimension x="0" y="5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("Use Coin Icons"); </OnLoad>
+          <OnClick>AnsConfig:Edit(self, "coins")</OnClick>
+        </Scripts>
+      </CheckButton>
       <Slider name="$parentSafeScanDelay" minValue="0" maxValue="2" valueStep="1" inherits="AnsSliderTemplate">
-        <Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parentSafeBuy" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="5" /></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parentUseCoinIcons" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="5" /></Offset></Anchor></Anchors>
           <Scripts>
             <OnValueChanged>
               AnsConfig:Edit(self, "safedelay");
@@ -159,7 +172,7 @@
         <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="VAR Name">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="VAR Name">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset x="0" y="5"/>
@@ -179,7 +192,7 @@
         <Anchors><Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="VAR Value">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="VAR Value">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
                   <Offset x="0" y="5"/>
@@ -216,7 +229,7 @@
         </Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Filter Name">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Filter Name">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="5"/>
               </Anchors>
@@ -236,7 +249,7 @@
         </Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item or Pet IDs E.g.: i:33444,i:1122,p:122">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Item or Pet IDs E.g.: i:33444,i:1122,p:122">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="5"/>
               </Anchors>
@@ -256,7 +269,7 @@
         </Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Filter String">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Filter String">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="10"/>
               </Anchors>
@@ -276,7 +289,7 @@
         </Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item Types (comma sep.)">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Item Types (comma sep.)">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="10"/>
               </Anchors>
@@ -296,7 +309,7 @@
         </Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" justifyH="LEFT" text="Item Sub-Types (comma sep.)">
+            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Item Sub-Types (comma sep.)">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="10" />
               </Anchors>
@@ -498,7 +511,7 @@
         <Size x="256" y="32" />
         <Layers>
           <Layer level="ARTWORK">
-            <FontString inherits="GameFontHighlightSmall" text="Import TSM Groups as Filters E.g: group:name,i:itemID,p:speciesID, ...">
+            <FontString inherits="AnsGameFontWhiteTrans" text="Import TSM Groups as Filters E.g: group:name,i:itemID,p:speciesID, ...">
               <Anchors>
                 <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="15" />
               </Anchors>
@@ -600,6 +613,128 @@
           </ScrollFrame>
         </Frames>
       </Frame>
+    </Frames>
+  </Frame>
+  <Frame name="AnsBlacklistOptionsFrame" enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate">
+    <Scripts>
+      <OnLoad>
+        AnsConfig:LoadPanel(self, "AnS", "Blacklist", nil);
+      </OnLoad>
+      <OnShow>
+        AnsConfig:LoadBlacklist(self);
+      </OnShow>
+    </Scripts>
+    <Frames>
+      <ScrollFrame name="$parentBlacklist"  inherits="UIPanelScrollFrameTemplate">
+        <Size x="250" y="480" />
+        <Anchors>
+          <Anchor point="TOPLEFT" x="0" y="-20" relativeTo="$parent_BTitle" relativePoint="BOTTOMLEFT" />
+        </Anchors>
+        <Layers>
+          <Layer level="BACKGROUND">
+            <Texture parentKey="TopLeftTex" file="Interface\Common\Common-Input-Border-TL">
+              <Size x="8" y="8"/>
+              <Anchors>
+                <Anchor point="TOPLEFT" x="-5" y="5"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="TopRightTex" file="Interface\Common\Common-Input-Border-TR">
+              <Size x="8" y="8"/>
+              <Anchors>
+                <Anchor point="TOPRIGHT" x="5" y="5"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="TopTex" file="Interface\Common\Common-Input-Border-T">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.TopLeftTex" relativePoint="TOPRIGHT"/>
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.TopRightTex" relativePoint="BOTTOMLEFT"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="BottomLeftTex" file="Interface\Common\Common-Input-Border-BL">
+              <Size x="8" y="8"/>
+              <Anchors>
+                <Anchor point="BOTTOMLEFT" x="-5" y="-5"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="BottomRightTex" file="Interface\Common\Common-Input-Border-BR">
+              <Size x="8" y="8"/>
+              <Anchors>
+                <Anchor point="BOTTOMRIGHT" x="5" y="-5"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="BottomTex" file="Interface\Common\Common-Input-Border-B">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.BottomLeftTex" relativePoint="TOPRIGHT"/>
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.BottomRightTex" relativePoint="BOTTOMLEFT"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="LeftTex" file="Interface\Common\Common-Input-Border-L">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.TopLeftTex" relativePoint="BOTTOMLEFT"/>
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.BottomLeftTex" relativePoint="TOPRIGHT"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="RightTex" file="Interface\Common\Common-Input-Border-R">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.TopRightTex" relativePoint="BOTTOMLEFT"/>
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.BottomRightTex" relativePoint="TOPRIGHT"/>
+              </Anchors>
+            </Texture>
+            <Texture parentKey="MiddleTex" file="Interface\Common\Common-Input-Border-M">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeKey="$parent.LeftTex" relativePoint="TOPRIGHT"/>
+                <Anchor point="BOTTOMRIGHT" relativeKey="$parent.RightTex" relativePoint="BOTTOMLEFT"/>
+              </Anchors>
+            </Texture>
+          </Layer>
+          <Layer level="ARTWORK">
+            <FontString inherits="AnsGameFontWhiteTrans" text="Character Name Blacklist (1 name per line)">
+              <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="15" />
+              </Anchors>
+            </FontString>
+          </Layer>
+          <Layer level="OVERLAY">
+            <FontString inherits="GameFontDisableLarge" parentKey="CharCount">
+              <Anchors>
+                <Anchor point="BOTTOMRIGHT" x="-6" y="0"/>
+              </Anchors>
+            </FontString>
+          </Layer>
+        </Layers>
+        <ScrollChild>
+          <EditBox parentKey="EditBox" multiLine="true" countInvisibleLetters="true" autoFocus="false">
+            <Size x="250" y="20" />
+            <FontString inherits="AnsGameFontWhiteTrans" />
+            <Anchors>
+              <Anchor point="TOPLEFT" />
+            </Anchors>
+            <Layers>
+              <Layer level="BORDER">
+                <FontString parentKey="Instructions" inherits="GameFontNormalSmall" justifyH="LEFT" justifyV="TOP">
+                  <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0"/>
+                  </Anchors>
+                  <Color r="0.35" g="0.35" b="0.35"/>
+                </FontString>
+              </Layer>
+            </Layers>
+            <Scripts>
+              <OnTextChanged>
+                AnsConfig:Edit(self, "blacklist");
+              </OnTextChanged>
+              <OnCursorChanged function="ScrollingEdit_OnCursorChanged"/>
+					    <OnUpdate function="InputScrollFrame_OnUpdate"/>
+              <OnEscapePressed function="InputScrollFrame_OnEscapePressed"/>
+              <OnTabPressed function="InputScrollFrame_OnTabPressed"/>
+            </Scripts>
+          </EditBox>
+        </ScrollChild>
+        <Scripts>
+          <OnLoad function="InputScrollFrame_OnLoad"/>
+          <OnMouseDown function="InputScrollFrame_OnMouseDown"/>
+        </Scripts>
+      </ScrollFrame>
     </Frames>
   </Frame>
 </Ui>

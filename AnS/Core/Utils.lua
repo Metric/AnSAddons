@@ -149,13 +149,28 @@ function Utils:GSC(val)
     return g, s, c
 end
 
+function Utils:FormatNumber(amount)
+    local formatted = amount
+    while true do  
+        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+        if (k==0) then
+            break
+        end
+    end
+    return formatted
+end
+
 
 function Utils:PriceToString(val)
+    if (ANS_GLOBAL_SETTINGS.useCoinIcons) then
+        return GetMoneyString(val, true);
+    end
+
     local gold, silver, copper  = self:GSC(val);
     local st = "";
 
     if (gold ~= 0) then
-        st = "|cFFFFFFFF"..gold.."|cFFD7BC45g ";
+        st = "|cFFFFFFFF"..self:FormatNumber(""..gold).."|cFFD7BC45g ";
     end
 
     if (st ~= "") then
@@ -230,6 +245,10 @@ function Utils:ClearTSMIDCache()
     wipe(TSMID_CACHE);
 end
 
+function Utils.SortLowToHigh(x,y) 
+    return x < y;
+end
+
 function Utils:GetTSMID(link)
     if (TSMID_CACHE[link]) then
         return TSMID_CACHE[link];
@@ -243,6 +262,11 @@ function Utils:GetTSMID(link)
     else
         if (type(link) == "number") then
             return "i:"..link;
+        end
+
+        if (string.find(link, "i:") or string.find(link, "p:")) then
+            TSMID_CACHE[link] = link;
+            return TSMID_CACHE[link];
         end
 
         local tbl = { strsplit(":", link) };
@@ -263,7 +287,7 @@ function Utils:GetTSMID(link)
                     end
                 end
 
-                table.sort(TempBonusID, function(x,y) return x < y; end);
+                table.sort(TempBonusID, Utils.SortLowToHigh);
 
                 extra = "::"..bonusCount..":"..strjoin(":", unpack(TempBonusID));
 
@@ -400,6 +424,18 @@ function Utils:IsSoulbound(bag, slot)
         if ((text == ITEM_BIND_ON_PICKUP and id < 4) or text == ITEM_SOULBOUND or text == ITEM_BIND_QUEST) then
             return true;
         elseif (text == ITEM_ACCOUNTBOUND or text == ITEM_BIND_TO_ACCOUNT or text == ITEM_BIND_TO_BNETACCOUNT or text == ITEM_BNETACCOUNTBOUND) then
+            return true;
+        end
+    end
+
+    return false;
+end
+
+function Utils:InTable(tbl, val)
+    local t = #tbl;
+    local i;
+    for i = 1, t do
+        if (tbl[i] == val) then
             return true;
         end
     end

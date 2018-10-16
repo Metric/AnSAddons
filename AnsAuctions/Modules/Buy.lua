@@ -18,8 +18,6 @@ AuctionBuy.waitingQuery = -1;
 AuctionBuy.scanning = false;
 AuctionBuy.exact = true;
 AuctionBuy.purchaseScan = false;
-AuctionBuy.previouslyScanning = false;
-AuctionBuy.wasPreviouslyWaiting = false;
 AuctionBuy.buyIndex = -1;
 
 Ans.AuctionBuy = AuctionBuy;
@@ -39,20 +37,9 @@ local purchaseScanResults = {};
 
 local selectedBlock = nil;
 
-local clickCount = 0;
-local clickTime = time();
+local numberOfPages = 4;
 
---- static popup for purchase confirm
-StaticPopupDialogs["ANS_BUY_AUCTION_CONFIRM"] = {
-    text = "Buy %s for %s PPU?",
-    button1 = "Yes",
-    button2 = "No",
-    OnAccept = function() AuctionBuy:ConfirmPurchase() end,
-    OnCancel = function() AuctionBuy:Resume() end,
-    whileDead = false,
-    hideOnEscape = true,
-    preferredIndex = 3
-};
+local currentItem = nil;
 
 function AuctionBuy:Init()
     local d = self;
@@ -64,6 +51,7 @@ function AuctionBuy:Init()
 
     local frame = CreateFrame("FRAME", "AnsAuctionBuyMainPanel", AuctionFrame, "AnsAuctionBuyTemplate");
     self.frame = frame;
+    self.frame:SetScript("OnMouseDown", self.OnClick);
 
     AnsCore:AddAHTab("AnsBuy", 
         function()
@@ -99,19 +87,53 @@ function AuctionBuy:Init()
     self.startButton = _G[frame:GetName().."BottomBarStart"];
     self.stopButton = _G[frame:GetName().."BottomBarStop"];
     self.exactMatch = _G[frame:GetName().."SearchBarExactMatch"];
+    self.pagesEntry = _G[frame:GetName().."SearchBarPages"];
+
+    self.buyButton = _G[frame:GetName().."BottomBarBuy"];
+    self.buyButton:Disable();
 
     frame:Hide();
+end
+
+function AuctionBuy.OnClick()
+    if (CursorHasItem()) then
+        local t, id, link = GetCursorInfo();
+        if (link) then
+            local name = GetItemInfo(link);
+            AuctionBuy.searchInput:SetText(name);
+            AuctionBuy:StopScan();
+            currentItem = nil;
+            AuctionBuy:StartScan();
+            ClearCursor();
+        end
+    end
 end
 
 function AuctionBuy:StartScan()
     local search = self.searchInput:GetText();
 
-    wipe(itemQueue);
+    self.buyIndex = -1;
+
+    -- to resume a previous scan
+    if (currentItem ~= nil) then
+        self.buyButton:Disable();
+        self.scanning = true;
+        self.purchaseScan = false;
+        self.waitingForResult = false;
+
+        numberOfPages = self.pagesEntry:GetNumber() or 4;
+
+        self.statusText:SetText("Scan Started...");
+
+        return;
+    end
+
     wipe(scanResults);
     wipe(purchaseScanResults);
     wipe(auctionTreeItems);
     wipe(querySearches);
 
+    self.buyButton:Disable();
     self.query:Reset();
     self.purchaseQuery:Reset();
 
@@ -147,11 +169,13 @@ function AuctionBuy:StartScan()
         self.startButton:Disable();
         self.stopButton:Enable();
 
-        local item = tremove(itemQueue, 1);
-        self.query:Set(item);
+        currentItem = tremove(itemQueue, 1);
+        self.query:Set(currentItem);
         self.scanning = true;
         self.purchaseScan = false;
         self.waitingForResult = false;
+
+        numberOfPages = self.pagesEntry:GetNumber() or 4;
 
         self.statusText:SetText("Scan Started...");
     end
@@ -159,7 +183,7 @@ end
 
 function AuctionBuy:BuildItemQueue(children)
     for i,v in ipairs(children) do
-        for i2, tsmId in ipairs(v.ids) do
+        for tsmId, v in pairs(v.ids) do
             local _, id = strsplit(":", tsmId);
 
             if (_ == "p") then
@@ -184,37 +208,24 @@ end
 function AuctionBuy:StopScan()
     self.scanning = false;
     self.purchaseScan =  false;
-    self.previouslyScanning = false;
     self.waitingForResult = false;
-    self.wasPreviouslyWaiting = false;
     self.startButton:Enable();
     self.stopButton:Disable();
+    self.buyButton:Disable();
 end
 
 function AuctionBuy:AuctionRowClick(item)
-    if (time() - clickTime > 1) then
-        clickCount = 0;
-    end
-
-    clickCount = clickCount + 1;
-
     if (item) then
         selectedBlock = item.block;
     else
         selectedBlock = nil;
     end
 
-    if (clickCount == 2 and selectedBlock) then
-        self.previouslyScanning = self.scanning;
-        self.wasPreviouslyWaiting = self.waitingForResult;
+    if (not self.scanning and not self.purchaseScan) then
         self:ScanForPurchase();
-
-        clickCount = 0;
     end
 
     self:RefreshAuctions();
-
-    clickTime = time();
 end
 
 function AuctionBuy.ShowTip(row)
@@ -252,7 +263,7 @@ function AuctionBuy:RenderAuctionRow(row, item)
 
         level:SetText(auction.iLevel);
         
-        local realCount = auction.stack;
+        local realCount = auction.total;
 
         posts:SetText(realCount);
         stack:SetText(auction.count);
@@ -278,7 +289,7 @@ end
 function AuctionBuy:OnUpdate()
     if (self.frame and self.frame:IsShown() and (self.scanning or self.purchaseScan)) then
         if (not self.waitingForResult) then
-            if (self.purchaseScan and not self.wasPreviouslyWaiting) then
+            if (self.purchaseScan) then
                 if (self.purchaseQuery:IsReady()) then
                     self.statusText:SetText("Finding item...");
                     self.purchaseQuery:Search(0, self.exact);
@@ -301,19 +312,22 @@ function AuctionBuy:OnAuctionUpdate()
             local index = self.query.index;
             local last = self.query.index;
 
-            if (not self.purchaseScan or self.wasPreviouslyWaiting) then
+            if (not self.purchaseScan) then
                 if (index == 0) then
                     -- create a new auctions table
                     -- this way the previous auction table is preserved
                     -- in the scanResults
+                    -- wipe previous grouping table
+                    wipe(self.query.groupTempTable);
                     self.query.auctions = {};
                 end
 
                 self.query:CaptureLight();
-            elseif (not self.wasPreviouslyWaiting and self.purchaseScan) then
+            else
                 -- reset purchase page
                 -- as capture light does not automatically clear
                 -- the previous auction list
+                wipe(self.purchaseQuery.groupTempTable);
                 wipe(self.purchaseQuery.auctions);
                 self.purchaseQuery:CaptureLight(true);
             end
@@ -323,70 +337,87 @@ function AuctionBuy:OnAuctionUpdate()
                 tinsert(querySearches, self.query.search);
             end
 
-            if (not self.purchaseScan or self.wasPreviouslyWaiting) then
-                scanResults[queueIndex] = self.query:Items(self.sortHow, self.sortAsc, scanResults[queueIndex], true);
+            if (not self.purchaseScan) then
+                scanResults[queueIndex] = self.query:Items(self.sortHow, self.sortAsc);
                 -- update tree view
                 self:RefreshAuctions();
-            elseif (not self.wasPreviouslyWaiting and self.purchaseScan) then
-                purchaseScanResults = self.purchaseQuery:Items(self.sortHow, self.sortAsc, purchaseScanResults, true);
+            else
+                purchaseScanResults = self.purchaseQuery:Items(self.sortHow, self.sortAsc);
             end
 
-            if (not self.purchaseScan or self.wasPreviouslyWaiting) then
-                if (index < 3 and not self.query:IsLastPage()) then
-                    self.query:Next();    
+            if (not self.purchaseScan) then
+                if (index < numberOfPages - 1 and not self.query:IsLastPage()) then
+                    self.query:Next();
                     index = self.query.index;
-
-                    -- get the last page number
-                    self.query:LastPage();
-                    last = self.query.index;
-                    -- restore to where we were
-                    self.query.index = index;
-                    self.statusText:SetText(self.query.search.. " page: "..(index + 1).." of "..math.min(last + 1, 4));
+                    self.statusText:SetText(self.query.search.. " page: "..(index + 1));
                 else
                     if (#itemQueue > 0) then
-                        local item = tremove(itemQueue, 1);
-                        self.query:Set(item);
+                        currentItem = tremove(itemQueue, 1);
+                        self.query:Set(currentItem);
                         index = self.query.index;
-                        last = self.query.index;
                         queueIndex = queueIndex + 1;
-                        self.statusText:SetText(self.query.search.. " page: "..(index + 1).." of "..math.min(last + 1, 4));
+                        self.statusText:SetText(self.query.search.. " page: "..(index + 1));
                     else
+                        currentItem = nil;
                         self:StopScan();
                         self.statusText:SetText("Scan Complete");
                     end
                 end
-            elseif (not self.wasPreviouslyWaiting and self.purchaseScan) then
+            else
                 self.purchaseScan = false;
                 self.scanning = false;
                 self:TryAndFind();           
             end
 
             self.waitingForResult = false;
-            self.wasPreviouslyWaiting = false;
         end
     end
 end
 
 function AuctionBuy:ScanForPurchase()
     if (selectedBlock) then
-        if (selectedBlock.stack > 0) then
+        if (selectedBlock.total > 0) then
+            if (self:PurchaseItemAvailable()) then
+                self.statusText:SetText("Item Found: Ready to purchase...");
+                self.buyButton:Enable();
+                return;
+            end
+
             local idx = self:FindScanForBlock(selectedBlock);
             if (idx and querySearches[idx]) then
+
                 self.purchaseQuery:Set(querySearches[idx]);
-                self.purchaseQuery.index = selectedBlock.page;
+
+                local page = tonumber(strsplit(":", selectedBlock.page[1]));
+
+                if (not page) then
+                    return;
+                end
+
+                self.purchaseQuery.index = page;
                 self.purchaseScan = true;
-            else
-                self.previouslyScanning = false;
             end
         else
-            self.previouslyScanning = false;
             self:RemoveEmptyAuction(selectedBlock);
             selectedBlock = nil;
             self:RefreshAuctions();
         end
-    else
-        self.previouslyScanning = false;
     end
+
+    self.buyButton:Disable();
+end
+
+function AuctionBuy:PurchaseItemAvailable()
+    if(selectedBlock and #purchaseScanResults > 0)  then
+        for i,v in ipairs(purchaseScanResults) do
+            if (self:Check(i, selectedBlock)) then
+                self.buyIndex = i;
+                return true;
+            end
+        end
+    end
+
+    return false;
 end
 
 function AuctionBuy:ConfirmPurchase()
@@ -396,72 +427,79 @@ function AuctionBuy:ConfirmPurchase()
             self.statusText:SetText("Auction no longer exists");
         end
 
-        selectedBlock.stack = selectedBlock.stack - 1;
+        local page, stack = strsplit(":", selectedBlock.page[1]);
+
+        -- update the page stack ref as well
+        if (stack) then
+            stack = tonumber(stack);
+            stack = stack - 1;
+            selectedBlock.page[1] = page..":"..stack;
+        else
+            selectedBlock.stack = selectedBlock.stack - 1;
+        end
+
+        selectedBlock.total = selectedBlock.total - 1;
         self:RemoveEmptyAuction(selectedBlock);
 
         self.buyIndex = -1;
 
-        if (selectedBlock.stack <= 0) then
+        if (selectedBlock.total <= 0) then
             selectedBlock = nil;
         end
-    end
-    self:RefreshAuctions();
-    self:Resume();
-end
 
-function AuctionBuy:Resume()
-    if (self.previouslyScanning) then
-        self.scanning = true;
-        self.waitingForResult = false;
-        self.previouslyScanning = false;
-        return true;
+        self:RefreshAuctions();
+        self:TryAndFind();
     end
-
-    return false;
 end
 
 function AuctionBuy:TryAndFind()
     if (selectedBlock) then
         local success = false;
-        if (#purchaseScanResults > 0) then
-            for i,v in ipairs(purchaseScanResults) do
-                if (self:Check(i, selectedBlock)) then
-                    self.buyIndex = i;
-                    success = true;
-                    local color = ITEM_QUALITY_COLORS[selectedBlock.quality];
-                    local name = color.hex..selectedBlock.name.."|cFFFFFFFF x "..selectedBlock.count;
-                    local ppu = Utils:PriceToString(selectedBlock.ppu);
-                    StaticPopup_Show("ANS_BUY_AUCTION_CONFIRM", name, ppu.."|cFFFFFFFF");
-                    break;
-                end
-            end
-        -- auctions no longer exists
+        if (self:PurchaseItemAvailable()) then
+            success = true;
+            self.statusText:SetText("Item Found: Ready to purchase...");
+            self.buyButton:Enable();
+        end
+
+        -- auctions no longer exists on this page
         -- remove it
-            if (not success) then
+        if (not success) then
+            self.buyButton:Disable();
+            self.buyIndex = -1;
+            -- remove the current known page
+            -- as it is possible that the auction
+            -- is still available on the next page 
+            if (#selectedBlock.page > 0) then
+                local page, stack = strsplit(":", tremove(selectedBlock.page, 1));
+                -- remove stacks that were supposedly on this page
+                if (stack) then
+                    stack = tonumber(stack);
+                    selectedBlock.total = selectedBlock.total - stack;
+                else -- else use last known stack size
+                    selectedBlock.total = selectedBlock.total - selectedBlock.stack;
+                    selectedBlock.stack = 0;
+                end
+            else -- no more pages to look
+                selectedBlock.total = 0;
                 selectedBlock.stack = 0;
+            end
+
+            -- still some available on another page continue scan
+            if (selectedBlock.total > 0) then
+                self:ScanForPurchase();
+            else
                 self:RemoveEmptyAuction(selectedBlock);
                 self.statusText:SetText("Auction no longer exists");
                 selectedBlock = nil;
             end
-        else
-            -- auction no longer exists on that page
-            -- remove
-            self.statusText:SetText("Auction no longer exists");
-            selectedBlock.stack = 0;
-            self:RemoveEmptyAuction(selectedBlock);
-            selectedBlock = nil;
-        end
 
-        if (not success) then
-            self.buyIndex = -1;
             self:RefreshAuctions();
-            self:Resume();
         end
     end
 end
 
 function AuctionBuy:Check(index, auction)
-    if (auction and auction.stack > 0) then
+    if (auction and auction.total > 0) then
         local link = GetAuctionItemLink("list", index);
         if (link and auction.link == link) then
             local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
@@ -477,7 +515,7 @@ function AuctionBuy:Check(index, auction)
 end
 
 function AuctionBuy:CheckAndPurchase(index, auction)
-    if (auction and auction.stack > 0) then
+    if (auction and auction.total > 0) then
         local link = GetAuctionItemLink("list", index);
         if (link and auction.link == link) then
             local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
@@ -529,7 +567,7 @@ function AuctionBuy:RemoveEmptyAuction(block)
                     end
                 end
 
-                if (v2.stack > 0) then
+                if (v2.total > 0) then
                     remove = false;
                 end
             end
@@ -591,6 +629,7 @@ function AuctionBuy:Show()
 
     self.stopButton:Disable();
     self.startButton:Enable();
+    self.buyButton:Disable();
 end
 
 function AuctionBuy:ToggleFilter(f)

@@ -361,7 +361,7 @@ end
 ----
 -- Only sorts the auctions in this page query
 ----
-function Query:Items(sort,asc,toTbl,doNotCopy)
+function Query:Items(sort,asc,toTbl)
     -- set local variable for sort functions
     sortAsc = asc;
     if (self.count > 1) then
@@ -378,25 +378,17 @@ function Query:Items(sort,asc,toTbl,doNotCopy)
         end
     end
 
-    if (not doNotCopy) then
-        local tt = #toTbl;   
-        local t = #self.auctions;
-        local i;
-        
-        for i = 1, tt do
-            Recycler:RecycleBlock(toTbl[i]);
+    if (toTbl) then
+        for i, v in ipairs(toTbl) do
+            Recycler:RecycleBlock(v);
         end
-
         wipe(toTbl);
-
-        for i = 1, t do
-            tinsert(toTbl, self.auctions[i]:Clone());
+        for i, v in ipairs(self.auctions) do
+            tinsert(toTbl, v:Clone());
         end
-    else
-        return self.auctions;
     end
 
-    return toTbl;
+    return self.auctions;
 end
 
 function Query:IsValid(item) 
@@ -434,8 +426,6 @@ end
 function Query:CaptureLight(noGroup)
     self.count, self.total = GetNumAuctionItems("list");
 
-    wipe(self.groupTempTable);
-
     local x;
     local groupLookup = self.groupTempTable;
 
@@ -468,18 +458,12 @@ function Query:CaptureLight(noGroup)
         if (auction.link ~= nil) then
             auction.tsmId = Utils:GetTSMID(auction.link);
 
-            if (string.find(auction.tsmId, "p:")) then
-                local pet = Utils:ParseBattlePetLink(auction.link);
-                auction.iLevel = pet.level;
-                auction.type = "pet";
-                auction.subtype = "battle";
-                auction.vendorsell = 1;
-            -- else just a cageable pet if auction id = 82800 and not a battle pet per say
-            elseif (auction.id == 82800) then
+            -- a cageable pet if auction id = 82800
+            if (auction.id == 82800) then
                 auction.iLevel = 0;
                 auction.type = "pet";
                 auction.subtype = "normal";
-                auction.vendorsell = 1;
+                auction.vendorsell = 0;
             -- otherwise normal item auction
             else
                 local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
@@ -505,36 +489,55 @@ function Query:CaptureLight(noGroup)
 
         local ownerName;
         if (not auction.ownerFullName) then
-            ownerName = owner;
+            ownerName = auction.owner;
         else
             ownerName = auction.ownerFullName;
+        end
+
+        local blacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
+        local isOnBlacklist = false;
+
+        if (ownerName) then
+            isOnBlacklist = Utils:InTable(blacklist, ownerName:lower());
         end
 
         -- according to blizzard's own code for their auction house ui, hasAll fixed bug: 145328
         -- a basic assumption based on the action performed by them, is the auction should be hidden
         -- until it has all the information
-        if (auction.buyoutPrice > 0 and auction.saleStatus == 0 and auction.hasAll and ownerName ~= UnitName("player")) then
+        if (auction.buyoutPrice > 0 and auction.saleStatus == 0 and auction.hasAll and ownerName ~= UnitName("player") and not isOnBlacklist) then
             local ppu = math.floor(auction.buyoutPrice / auction.count);
             auction.ppu = ppu;
 
-            local hash = ItemHash(auction, self.index);
+            local hash = ItemHash(auction);
 
             local avg = Sources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
             if (not avg or avg <= 0) then avg = auction.vendorsell or 1; end;
 
-            auction.percent = math.floor(ppu / avg * 100);
-
             auction.page = self.index;
-            auction.index = x;
+            auction.percent = math.floor(ppu / avg * 100);
             auction.queryId = self.id;
             auction.stack = 1;
+            auction.total = 1;
 
             if (not noGroup) then
                 local idx = groupLookup[hash];
                 if  (idx and idx > 0) then
                     local block = self.auctions[idx];
                     block.stack = block.stack + 1;
+                    block.total = block.total + 1;
+
+                    if (not Utils:InTable(block.page, ""..self.index)) then
+                        -- save the amount found for this page block
+                        local last = block.page[#block.page];
+                        last = last..":"..(block.stack - 1);
+                        block.page[#block.page] = last;
+                        -- reset block size
+                        block.stack = 1;
+                        -- insert new page block
+                        tinsert(block.page, ""..self.index);
+                    end
                 else
+                    auction.page = {""..self.index};
                     tinsert(self.auctions, auction);
                     groupLookup[hash] = #self.auctions;
 
@@ -608,18 +611,12 @@ function Query:Capture()
         if (auction.link ~= nil) then
             auction.tsmId = Utils:GetTSMID(auction.link);
 
-            if (string.find(auction.tsmId, "p:")) then
-                local pet = Utils:ParseBattlePetLink(auction.link);
-                auction.iLevel = pet.level;
-                auction.type = "pet";
-                auction.subtype = "battle";
-                auction.vendorsell = 1;
-            -- else just a cageable pet if auction id = 82800 and not a battle pet per say
-            elseif (auction.id == 82800) then
+            -- a cageable pet if auction id = 82800
+            if (auction.id == 82800) then
                 auction.iLevel = 0;
                 auction.type = "pet";
                 auction.subtype = "normal";
-                auction.vendorsell = 1;
+                auction.vendorsell = 0;
             -- otherwise normal item auction
             else
                 local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
@@ -645,15 +642,22 @@ function Query:Capture()
 
         local ownerName;
         if (not auction.ownerFullName) then
-            ownerName = owner;
+            ownerName = auction.owner;
         else
             ownerName = auction.ownerFullName;
+        end
+
+        local blacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
+        local isOnBlacklist = false;
+
+        if (ownerName) then
+            isOnBlacklist = Utils:InTable(blacklist, ownerName:lower());
         end
 
         -- according to blizzard's own code for their auction house ui, hasAll fixed bug: 145328
         -- a basic assumption based on the action performed by them, is the auction should be hidden
         -- until it has all the information
-        if (auction.buyoutPrice > 0 and auction.saleStatus == 0 and auction.hasAll and ownerName ~= UnitName("player")) then
+        if (auction.buyoutPrice > 0 and auction.saleStatus == 0 and auction.hasAll and ownerName ~= UnitName("player") and not isOnBlacklist) then
             local ppu = math.floor(auction.buyoutPrice / auction.count);
             auction.ppu = ppu;
 

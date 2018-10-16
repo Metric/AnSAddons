@@ -27,6 +27,8 @@ local clickCount = 0;
 local clearTime = time();
 local scanningItem = nil;
 
+local numberOfPages = 4;
+
 function AuctionSell:Init()
     local d = self;
     if (isInited) then
@@ -62,6 +64,7 @@ function AuctionSell:Init()
     );
 
     self.statusText = _G[frame:GetName().."BottomBarStatus"];
+    self.pagesEntry = _G[frame:GetName().."SearchBarPages"];
 
     frame:Hide();
 end
@@ -119,7 +122,7 @@ function AuctionSell:RenderRow(row, item)
 
         level:SetText(auction.iLevel);
         
-        local realCount = auction.stack;
+        local realCount = auction.total;
 
         posts:SetText(realCount);
         stack:SetText(auction.count);
@@ -157,6 +160,7 @@ function AuctionSell:OnUpdate()
             _G["AuctionsButton"..i]:Hide();
         end
         AuctionsScrollFrame:Hide();
+        self:HideDefaultUI();
         clearTime = time();
     end
 end
@@ -181,11 +185,11 @@ function AuctionSell:OnAuctionUpdate()
             local item = items[scanIndex];
 
             if (item and item == scanningItem) then
-                item.children = self.query:Items(self.sortHow, self.sortAsc, item.children, true);
+                item.children = self.query:Items(self.sortHow, self.sortAsc);
                 self:RefreshView();
             end
 
-            if (index < 3 and not self.query:IsLastPage() and item == scanningItem) then
+            if (index < numberOfPages - 1 and not self.query:IsLastPage() and item == scanningItem) then
                 self.query:Next();
                 index = self.query.index;
 
@@ -409,7 +413,7 @@ function AuctionSell:Sell(item, ppu)
                 break;
             end
 
-            if (diff > other.count) then
+            if (diff >= other.count) then
                 diff = diff - other.count;
                 other.count = 0;
                 self:RemoveItem(other);
@@ -421,7 +425,6 @@ function AuctionSell:Sell(item, ppu)
     end
 
     self:HideDefaultUI();
-    
     self:RefreshView();
 end
 
@@ -438,6 +441,7 @@ function AuctionSell:FindSimilar(item)
 end
 
 function AuctionSell:ScanSelected()
+    numberOfPages = self.pagesEntry:GetNumber() or 4;
     local idx = self:GetSelectedIndex();
 
     if (idx == -1) then

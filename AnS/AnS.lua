@@ -116,6 +116,7 @@ end
 function AnsCore:RegisterPriceSources()
     local tsmEnabled = false;
     local tujEnabled = false;
+    local ansEnabled = false;
     local auctionatorEnabled = false;
 
     if (Utils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
@@ -124,6 +125,10 @@ function AnsCore:RegisterPriceSources()
     
     if (TSM_API or TSMAPI) then
         tsmEnabled = true;
+    end
+
+    if (AnsAuctionData) then
+        ansEnabled = AnsAuctionData:HasData();
     end
 
     if (TUJMarketInfo) then
@@ -183,6 +188,18 @@ function AnsCore:RegisterPriceSources()
         Sources:Register("TUJDays", TUJDB.GetPrice, "days");
         Sources:Register("TUJStdDev", TUJDB.GetPrice, "stddev");
         Sources:Register("TUJGlobalStdDev", TUJDB.GetPrice, "globalStdDev");
+    end
+
+    if (ansEnabled) then
+        print("AnS: found AnS pricing source");
+        Sources:Register("ANSRecent", AnsAuctionData.GetRealmValue, "recent");
+        Sources:Register("ANSMarket", AnsAuctionData.GetRealmValue, "market");
+        Sources:Register("ANSMin", AnsAuctionData.GetRealmValue, "min");
+        Sources:Register("ANSHistorical", AnsAuctionData.GetRealmValue, "3day");
+        Sources:Register("ANSRegionRecentAvg", AnsAuctionData.GetRegionValue, "recent");
+        Sources:Register("ANSRegionAvg", AnsAuctionData.GetRegionValue, "market");
+        Sources:Register("ANSRegionMin", AnsAuctionData.GetRegionValue, "min");
+        Sources:Register("ANSRegionHistorical", AnsAuctionData.GetRegionValue, "3day");
     end
 
     if (auctionatorEnabled) then
@@ -259,6 +276,30 @@ function AnsCore:MigrateGlobalSettings()
     end
     if (ANS_GLOBAL_SETTINGS.safeDelay == nil) then
         ANS_GLOBAL_SETTINGS.safeDelay = 2;
+    end
+    if (ANS_GLOBAL_SETTINGS.characterBlacklist == nil) then
+        ANS_GLOBAL_SETTINGS.characterBlacklist = "";
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRegionRecent == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRegionRecent = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRegionMin == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRegionMin = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRealmRecent == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmRecent = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRegionHistorical == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRegionHistorical = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRealmHistorical == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmHistorical = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.useCoinIcons == nil) then
+        ANS_GLOBAL_SETTINGS.useCoinIcons = false;
     end
 end
 

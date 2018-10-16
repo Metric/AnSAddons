@@ -21,6 +21,9 @@ function Filter:New(name)
     f.subtypes = {};
     f.minSize = 0;
     f.subfilters = {};
+    f.typeCount = 0;
+    f.subtypeCount = 0;
+    f.idCount = 0;
     
     f.priceFn = "";
     f.maxPercent = 100;
@@ -44,9 +47,9 @@ function Filter:GetSubTypes()
     while (#tbl > 0) do
         local v = tremove(tbl, 1);
 
-        if (#v.subtypes > 0) then
+        if (v.subtypeCount > 0) then
             Utils:ReleaseTable(tbl);
-            return v.subtypes;
+            return v;
         elseif (v.parent) then
             tinsert(tbl, v.parent);
         end
@@ -54,7 +57,7 @@ function Filter:GetSubTypes()
 
     Utils:ReleaseTable(tbl);
 
-    return self.subtypes;
+    return self;
 end
 
 function Filter:GetTypes()
@@ -65,9 +68,9 @@ function Filter:GetTypes()
     while (#tbl > 0) do
         local v = tremove(tbl, 1);
 
-        if (#v.types > 0) then
+        if (v.typeCount > 0) then
             Utils:ReleaseTable(tbl);
-            return v.types;
+            return v;
         elseif (v.parent) then
             tinsert(tbl, v.parent);
         end
@@ -75,7 +78,7 @@ function Filter:GetTypes()
 
     Utils:ReleaseTable(tbl);
 
-    return self.types;
+    return self;
 end
 
 function Filter:GetPriceFn()
@@ -86,7 +89,7 @@ function Filter:GetPriceFn()
     while (#tbl > 0) do
         local v = tremove(tbl, 1);
 
-        if (v.priceFn and string.gsub(v.priceFn, " ", ""):len() > 0) then
+        if (v.priceFn and v.priceFn:len() > 0) then
             Utils:ReleaseTable(tbl);
             return v.priceFn;
         elseif (v.parent) then
@@ -126,6 +129,16 @@ function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricing
             v.maxBuyout = buyout;
             v.minQuality = quality;
 
+            local subtypes = v:GetSubTypes();
+            v.subtypes = subtypes.subtypes;
+            v.subtypeCount = subtypes.subtypeCount;
+
+            local types = v:GetTypes();
+            v.types = types.types;
+            v.typeCount = types.typeCount;
+
+            v.priceFn = v:GetPriceFn();
+
             if (#v.subfilters > 0) then
                 for i, v2 in ipairs(v.subfilters) do
                     tinsert(tbl, v2);
@@ -141,7 +154,12 @@ function Filter:ParseTypes(types)
     if (types and types:len() > 0) then
         local trim = string.gsub(types:lower(), " ,", ",");
         trim = string.gsub(trim, ", ", ",");
-        self.types = { strsplit(",", trim) };
+        local tbl = { strsplit(",", trim) };
+        self.typeCount = #tbl;
+        wipe(self.types);
+        for i,v in ipairs(tbl) do
+            self.types[v] = 1;
+        end
     end
 end
 
@@ -149,7 +167,12 @@ function Filter:ParseSubtypes(types)
     if (types and types:len() > 0) then
         local trim = string.gsub(types:lower(), " ,", ",");
         trim = string.gsub(trim, ", ", ",");
-        self.subtypes = { strsplit(",", trim) };
+        local tbl = { strsplit(",", trim) };
+        self.subtypeCount = #tbl;
+        wipe(self.subtypes);
+        for i,v in ipairs(tbl) do
+            self.subtypes[v] = 1;
+        end
     end
 end
 
@@ -197,6 +220,9 @@ function Filter:Clone()
     f.types = self.types;
     f.subtypes = self.subtypes;
     f.minSize = self.minSize;
+    f.subtypeCount = self.subtypeCount;
+    f.typeCount = self.typeCount;
+    f.idCount = self.idCount;
 
     if (self.subfilters) then
         f.subfilters = {};
@@ -220,24 +246,6 @@ function Filter:Clone()
     f.parent = self.parent;
 
     return f;
-end
-
-function Filter:Export()
-    return "group:"..self.name..","..self:ExportIds();
-end
-
-function Filter:ExportIds()
-    local str = "";
-    local sep = "";
-
-    local i;
-
-    for i = 1, #self.ids do
-        str = str..sep..self.ids[i];
-        sep = ",";
-    end
-
-    return str;
 end
 
 function Filter:ParseTSMGroups(str)
@@ -300,25 +308,27 @@ end
 
 function Filter:ParseTSM(str)
     local items = { strsplit(",", str) };
-    local i;
 
+    self.idCount = 0;
     wipe(self.ids);
 
-    for i = 1, #items do
-        local _, id  = strsplit(":", items[i]);
+    for i,v in ipairs(items) do
+        local _, id = strsplit(":", v);
         if (id ~= nil) then
-            tinsert(self.ids, items[i]); 
+            self.ids[v] = 1;
+            self.idCount = self.idCount + 1;
         else
             local tn = tonumber(_);
             if (tn ~= nil) then
-                tinsert(self.ids, "i:"..tn);
-            end 
+                self.ids["i:"..tn] = 1;
+                self.idCount = self.idCount + 1;
+            end
         end
     end
 end
 
 function Filter:HasIds()
-    if (#self.ids > 0) then
+    if (self.idCount > 0) then
         return true;
     end
 
@@ -340,7 +350,7 @@ function Filter:IsValid(item)
         end
     end
 
-    local priceFn = self:GetPriceFn();
+    local priceFn = self.priceFn;
 
     if (priceFn ~= nil and priceFn:len() > 0) then
         local presult = Sources:Query(priceFn, item);
@@ -366,40 +376,26 @@ function Filter:IsValid(item)
         return false;
     end
 
-    local tids = #self.ids;
-    if (tids > 0) then
-        local i;
-        for i = 1, tids do
-            local ct, cid = strsplit(":", self.ids[i]);
-            local ot, oid = strsplit(":", item.tsmId);
-
-            if (ct == ot and cid == oid) then
-                if (self.ids[i] == item.tsmId or string.find(self.ids[i], item.tsmId)) then
-                    return true;
-                end
-            end
+    if (self.idCount > 0) then
+        if (self.ids[item.tsmId] == 1) then
+            return true;
         end
     end
 
-    local types = self:GetTypes();
-    local subtypes = self:GetSubTypes();
-    local ttypes = #types;
-    local tstypes = #subtypes;
+    local ttypes = self.typeCount;
+    local tstypes = self.subtypeCount;
     
+    local types = self.types;
+    local subtypes = self.subtypes;
+
     if (ttypes > 0) then
-        local i;
-        for i = 1, ttypes do
-            if (types[i] == item.type) then
-                if (tstypes > 0) then
-                    local j;
-                    for j = 1, tstypes do
-                        if (subtypes[j] == item.subtype) then
-                            return true;
-                        end
-                    end
-                else
+        if (types[item.type] == 1) then
+            if (tstypes > 0) then
+                if (subtypes[item.subtype] == 1) then
                     return true;
-                end
+                end 
+            else
+                return true;
             end
         end
     end

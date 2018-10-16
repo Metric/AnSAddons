@@ -1,6 +1,6 @@
 ## Interface: 80000
 ## Title: AnS [Auctions]
-## Version: 1.0.0
+## Version: 1.0.1
 ## Notes: A lightweight addon for auction selling and buying.
 ## License: MIT
 ## Dependencies: AnS

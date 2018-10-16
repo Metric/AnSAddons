@@ -10,43 +10,57 @@ local NameStringCache = "";
 local SourceStringCache = "";
 local CustomVarStringCache = "";
 
-local OpCodes = {
-    percent = 0,
-    ppu = 0,
-    stacksize = 0,
-    buyout = 0,
-    ilevel = 0,
-    vendorsell = 0,
-    quality = 1,
-    dbmarket = 0,
-    dbminbuyout = 0, 
-    dbhistorical = 0, 
-    dbregionmarketavg = 0, 
-    dbregionminbuyoutavg = 0, 
-    dbregionhistorical = 0, 
-    dbregionsaleavg = 0, 
-    dbregionsalerate = 0, 
-    dbregionsoldperday = 0,
-    dbglobalminbuyoutavg = 0,
-    dbglobalmarketavg = 0,
-    dbglobalhistorical = 0,
-    dbglobalsaleavg = 0,
-    dbglobalsalerate = 0,
-    dbglobalsoldperday = 0,
-    tujmarket = 0, 
-    tujrecent = 0, 
-    tujglobalmedian = 0, 
-    tujglobalmean = 0, 
-    tujage = 0, 
-    tujdays = 0, 
-    tujstddev = 0, 
-    tujglobalstddev = 0,
-    atrvalue = 0
-};
+local OpCodes = {};
+OpCodes.__index = OpCodes;
+
+function OpCodes:New() 
+    local op = {};
+    op.percent = 0;
+    op.ppu = 0;
+    op.stacksize = 0;
+    op.buyout = 0;
+    op.ilevel = 0;
+    op.vendorsell = 0;
+    op.quality = 1;
+    op.dbmarket = 0;
+    op.dbminbuyout = 0; 
+    op.dbhistorical = 0; 
+    op.dbregionmarketavg = 0; 
+    op.dbregionminbuyoutavg = 0; 
+    op.dbregionhistorical = 0; 
+    op.dbregionsaleavg = 0; 
+    op.dbregionsalerate = 0; 
+    op.dbregionsoldperday = 0;
+    op.dbglobalminbuyoutavg = 0;
+    op.dbglobalmarketavg = 0;
+    op.dbglobalhistorical = 0;
+    op.dbglobalsaleavg = 0;
+    op.dbglobalsalerate = 0;
+    op.dbglobalsoldperday = 0;
+    op.tujmarket = 0; 
+    op.tujrecent = 0; 
+    op.tujglobalmedian = 0; 
+    op.tujglobalmean = 0;
+    op.tujage = 0;
+    op.tujdays = 0; 
+    op.tujstddev = 0; 
+    op.tujglobalstddev = 0;
+    op.atrvalue = 0;
+    op.ansrecent = 0;
+    op.ansmarket = 0;
+    op.ansmin = 0;
+    op.ansregionrecentavg = 0;
+    op.ansregionmin = 0;
+    op.ansregionavg = 0;
+    op.anshistorical = 0;
+    op.ansregionhistorical = 0;
+    return op;
+end
 
 local VarCodes = {};
 
 local OperationCache = {};
+local OpValueCache = {};
 
 local ParseSourceTemplate = "local %s = ops.%s or 0; ";
 local ParseVarsTemplate = "local %s = %s or 0; ";
@@ -80,6 +94,7 @@ function Sources:ClearCache()
     NameStringCache = "";
     SourceStringCache = "";
     CustomVarStringCache = "";
+    wipe(OpValueCache);
     wipe(OperationCache);
 end
 
@@ -101,7 +116,7 @@ function Sources:LoadCustomVars()
 end
 
 function Sources:Register(name, fn, key)
-    local source = PriceSource:New(name,fn,key);
+    local source = PriceSource:New(name:lower(),fn,key);
     tinsert(self.items, source);
 end
 
@@ -117,7 +132,7 @@ function Sources:GetNamesAsString()
     for i = 1, #self.items do
         local s = self.items[i];
         if (s.fn ~= nil) then
-            str = str..sep..s.name:lower();
+            str = str..sep..s.name;
             sep = ",";
         end
     end
@@ -161,7 +176,7 @@ function Sources:GetVarsAsString()
     for i = 1, total do
         local s = self.items[i];
         if (s.fn ~= nil) then
-            local name = s.name:lower();
+            local name = s.name;
             local nstr = string.format(ParseSourceTemplate, name, name);
             str = str..nstr;
         end
@@ -202,17 +217,15 @@ function Sources:IsValidQuery(q)
 end
 
 function Sources:GetValues(itemId, ops)
-    local values = "";
-    local sep = "";
     local i;
     local total = #self.items;
 
     for i = 1, total do
         local s = self.items[i];
         if (s.fn ~= nil) then
-            local _, r = pcall(s.fn, itemId, s.key, s.name:lower());
+            local r = s.fn(itemId, s.key, s.name);
             local v = r or 0;
-            ops[s.name:lower()] = v;
+            ops[s.name] = v;
         end
     end
 end
@@ -226,11 +239,14 @@ Sources.round = function(n)
 end
 
 Sources.avg = function(...)
-    local table = { ... };
+    local totalItems = select("#", ...);
+
+    local i;
     local t = 0;
     local amt = 0;
-    for i, v in ipairs(table) do
-        amt = amt + v;
+
+    for i = 1, totalItems do
+        amt = amt + select(i, ...);
         t = t + 1;
     end
 
@@ -306,8 +322,6 @@ Sources.ifneq = function(v1, v2, v3, v4)
 end
 
 function Sources:Query(q, item)
-    local values = "";
-
     local itemId = item.link;
     local buyout = item.buyoutPrice;
     local stackSize = item.count;
@@ -316,13 +330,7 @@ function Sources:Query(q, item)
     local percent = item.percent;
     local ppu = item.ppu;
 
-    OpCodes.buyout = buyout;
-    OpCodes.stacksize = stackSize;
-    OpCodes.quality = quality;
-    OpCodes.percent = percent;
-    OpCodes.ppu = ppu;
-    OpCodes.ilevel = ilvl;
-    OpCodes.vendorsell = item.vendorsell;
+    local codes = nil;
 
     local names = self:GetNamesAsString();
     if (not names or names:len() == 0 ) then
@@ -333,7 +341,21 @@ function Sources:Query(q, item)
         return nil;
     end
 
-    self:GetValues(itemId, OpCodes);
+    if (OpValueCache[item.link]) then
+        codes = OpValueCache[item.link];
+    else 
+        codes = OpCodes:New();
+        OpValueCache[item.link] = codes;
+        self:GetValues(itemId, codes);
+    end
+
+    codes.buyout = buyout;
+    codes.stacksize = stackSize;
+    codes.quality = quality;
+    codes.percent = percent;
+    codes.ppu = ppu;
+    codes.ilevel = ilvl;
+    codes.vendorsell = item.vendorsell;
 
     local _, fn = false, nil;
     local oq = q;
@@ -375,13 +397,6 @@ function Sources:Query(q, item)
         return nil;
     end
 
-    local r = nil;
-    _, r = pcall(fn, self, OpCodes);
-
-    if (not _) then
-        print("AnS Invalid Filter / Pricing String: "..q);
-        return nil;
-    end
-
+    r = fn(self, codes);
     return r;
 end

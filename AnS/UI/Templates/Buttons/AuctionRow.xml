@@ -9,7 +9,7 @@
         </Anchors>
         <Layers>
           <Layer level="ARTWORK">
-            <FontString name="$parentPPU" justifyH="RIGHT" inherits="GameFontHighlightSmall">
+            <FontString name="$parentPPU" justifyH="RIGHT" inherits="AnsAuctionFont">
               <Size x="140" y="16" />
               <Anchors>
                 <Anchor point="LEFT" x="0" y="0" />
@@ -41,7 +41,7 @@
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentNameText" inherits="GameFontHighlightSmall" justifyH="LEFT">
+            <FontString name="$parentNameText" inherits="AnsAuctionFont" justifyH="LEFT">
               <Size x="210" y="16"/>
             </FontString>
           </Layer>
@@ -49,14 +49,14 @@
       </Frame>
 
       <Frame>
-        <Size x="32" y="16" />
+        <Size x="40" y="16" />
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parentNameText" relativePoint="RIGHT" x="10" y="0"/>
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentPercent" inherits="GameFontHighlightSmall" justifyH="LEFT">
-              <Size x="32" y="16" />
+            <FontString name="$parentPercent" inherits="AnsAuctionFont" justifyH="LEFT">
+              <Size x="40" y="16" />
             </FontString>
           </Layer>
         </Layers>
@@ -69,7 +69,7 @@
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentILevel" inherits="GameFontHighlightSmall" justifyH="LEFT">
+            <FontString name="$parentILevel" inherits="AnsAuctionFont" justifyH="LEFT">
               <Size x="32" y="16" />
             </FontString>
           </Layer>
@@ -83,7 +83,7 @@
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentStackPrice" inherits="GameFontHighlightSmall" justifyH="RIGHT"/>
+            <FontString name="$parentStackPrice" inherits="AnsAuctionFont" justifyH="RIGHT"/>
           </Layer>
         </Layers>
       </Frame>

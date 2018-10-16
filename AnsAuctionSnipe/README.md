@@ -100,7 +100,7 @@ CTRL + Left Click allows you to temporarily blacklist the item type until the AH
 
 Selecting armor, weapons, or pets, will now display the dress up window with that item.
 
-* Want to use the key bindings through TSM macros instead? Use the following functions: AuctionSnipe:BuySelected() and AuctionSnipe:BuyFirst()
+* Want to use the key bindings through TSM macros instead? Use the following functions: /run AuctionSnipe:BuySelected() or /run AuctionSnipe:BuyFirst()
 
 
 Filter and Percent/Pricing Strings

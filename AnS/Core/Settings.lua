@@ -10,5 +10,13 @@ ANS_GLOBAL_SETTINGS = {
     dingSound = true,
     safeBuy = true,
     safeDelay = 2,
+    characterBlacklist = "",
+    tooltipRegionRecent = true,
+    tooltipRegionMin = true,
+    tooltipRegionHistorical = true,
+    tooltipRealmRecent = true,
+    tooltipRealmMin = true,
+    tooltipRealmHistorical = true,
+    useCoinIcons = false
 };
 ANS_FILTER_SELECTION = {};

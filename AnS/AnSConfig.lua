@@ -59,6 +59,8 @@ local function AnsConfigFinalize()
     AnsCore:LoadFilters();
     AnsCore:LoadCustomVars();
 
+    ANS_GLOBAL_SETTINGS.characterBlacklist = { strsplit("\r\n", ANS_GLOBAL_SETTINGS.characterBlacklist) };
+
     wipe(filterTreeItems);
     AnsConfig.filterView:ReleaseView();
 end
@@ -77,6 +79,7 @@ function AnsConfig:LoadGlobal(f)
     local safeBuy = _G[f:GetName().."SafeBuy"];
     local safeDelay = _G[f:GetName().."SafeScanDelay"];
     local safeDelayText = _G[safeDelay:GetName().."Text"];
+    local useCoins = _G[f:GetName().."UseCoinIcons"];
 
 
     safeBuy:SetChecked(ANS_GLOBAL_SETTINGS.safeBuy);
@@ -86,8 +89,20 @@ function AnsConfig:LoadGlobal(f)
     rscan:SetValue(ANS_GLOBAL_SETTINGS.rescanTime);
     safeDelay:SetValue(ANS_GLOBAL_SETTINGS.safeDelay);
 
+    useCoins:SetChecked(ANS_GLOBAL_SETTINGS.useCoinIcons);
+
     safeDelayText:SetText("New Query Max Safe Delay: " ..ANS_GLOBAL_SETTINGS.safeDelay.."s");
     rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
+end
+
+function AnsConfig:LoadBlacklist(f)
+    local box = _G[f:GetName().."Blacklist"];
+
+    if (type(ANS_GLOBAL_SETTINGS.characterBlacklist) == "table") then
+        box.EditBox:SetText(table.concat(ANS_GLOBAL_SETTINGS.characterBlacklist, "\r\n"));
+    else
+        box.EditBox:SetText(ANS_GLOBAL_SETTINGS.characterBlacklist);
+    end
 end
 
 function AnsConfig:Edit(f, type) 
@@ -107,6 +122,10 @@ function AnsConfig:Edit(f, type)
         local safeText = _G[f:GetName().."Text"];
         ANS_GLOBAL_SETTINGS.safeDelay = math.floor(f:GetValue());
         safeText:SetText("New Query Max Safe Delay: "..ANS_GLOBAL_SETTINGS.safeDelay.."s");
+    elseif (type == "blacklist") then
+        ANS_GLOBAL_SETTINGS.characterBlacklist = f:GetText():lower();
+    elseif (type == "coins") then
+        ANS_GLOBAL_SETTINGS.useCoinIcons = f:GetChecked();
     end
 end
 

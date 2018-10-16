@@ -12,6 +12,34 @@
                 <Anchors>
                     <Anchor point="TOPLEFT" x="215" y="-40" />
                 </Anchors>
+                <Frames>
+                    <EditBox name="$parentPages" autoFocus="false" inherits="InputBoxTemplate" bytes="3">
+                        <Size x="32" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="100" y="0" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString inherits="GameFontHighlight" text="# Pages to Scan" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="LEFT" relativePoint="LEFT" x="-100" y="0"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnLoad>
+                                self:SetNumber(4);
+                            </OnLoad>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                    </EditBox>
+                </Frames>
             </Frame>
 
             <Frame name="$parentBottomBar">
@@ -21,7 +49,7 @@
                 </Anchors>
                 <Layers>
                     <Layer level="OVERLAY">
-                        <FontString name="$parentStatus" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                        <FontString name="$parentStatus" text="" justifyH="CENTER" inherits="GameFontHighlight">
                             <Anchors>
                                 <Anchor point="RIGHT" relativePoint="LEFT" x="-50" y="0" />
                             </Anchors>
@@ -64,37 +92,37 @@
                         </Anchors>
                     </Button>
                     <Button name="$parentLevel" text="iLvL" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="32" y="20"/>
+                        <Size x="40" y="20"/>
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="TOPRIGHT" x="32" y="0"/>
                         </Anchors>
                     </Button>
                     <Button name="$parentPosts" text="Posts" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="32" y="20"/>
+                        <Size x="40" y="20"/>
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentLevel" relativePoint="TOPRIGHT" x="5" y="0"/>
                         </Anchors>
                     </Button>
                     <Button name="$parentStack" text="Stack" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="32" y="20" />
+                        <Size x="40" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentPosts" relativePoint="TOPRIGHT" x="5" y="0" />
                         </Anchors>
                     </Button>
                     <Button name="$parentSeller" text="Seller" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="64" y="20" />
+                        <Size x="90" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentStack" relativePoint="TOPRIGHT" x="5" y="0" />
                         </Anchors>
                     </Button>
                     <Button name="$parentPercent" text="%" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="32" y="20" />
+                        <Size x="40" y="20" />
                         <Anchors>
                             <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-20" y="-21" />
                         </Anchors>
                     </Button>
                     <Button name="$parentPPU" text="PPU" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="64" y="20" />
+                        <Size x="125" y="20" />
                         <Anchors>
                             <Anchor point="TOPRIGHT" relativeTo="$parentPercent" relativePoint="TOPLEFT" x="5" y="0" />
                         </Anchors>

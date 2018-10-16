@@ -21,7 +21,7 @@
 
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlightSmall" text="Name Filter" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Name Filter" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
@@ -46,7 +46,7 @@
                         </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlightSmall" text="Max %" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Max %" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
@@ -69,7 +69,7 @@
                         </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-                                <FontString inherits="GameFontHighlightSmall" text="Max PPU" justifyH="RIGHT">
+                                <FontString inherits="GameFontHighlight" text="Max PPU" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
@@ -85,13 +85,21 @@
 						</Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlightSmall" text="Min iLevel" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Min iLevel" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
 									</Anchors>
 								</FontString>
 							</Layer>
                         </Layers>
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
                     </EditBox>
 
                     <Frame name="$parentQuality" inherits="UIDropDownMenuTemplate">
@@ -101,7 +109,7 @@
                         </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlightSmall" text="Min Quality" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Min Quality" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="24" y="15"/>
 									</Anchors>
@@ -117,7 +125,7 @@
 						</Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlightSmall" text="Min Stack Size" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Min Stack Size" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15" />
 									</Anchors>
@@ -145,13 +153,13 @@
                     <EditBox name="$parentGlobalFilter" autoFocus="false" inherits="InputBoxTemplate">
                         <Size x="220" y="24" />
                         <Anchors>
-							<Anchor point="TOPLEFT" relativeTo="$parentSearch" relativePoint="BOTTOMLEFT" x="110" y="0"/>
+							<Anchor point="TOPLEFT" relativeTo="$parentSearch" relativePoint="BOTTOMLEFT" x="120" y="0"/>
 						</Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlightSmall" text="Global Filter String" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Global Filter String" justifyH="RIGHT">
 									<Anchors>
-										<Anchor point="LEFT" relativePoint="LEFT" x="-110" y="0"/>
+										<Anchor point="LEFT" relativePoint="LEFT" x="-120" y="0"/>
 									</Anchors>
 								</FontString>
 							</Layer>
@@ -302,9 +310,6 @@
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
-                        <FontString name="$parentLabel" inherits="GameFontHighlightSmall" text="Filters">
-                            <Anchors><Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="40" y="10"/></Anchors>
-                        </FontString>
                         <Texture file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
                             <Size x="31" y="256"/>
                             <Anchors>
@@ -321,20 +326,25 @@
                         </Texture>
                     </Layer>
                 </Layers>
-                <Frames>
-                    <Button name="$parentReset" text="Reset" inherits="UIPanelButtonTemplate">
-                        <Size x="52" y="22" />
-                        <Anchors>
-                            <Anchor point="LEFT" x="5" y="0" relativeTo="$parentLabel" relativePoint="RIGHT" />
-                        </Anchors>
-                        <Scripts>
-                            <OnClick>
-                                AuctionSnipe:ClearFilters();
-                            </OnClick>
-                        </Scripts>
-                    </Button>
-                </Frames>
             </ScrollFrame>
+            <Button name="$parentReset" text="Reset" inherits="UIPanelButtonTemplate">
+                <Size x="52" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="52" y="8" relativeTo="$parentTreeView" relativePoint="TOPLEFT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString name="$parentLabel" inherits="GameFontHighlight" text="Filters">
+                            <Anchors><Anchor point="BOTTOMLEFT" x="-45" y="5"/></Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:ClearFilters();
+                    </OnClick>
+                </Scripts>
+            </Button>
         </Frames>
     </Frame>
 </Ui>

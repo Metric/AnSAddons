@@ -104,7 +104,7 @@
 		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD"/>
         <Layers>
             <Layer level="ARTWORK">
-                <FontString name="$parentText" inherits="GameFontNormalSmallLeft">
+                <FontString name="$parentText" justifyH="LEFT" inherits="GameFontHighlight">
                     <Size x="172" y="8" />
                     <Anchors>
                         <Anchor point="LEFT" x="4" y="0" />

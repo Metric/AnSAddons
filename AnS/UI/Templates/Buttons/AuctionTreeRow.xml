@@ -9,7 +9,7 @@
     </HighlightTexture>
     <Layers>
         <Layer level="ARTWORK">
-            <FontString name="$parentText" justifyH="LEFT" inherits="GameFontHighlightSmall">
+            <FontString name="$parentText" justifyH="LEFT" inherits="AnsAuctionFont">
                 <Size x="172" y="8" />
                 <Anchors>
                     <Anchor point="LEFT" x="4" y="0" />
@@ -22,38 +22,38 @@
                 </Anchors>
                 <TexCoords left="0" right="1" top="0" bottom="1"/>
             </Texture>
-            <FontString name="$parentLevel" inherits="GameFontHighlightSmall" justifyH="RIGHT">
-              <Size x="32" y="16" />
+            <FontString name="$parentLevel" inherits="AnsAuctionFont" justifyH="RIGHT">
+              <Size x="40" y="16" />
               <Anchors>
                 <Anchor point="LEFT" relativeTo="$parentItemIcon" relativePoint="RIGHT" x="15" y="0" />
               </Anchors>
             </FontString>
-            <FontString name="$parentPosts" inherits="GameFontHighlightSmall" justifyH="RIGHT">
-              <Size x="32" y="16" />
+            <FontString name="$parentPosts" inherits="AnsAuctionFont" justifyH="RIGHT">
+              <Size x="40" y="16" />
               <Anchors>
                 <Anchor point="LEFT" relativeTo="$parentLevel" relativePoint="RIGHT" x="5" y="0" />
               </Anchors>
             </FontString>
-            <FontString name="$parentStack" inherits="GameFontHighlightSmall" justifyH="RIGHT">
-              <Size x="32" y="16" />
+            <FontString name="$parentStack" inherits="AnsAuctionFont" justifyH="RIGHT">
+              <Size x="40" y="16" />
               <Anchors>
                 <Anchor point="LEFT" relativeTo="$parentPosts" relativePoint="RIGHT" x="5" y="0" />
               </Anchors>
             </FontString>
-            <FontString name="$parentSeller" inherits="GameFontHighlightSmall" justifyH="LEFT">
-              <Size x="64" y="16" />
+            <FontString name="$parentSeller" inherits="AnsAuctionFont" justifyH="LEFT">
+              <Size x="90" y="16" />
               <Anchors>
                 <Anchor point="LEFT" relativeTo="$parentStack" relativePoint="RIGHT" x="15" y="0" />
               </Anchors>
             </FontString>
-            <FontString name="$parentPercent" inherits="GameFontHighlightSmall" justifyH="LEFT">
-              <Size x="32" y="16" />
+            <FontString name="$parentPercent" inherits="AnsAuctionFont" justifyH="LEFT">
+              <Size x="40" y="16" />
               <Anchors>
                 <Anchor point="RIGHT" relativePoint="RIGHT" x="0" y="0" />
               </Anchors>
             </FontString>
-            <FontString name="$parentPPU" justifyH="RIGHT" inherits="GameFontHighlightSmall">
-                <Size x="100" y="16" />
+            <FontString name="$parentPPU" justifyH="RIGHT" inherits="AnsAuctionFont">
+                <Size x="125" y="16" />
                 <Anchors>
                     <Anchor point="RIGHT" relativeTo="$parentPercent" relativePoint="LEFT" x="-10" y="0" />
                 </Anchors>

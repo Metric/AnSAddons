@@ -1,3 +1,9 @@
+AnS [Auction Sniper] CHANGES 1.0.6.1
+---------------------
+* Fixed issue where when using AuctionSnipe:BuyFirst(), it would not go to the next item after the previous was all bought
+* Fixed error if you tried to use AuctionSnipe:BuyFirst() or AuctionSnipe:BuySelected() without opening the AH first.
+
+
 AnS [Auction Sniper] CHANGES 1.0.6
 ---------------------
 * Filter list is now a tree view.

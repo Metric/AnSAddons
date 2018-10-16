@@ -23,7 +23,7 @@
   <Font name="AnsGameFontNormalGray" font="Fonts\FRIZQT__.TTF" virtual="true">
     <Color r="0.4" g="0.4" b="0.4" />
     <FontHeight>
-      <AbsValue val="8" />
+      <AbsValue val="10" />
     </FontHeight>
     <Shadow>
       <Color r="0" g="0" b="0" a="0" />
@@ -32,7 +32,7 @@
   <Font name="AnsGameFontNormalDark" font="Fonts\FRIZQT__.TTF"  virtual="true">
     <Color r="0" g="0" b="0" />
     <FontHeight>
-      <AbsValue val="8" />
+      <AbsValue val="10" />
     </FontHeight>
     <Shadow>
       <Color r="0" g="0" b="0" a="0" />
@@ -41,7 +41,7 @@
   <Font name="AnsGameFontWhiteTrans" font="Fonts\FRIZQT__.TTF" virtual="true">
     <Color r="1" g="1" b="1" a="0.75" />
     <FontHeight>
-      <AbsValue val="8" />
+      <AbsValue val="10" />
     </FontHeight>
     <Shadow>
       <Color r="0" g="0" b="0" a="0" />
@@ -49,7 +49,12 @@
   </Font>
   <Font name="AnsGameFontSmall" font="Fonts\FRIZQT__.TTF" virtual="true">
     <FontHeight>
-      <AbsValue val="6" />
+      <AbsValue val="8" />
+    </FontHeight>
+  </Font>
+  <Font name="AnsAuctionFont" font="Fonts\FRIZQT__.TTF" virtual="true">
+   <FontHeight>
+      <AbsValue val="11.5" />
     </FontHeight>
   </Font>
 </Ui>

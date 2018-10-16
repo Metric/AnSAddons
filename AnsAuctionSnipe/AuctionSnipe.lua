@@ -52,7 +52,7 @@ end
 
 function AuctionSnipe:BuySelected()
     local s = AuctionList;
-    if (s and _G["AnsSnipeMainPanel"]:IsShown()) then
+    if (s and self.frame and self.frame:IsShown()) then
         if (s.selectedEntry > -1 and #s.items > 0) then
             local block = s.items[s.selectedEntry];
             if (block) then
@@ -68,9 +68,10 @@ end
 
 function AuctionSnipe:BuyFirst()
     local s = AuctionList;
-    if (s and _G["AnsSnipeMainPanel"]:IsShown()) then
+    if (s and self.frame and self.frame:IsShown()) then
         if (#s.items > 0) then
-            local block = s.items[1];
+            local block = self:GetNextAvailable();
+
             if (block) then
                 if(s:Purchase(block)) then
                     if (s.selectedEntry == 1) then
@@ -82,6 +83,31 @@ function AuctionSnipe:BuyFirst()
             end
         end
     end
+end
+
+function AuctionSnipe:GetNextAvailable()
+    local s = AuctionList;
+    for i,v in ipairs(s.items) do
+        if (not self:IsSniped(v.item)) then
+            return v;
+        end 
+    end
+
+    return nil;
+end
+
+function AuctionSnipe:IsSniped(auction)
+    if (not auction.sniped) then
+        return false;
+    end
+
+    for i,v in ipairs(auction.group) do
+        if (not v.item.sniped) then
+            return false;
+        end
+    end
+
+    return true;
 end
 
 function AuctionSnipe:Init()
@@ -313,7 +339,7 @@ function AuctionSnipe:OnAuctionUpdate(...)
             end
             AuctionList:SetStatus(AuctionList.QUERY_ID, self.query.id);
             self.query:Capture();
-            self.query:Items(self.sortHow,self.sortAsc,AuctionList.items);
+            self.query:Items(self.sortHow, self.sortAsc, AuctionList.items);
             AuctionList.selectedEntry = -1;
             AuctionList:Refresh();
             AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
@@ -344,7 +370,7 @@ function AuctionSnipe:Close()
     self.frame:Hide();
     self:Stop();
     self.query:Reset();
-    
+
     wipe(filterTreeViewItems);
     self.filterTreeView:ReleaseView();
 end

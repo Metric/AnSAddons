@@ -1,3 +1,14 @@
+AnS Changes 1.0.6.2
+--------------------
+* Made the font size larger for most things, until I can implement a font scaling option.
+* Fixed bug where an invalid variable name was used to check for auction owner vs your character name. In order to not display your auctions etc.
+* Added a character blacklist (1 name per line)
+* Can now pick between g.s.c or coin icons for money display.
+* Money display now has separators for gold: 1,000,000g ...
+* Optimized certain function calls for lower memory usage
+* Fixed issue with frame stuttering when quite a few filters were active at once, with lots of ids. May see slight memory usage increase over time, as caching is used. To clear the cache, just close the AH window.
+
+
 AnS Changes 1.0.6.1
 --------------------
 * Fixed misspelled variable when trying to access dbregionhistorical

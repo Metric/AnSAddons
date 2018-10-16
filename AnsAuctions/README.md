@@ -14,7 +14,7 @@ Use your filter groups as way to quickly search for buying. The filter group mus
 You can also put in a search string to find what you want.
 * Search string overrides selected filters currently (may change based on feedback)
 
-You can buy while it is still scanning all the pages. It will pause the scan to try and find the auction and then show a confirmation to click buy. After buying or canceling, the previous scanning will resume.
+Scanning must finish before you can buy. You can always stop the scan and restart.
 
 Selling Features
 =================
@@ -32,6 +32,5 @@ Dragging an item into the auction sell slot will have no effect and will not be 
 TODO
 ==========
 * Add config option for a different percent string for selling and buying auctions.
-* Add a config option for how many pages you want scanned for buying and selling (right now it is hard coded to 4)
 * Add an option for setting default stack size to sell
 * Add an undercut by ... amount
