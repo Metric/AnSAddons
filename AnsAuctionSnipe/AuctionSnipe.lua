@@ -66,6 +66,25 @@ function AuctionSnipe:BuySelected()
     end 
 end
 
+function AuctionSnipe:BuyFirstOnly()
+    local s = AuctionList;
+    if (s and self.frame and self.frame:IsShown()) then
+        if (#s.items > 0) then
+            local block = s.items[1];
+
+            if (block) then
+                if(s:Purchase(block)) then
+                    if (s.selectedEntry == 1) then
+                        s.selectedEntry = -1;
+                    end
+                end
+
+                s:Refresh();
+            end
+        end
+    end
+end
+
 function AuctionSnipe:BuyFirst()
     local s = AuctionList;
     if (s and self.frame and self.frame:IsShown()) then
