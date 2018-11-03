@@ -1,3 +1,7 @@
+AnS Changes 1.0.6.4
+--------------------
+* Fixed a bug, where if you use just the base id for an equipment, it would be ignored. As it would be trying to only find the equipment with bonus ids. This was a regression, as previously this was taken into account, but during optimizing for stuttering, I forgot to add it back in.
+
 AnS Changes 1.0.6.2
 --------------------
 * Made the font size larger for most things, until I can implement a font scaling option.

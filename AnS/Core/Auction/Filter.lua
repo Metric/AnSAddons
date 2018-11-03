@@ -377,7 +377,8 @@ function Filter:IsValid(item)
     end
 
     if (self.idCount > 0) then
-        if (self.ids[item.tsmId] == 1) then
+        local t,id = strsplit(":", item.tsmId);
+        if (self.ids[item.tsmId] == 1 or self.ids[t..":"..id] == 1) then
             return true;
         end
     end
