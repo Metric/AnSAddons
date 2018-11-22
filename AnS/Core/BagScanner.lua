@@ -62,8 +62,13 @@ function BagScanner:Scan()
                     items[idx].children = {};
 
                     if (link) then
-                        local name = GetItemInfo(link);
-                        items[idx].name = name;
+                        if (Utils:IsBattlePetLink(link)) then
+                            local pet = Utils:ParseBattlePetLink(link);
+                            items[idx].name = pet.name;
+                        else
+                            local name = GetItemInfo(link);
+                            items[idx].name = name;
+                        end
                     else
                         items[idx].name = nil;
                     end
@@ -77,7 +82,12 @@ function BagScanner:Scan()
                 end
 
                 if (link) then
-                    name = GetItemInfo(link);
+                    if (Utils:IsBattlePetLink(link)) then
+                        local pet = Utils:ParseBattlePetLink(link);
+                        name = pet.name;
+                    else
+                        name = GetItemInfo(link);
+                    end
                 end
 
                 local item = {
