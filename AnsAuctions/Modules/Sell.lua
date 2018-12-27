@@ -95,7 +95,7 @@ function AuctionSell:RenderRow(row, item)
     local percent = _G[row:GetName().."Percent"];
 
     local color = ITEM_QUALITY_COLORS[item.quality];
-    name:SetText(color.hex..item.name);
+    name:SetText(color.hex..(item.name or "<Failed to Parse Item Name>"));
     stack:SetText(item.count);
 
     if (item.children) then
@@ -356,7 +356,7 @@ function AuctionSell:Sell(item, ppu)
     end
 
     -- get auction house post time settings
-    local time = UIDropDownMenu_GetSelectedID(DurationDropDown);
+    local time = UIDropDownMenu_GetSelectedValue(DurationDropDown);
 
     local stackSize = item.count;
     local numStacks = 1;
@@ -394,7 +394,7 @@ function AuctionSell:Sell(item, ppu)
     local copper = stackSize * ppu;
     local icount = item.count;
 
-    PostAuction(copper, copper, time, stackSize, numStacks);
+    PostAuction(copper, copper, time, totalPosting);
 
     item.count = item.count - totalPosting;
 

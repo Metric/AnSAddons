@@ -1,3 +1,7 @@
+AnS [Auction Sniper] CHANGES 1.0.6.2
+---------------------
+* Added in a time out to reset the sniper if it fails to receive a response from a query within 30 seconds. This is to try and fix where it gets stuck on query sent every so often.
+
 AnS [Auction Sniper] CHANGES 1.0.6.1
 ---------------------
 * Fixed issue where when using AuctionSnipe:BuyFirst(), it would not go to the next item after the previous was all bought

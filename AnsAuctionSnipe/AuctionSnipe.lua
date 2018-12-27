@@ -299,6 +299,15 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
                 lastScan = time();
             end
         end
+
+        -- if we haven't received a response within 30 seconds
+        -- reset and try again
+        if (tdiff > 30 and self.waitingForResult) then
+            self:Stop();
+            self.query:Reset();
+            Sources:ClearCache();
+            self:Start();
+        end
     end
     
     AuctionList:UpdateDelay();
@@ -351,6 +360,7 @@ function AuctionSnipe:OnAuctionUpdate(...)
             if (self.snipeStatusText) then
                 self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
+            self.waitingForResult = false;
         elseif (self.waitingForResult) then
             self.waitingQuery = self.query.id;
             if (self.snipeStatusText) then
@@ -367,6 +377,7 @@ function AuctionSnipe:OnAuctionUpdate(...)
             if (self.snipeStatusText) then
                 self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
+            self.waitingForResult = false;
         else
             if (self.snipeStatusText) then
                 self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
@@ -377,8 +388,6 @@ function AuctionSnipe:OnAuctionUpdate(...)
         self.prepareToSnipe = false;
         self.isSniping = true;
     end
-
-    self.waitingForResult = false;
 end
 
 ---
@@ -512,6 +521,9 @@ function AuctionSnipe:Start()
     self.startButton:Disable();
     self.stopButton:Enable();
 
+    AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
+    self.waitingForResult = false;
+
     local maxBuyout = MoneyInputFrame_GetCopper(self.maxBuyoutInput) or 0;
     local ilevel = tonumber(self.minLevelInput:GetText()) or 0;
     local minSize = tonumber(self.minSizeInput:GetText()) or 0;
@@ -553,6 +565,7 @@ function AuctionSnipe:Stop()
     self.waitingForResult = false;
     self.prepareToSnipe = false;
     self.waitingQuery = 0;
+    AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
     AuctionList.queryDelay = 0;
     if (self.snipeStatusText) then
         self.snipeStatusText:SetText("Page: "..self.query.index.." - Stopped...");
