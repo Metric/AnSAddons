@@ -1,3 +1,7 @@
+AnS [Auctions] Changes 1.0.3
+-----------------------------
+* Oops, accidentally broke multiple stack posting in the sell module in last update. It is now fixed.
+
 AnS [Auctions] Changes 1.0.2
 -----------------------------
 * Updated auction posting to match the new PostAuction api changes by blizzard.

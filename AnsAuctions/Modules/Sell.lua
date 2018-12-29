@@ -394,7 +394,7 @@ function AuctionSell:Sell(item, ppu)
     local copper = stackSize * ppu;
     local icount = item.count;
 
-    PostAuction(copper, copper, time, totalPosting);
+    PostAuction(copper, copper, time, stackSize, numStacks);
 
     item.count = item.count - totalPosting;
 
