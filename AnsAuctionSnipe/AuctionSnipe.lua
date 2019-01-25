@@ -33,7 +33,9 @@ BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
 
 local function QualitySelected(self, arg1, arg2, checked)
     AuctionSnipe.quality = arg1;
-    UIDropDownMenu_SetText(_G["AnsSnipeQualityLevel"], ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+    if (AuctionSnipe.qualityInput ~= nil) then
+        UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+    end
     CloseDropDownMenus();
 end
 
