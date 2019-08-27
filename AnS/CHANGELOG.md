@@ -1,3 +1,20 @@
+AnS Changes 1.0.6.6
+--------------------
+* Fixed a small bug when no valid auction link provided.
+* Implemented a few new functions available for filters etc: eq, neq, contains, startswith
+    * eq: simply checks to see if two values equal each other and returns either true or false
+    * neq: checks to see if two values do not equal eath other and returns either true or false
+    * contains: checks to see if a string contains the provided substring
+    * startswith: checks to see if a string starts with the provided substring
+* You can now use tsmId and id in filters. tsmId is a string and starts with i: for items and p: for pets. id is the numeric form of the id provided straight from the auction house listing.
+    * Example of matching every item except the given with tsmId: tsmId ~= "i:12456"
+    * Example of matching every item except the given with id: id ~= 12456
+    * Example of matching every item except the given with tsmId and new neq function: neq(tsmId, "i:12456")
+    * Example of matching every item except the given with id and new neq function: neq(id, 12456)
+    * Example of seeing if tsmId starts with "i:123": startswith(tsmId, "i:123")
+
+
+
 AnS Changes 1.0.6.5
 --------------------
 * Fixed issue where bag scanner was not properly handling pet links. Resulting in an error being thrown in AnSAuctions Sell Module.

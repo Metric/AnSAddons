@@ -72,6 +72,8 @@ local ParseTemplate = [[
             abs, ceil, floor, random, log, 
             log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, math.min, math.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
+        local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
+
 
         local percent = ops.percent;
         local ppu = ops.ppu;
@@ -80,6 +82,8 @@ local ParseTemplate = [[
         local ilevel = ops.ilevel;
         local quality = ops.quality;
         local vendorsell = ops.vendorsell;
+        local tsmId = ops.tsmId;
+        local id = ops.id;
 
         %s
 
@@ -321,6 +325,26 @@ Sources.ifneq = function(v1, v2, v3, v4)
     end
 end
 
+Sources.neq = function(v1,v2) 
+    return v1 ~= v2;
+end
+
+Sources.eq = function(v1,v2)
+    return v1 == v2;
+end
+
+Sources.startswith = function(v1, v2)
+    return strsub(v1, 1, #v2) == v2
+end
+
+Sources.contains = function(v1, v2)
+    if (strfind(v1, v2)) then
+        return true;
+    end
+
+    return false;
+end
+
 function Sources:Query(q, item)
     local itemId = item.link;
     local buyout = item.buyoutPrice;
@@ -356,6 +380,8 @@ function Sources:Query(q, item)
     codes.ppu = ppu;
     codes.ilevel = ilvl;
     codes.vendorsell = item.vendorsell;
+    codes.tsmId = item.tsmId;
+    codes.id = item.id;
 
     local _, fn = false, nil;
     local oq = q;

@@ -1,6 +1,6 @@
 ## Interface: 80100
 ## Title: AnS [Auctions]
-## Version: 1.0.1
+## Version: 1.0.2
 ## Notes: A lightweight addon for auction selling and buying.
 ## License: MIT
 ## Dependencies: AnS

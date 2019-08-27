@@ -221,16 +221,22 @@ end
 
 function Utils.HideTooltip()
     GameTooltip:Hide();
-    BattlePetTooltip:Hide();
+	
+	-- take into account wow classic not having this
+	if BattlePetTooltip then
+		BattlePetTooltip:Hide();
+	end
 end
 
 function Utils:ShowBattlePetTip(link)
-    local pet = self:ParseBattlePetLink(link);
-    BattlePetTooltipTemplate_SetBattlePet(BattlePetTooltip, pet);
-    BattlePetTooltip:SetSize(260,136);
-    BattlePetTooltip:Show();
-    BattlePetTooltip:ClearAllPoints();
-    BattlePetTooltip:SetPoint(GameTooltip:GetPoint());
+	if BattlePetTooltip then
+		local pet = self:ParseBattlePetLink(link);
+		BattlePetTooltipTemplate_SetBattlePet(BattlePetTooltip, pet);
+		BattlePetTooltip:SetSize(260,136);
+		BattlePetTooltip:Show();
+		BattlePetTooltip:ClearAllPoints();
+		BattlePetTooltip:SetPoint(GameTooltip:GetPoint());
+	end
 end
 
 function Utils:IsAddonInstalled(name)
@@ -406,7 +412,7 @@ function Utils:IsSoulbound(bag, slot)
     TooltipScanner:ClearLines();
     if (bag == BANK_CONTAINER) then
         TooltipScanner:SetInventoryItem("player", bag, slot + BankButtonIDToInvSlotID(0));
-    elseif (bag == REAGENTBANK_CONTAINER) then
+    elseif (REAGENTBANK_CONTAINER and bag == REAGENTBANK_CONTAINER) then
         TooltipScanner:SetInventoryItem("player", bag, slot + ReagentBankButtonIDToInvSlotID(0));
     else
         TooltipScanner:SetBagItem(bag, slot);

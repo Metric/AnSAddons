@@ -356,7 +356,24 @@ function AuctionSell:Sell(item, ppu)
     end
 
     -- get auction house post time settings
-    local time = UIDropDownMenu_GetSelectedValue(DurationDropDown);
+    local time = -1;
+	
+	if DurationDropDown then
+		time = UIDropDownMenu_GetSelectedValue(DurationDropDown);
+	else
+		if AuctionsShortAuctionButton and AuctionsShortAuctionButton:GetChecked() then
+			time = 1;
+		elseif AuctionsMediumAuctionButton and AuctionsMediumAuctionButton:GetChecked() then
+			time = 2;
+		elseif AuctionsLongAuctionButton and AuctionsLongAuctionButton:GetChecked() then
+			time = 3;
+		end
+	end
+
+	if time == -1 then
+		print("Could not locate auction time");
+		return;
+	end
 
     local stackSize = item.count;
     local numStacks = 1;
@@ -393,6 +410,8 @@ function AuctionSell:Sell(item, ppu)
 
     local copper = stackSize * ppu;
     local icount = item.count;
+
+	print("AnS Sell Trying To Post Auction: "..numStacks.." stacks of "..aName.." x "..stackSize.." for "..Utils:PriceToString(copper).." per stack");
 
     PostAuction(copper, copper, time, stackSize, numStacks);
 
@@ -464,9 +483,16 @@ function AuctionSell:ScanSelected()
         -- auctionhouseui code
 
         SortAuctionClearSort("list");
-        for i, r in pairs(AuctionSort["list_unitprice"]) do
-            SortAuctionSetSort("list", r.column, r.reverse);
-        end
+        if AuctionSort["list_unitprice"] then
+			for i, r in pairs(AuctionSort["list_unitprice"]) do
+				SortAuctionSetSort("list", r.column, r.reverse);
+			end
+		-- take in account wow classic
+		else
+			for i, r in pairs(AuctionSort["list_bid"]) do
+				SortAuctionSetSort("list", r.column, r.reverse);
+			end
+		end
 
         scanIndex = tremove(itemQueue, 1);
         scanningItem = items[scanIndex];

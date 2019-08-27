@@ -148,9 +148,17 @@ function AuctionBuy:StartScan()
     -- auctionhouseui code
 
     SortAuctionClearSort("list");
-    for i, r in pairs(AuctionSort["list_unitprice"]) do
-        SortAuctionSetSort("list", r.column, r.reverse);
-    end
+	
+	if AuctionSort["list_unitprice"] then
+		for i, r in pairs(AuctionSort["list_unitprice"]) do
+			SortAuctionSetSort("list", r.column, r.reverse);
+		end
+	-- take into account wow classic
+	else
+		for i, r in pairs(AuctionSort["list_bid"]) do
+			SortAuctionSetSort("list", r.column, r.reverse);
+		end
+	end
 
     self:RefreshAuctions();
 
@@ -186,7 +194,7 @@ function AuctionBuy:BuildItemQueue(children)
         for tsmId, v in pairs(v.ids) do
             local _, id = strsplit(":", tsmId);
 
-            if (_ == "p") then
+            if (_ == "p" and C_PetJournal) then
                 local name, icon, type = C_PetJournal.GetPetInfoBySpeciesID(tonumber(id));
                 if (name) then
                     tinsert(itemQueue, name);
@@ -663,65 +671,71 @@ end
 
 function AuctionBuy:BuildTreeViewAuctions()
     local totalScans = #scanResults;
+	local treeCount = #auctionTreeItems;
     local selected = nil;
 
     if (selectedBlock) then
         selected = selectedBlock;
     end
 
-    if (totalScans < #auctionTreeItems) then
+    if (totalScans < treeCount) then
         while (#auctionTreeItems > totalScans) do
             tremove(auctionTreeItems);
         end
     end
 
+	local treeIndex = 1;
     for k,v in ipairs(scanResults) do
-        local pf = auctionTreeItems[k];
+		local vcount = #v;
+        local pf = auctionTreeItems[treeIndex];
 
         if (pf) then
+			local pfcount = #pf.children;
             local i;
-            if (#v - 1 < #pf.children) then
-                while (#pf.children > #v - 1) do
+            if (vcount < pfcount) then
+                while (#pf.children > vcount) do
                     tremove(pf.children);
                 end
             end
 
-            local v1 = v[1];
-            if (v1) then
-                pf.name = v1.name;
-                pf.block = v1;
-                pf.selected = v1 == selected;
+			local v1 = v[1];
+			if (v1 and vcount > 0) then
+				treeIndex = treeIndex + 1;
+				pf.name = v1.name;
+				pf.block = v1;
+				pf.selected = v1 == selected;
 
-                local c = 1;
-                for i = 2, #v do
-                    local v2 = v[i];
-                    local pf2 = pf.children[c];
-                    c = c + 1;
+				local c = 1;
+				for i = 2, #v do
+					local v2 = v[i];
+					local pf2 = pf.children[c];
+					c = c + 1;
 
-                    if (pf2) then
-                        pf2.name = v2.name;
-                        pf2.block = v2;
-                        pf2.selected = v2 == selected;
-                        pf2.expanded = false;
-                        pf2.children = {};
+					if (pf2) then
+						pf2.name = v2.name;
+						pf2.block = v2;
+						pf2.selected = v2 == selected;
+						pf2.expanded = false;
+						pf2.children = {};
 
-                    else
-                        local t2 = {
-                            name = v2.name,
-                            block = v2,
-                            expanded = false,
-                            selected = v2 == selected,
-                            children = {}
-                        };
+					else
+						local t2 = {
+							name = v2.name,
+							block = v2,
+							expanded = false,
+							selected = v2 == selected,
+							children = {}
+						};
 
-                        tinsert(pf.children, t2);
-                    end
-                end
-            end
-        else
+						tinsert(pf.children, t2);
+					end
+				end
+			end
+        elseif (vcount > 0) then
             local i;
             local v1 = v[1];
             if (v1) then
+				treeIndex = treeIndex + 1;
                 local t = {
                     name = v1.name,
                     block = v1,

@@ -633,7 +633,7 @@ function Query:Capture()
                 end
             end
         else
-            auction.tsmId = "i"..auction.id;
+            auction.tsmId = "i:"..auction.id;
             auction.iLevel = 0;
             auction.type = "Unknown";
             auction.subtype = "Unknown";
