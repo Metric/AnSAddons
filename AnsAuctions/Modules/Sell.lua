@@ -411,7 +411,7 @@ function AuctionSell:Sell(item, ppu)
     local copper = stackSize * ppu;
     local icount = item.count;
 
-	print("AnS Sell Trying To Post Auction: "..numStacks.." stacks of "..aName.." x "..stackSize.." for "..Utils:PriceToString(copper).." per stack");
+	print("AnS Sell Trying To Post Auction: "..numStacks.." stacks of "..aName.." x "..stackSize.." for "..Utils:PriceToString(copper).."|cFFFFFFFF per stack");
 
     PostAuction(copper, copper, time, stackSize, numStacks);
 

@@ -48,7 +48,7 @@
                             </OnEscapePressed>
                         </Scripts>
                     </EditBox>
-                    <Button name="$parentClearSearch" hidden="true" text="x" inherits="UIPanelButtonTemplate">
+                    <Button name="$parentClearSearch" hidden="true" text="X" inherits="UIPanelButtonTemplate">
                         <Size x="20" y="20" />
                         <Anchors>
                             <Anchor point="LEFT" relativeTo="$parentSearch" relativePoint="RIGHT" x="5" y="0" />
