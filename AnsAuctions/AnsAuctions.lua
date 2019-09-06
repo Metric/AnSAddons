@@ -1,6 +1,7 @@
 local Ans = select(2, ...);
 local AuctionsBuy = Ans.AuctionBuy;
 local AuctionsSell = Ans.AuctionSell;
+local AuctionData = Ans.AuctionData;
 local Sources = AnsCore.API.Sources;
 
 
@@ -29,27 +30,31 @@ function AnsAuctions:OnAddonLoaded(...)
     if (addonName:lower() == "blizzard_auctionui") then
         AuctionsBuy:Init();
         AuctionsSell:Init();
+        AuctionData:Init();
     end
 end
 
 function AnsAuctions:OnAuctionHouseShow()
-    
+    AuctionData:Show();
 end
 
 function AnsAuctions:OnUpdate()
     AuctionsBuy:OnUpdate();
     AuctionsSell:OnUpdate();
+    AuctionData:OnUpdate();
 end
 
 function AnsAuctions:OnAuctionHouseClosed()
     AuctionsBuy:OnAuctionHouseClosed();
     AuctionsSell:OnAuctionHouseClosed();
+    AuctionData:OnAuctionHouseClosed();
     Sources:ClearCache();
 end
 
 function AnsAuctions:OnAuctionUpdate(...)
     AuctionsBuy:OnAuctionUpdate();
     AuctionsSell:OnAuctionUpdate();
+    AuctionData:OnAuctionUpdate();
 end
 
 function AnsAuctions:PostAuction()
@@ -66,4 +71,12 @@ end
 
 function AnsAuctions:StopBuyScan()
     AuctionsBuy:StopScan();
+end
+
+function AnsAuctions:StartDataScan()
+    AuctionData:StartScan();
+end
+
+function AnsAuctions:StopDataScan()
+    AuctionData:StopScan();
 end

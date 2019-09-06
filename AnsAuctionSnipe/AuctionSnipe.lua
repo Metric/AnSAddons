@@ -11,6 +11,9 @@ AuctionSnipe.sortAsc = true;
 AuctionSnipe.query = Query:New("");
 AuctionSnipe.isSniping = false;
 AuctionSnipe.prepareToSnipe = false;
+AuctionSnipe.isRewinding = false;
+AuctionSnipe.firstRewind = false;
+AuctionSnipe.rewindPaused = false;
 AuctionSnipe.isInited = false;
 AuctionSnipe.waitingForResult = false;
 AuctionSnipe.waitingQuery = -1;
@@ -162,9 +165,11 @@ function AuctionSnipe:Init()
 
     self.startButton = _G[frame:GetName().."BottomBarStart"];
     self.stopButton = _G[frame:GetName().."BottomBarStop"];
+    self.rewindButton = _G[frame:GetName().."BottomBarRewind"];
 
     self.startButton:Enable();
     self.stopButton:Disable();
+    self.rewindButton:Enable();
 
     self.maxBuyoutInput = _G[frame:GetName().."SearchBarMaxPPU"];
     self.minLevelInput = _G[frame:GetName().."SearchBarMinLevel"];
@@ -282,7 +287,7 @@ function AuctionSnipe:BuildSubTreeFilters(children, parent)
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
-    if (self.isSniping) then
+    if (self.isSniping or (self.isRewinding and not self.rewindPaused)) then
         local tdiff = time() - lastScan;
         local notDelayed = AuctionList.queryDelay <= 0 or not ANS_GLOBAL_SETTINGS.safeBuy;
         local scanReady = tdiff >= ANS_GLOBAL_SETTINGS.rescanTime;
@@ -385,10 +390,47 @@ function AuctionSnipe:OnAuctionUpdate(...)
                 self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
             end
         end
+    elseif (self.isRewinding and not self.prepareToSnipe) then
+        if (self.firstRewind) then
+            self.query:LastPage();
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query..."); 
+            end
+            self.waitingForResult = false;
+            self.firstRewind = false;
+        elseif (self.waitingForResult) then
+            self.waitingQuery = self.query.id;
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Processing Data...");
+            end
+            AuctionList:SetStatus(AuctionList.QUERY_ID, self.query.id);
+            self.query:Capture();
+            self.query:Items(self.sortHow, self.sortAsc, AuctionList.items);
+            AuctionList.selectedEntry = -1;
+            AuctionList:Refresh();
+            AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
+            self.query:Previous();
+
+            if (self.query.index <= 0) then
+                self.query:LastPage();
+            end
+
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
+            end
+            self.waitingForResult = false;
+        else
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
+            end
+        end
     end
-    if (not self.isSniping and self.prepareToSnipe) then
+    if (self.prepareToSnipe and not self.isRewinding) then
         self.prepareToSnipe = false;
         self.isSniping = true;
+    elseif (self.prepareToSnipe and self.isRewinding) then
+        self.prepareToSnipe = false;
+        self.isSniping = false;
     end
 end
 
@@ -523,8 +565,14 @@ function AuctionSnipe:Start()
     self.startButton:Disable();
     self.stopButton:Enable();
 
+    if (not self.isRewinding) then
+        self.rewindButton:Disable();
+    end
+
     AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
+
     self.waitingForResult = false;
+    self.firstRewind = true;
 
     local maxBuyout = MoneyInputFrame_GetCopper(self.maxBuyoutInput) or 0;
     local ilevel = tonumber(self.minLevelInput:GetText()) or 0;
@@ -561,9 +609,13 @@ function AuctionSnipe:Start()
 end
 
 function AuctionSnipe:Stop()
+    self.rewindButton:Enable();
     self.startButton:Enable();
     self.stopButton:Disable();
+    self.rewindButton:SetText("Rewind Scan");
     self.isSniping = false;
+    self.isRewinding = false;
+    self.firstRewind = true;
     self.waitingForResult = false;
     self.prepareToSnipe = false;
     self.waitingQuery = 0;
@@ -571,6 +623,25 @@ function AuctionSnipe:Stop()
     AuctionList.queryDelay = 0;
     if (self.snipeStatusText) then
         self.snipeStatusText:SetText("Page: "..self.query.index.." - Stopped...");
+    end
+end
+
+---
+--- Rewind Button Handler
+---
+function AuctionSnipe:Rewind()
+    if (self.isRewinding) then
+        if (not self.rewindPaused) then
+            self.rewindPaused = true;
+            self.rewindButton:SetText("Resume Rewind");
+        else
+            self.rewindPaused = false;
+            self.rewindButton:SetText("Pause Rewind");
+        end
+    else
+        self.rewindButton:SetText("Pause Rewind");
+        self.isRewinding = true;
+        self:Start();
     end
 end
 

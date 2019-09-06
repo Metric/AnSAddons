@@ -190,6 +190,8 @@ function Query:New(search)
     query.quality = 1;
     query.minStackSize = 0;
     query.maxPercent = 100;
+	
+	query.isGettingAll = false;
 
     query.blacklist = {};
 
@@ -230,6 +232,11 @@ function Query:IsReady()
     return query;
 end
 
+function Query:IsGetAllReady()
+	local query, queryAll = CanSendAuctionQuery();
+	return queryAll;
+end
+
 function Query:Search(quality, exact)
     local query, queryAll = CanSendAuctionQuery();
 
@@ -243,9 +250,22 @@ function Query:Search(quality, exact)
         else
             QueryAuctionItems(self.search, nil, nil, self.index, false, quality, false, exact);
         end
+		
+		self.isGettingAll = false;
     end
 
     return query;
+end
+
+function Query:GetAll()
+	local query, queryAll = CanSendAuctionQuery();
+	
+	if (queryAll) then
+		QueryAuctionItems(nil, nil, nil, 0, false, 1, true);
+		self.isGettingAll = true;
+	end
+	
+	return queryAll;
 end
 
 function Query:Next() 
@@ -412,6 +432,84 @@ function Query:IsValid(item)
 end
 
 ----------------------
+-- Stores id and ppu in tracker
+----------------------
+
+function Query:CaptureTrack(index, tracker)
+	self.count, self.total = GetNumAuctionItems("list");
+	
+	local auction = Utils:GetTable();
+	
+	if (index >= 1 and index <= self.count) then
+		auction.name,
+        auction.texture,
+        auction.count,
+        auction.quality,
+        auction.canUse,
+        auction.level,
+        auction.huh,
+        auction.minBid,
+        auction.minIncrement,
+        auction.buyoutPrice,
+        auction.bid,
+        auction.highBidder,
+        auction.bidderFullName,
+        auction.owner,
+        auction.ownerFullName,
+        auction.saleStatus,
+        auction.id,
+        auction.hasAll = GetAuctionItemInfo("list", index);
+        auction.link = GetAuctionItemLink("list", index);
+        auction.time = GetAuctionItemTimeLeft("list", index);
+        auction.sniped = false;
+        auction.percent = 1000;
+		
+		  if (auction.link ~= nil) then
+            auction.tsmId = Utils:GetTSMID(auction.link);
+
+            -- a cageable pet if auction id = 82800
+            if (auction.id == 82800) then
+                auction.iLevel = 0;
+                auction.type = "pet";
+                auction.subtype = "normal";
+                auction.vendorsell = 0;
+            -- otherwise normal item auction
+            else
+                local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
+                if (itemName ~= nil) then
+                    auction.iLevel = itemLevel;
+                    auction.type = itemType:lower();
+                    auction.subtype = itemSubType:lower();
+                    auction.vendorsell = vendorsell;
+                else
+                    auction.iLevel = 0;
+                    auction.type = "Unknown";
+                    auction.subtype = "Unknown";
+                    auction.vendorsell = 0;
+                end
+            end
+        else
+            auction.tsmId = "i:"..auction.id;
+            auction.iLevel = 0;
+            auction.type = "Unknown";
+            auction.subtype = "Unknown";
+            auction.vendorsell = 0;
+        end
+		
+		if (auction.buyoutPrice > 0 and auction.saleStatus == 0 and auction.hasAll) then
+			local ppu = math.floor(auction.buyoutPrice / auction.count);
+            auction.ppu = ppu;
+			
+			if (tracker) then
+				tracker:AddTracking(auction.tsmId, auction.ppu);
+			end
+		end
+	end
+	
+	Utils:ReleaseTable(auction);
+end
+
+----------------------
 -- Capture page info but in a lighter fashion
 -- since we will need to scan again to buy
 -- anyway
@@ -521,21 +619,21 @@ function Query:CaptureLight(noGroup)
 
             if (not noGroup) then
                 local idx = groupLookup[hash];
-                if  (idx and idx > 0) then
+                if  (idx and idx > 0 and self.auctions[idx]) then
                     local block = self.auctions[idx];
-                    block.stack = block.stack + 1;
-                    block.total = block.total + 1;
+					block.stack = block.stack + 1;
+					block.total = block.total + 1;
 
-                    if (not Utils:InTable(block.page, ""..self.index)) then
-                        -- save the amount found for this page block
-                        local last = block.page[#block.page];
-                        last = last..":"..(block.stack - 1);
-                        block.page[#block.page] = last;
-                        -- reset block size
-                        block.stack = 1;
-                        -- insert new page block
-                        tinsert(block.page, ""..self.index);
-                    end
+					if (not Utils:InTable(block.page, ""..self.index)) then
+						-- save the amount found for this page block
+						local last = block.page[#block.page];
+						last = last..":"..(block.stack - 1);
+						block.page[#block.page] = last;
+						-- reset block size
+						block.stack = 1;
+						-- insert new page block
+						tinsert(block.page, ""..self.index);
+					end
                 else
                     auction.page = {""..self.index};
                     tinsert(self.auctions, auction);
@@ -728,6 +826,14 @@ function Query:Capture()
         PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
     end
     lastFoundHash = foundHash;
+end
+
+function Query:Previous()
+	self.index = self.index - 1;
+end
+
+function Query:IsFirst()
+	return self.index == 1;
 end
 
 function Query:IsLastPage()

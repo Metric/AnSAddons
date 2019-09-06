@@ -114,6 +114,20 @@
           </OnLoad>
         </Scripts>
       </SimpleHTML>
+      <Button name="$parentDeleteAuctionData" text="Delete Realm Auction Data" inherits="UIPanelButtonTemplate">
+        <Size><AbsDimension x="200" y="32" /></Size>
+        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-10" y="40" /></Offset></Anchor></Anchors>
+        <Scripts>
+          <OnShow>
+            if (not AnsAuctionData) then
+              self:Hide();
+            end
+          </OnShow>
+          <OnClick>
+            StaticPopup_Show("ANS_RESET_REALM_AUCTION_DATA_CONFIRM");
+          </OnClick>
+        </Scripts>
+      </Button>              
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentShowDressing">
         <Anchors>
           <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentRescanTime">

@@ -6,6 +6,8 @@ local Sources = AnsCore.API.Sources;
 local Utils = AnsCore.API.Utils;
 local TreeView = AnsCore.API.UI.TreeView;
 
+local DEFAULT_COLOR = {["hex"] = "|cFFFFFFFF"};
+
 local AuctionSell = {};
 AuctionSell.__index = AuctionSell;
 AuctionSell.isInited = false;
@@ -95,6 +97,9 @@ function AuctionSell:RenderRow(row, item)
     local percent = _G[row:GetName().."Percent"];
 
     local color = ITEM_QUALITY_COLORS[item.quality];
+    if (not color or not color.hex) then
+        color = DEFAULT_COLOR;
+    end
     name:SetText(color.hex..(item.name or "<Failed to Parse Item Name>"));
     stack:SetText(item.count);
 
@@ -328,6 +333,15 @@ function AuctionSell:RestoreDefaultUI()
     AuctionsCloseButton:Show();
     AuctionsCancelAuctionButton:Show();
     AuctionsCreateAuctionButton:Show();
+
+    -- if we are classic then
+    -- we want to hide these
+    if (not BattlePetTooltip) then
+        AuctionsNumStacksEntry:Hide();
+        AuctionsStackSizeEntry:Hide();
+		AuctionsStackSizeMaxButton:Hide();
+		AuctionsNumStacksMaxButton:Hide();
+    end
 end
 
 function AuctionSell:HideDefaultUI()
@@ -487,7 +501,7 @@ function AuctionSell:ScanSelected()
 			for i, r in pairs(AuctionSort["list_unitprice"]) do
 				SortAuctionSetSort("list", r.column, r.reverse);
 			end
-		-- take in account wow classic
+		-- take into account wow classic
 		else
 			for i, r in pairs(AuctionSort["list_bid"]) do
 				SortAuctionSetSort("list", r.column, r.reverse);
@@ -539,6 +553,16 @@ end
 function AuctionSell:Show()
     -- scan bags real quick
     self.frame:Show();
+
+    -- show these for classic
+    -- since they are using
+    -- a modified version of legion UI
+    -- these still exist and work
+    -- but are just hidden
+    AuctionsNumStacksEntry:Show();
+    AuctionsStackSizeEntry:Show();
+	AuctionsStackSizeMaxButton:Show();
+	AuctionsNumStacksMaxButton:Show();
 
     AuctionFrameMoneyFrame:Show();
     AuctionFrameBrowse:Hide();

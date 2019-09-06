@@ -1,3 +1,8 @@
+AnS [Auctions] Changes 1.0.4
+-----------------------------
+* Made the max stack size, stacks to post, and their corresponding max buttons visible on WoW Classic.
+* Added a new area for scanning the auction house for AnsAuctionData
+
 AnS [Auctions] Changes 1.0.3
 -----------------------------
 * Oops, accidentally broke multiple stack posting in the sell module in last update. It is now fixed.

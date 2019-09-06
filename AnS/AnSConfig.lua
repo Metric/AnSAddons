@@ -22,6 +22,17 @@ StaticPopupDialogs["ANS_DELETE_FILTER_CONFIRM"] = {
     preferredIndex = 3
 };
 
+StaticPopupDialogs["ANS_RESET_REALM_AUCTION_DATA_CONFIRM"] = {
+    text = "This will remove all auction data for this realm",
+    button1 = "DELETE",
+    button2 = "CANCEL",
+    OnAccept = function() AnsConfig:ResetAuctionData() end,
+    timeout = 0,
+    whileDead = false,
+    hideOnEscape = true,
+    preferredIndex = 3
+};
+
 local function AnsCustomVarUpdateRow(dataOffset, line)
     local row = _G["AnsCustomVarRow"..line];
     local nameBox = _G[row:GetName().."Name"];
@@ -361,6 +372,12 @@ function AnsConfig:DeleteVarRow(row)
     table.remove(ANS_CUSTOM_VARS, id);
     FauxScrollFrame_SetOffset(AnsCustomVarsScrollFrame, math.max(#ANS_CUSTOM_VARS - 13, 0));
     AnsCustomVarsRefresh();
+end
+
+function AnsConfig:ResetAuctionData()
+    if (AnsAuctionData) then
+        AnsAuctionData:ResetRealm();
+    end
 end
 
 function AnsConfig:DeleteFilter()

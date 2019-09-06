@@ -49,11 +49,7 @@ function OpCodes:New()
     op.ansrecent = 0;
     op.ansmarket = 0;
     op.ansmin = 0;
-    op.ansregionrecentavg = 0;
-    op.ansregionmin = 0;
-    op.ansregionavg = 0;
-    op.anshistorical = 0;
-    op.ansregionhistorical = 0;
+    op.ans3day = 0;
     return op;
 end
 

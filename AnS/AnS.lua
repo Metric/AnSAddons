@@ -24,7 +24,7 @@ AnsCore.API = Ans;
 local AH_TAB_CLICK = nil;
 
 StaticPopupDialogs["ANS_NO_PRICING"] = {
-    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, and Auctionator are currently supported.",
+    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, AnsAuctionData, and Auctionator are currently supported.",
     button1 = "OKAY",
     OnAccept = function() end,
     timeout = 0,
@@ -44,6 +44,7 @@ local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
 local ATRPercentFn = "atrvalue";
 local ATRTSMPercentFn = "min(atrvalue,dbmarket)";
 local ATRTUJPercentFn = "min(atrvalue,tujmarket)";
+local AnsOnlyPercentFn = "ansmarket";
 
 function AnsCore:AHTabClick(t, button, down)
     for k, v in pairs(AHTabs) do
@@ -128,7 +129,7 @@ function AnsCore:RegisterPriceSources()
     end
 
     if (AnsAuctionData) then
-        ansEnabled = AnsAuctionData:HasData();
+        ansEnabled = true;
     end
 
     if (TUJMarketInfo) then
@@ -153,6 +154,9 @@ function AnsCore:RegisterPriceSources()
     elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default auctionator and tsm percent fn");
         ANS_GLOBAL_SETTINGS.percentFn = ATRTSMPercentFn;
+    elseif (ansEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+        print("AnS: setting default AnsAuctionData percent fn");
+        ANS_GLOBAL_SETTINGS.percentFn = AnsOnlyPercentFn;
     end
 
     if (not tsmEnabled and not tujEnabled and not auctionatorEnabled) then
@@ -195,11 +199,11 @@ function AnsCore:RegisterPriceSources()
         Sources:Register("ANSRecent", AnsAuctionData.GetRealmValue, "recent");
         Sources:Register("ANSMarket", AnsAuctionData.GetRealmValue, "market");
         Sources:Register("ANSMin", AnsAuctionData.GetRealmValue, "min");
-        Sources:Register("ANSHistorical", AnsAuctionData.GetRealmValue, "3day");
-        Sources:Register("ANSRegionRecentAvg", AnsAuctionData.GetRegionValue, "recent");
-        Sources:Register("ANSRegionAvg", AnsAuctionData.GetRegionValue, "market");
-        Sources:Register("ANSRegionMin", AnsAuctionData.GetRegionValue, "min");
-        Sources:Register("ANSRegionHistorical", AnsAuctionData.GetRegionValue, "3day");
+        Sources:Register("ANS3Day", AnsAuctionData.GetRealmValue, "3day");
+        --Sources:Register("ANSRegionRecent", AnsAuctionData.GetRegionValue, "recent");
+        --Sources:Register("ANSRegionMarket", AnsAuctionData.GetRegionValue, "market");
+        --Sources:Register("ANSRegionMin", AnsAuctionData.GetRegionValue, "min");
+        --Sources:Register("ANSRegion3Day", AnsAuctionData.GetRegionValue, "3day");
     end
 
     if (auctionatorEnabled) then
@@ -292,11 +296,17 @@ function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
         ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
     end
-    if (ANS_GLOBAL_SETTINGS.tooltipRegionHistorical == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRegionHistorical = true;
+    if (ANS_GLOBAL_SETTINGS.tooltipRegion3Day == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRegion3Day = true;
     end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmHistorical == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmHistorical = true;
+    if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealm3Day = true;
+    end
+	if (ANS_GLOBAL_SETTINGS.tooltipRealmMarket == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmMarket = true;
+    end
+	if (ANS_GLOBAL_SETTINGS.tooltipRegionMarket == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRegionMarket = true;
     end
     if (ANS_GLOBAL_SETTINGS.useCoinIcons == nil) then
         ANS_GLOBAL_SETTINGS.useCoinIcons = false;

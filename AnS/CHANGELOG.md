@@ -1,3 +1,9 @@
+AnS Changes 1.0.6.7
+--------------------
+* Fixed some bugs in bag scanner, where non auctionable items would be added to the GetAuctionable() list.
+* Updated query.lua to support new features for AnsAuctionData tracking and scanning.
+* Added a button to clear realm auction data for AnsAuctionData to Global Settings
+
 AnS Changes 1.0.6.6
 --------------------
 * Fixed a small bug when no valid auction link provided.

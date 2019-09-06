@@ -19,7 +19,7 @@ function BagScanner:GetAuctionable()
     wipe(auctionItemCache);
 
     for i,v in ipairs(self.items) do
-        if (v and v.link and v.bound ~= nil and v.bound == false) then
+        if (v and v.link and v.bound ~= nil and v.bound == false and v.count > 0 and not v.hidden and v.name) then
             tinsert(auctionItemCache, v);
         end
     end
@@ -46,7 +46,7 @@ function BagScanner:Scan()
                     items[idx].link = link;
                     items[idx].count = icount;
                     items[idx].quality = quality;
-                    items[idx].hidden = false;
+                    items[idx].hidden = noValue;
 
                     -- if not pet cage then use tooltip soulbound check
                     -- otherwise cages are never soulbound
@@ -102,7 +102,7 @@ function BagScanner:Scan()
                     name = name,
                     expanded = false,
                     selected = false,
-                    hidden = false,
+                    hidden = noValue,
                     children = {}
                 };
                 tinsert(items, item);

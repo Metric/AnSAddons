@@ -1,3 +1,7 @@
+AnS [Auction Sniper] CHANGES 1.0.6.4
+----------------------------
+* Added a rewind button that starts at last page and goes to the first page and then resets.
+
 AnS [Auction Sniper] CHANGES 1.0.6.3
 ------------------------
 * Fixed issue where quality dropdown was broken.

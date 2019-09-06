@@ -13,10 +13,12 @@ ANS_GLOBAL_SETTINGS = {
     characterBlacklist = "",
     tooltipRegionRecent = true,
     tooltipRegionMin = true,
-    tooltipRegionHistorical = true,
+    tooltipRegion3Day = true,
+	tooltipRegionMarket = true,
     tooltipRealmRecent = true,
     tooltipRealmMin = true,
-    tooltipRealmHistorical = true,
+    tooltipRealm3Day = true,
+	tooltipRealmMarket = true,
     useCoinIcons = false
 };
 ANS_FILTER_SELECTION = {};

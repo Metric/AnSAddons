@@ -1,15 +1,18 @@
-## Interface: 80100
+## Interface: 82000
 ## Title: AnS [Auctions]
-## Version: 1.0.2
+## Version: 1.0.4
 ## Notes: A lightweight addon for auction selling and buying.
 ## License: MIT
+## SavedVariables: ANS_LAST_DATA_SCAN
 ## Dependencies: AnS
 
 UI\Templates\Buy.xml
 UI\Templates\Sell.xml
+UI\Templates\Data.xml
 
 Modules\Buy.lua
 Modules\Sell.lua
+Modules\Data.lua
 
 AnsAuctions.lua
 AnsAuctions.xml
