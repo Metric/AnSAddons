@@ -117,7 +117,7 @@ A filter string must end up as a boolean value
 Lua operators can be used on strings
 
 ```
- &gt;=, ~=, ==, &lt;=, &lt;, &gt;, not, and, or, -, +, *, \
+ >=, ~=, ==, <=, <, >, not, and, or, -, +, *, \
 ```
 
 Predefined functions for use in strings:
@@ -260,7 +260,7 @@ percent lt 50
 
 Without shorthand
 ```
-percent &lt; 50
+percent < 50
 ```
 
 Only show auctions with a ppu less than equal to 5g
@@ -271,7 +271,7 @@ ppu lte 5g
 
 Without shorthand
 ```
-ppu &lt;= 5 * 10000
+ppu <= 5 * 10000
 ```
 
 Only show items with ilevel greater than 350
@@ -282,7 +282,7 @@ ilevel gt 350
 
 Without shorthand
 ```
-ilevel &gt; 350
+ilevel > 350
 ```
 
 Only show items with a stacksize of greater than equal to 20
@@ -293,7 +293,7 @@ stacksize gte 20
 
 Without shorthand
 ```
-stacksize &gt;= 20
+stacksize >= 20
 ```
 
 Only show items that are rare and above
@@ -304,7 +304,7 @@ quality gte rare
 
 Without shorthand
 ```
-quality &gt;= 4
+quality >= 4
 ```
 
 Combining More Than One Examples
@@ -317,7 +317,7 @@ quality gte common and ppu lte 10g
 
 Without shorthand
 ```
-quality &gt;= 1 and ppu &lt;= 10 * 10000
+quality >= 1 and ppu <= 10 * 10000
 ```
 
 iLevel greater than 350 and percent less than 50
@@ -328,7 +328,7 @@ ilevel gt 350 and percent lt 50
 
 Without shorthand
 ```
-ilevel &gt; 350 and percent &lt; 50
+ilevel > 350 and percent < 50
 ```
 
 One or the Other Examples
@@ -341,7 +341,7 @@ ppu lt 1000g or ppu gt 5000g
 
 Without shorthand
 ```
-ppu &lt; 1000 * 10000 or ppu &gt; 5000 * 10000
+ppu < 1000 * 10000 or ppu > 5000 * 10000
 ```
 
 Only accept items with stacksize 200 or ppu gt 200g and ppu lt 250g
@@ -352,7 +352,7 @@ Only accept items with stacksize 200 or ppu gt 200g and ppu lt 250g
 
 Without shorthand
 ```
-(stacksize == 200) or (ppu &gt; 200 * 10000 and ppu &lt; 250 * 10000)
+(stacksize == 200) or (ppu > 200 * 10000 and ppu < 250 * 10000)
 ```
 
 
