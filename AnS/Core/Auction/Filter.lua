@@ -163,6 +163,26 @@ function Filter:ParseTypes(types)
     end
 end
 
+function Filter:TypesAsString()
+    local sep = "";
+    local tmp = "";
+    for k,v in pairs(self.types) do
+        tmp = tmp..sep..k;
+        sep = ",";
+    end
+    return tmp;
+end
+
+function Filter:SubtypesAsString()
+    local sep = "";
+    local tmp = "";
+    for k,v in pairs(self.subtypes) do
+        tmp = tmp..sep..k;
+        sep = ",";
+    end
+    return tmp;
+end
+
 function Filter:ParseSubtypes(types) 
     if (types and types:len() > 0) then
         local trim = string.gsub(types:lower(), " ,", ",");
@@ -248,82 +268,194 @@ function Filter:Clone()
     return f;
 end
 
-function Filter:ParseTSMGroups(str)
-    local items = { strsplit(",", str) };
-    local i;
-
-    local temp = "";
-    local f = nil;
-
-    local filters = {};
+function Filter:IdsAsString()
+    local tmp = "";
     local sep = "";
-
-    for i = 1, #items do
-        local _, id = strsplit(":", items[i]);
-        if (id ~= nil) then
-            if (_ == "group") then
-                if (temp:len() > 0 and f ~= nil) then
-                    f:ParseTSM(temp); 
-                elseif (temp:len() > 0 and f == nil) then
-                    f = Filter:New("Custom"..(#filters + 1));
-                    f:ParseTSM(temp);
-                end
-
-                if (f ~= nil and temp:len() > 0) then
-                    tinsesrt(filters, f);
-                end
-
-                sep = "";
-                temp = "";
-                f = Filter:New(id);
-            else
-                temp = temp..sep..items[i];
-                sep = ",";
-            end
-        else
-            local tn = tonumber(_);
-
-            if(tn ~= nil) then
-                temp = temp..sep.._;
-                sep = ",";
-            end
-        end
+    for k,v in pairs(self.ids) do
+        tmp = tmp..sep..k;
+        sep = ",";
     end
-
-    -- take into account last amount of data
-    -- or if there was never a group
-    if (temp:len() > 0 and f ~= nil) then
-        f:ParseTSM(temp);
-    elseif (temp:len() > 0 and f == nil) then
-        f = Filter:New("Custom"..(#filters + 1));
-        f:ParseTSM(temp);
-    end
-
-    if(f ~= nil and temp:len() > 0) then
-        tinsert(filters, f);
-    end
-    
-    return filters;
+    return tmp;
 end
 
-function Filter:ParseTSM(str)
-    local items = { strsplit(",", str) };
+function Filter:ToConfigFilter()
+    local f = {
+        name = self.name,
+        ids = self:IdsAsString(),
+        useMaxPPU = self.useGlobalMaxBuyout,
+        useMinLevel = self.useGlobalMinILevel,
+        useMinStack = self.useGlobalMinStack,
+        useQuality = self.useGlobalMinQuality,
+        usePercent = self.useGlobalPercent,
+        priceFn = self.priceFn,
+        types = self:TypesAsString(),
+        subtypes = self:SubtypesAsString(),
+        children = {}
+    };
 
-    self.idCount = 0;
-    wipe(self.ids);
+    if (#self.subfilters > 0) then
+        for i, v in ipairs(self.subfilters) do
+            tinsert(f.children, v:ToConfigFilter());
+        end
+    end
 
-    for i,v in ipairs(items) do
-        local _, id = strsplit(":", v);
-        if (id ~= nil) then
-            self.ids[v] = 1;
-            self.idCount = self.idCount + 1;
+    return f;
+end
+
+local function GroupFilters(groups, children)
+    local temp = Utils:GetTable();
+
+    for i,v in ipairs(children) do
+        tinsert(temp, { parent = nil, root = v });
+    end
+
+    while (#temp > 0) do
+        local g = tremove(temp);
+        local sub = { root = g.root, children = {} };
+
+        if (g.parent == nil) then
+            groups[sub.root.name] = sub;
         else
-            local tn = tonumber(_);
-            if (tn ~= nil) then
-                self.ids["i:"..tn] = 1;
-                self.idCount = self.idCount + 1;
+            g.parent.children[sub.root.name] = sub;
+        end
+
+        if (#sub.root.subfilters > 0) then
+            for i,v in ipairs(sub.root.subfilters) do
+                tinsert(temp, { parent = sub, root = v });
             end
         end
+    end
+
+    Utils:ReleaseTable(temp);
+end
+
+function Filter:ParseTSMGroupItem(item, f, groups)
+    local _, id = strsplit(":", item);
+    if (id ~= nil) then
+        if (_ == "group") then
+            local subgroups = { strsplit("`", id) };
+            local group = nil;
+
+            if (#subgroups > 0) then
+                if (groups[subgroups[1]]) then
+                    group = groups[subgroups[1]];
+                else
+                    group = { root = Filter:New(subgroups[1]), children = {} };
+                    self:AddChild(group.root);
+                    groups[subgroups[1]] = group;
+                end
+
+                for k = 2, #subgroups do
+                    if (group.children[subgroups[k]]) then
+                        group = group.children[subgroups[k]];
+                    else
+                        local root = group.root;
+                        local c = Filter:New(subgroups[k]);
+                        local sub = { root = c, children = {} };
+                        root:AddChild(c);
+                        group.children[subgroups[k]] = sub;
+                        group = sub;
+                    end
+                end
+            end
+
+            if (group == nil) then
+                f = Filter:New(id);
+                groups[f.name] = { root = f, children = {} };
+                self:AddChild(f);
+            else
+                f = group.root;    
+            end
+        else
+            if (f == nil) then
+                f = Filter:New("Custom"..(#self.subfilters + 1));
+                self:AddChild(f);
+            end 
+
+            if (not f.ids[item]) then
+                f.ids[item] = 1;
+                f.idCount = f.idCount + 1; 
+            end
+        end
+    else
+        if (f == nil) then
+            f = Filter:New("Custom"..(#self.subfilters + 1));
+            self:AddChild(f);
+        end
+
+        local tn = tonumber(_);
+        if (tn ~= nil) then
+            if (not f.ids["i:"..tn]) then
+                f.ids["i:"..tn] = 1;
+                f.idCount = f.idCount + 1;
+            end
+        end
+    end
+
+    return f;
+end
+
+function Filter:ParseTSMGroups(str)
+    local i = 0;
+    local f = nil;
+
+    local groups = Utils:GetTable();
+    local group = nil;
+
+    -- setup groups
+    GroupFilters(groups, self.subfilters);
+
+    local tmp = "";
+    for i = 1, #str do
+        local c = str:sub(i,i);
+        if (c == ",") then
+            f = self:ParseTSMGroupItem(tmp, f, groups);
+            tmp = "";
+        else
+            tmp = tmp..c;
+        end
+    end
+
+    if (#tmp > 0) then
+        f = self:ParseTSMGroupItem(tmp, f, groups);
+    end
+
+    Utils:ReleaseTable(groups);
+end
+
+function Filter:ParseTSMItem(item) 
+    local _, id = strsplit(":", item);
+    if (id ~= nil) then
+        self.ids[item] = 1;
+        self.idCount = self.idCount + 1;
+    else
+        local tn = tonumber(_);
+        if (tn ~= nil) then
+            self.ids["i:"..tn] = 1;
+            self.idCount = self.idCount + 1;
+        end
+    end
+end
+
+function Filter:ParseTSM(ids)
+    wipe(self.ids);
+    self.idCount = 0;
+
+    local tmp = "";
+    -- new method so no stack overflow!
+    for i = 1, #ids do
+        local c = ids:sub(i,i);
+        if (c == ",") then
+            self:ParseTSMItem(tmp);
+            tmp = "";
+        else
+            tmp = tmp..c;
+        end
+    end
+
+    -- handle left over
+    if (#tmp > 0) then
+        self:ParseTSMItem(tmp);
     end
 end
 

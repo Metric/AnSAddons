@@ -407,38 +407,88 @@ function AnsConfig:DeleteFilter()
     end
 end
 
+function AnsConfig:BuildFilters(parent)
+    local name = "base";
+
+    if (parent) then
+        name = parent.name;
+    end
+
+    local fp = Filter:New(name);
+    
+    local base = ANS_FILTERS;
+    if (parent and parent.children) then
+        base = parent.children;
+    end
+
+    for i, f in ipairs(base) do
+        local filter = Filter:New(f.name);
+        
+        filter.priceFn = f.priceFn;
+        filter.useGlobalMaxBuyout = f.useMaxPPU;
+        filter.useGlobalMinILevel = f.useMinLevel;
+        filter.useGlobalMinQuality = f.useQuality;
+        filter.useGlobalMinStack = f.useMinStack;
+        filter.useGlobalPercent = f.usePercent;
+        filter:ParseTSM(f.ids);
+        filter:ParseTypes(f.types);
+        filter.ParseSubtypes(f.subtypes);
+
+        if (#f.children > 0) then
+            self:BuildSubfilters(f.children, filter);
+        end
+
+        fp:AddChild(filter);
+    end
+
+    return fp;
+end
+
+function AnsConfig:BuildSubfilters(filters, parent)
+    for i, f in ipairs(filters) do
+        local filter = Filter:New(f.name);
+        filter.priceFn = f.priceFn;
+        filter.useGlobalMaxBuyout = f.useMaxPPU;
+        filter.useGlobalMinILevel = f.useMinLevel;
+        filter.useGlobalMinQuality = f.useQuality;
+        filter.useGlobalMinStack = f.useMinStack;
+        filter.useGlobalPercent = f.usePercent;
+        filter:ParseTSM(f.ids);
+        filter:ParseTypes(f.types);
+        filter:ParseSubtypes(f.subtypes);
+
+        parent:AddChild(filter);
+
+        -- probably should do this as a stack
+        -- but for now will do recursive
+        if (#f.children > 0) then
+            self:BuildSubfilters(f.children, filter);
+        end
+    end
+end
+
 function AnsConfig:ImportGroups(editor)
     local i;
     local text = editor:GetText();
 
     if (text:len() > 0) then
-        local filters = Filter:ParseTSMGroups(text);
-        for i = 1, #filters do
-            local f = filters[i];
+        local parent = nil;
+        local base = ANS_FILTERS;
 
-            local ids = f:ExportIds();
-            if (ids ~= nil and ids:len() > 0) then
-                local t = {
-                    name = f.name,
-                    ids = ids,
-                    useMaxPPU = false,
-                    useMinLevel = false,
-                    useMinStack = false,
-                    useQuality = false,
-                    usePercent = true,
-                    priceFn = "",
-                    types = "",
-                    subtypes = "",
-                    children = {}
-                };
-                
-                if (selectedFilter and selectedFilter.filter) then
-                    local sf = selectedFilter.filter;
-                    tinsert(sf.children, t);
-                else
-                    tinsert(ANS_FILTERS, t);
-                end
-            end
+        if (selectedFilter and selectedFilter.filter and selectedFilter.filter.children) then
+            parent = selectedFilter.filter;
+            base = parent.children;
+        end
+
+        local root = self:BuildFilters(parent);
+
+        root:ParseTSMGroups(text);
+
+        -- clear previous to rebuild
+        wipe(base);
+
+        for i, v in ipairs(root.subfilters) do
+            tinsert(base, v:ToConfigFilter());
         end
 
         editor:SetText("");

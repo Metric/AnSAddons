@@ -31,6 +31,9 @@ local scanningItem = nil;
 
 local numberOfPages = 4;
 
+local isSelling = false;
+local sellCount = 0;
+
 function AuctionSell:Init()
     local d = self;
     if (isInited) then
@@ -67,8 +70,37 @@ function AuctionSell:Init()
 
     self.statusText = _G[frame:GetName().."BottomBarStatus"];
     self.pagesEntry = _G[frame:GetName().."SearchBarPages"];
+    self.totalSellPrice = _G[frame:GetName().."BottomBarTotalSellPrice"];
+    self.vendorSellPrice = _G[frame:GetName().."BottomBarVendorSellPrice"];
+
+    self:Hook();
 
     frame:Hide();
+end
+
+function AuctionSell:Hook()
+    hooksecurefunc(_G, "MoneyInputFrame_OnTextChanged", 
+        function(self)
+            local moneyFrame = self:GetParent();
+            if (moneyFrame == BuyoutPrice) then
+                local copper = MoneyInputFrame_GetCopper(moneyFrame);
+                AuctionSell:UpdateTotalPrice(copper);
+            end
+        end
+    );
+end
+
+function AuctionSell:UpdateTotalPrice(copper) 
+    if (not selected) then return; end
+    local aName, _, aCount = GetAuctionSellItemInfo();
+
+    if (not aName or not aCount) then
+        return;
+    end
+
+    local totalCopper = copper * selected.count;
+    local text = Utils:PriceToString(totalCopper);
+    self.totalSellPrice:SetText("Stack Price: "..text);
 end
 
 function AuctionSell.ShowTip(row)
@@ -111,7 +143,7 @@ function AuctionSell:RenderRow(row, item)
             icon:Hide();
         end
         level:SetText("");
-        posts:SetText("");
+        posts:SetText(item.stacks);
         seller:SetText("");
         ppu:SetText("");
         percent:SetText("");
@@ -148,7 +180,7 @@ function AuctionSell:RenderRow(row, item)
 end
 
 function AuctionSell:OnUpdate()
-    if (self.frame and self.frame:IsShown() and self.scanning) then
+    if (self.frame and self.frame:IsShown() and self.scanning and not isSelling) then
         if (not self.waitingForResult) then
             if (self.query:IsReady()) then
                 self.query:Search(0, true);
@@ -227,6 +259,42 @@ function AuctionSell:OnAuctionUpdate()
     end 
 end
 
+function AuctionSell:OnAuctionSellUpdate() 
+    if (self.frame and self.frame:IsShown()) then
+        self:ScanBags();
+    end
+
+    if (isSelling and sellCount > 0 and self.frame and self.frame:IsShown()) then
+        sellCount = sellCount - 1;
+        if (sellCount <= 0) then
+            sellCount = 0;
+            isSelling = false;
+        end
+    else
+        sellCount = 0;
+        isSelling = false;
+    end
+end
+
+function AuctionSell:OnMultisellUpdate(failure, listed, total)
+    if (self.frame and self.frame:IsShown()) then
+        self:ScanBags();
+    end
+
+    if (failure) then
+        isSelling = false;
+        sellCount = 0;
+        return;
+    end
+
+    sellCount = total - listed;
+
+    if (sellCount <= 0 or listed >= total) then
+        sellCount = 0;
+        isSelling = false;
+    end
+end
+
 function AuctionSell:GetSelectedIndex()
     if (not selected) then
         return -1;
@@ -252,6 +320,14 @@ function AuctionSell:SetItem(item)
         ClickAuctionSellItemButton(AuctionsItemButton, "LeftButton");
         self:HideDefaultUI();
         ClearCursor();
+
+        if (self.vendorSellPrice) then
+            local totalCopper = item.vendorsell * item.count;
+            local text = Utils:PriceToString(totalCopper);
+            self.vendorSellPrice:SetText("Vendor Price: "..text);
+        end
+
+        AuctionsNumStacksEntry:SetNumber(item.stacks);
     end
 
     if (not item.scanned) then
@@ -308,13 +384,21 @@ function AuctionSell:RowClick(item)
         end
         
         selectedChild = item;
-        MoneyInputFrame_SetCopper(BuyoutPrice, item.ppu);
+        -- undercut by 1 copper
+        local ppu = item.ppu - 1;
+        -- handle case where it would be 0
+        if (ppu <= 0) then ppu = item.ppu; end
+        MoneyInputFrame_SetCopper(BuyoutPrice, ppu);
     end
 
     if (clickCount == 2 and item and not item.children) then
         if (item.parent and item.parent == selected) then
             -- this is a shortcut to sell for this price
-            self:Sell(item.parent, item.ppu);
+            -- undercut by 1 copper
+            local ppu = item.ppu - 1;
+            -- handle case where it would be 0
+            if (ppu <= 0) then ppu = item.ppu; end
+            self:Sell(item.parent, ppu);
         end
         clickCount = 0;
     end
@@ -359,6 +443,8 @@ function AuctionSell:HideDefaultUI()
 end
 
 function AuctionSell:Sell(item, ppu)
+    if (isSelling) then return; end
+
     -- validate the desired auction is in the sell slot
     local aName, _, aCount = GetAuctionSellItemInfo();
     if (aName ~= item.name or aCount ~= item.count) then
@@ -427,38 +513,14 @@ function AuctionSell:Sell(item, ppu)
 
 	print("AnS Sell Trying To Post Auction: "..numStacks.." stacks of "..aName.." x "..stackSize.." for "..Utils:PriceToString(copper).."|cFFFFFFFF per stack");
 
+    isSelling = true;
+    sellCount = numStacks;
     PostAuction(copper, copper, time, stackSize, numStacks);
 
-    item.count = item.count - totalPosting;
-
-    if (item.count <= 0) then
-        item.count = 0;
-        self:RemoveItem(item);
-    end
-
-    if (totalPosting > icount) then
-        local diff = totalPosting - icount;
-
-        -- find the other items in the inventory that match the current one
-        while (diff > 0) do
-            local other = self:FindSimilar(item);
-            if (not other) then
-                break;
-            end
-
-            if (diff >= other.count) then
-                diff = diff - other.count;
-                other.count = 0;
-                self:RemoveItem(other);
-            else
-                other.count = other.count - diff;
-                diff = 0;
-            end
-        end
-    end
+    selected = nil;
+    selectedChild = nil;
 
     self:HideDefaultUI();
-    self:RefreshView();
 end
 
 function AuctionSell:FindSimilar(item)
@@ -513,15 +575,6 @@ function AuctionSell:ScanSelected()
         self.query:Set(scanningItem.name);
         self.waitingForResult = false;
         self.scanning = true;
-    end
-end
-
-function AuctionSell:RemoveItem(item)
-    item.hidden = true;
-
-    if (selected == item) then
-        selected = nil;
-        selectedChild = nil;
     end
 end
 
@@ -585,13 +638,19 @@ function AuctionSell:Show()
 end
 
 function AuctionSell:ScanBags()
-    if (not self.scanning) then
-        BagScanner:Scan();
-        items = BagScanner:GetAuctionable();
+    self:StopScan();
 
-        -- update tree view
-        self:RefreshView();
-    end
+    wipe(itemQueue);
+    
+    items = nil;
+
+    BagScanner:Release();
+    BagScanner:Scan();
+    
+    items = BagScanner:GetAuctionable();
+
+    -- update tree view
+    self:RefreshView();
 end
 
 function AuctionSell:Close()

@@ -159,7 +159,7 @@ function AnsCore:RegisterPriceSources()
         ANS_GLOBAL_SETTINGS.percentFn = AnsOnlyPercentFn;
     end
 
-    if (not tsmEnabled and not tujEnabled and not auctionatorEnabled) then
+    if (not tsmEnabled and not tujEnabled and not auctionatorEnabled and not ansEnabled) then
         StaticPopup_Show("ANS_NO_PRICING");
     end
 

@@ -1,6 +1,6 @@
 ## Interface: 82000
 ## Title: AnS
-## Version: 1.0.6.7
+## Version: 1.0.6.8
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
 ## SavedVariables: ANS_CUSTOM_FILTERS, ANS_FILTERS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION

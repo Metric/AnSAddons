@@ -41,6 +41,9 @@ local numberOfPages = 4;
 
 local currentItem = nil;
 
+local isBuying = 0;
+local moneySnapshot = 0;
+
 function AuctionBuy:Init()
     local d = self;
     if (self.isInited) then
@@ -295,7 +298,7 @@ function AuctionBuy:RenderAuctionRow(row, item)
 end
 
 function AuctionBuy:OnUpdate()
-    if (self.frame and self.frame:IsShown() and (self.scanning or self.purchaseScan)) then
+    if (self.frame and self.frame:IsShown() and (self.scanning or self.purchaseScan) and isBuying <= 0) then
         if (not self.waitingForResult) then
             if (self.purchaseScan) then
                 if (self.purchaseQuery:IsReady()) then
@@ -530,6 +533,8 @@ function AuctionBuy:CheckAndPurchase(index, auction)
             _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
             if (hasAllInfo and count == auction.count and buyoutPrice and
                 buyoutPrice <= auction.buyoutPrice and GetMoney() >= buyoutPrice) then
+                isBuying = isBuying + buyoutPrice;
+                moneySnapshot = GetMoney();
                 PlaceAuctionBid("list", index, buyoutPrice);
                 return true;
             end
@@ -537,6 +542,20 @@ function AuctionBuy:CheckAndPurchase(index, auction)
     end
 
     return false;
+end
+
+function AuctionBuy:OnMoneyUpdate()
+    if (isBuying > 0) then
+        local newamount = GetMoney();
+        local diff = math.abs(moneySnapshot - newamount);
+        isBuying = isBuying - diff;
+
+        if (isBuying <= 0) then
+            isBuying = 0;
+        end
+        
+        moneySnapshot = newamount;
+    end
 end
 
 function AuctionBuy:FindScanForBlock(block)

@@ -287,7 +287,7 @@ function AuctionSnipe:BuildSubTreeFilters(children, parent)
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
-    if (self.isSniping or (self.isRewinding and not self.rewindPaused)) then
+    if ((self.isSniping or (self.isRewinding and not self.rewindPaused)) and AuctionList.isBuying <= 0) then
         local tdiff = time() - lastScan;
         local notDelayed = AuctionList.queryDelay <= 0 or not ANS_GLOBAL_SETTINGS.safeBuy;
         local scanReady = tdiff >= ANS_GLOBAL_SETTINGS.rescanTime;
@@ -320,7 +320,6 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
     AuctionList:UpdateDelay();
 end
 
-
 ----
 -- Events
 ---
@@ -329,6 +328,7 @@ function AuctionSnipe:RegisterEvents(frame)
     frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
     frame:RegisterEvent("AUCTION_HOUSE_SHOW");
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
+    frame:RegisterEvent("PLAYER_MONEY");
 end
 
 function AuctionSnipe:EventHandler(frame, event, ...)
@@ -336,6 +336,7 @@ function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "AUCTION_ITEM_LIST_UPDATE") then self:OnAuctionUpdate(...); end;
     if (event == "AUCTION_HOUSE_SHOW") then self:OnAuctionHouseShow(); end;
     if (event == "AUCTION_HOUSE_CLOSED") then self:OnAuctionHouseClosed(); end;
+    if (event == "PLAYER_MONEY") then AuctionList:OnMoneyUpdate(); end
 end
 
 function AuctionSnipe:OnAddonLoaded(...)

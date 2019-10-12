@@ -4,7 +4,6 @@
             <Anchor point="TOPLEFT" x="0" y="0"/>
             <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
         </Anchors>
-
         <Frames>
         <!-- here to hold spacing and for alignment of other fraems -->
             <Frame name="$parentSearchBar">
@@ -43,15 +42,25 @@
             </Frame>
 
             <Frame name="$parentBottomBar">
-                <Size x="160" y="22" />
+                <Size x="605" y="22" />
                 <Anchors>
-                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-50" y="15" />
+                    <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" x="200" y="13" />
                 </Anchors>
                 <Layers>
                     <Layer level="OVERLAY">
                         <FontString name="$parentStatus" text="" justifyH="CENTER" inherits="GameFontHighlight">
                             <Anchors>
-                                <Anchor point="RIGHT" relativePoint="LEFT" x="-50" y="0" />
+                                <Anchor point="CENTER" relativePoint="CENTER" x="0" y="0" />
+                            </Anchors>
+                        </FontString>
+                        <FontString name="$parentVendorSellPrice" text="" justifyH="LEFT" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="LEFT" x="0" y="0" />
+                            </Anchors>
+                        </FontString>	
+                        <FontString name="$parentTotalSellPrice" text="" justifyH="LEFT" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="LEFT" relativeTo="$parentVendorSellPrice" relativePoint="RIGHT" x="10" y="0" />
                             </Anchors>
                         </FontString>
                     </Layer>

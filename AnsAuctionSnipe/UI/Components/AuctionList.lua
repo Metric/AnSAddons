@@ -22,6 +22,8 @@ AuctionList.rows = {};
 AuctionList.style = {
     rowHeight = 16
 };
+AuctionList.isBuying = 0;
+AuctionList.moneySnapshot = 0;
 
 local stepTime = 1;
 local clickTime = time();
@@ -61,7 +63,8 @@ function AuctionList:CheckAndPurchase(index, auction)
             _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
             if (hasAllInfo and count == auction.count and buyoutPrice and
                 buyoutPrice <= auction.buyoutPrice and GetMoney() >= buyoutPrice) then
-                   
+                self.isBuying = self.isBuying + buyoutPrice;
+                self.moneySnapshot = GetMoney();
                 PlaceAuctionBid("list", index, buyoutPrice);
                 auction.sniped = true;
                 return true;
@@ -70,6 +73,20 @@ function AuctionList:CheckAndPurchase(index, auction)
     end
 
     return false;
+end
+
+function AuctionList:OnMoneyUpdate()
+    if (self.isBuying > 0) then
+        local newamount = GetMoney();
+        local diff = math.abs(self.moneySnapshot - newamount);
+        self.isBuying = self.isBuying - diff;
+
+        if (self.isBuying <= 0) then
+            self.isBuying = 0;
+        end
+
+        self.moneySnapshot = newamount;
+    end
 end
 
 function AuctionList:Purchase(block)

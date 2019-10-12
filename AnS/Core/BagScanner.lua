@@ -9,21 +9,43 @@ BagScanner.items = {};
 Ans.BagScanner = BagScanner;
 
 local auctionItemCache = {};
+local stackTracker = {};
+
+local function Sort(a,b)
+    if (a.name == b.name) then
+        return a.count < b.count;
+    end
+
+    return a.name < b.name;
+end
 
 function BagScanner:Release()
     wipe(self.items);
     wipe(auctionItemCache);
+    wipe(stackTracker);
 end
 
 function BagScanner:GetAuctionable()
     wipe(auctionItemCache);
+    wipe(stackTracker);
 
     for i,v in ipairs(self.items) do
         if (v and v.link and v.bound ~= nil and v.bound == false and v.count > 0 and not v.hidden and v.name) then
-            tinsert(auctionItemCache, v);
+            if (not stackTracker[v.name..v.count]) then
+                stackTracker[v.name..v.count] = v;
+                v.total = v.count;
+                v.stacks = 1;
+                tinsert(auctionItemCache, v);
+            else
+                local c = stackTracker[v.name..v.count];
+                c.total = c.total + v.count;
+                c.stacks = c.stacks + 1;
+            end
         end
     end
 
+
+    table.sort(auctionItemCache, Sort);
     return auctionItemCache;
 end
 
@@ -39,19 +61,25 @@ function BagScanner:Scan()
         for slot = 1, slots do
             local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
             link = GetContainerItemLink(bag, slot);
-
+			local itemSellPrice = 0;
+            local boundType = 0;
+            if (link) then itemSellPrice = select(11, GetItemInfo(link)); end
+            if (link) then boundType = select(14, GetItemInfo(link)); end
+            
             if (items[idx]) then
                 -- different item than last scan
                 if (items[idx].link ~= link or items[idx].count ~= icount or items[idx].id ~= id) then
+	
                     items[idx].link = link;
                     items[idx].count = icount;
                     items[idx].quality = quality;
-                    items[idx].hidden = noValue;
+                    items[idx].hidden = false;
+					items[idx].vendorsell = itemSellPrice;
 
                     -- if not pet cage then use tooltip soulbound check
                     -- otherwise cages are never soulbound
                     if (id ~= 82800) then
-                        items[idx].bound = Utils:IsSoulbound(bag, slot);
+                        items[idx].bound = Utils:IsSoulbound(bag, slot) or boundType == 1 or boundType == 4;
                     else
                         items[idx].bound = false;
                     end
@@ -78,7 +106,7 @@ function BagScanner:Scan()
                 local name = nil;
 
                 if (id ~= 82800) then
-                    bound = Utils:IsSoulbound(bag, slot);
+                    bound = Utils:IsSoulbound(bag, slot) or boundType == 1 or boundType == 4;
                 end
 
                 if (link) then
@@ -100,9 +128,10 @@ function BagScanner:Scan()
                     tex = _,
                     id = id,
                     name = name,
+					vendorsell = itemSellPrice,
                     expanded = false,
                     selected = false,
-                    hidden = noValue,
+                    hidden = false,
                     children = {}
                 };
                 tinsert(items, item);
