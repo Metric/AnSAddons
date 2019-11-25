@@ -12,41 +12,6 @@ Requires AnS
 
 (Optional) Auctionator addon for percentage calculations.
 
-TSM Server Market Data Caveat (1.0.2 - 1.0.5.1). NO LONGER NEEDED IF USING AnS 1.0.5.3+
-==================
-If you were on version 1.0.1 of AnS, then you will need to revert the change or simply restore TradeSkillMaster_AppHelper to its defaults.
-
-NO LONGER NEEDED IF USING AnS 1.0.5.3+
-=====================================
-
-If using TSM 4: NO LONGER NEEDED IF USING AnS 1.0.5.3+
--------------------
-In TradeSkillMaster/Core/Service/AuctionDB/Core.lua after the following line:
-
-```
-local AuctionDB = ...
-```
-
-Add the following global variable:
-
-```
-AnsTSMAuctionDB = AuctionDB;
-```
-
-If using TSM 3: NO LONGER NEEDED IF USING AnS 1.0.5.3+
---------------------
-In TradeSkillMaster_AuctionDB/TradeSkillMaster_AuctionDB.lua after the following line:
-
-```
-TSM = LibStub ...
-```
-
-Add the following global variable:
-
-```
-AnsTSMAuctionDB = TSM;
-```
-
 
 Features
 ===============
@@ -102,6 +67,42 @@ Selecting armor, weapons, or pets, will now display the dress up window with tha
 
 * Want to use the key bindings through TSM macros instead? Use the following functions: /run AuctionSnipe:BuySelected() or /run AuctionSnipe:BuyFirst()
 
+
+The Billis Formula for AnS Sniper
+==============================================
+this is for wow classic
+
+tsm only supports dbminprice and dbmarket on classic currently
+
+create a new varable with the name of minprice
+
+and this as the data for that variable
+
+```
+max(dbmarket, vendorsell)
+```
+
+or if using ans auction data
+
+```
+max(ansmarket, vendorsell)
+```
+
+create a new variable with this in it
+
+this variable must come after minprice variable in the variables list
+
+give it the name billisformula
+
+```
+ifgte(quality, 1, ifgte(minprice, 250g, 80, ifgte(minprice, 100g, 70, ifgte(minprice, 50g, 60, ifgte(minprice, 10g, 40, ifgte(minprice, 5g, 30, ifgte(minprice, 1g, 10, 0)))))), 0)
+```
+
+in the global filter string or in the filter string for a filter itself
+
+```
+percent lte billisformula and billisformula gt 0
+```
 
 Filter and Percent/Pricing Strings
 =========================

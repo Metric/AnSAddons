@@ -287,16 +287,15 @@ function AuctionSnipe:BuildSubTreeFilters(children, parent)
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
-    if ((self.isSniping or (self.isRewinding and not self.rewindPaused)) and AuctionList.isBuying <= 0) then
+    if (self.isSniping or (self.isRewinding and not self.rewindPaused)) then
         local tdiff = time() - lastScan;
         local notDelayed = AuctionList.queryDelay <= 0 or not ANS_GLOBAL_SETTINGS.safeBuy;
         local scanReady = tdiff >= ANS_GLOBAL_SETTINGS.rescanTime;
 
         if (scanReady and notDelayed and not self.waitingForResult and not AuctionList.buying) then
-            if (self.query:IsReady()) then
-                AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, ANS_GLOBAL_SETTINGS.safeBuy);
-                
+            if (self.query:IsReady()) then 
                 self.waitingForResult = true;
+                AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, true);
                 self.query:Search();
 
                 if (self.snipeStatusText) then
@@ -328,7 +327,6 @@ function AuctionSnipe:RegisterEvents(frame)
     frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
     frame:RegisterEvent("AUCTION_HOUSE_SHOW");
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
-    frame:RegisterEvent("PLAYER_MONEY");
 end
 
 function AuctionSnipe:EventHandler(frame, event, ...)
@@ -336,7 +334,6 @@ function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "AUCTION_ITEM_LIST_UPDATE") then self:OnAuctionUpdate(...); end;
     if (event == "AUCTION_HOUSE_SHOW") then self:OnAuctionHouseShow(); end;
     if (event == "AUCTION_HOUSE_CLOSED") then self:OnAuctionHouseClosed(); end;
-    if (event == "PLAYER_MONEY") then AuctionList:OnMoneyUpdate(); end
 end
 
 function AuctionSnipe:OnAddonLoaded(...)
@@ -571,6 +568,7 @@ function AuctionSnipe:Start()
     end
 
     AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
+    AuctionList.queryDelay = 0;
 
     self.waitingForResult = false;
     self.firstRewind = true;

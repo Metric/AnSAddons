@@ -22,8 +22,6 @@ AuctionList.rows = {};
 AuctionList.style = {
     rowHeight = 16
 };
-AuctionList.isBuying = 0;
-AuctionList.moneySnapshot = 0;
 
 local stepTime = 1;
 local clickTime = time();
@@ -63,8 +61,6 @@ function AuctionList:CheckAndPurchase(index, auction)
             _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
             if (hasAllInfo and count == auction.count and buyoutPrice and
                 buyoutPrice <= auction.buyoutPrice and GetMoney() >= buyoutPrice) then
-                self.isBuying = self.isBuying + buyoutPrice;
-                self.moneySnapshot = GetMoney();
                 PlaceAuctionBid("list", index, buyoutPrice);
                 auction.sniped = true;
                 return true;
@@ -73,20 +69,6 @@ function AuctionList:CheckAndPurchase(index, auction)
     end
 
     return false;
-end
-
-function AuctionList:OnMoneyUpdate()
-    if (self.isBuying > 0) then
-        local newamount = GetMoney();
-        local diff = math.abs(self.moneySnapshot - newamount);
-        self.isBuying = self.isBuying - diff;
-
-        if (self.isBuying <= 0) then
-            self.isBuying = 0;
-        end
-
-        self.moneySnapshot = newamount;
-    end
 end
 
 function AuctionList:Purchase(block)
@@ -115,24 +97,24 @@ function AuctionList:Purchase(block)
                 return false;
             end
         elseif (not auction.sniped) then
-            if (not self:CheckAndPurchase(index, auction)) then
-                return false;
-            end
+            self:CheckAndPurchase(index, auction);
         else
             for i = 1, total do
                 local subblock = orig.group[i];
                 auction = subblock.item;
                 index = subblock.index;
 
-                -- just an extra check for precaution
-                -- even though technically both the main block
-                -- and sub blocks are from the same query id
-                if (subblock.queryId ~= self.queryId or self.isWaitingForData) then
-                    return false;
-                end
+                if (auction and not auction.sniped) then
+                    -- just an extra check for precaution
+                    -- even though technically both the main block
+                    -- and sub blocks are from the same query id
+                    if (subblock.queryId ~= self.queryId or self.isWaitingForData) then
+                        return false;
+                    end
 
-                if (self:CheckAndPurchase(index, auction)) then
-                    break;
+                    if (self:CheckAndPurchase(index, auction)) then
+                        break;
+                    end
                 end
             end
         end
@@ -206,14 +188,14 @@ function AuctionList:Click(row, button, down)
         end
     end
 
-    if (clickCount == 2) then
+    if (clickCount >= 2) then
         self.buying = true;
         --buy it instantly
 
         local block = self.items[id];
         if (block) then
             if (self:Purchase(block)) then
-                --Recycler:RecycleBlock(table.remove(self.items, id));
+                Recycler:RecycleBlock(table.remove(self.items, id));
                 if (self.selectedEntry == id) then
                     self.selectedEntry = -1;
                 end
