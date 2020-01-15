@@ -420,13 +420,3 @@ TODO
     * Gems
     * Meat
     * Consumables
-
-* Create other addon modules:
-    * Analytics
-    * Crafting (Profits / Loss per Craft)
-
-* Even Bigger Goals:
-    * Use my AWS server to pull down and cache real time 1-hour auction house snapshots (Currently just running an Unreal Engine Game Server).
-    * Keep track of current avg and 3-day avg.
-    * Integrate into custom MIT licensed electron app to get realtime updates from server via websockets.
-        * Write to WoW saved variables. 
