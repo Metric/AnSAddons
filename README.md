@@ -1,4 +1,8 @@
 
+UPDATE REGARDING 8.3.0 SUPPORT
+=====================================
+Sadly, after testing on a live server, it just won't be possible to snipe anymore. If you use TSM to find items already via regular TSM search, then there is no additional benefit that this can provide. Therefore, this is now dead for 8.3+ and will only be maintained for Classic.
+
 AnS [Auctions]
 =======
 
