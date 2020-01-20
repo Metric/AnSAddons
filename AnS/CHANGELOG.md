@@ -1,3 +1,12 @@
+AnS Changes 2.0
+----------------
+* A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
+* Complete rewrite for 8.3 Query Handling etc
+* Removed unneeded settings
+* Filters do not require item ids anymore.
+    - Thus you can use just the filter string in them now for quicker access to different types of filters without relying on global
+
+
 AnS Changes 1.0.6.7
 --------------------
 * Fixed some bugs in bag scanner, where non auctionable items would be added to the GetAuctionable() list.

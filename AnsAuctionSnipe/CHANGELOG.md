@@ -1,3 +1,23 @@
+AnS [Auction Sniper] Changes 2.0
+----------------------------
+* A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
+* Rewrite for 8.3
+* UI Updated to match new Auction House
+* New base filters on the left using Blizzard API to speed up scanning
+    - You really want to use the base filters otherwise it will be just as slow as TSM
+    - You can select multiple at a time. The more that is selected the slower it will be.
+    - This is what makes it faster combined with CLevel Range, Min iLevel, Min Quality, and Custom Filters.
+* Custom filters on right, which are applied along with the base filters
+* Removed Min Stack as it is no longer needed
+* Added CLevel Range. I highly recommend you take advantage of this to speed the scan up for equipment based searches
+* Can now blacklist item ids via Control + Left Click
+* New scan delay if items are found. Defaults to 5 seconds before starting new search.
+    - Can be changed under Interface -> Addons -> AnS
+    - This will be back ported for classic as well
+* Removed safe buy and safe buy delay as it is no longer needed with new Auction House API
+* Commodities are separated by ppu. If you double click it, be prepared to buy all at that ppu or lower.
+    - Will add in a way to select amount in another update
+
 AnS [Auction Sniper] CHANGES 1.0.6.4
 ----------------------------
 * Added a rewind button that starts at last page and goes to the first page and then resets.

@@ -1,10 +1,13 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Button name="AnsFilterRowTemplate" virtual="true">
-        <Size x="136" y="20"/>
-        <NormalTexture name="$parentNormalTexture" file="Interface\AuctionFrame\UI-AuctionFrame-FilterBg">
-			<TexCoords left="0" right="0.53125" top="0" bottom="0.625"/>
+        <Size x="136" y="21"/>
+        <NormalTexture name="$parentNormalTexture" atlas="auctionhouse-nav-button" useAtlasSize="false">
+			<Size x="136" y="32" />
+			<Anchors>
+            	<Anchor point="TOPLEFT" x="-2" y="0"/>
+          	</Anchors>
 		</NormalTexture>
-		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD"/>
+		<HighlightTexture atlas="auctionhouse-nav-button-highlight" alphaMode="ADD"/>
 		<Layers>
 			<Layer level="ARTWORK">
 				<FontString name="$parentText" inherits="GameFontNormalSmallLeft">

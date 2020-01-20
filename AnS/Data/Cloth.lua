@@ -3,7 +3,7 @@ local Cloth = {};
 Cloth.children = {
     {
         name = "BFA",
-        ids = "i:152577,i:158378,i:152576",
+        ids = "i:152577,i:158378,i:152576,i:167738",
         useMaxPPU = true,
         useMinLevel = false,
         useQuality = true,

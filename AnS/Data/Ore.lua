@@ -4,7 +4,7 @@ local Ore = {};
 Ore.children = {
     {
         name = "BFA",
-        ids = "i:152513,i:152512,i:152579",
+        ids = "i:152513,i:152512,i:152579,i:168185",
         useMaxPPU = true,
         useMinLevel = false,
         useQuality = true,

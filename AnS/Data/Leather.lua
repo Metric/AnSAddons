@@ -4,7 +4,7 @@ local Leather = {};
 Leather.children = {
     {
         name = "BFA",
-        ids = "i:152541,i:154164,i:154165,i:153050,i:153051,i:154722,i:152542",
+        ids = "i:152541,i:154164,i:154165,i:153050,i:153051,i:154722,i:152542,i:168649",
         useMaxPPU = true,
         useMinLevel = false,
         useQuality = true,

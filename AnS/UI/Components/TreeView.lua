@@ -13,7 +13,7 @@ function TreeView:New(parent, style, selectFn, upFn, downFn, renderFn)
     fv.frame = _G[parent:GetName().."TreeView"];
     fv.scrollFrame = fv.frame;
     fv.childFrame = _G[fv.scrollFrame:GetName().."ScrollChildFrame"];
-    fv.childFrame:SetSize(fv.frame:GetWidth(), fv.frame:GetHeight());
+     fv.childFrame:SetSize(fv.frame:GetWidth(), fv.frame:GetHeight());
 
     fv.parent = parent;
 

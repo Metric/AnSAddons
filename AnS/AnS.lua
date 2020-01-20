@@ -33,10 +33,10 @@ StaticPopupDialogs["ANS_NO_PRICING"] = {
     preferredIndex = 3
 };
 
-local function AHTabClick(self, button, down)
-    AH_TAB_CLICK(self, button, down);
-    AnsCore:AHTabClick(self, button, down);
-end
+--local function AHTabClick(self, button, down)
+--    AH_TAB_CLICK(self, button, down);
+--    AnsCore:AHTabClick(self, button, down);
+--end
 
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
@@ -46,55 +46,23 @@ local ATRTSMPercentFn = "min(atrvalue,dbmarket)";
 local ATRTUJPercentFn = "min(atrvalue,tujmarket)";
 local AnsOnlyPercentFn = "ansmarket";
 
-function AnsCore:AHTabClick(t, button, down)
-    for k, v in pairs(AHTabs) do
-        if (v.onClose) then
-            v.onClose();
-        end
-    end
-
-    local id = t:GetID();
-
-    if (AHTabIndexToTab[id]) then
-        local n = AHTabIndexToTab[id];
-        local tab = AHTabs[n];
-
-        if (tab and tab.onShow) then
-            tab.onShow();
-            PlaySound(SOUNDKIT.IG_CHARACTER_INFO_TAB);
-        end
-    end
-
-    PanelTemplates_SetTab(AuctionFrame, id);
-end
-
-function AnsCore:AddAHTab(name, showFn, closeFn)
-    local n = AuctionFrame.numTabs + 1;
-    local framename = "AuctionFrameTab"..n;
-    local frame = CreateFrame("BUTTON", framename, AuctionFrame, "AuctionTabTemplate");
+function AnsCore:AddAHTab(name, displayMode)
+    local n = #AuctionHouseFrame.Tabs + 1;
+    local lastTab = AuctionHouseFrame.Tabs[n - 1];
+    local framename = "AuctionHouseFrameTab"..n;
+    local frame = CreateFrame("BUTTON", framename, AuctionHouseFrame, "AuctionHouseFrameDisplayModeTabTemplate");
 
     frame:SetID(n);
     frame:SetText(name);
     frame:SetNormalFontObject(_G["AnsFontOrange"]);
-    frame:SetPoint("LEFT", _G["AuctionFrameTab"..(n-1)], "RIGHT", -8, 0);
+    frame:SetPoint("LEFT", lastTab, "RIGHT", -15, 0);
+    frame.displayMode = displayMode;
+    frame:HookScript("OnClick", function() AuctionHouseFrame:SetTitle(name) end);
 
-    PanelTemplates_SetNumTabs(AuctionFrame, n);
-    PanelTemplates_EnableTab(AuctionFrame, n);
+    tinsert(AuctionHouseFrame.Tabs, frame);
+    AuctionHouseFrame.tabsForDisplayMode[displayMode] = n;
 
-    if (AH_TAB_CLICK == nil) then
-        -- setup hook
-        AH_TAB_CLICK = AuctionFrameTab_OnClick;
-        AuctionFrameTab_OnClick = AHTabClick;
-    end
-
-    local ansTab = {
-        name = name,
-        onShow = showFn,
-        onClose = closeFn
-    };
-
-    AHTabs[name] = ansTab;
-    AHTabIndexToTab[n] = name;
+    PanelTemplates_SetNumTabs(AuctionHouseFrame, n);
 end
 
 function AnsCore:RegisterEvents(frame)
@@ -228,11 +196,8 @@ function AnsCore:LoadFilters()
         filter.useGlobalMaxBuyout = f.useMaxPPU;
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
-        filter.useGlobalMinStack = f.useMinStack;
         filter.useGlobalPercent = f.usePercent;
         filter:ParseTSM(f.ids);
-        filter:ParseTypes(f.types);
-        filter.ParseSubtypes(f.subtypes);
 
         if (#f.children > 0) then
             self:LoadSubFilters(f.children, filter);
@@ -249,11 +214,8 @@ function AnsCore:LoadSubFilters(filters, parent)
         filter.useGlobalMaxBuyout = f.useMaxPPU;
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
-        filter.useGlobalMinStack = f.useMinStack;
         filter.useGlobalPercent = f.usePercent;
         filter:ParseTSM(f.ids);
-        filter:ParseTypes(f.types);
-        filter:ParseSubtypes(f.subtypes);
 
         parent:AddChild(filter);
 
@@ -270,46 +232,25 @@ function AnsCore:MigrateGlobalSettings()
         ANS_GLOBAL_SETTINGS.rescanTime = 0;
     end
     if (ANS_GLOBAL_SETTINGS.showDressing == nil) then
-        ANS_GLOBAL_SETTINGS.showDressing = true;
+        ANS_GLOBAL_SETTINGS.showDressing = false;
     end
     if (ANS_GLOBAL_SETTINGS.dingSound == nil) then
         ANS_GLOBAL_SETTINGS.dingSound = true;
     end
-    if (ANS_GLOBAL_SETTINGS.safeBuy == nil) then
-        ANS_GLOBAL_SETTINGS.safeBuy = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.safeDelay == nil) then
-        ANS_GLOBAL_SETTINGS.safeDelay = 2;
+    if (ANS_GLOBAL_SETTINGS.scanDelayTime == nil) then
+        ANS_GLOBAL_SETTINGS.scanDelayTime = 5;
     end
     if (ANS_GLOBAL_SETTINGS.characterBlacklist == nil) then
         ANS_GLOBAL_SETTINGS.characterBlacklist = "";
     end
-    if (ANS_GLOBAL_SETTINGS.tooltipRegionRecent == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRegionRecent = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRegionMin == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRegionMin = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmRecent == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmRecent = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRegion3Day == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRegion3Day = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealm3Day = true;
-    end
-	if (ANS_GLOBAL_SETTINGS.tooltipRealmMarket == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmMarket = true;
-    end
-	if (ANS_GLOBAL_SETTINGS.tooltipRegionMarket == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRegionMarket = true;
-    end
     if (ANS_GLOBAL_SETTINGS.useCoinIcons == nil) then
         ANS_GLOBAL_SETTINGS.useCoinIcons = false;
+    end
+    if (ANS_GLOBAL_SETTINGS.itemsPerUpdate == nil) then
+        ANS_GLOBAL_SETTINGS.itemsPerUpdate = 20;
+    end
+    if (ANS_GLOBAL_SETTINGS.itemBlacklist == nil) then
+        ANS_GLOBAL_SETTINGS.itemBlacklist = {};
     end
 end
 
@@ -325,11 +266,8 @@ function AnsCore:MigrateCustomFilters()
                 useMaxPPU = false,
                 useMinLevel = false,
                 useQuality = false,
-                useMinStack = false,
                 usePercent = true,
-                priceFn = v.priceFn,
-                types = v.types,
-                subtypes = v.subtypes,
+                priceFn = v.priceFn
             };
 
             tinsert(ANS_FILTERS, t);
@@ -355,11 +293,8 @@ function AnsCore:RestoreFilter(children, parent)
                 v2.useMaxPPU = v.useMaxPPU;
                 v2.useMinLevel = v.useMinLevel;
                 v2.useQuality = v.useQuality;
-                v2.useMinStack = v.useMinStack;
                 v2.usePercent = v.usePercent;
                 v2.priceFn = v.priceFn;
-                v2.types = v.types;
-                v2.subtypes = v.subtypes;
                 
                 if (v.children and #v.children > 0) then
                     self:RestoreFilter(v.children, v2.children);
@@ -377,6 +312,10 @@ function AnsCore:RestoreFilter(children, parent)
 end
 
 function AnsCore:CreateDefaultFilters()
+    if (not ANS_BASE_SELECTION) then
+        ANS_BASE_SELECTION = {};
+    end
+
     if (not ANS_FILTERS or #ANS_FILTERS == 0) then
         ANS_FILTERS = {};
         -- reset filter selection as a new method will now
@@ -394,11 +333,8 @@ function AnsCore:PopulateFilter(v, parent)
         useMaxPPU = v.useMaxPPU,
         useMinLevel = v.useMinLevel,
         useQuality = v.useQuality,
-        useMinStack = v.useMinStack,
         usePercent = v.usePercent,
-        priceFn = v.priceFn,
-        types = v.types,
-        subtypes = v.subtypes,
+        priceFn = v.priceFn
     };
 
     if (v.children and #v.children > 0) then

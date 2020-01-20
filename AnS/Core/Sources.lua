@@ -350,6 +350,10 @@ function Sources:Query(q, item)
     local percent = item.percent;
     local ppu = item.ppu;
 
+    if (not itemId) then
+        return nil;
+    end
+    
     local codes = nil;
 
     local names = self:GetNamesAsString();
@@ -361,11 +365,11 @@ function Sources:Query(q, item)
         return nil;
     end
 
-    if (OpValueCache[item.link]) then
-        codes = OpValueCache[item.link];
+    if (OpValueCache[itemId]) then
+        codes = OpValueCache[itemId];
     else 
         codes = OpCodes:New();
-        OpValueCache[item.link] = codes;
+        OpValueCache[itemId] = codes;
         self:GetValues(itemId, codes);
     end
 

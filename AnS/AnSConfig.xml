@@ -113,21 +113,7 @@
             AnsConfig:SetHelpText(self);
           </OnLoad>
         </Scripts>
-      </SimpleHTML>
-      <Button name="$parentDeleteAuctionData" text="Delete Realm Auction Data" inherits="UIPanelButtonTemplate">
-        <Size><AbsDimension x="200" y="32" /></Size>
-        <Anchors><Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT"><Offset><AbsDimension x="-10" y="40" /></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnShow>
-            if (not AnsAuctionData) then
-              self:Hide();
-            end
-          </OnShow>
-          <OnClick>
-            StaticPopup_Show("ANS_RESET_REALM_AUCTION_DATA_CONFIRM");
-          </OnClick>
-        </Scripts>
-      </Button>              
+      </SimpleHTML>             
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentShowDressing">
         <Anchors>
           <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentRescanTime">
@@ -141,22 +127,9 @@
           <OnClick>AnsConfig:Edit(self, "dressup")</OnClick>
         </Scripts>
       </CheckButton>
-      <CheckButton inherits="UIRadioButtonTemplate" name="$parentSafeBuy">
-        <Anchors>
-          <Anchor point="BOTTOMLEFT"  relativePoint="TOPLEFT" relativeTo="$parentShowDressing">
-            <Offset>
-              <AbsDimension x="0" y="5"/>
-            </Offset>
-          </Anchor>
-        </Anchors>
-        <Scripts>
-          <OnLoad>_G[self:GetName().."Text"]:SetText("Safe Buy"); </OnLoad>
-          <OnClick>AnsConfig:Edit(self, "safebuy")</OnClick>
-        </Scripts>
-      </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentUseCoinIcons">
         <Anchors>
-          <Anchor point="BOTTOMLEFT"  relativePoint="TOPLEFT" relativeTo="$parentSafeBuy">
+          <Anchor point="BOTTOMLEFT"  relativePoint="TOPLEFT" relativeTo="$parentShowDressing">
             <Offset>
               <AbsDimension x="0" y="5"/>
             </Offset>
@@ -167,11 +140,11 @@
           <OnClick>AnsConfig:Edit(self, "coins")</OnClick>
         </Scripts>
       </CheckButton>
-      <Slider name="$parentSafeScanDelay" minValue="0" maxValue="2" valueStep="1" inherits="AnsSliderTemplate">
+      <Slider name="$parentScanDelay" minValue="0" maxValue="30" valueStep="1" inherits="AnsSliderTemplate">
         <Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parentUseCoinIcons" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="5" /></Offset></Anchor></Anchors>
           <Scripts>
             <OnValueChanged>
-              AnsConfig:Edit(self, "safedelay");
+              AnsConfig:Edit(self, "scandelay");
             </OnValueChanged>
           </Scripts>
       </Slider>
@@ -296,67 +269,18 @@
           </OnTextChanged>
         </Scripts>
       </EditBox>
-      <EditBox name="$parentTypes" autoFocus="false" inherits="InputBoxTemplate">
-        <Size x="256" y="32" />
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT" x="0" y="-10" />
-        </Anchors>
-        <Layers>
-          <Layer level="ARTWORK">
-            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Item Types (comma sep.)">
-              <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="10"/>
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-        <Scripts>
-          <OnTextChanged>
-            AnsConfig:SaveFilter(self:GetParent(), "types");
-          </OnTextChanged>
-        </Scripts>
-      </EditBox>
-      <EditBox name="$parentSubTypes" autoFocus="false" inherits="InputBoxTemplate">
-        <Size x="256" y="32" />
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="$parentTypes" relativePoint="BOTTOMLEFT" x="0" y="-10" />
-        </Anchors>
-        <Layers>
-          <Layer level="ARTWORK">
-            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Item Sub-Types (comma sep.)">
-              <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="10" />
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-        <Scripts>
-          <OnTextChanged>
-            AnsConfig:SaveFilter(self:GetParent(), "subtypes");
-          </OnTextChanged>
-        </Scripts>
-      </EditBox>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMaxBuyout">
         <Anchors>
-          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSubTypes" x="0" y="-5"/>
+          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentPriceString" x="0" y="-5"/>
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("Use Sniper Window Max PPU"); </OnLoad>
           <OnClick>AnsConfig:SaveFilter(self:GetParent(), "buyout");</OnClick>
         </Scripts>
       </CheckButton>
-      <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinStack">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentGMaxBuyout" x="0" y="-5"/>
-        </Anchors>
-        <Scripts>
-          <OnLoad>_G[self:GetName().."Text"]:SetText("Use Sniper Window Min Stack Size"); </OnLoad>
-          <OnClick>AnsConfig:SaveFilter(self:GetParent(), "stack");</OnClick>
-        </Scripts>
-      </CheckButton>
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentGMinQuality">
         <Anchors>
-          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentGMinStack" x="0" y="-5"/>
+          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentGMaxBuyout" x="0" y="-5"/>
         </Anchors>
         <Scripts>
           <OnLoad>_G[self:GetName().."Text"]:SetText("Use Sniper Window Min Quality"); </OnLoad>

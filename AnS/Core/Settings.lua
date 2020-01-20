@@ -4,21 +4,13 @@ ANS_CUSTOM_VARS = {};
 ANS_GLOBAL_SETTINGS = {
     percentFn = "",
     pricingFn = "tujdays ~= 252",
-    groupAuctions = true,
     rescanTime = 0,
-    showDressing = true,
+    showDressing = false,
     dingSound = true,
-    safeBuy = true,
-    safeDelay = 2,
+    scanDelayTime = 5,
     characterBlacklist = "",
-    tooltipRegionRecent = true,
-    tooltipRegionMin = true,
-    tooltipRegion3Day = true,
-	tooltipRegionMarket = true,
-    tooltipRealmRecent = true,
-    tooltipRealmMin = true,
-    tooltipRealm3Day = true,
-	tooltipRealmMarket = true,
-    useCoinIcons = false
+    useCoinIcons = false,
+    itemBlacklist = {}
 };
 ANS_FILTER_SELECTION = {};
+ANS_BASE_SELECTION = {};

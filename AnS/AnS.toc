@@ -1,20 +1,15 @@
-## Interface: 82000
+## Interface: 83000
 ## Title: AnS
-## Version: 1.0.6.8
+## Version: 2.0
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
-## SavedVariables: ANS_CUSTOM_FILTERS, ANS_FILTERS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION
+## SavedVariables: ANS_CUSTOM_FILTERS, ANS_FILTERS, ANS_BASE_SELECTION, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION
 
 ## Default Settings
 Core\Settings.lua
 
 #e Data
 Data\Core.lua
-Data\Armor.lua
-Data\Weapons.lua
-Data\Consumable.lua
-Data\Container.lua
-Data\Recipes.lua
 Data\Herbs.lua
 Data\Ore.lua
 Data\Cloth.lua
@@ -41,6 +36,7 @@ UI\Components\Graph.lua
 UI\Components\TreeView.lua
 
 ## General Utils
+Core\Minimap.lua
 Core\Utils.lua
 
 ## Auction Database Sources
@@ -54,7 +50,7 @@ Core\Sources.lua
 Core\Auction\Filter.lua
 
 ## Auction Queries
-Core\Auction\Query.lua
+Core\Auction\GroupQuery.lua
 
 ## BagScanner
 Core\BagScanner.lua

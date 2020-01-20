@@ -4,7 +4,7 @@ local Herb = {};
 Herb.children = {
     {
         name = "BFA",
-        ids = "i:152505,i:152506,i:152507,i:152508,i:152509,i:152510,i:152511",
+        ids = "i:152505,i:152506,i:152507,i:152508,i:152509,i:152510,i:152511,i:168487",
         useMaxPPU = true,
         useMinLevel = false,
         useQuality = true,

@@ -1,6 +1,6 @@
 AnS [Auction Snipe] 
 ===========================
-A lightweight addon for WoW auction sniping; Relies on Undermine Journal for pricing.
+A lightweight addon for WoW auction sniping
 
 Dependecies
 =============
@@ -12,13 +12,9 @@ Requires AnS
 
 (Optional) Auctionator addon for percentage calculations.
 
-
 Features
 ===============
-* Only ever loads the last page of the auction house for sniping and is refreshed as soon as possible.
-* Due to the above, there is no need to perform another search to purchase.
-
-* To filter out vendor items with unlimited quantities, will require a filter string of: tujdays ~= 252
+* To filter out vendor items with unlimited quantities, will require a filter string of: tujdays ~= 252 and using Undermine Journal addon
 
 * Filters must be set before starting a sniping session
 * Changes to filters during a running sniping session has no effect.
@@ -31,24 +27,18 @@ Features
     * Cloth
     * Leather
     * Enchanting
-    * Armor
-    * Weapons
     * Pets
     * Mounts
-    * Recipes
-    * Consumable
-    * Containers
 
  * Allows for quick settings of:
     * Max Percent
     * Max Buyout
     * Min iLevel
     * Min Quality
-    * Min Stack Size
+    * CLevel Range
     * Name filter for further refinement
 
  * Take it to the next level with custom filters, pricing strings, and filter strings
- * For a list of item types and sub-types to use in your custom filters, instead of item ids see: http://wowwiki.wikia.com/wiki/ItemType
 
 
 How to Buy & Other Controls
@@ -59,50 +49,10 @@ Or set a key binding under ESC -> Bindings -> AnS to buy selected auctions via a
 
 (For Advanced Users) There is now a keybinding option to buy the first listed auction item.
 
-Shift + Left Click allows you to temporarily blacklist a listing until the AH window is closed.
-
-CTRL + Left Click allows you to temporarily blacklist the item type until the AH window is closed.
-
-Selecting armor, weapons, or pets, will now display the dress up window with that item.
+CTRL + Left Click allows you to blacklist an item id.
 
 * Want to use the key bindings through TSM macros instead? Use the following functions: /run AuctionSnipe:BuySelected() or /run AuctionSnipe:BuyFirst()
 
-
-The Billis Formula for AnS Sniper
-==============================================
-this is for wow classic
-
-tsm only supports dbminprice and dbmarket on classic currently
-
-create a new varable with the name of minprice
-
-and this as the data for that variable
-
-```
-max(dbmarket, vendorsell)
-```
-
-or if using ans auction data
-
-```
-max(ansmarket, vendorsell)
-```
-
-create a new variable with this in it
-
-this variable must come after minprice variable in the variables list
-
-give it the name billisformula
-
-```
-ifgte(quality, 1, ifgte(minprice, 250g, 80, ifgte(minprice, 100g, 70, ifgte(minprice, 50g, 60, ifgte(minprice, 10g, 40, ifgte(minprice, 5g, 30, ifgte(minprice, 1g, 10, 0)))))), 0)
-```
-
-in the global filter string or in the filter string for a filter itself
-
-```
-percent lte billisformula and billisformula gt 0
-```
 
 Filter and Percent/Pricing Strings
 =========================

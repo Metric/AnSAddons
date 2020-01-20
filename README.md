@@ -1,44 +1,7 @@
+OMG It is Happening... An update for 8.3 Sniper
+=========================================
 
-UPDATE REGARDING 8.3.0 SUPPORT
-=====================================
-Sadly, after testing on a live server, it just won't be possible to snipe anymore. If you use TSM to find items already via regular TSM search, then there is no additional benefit that this can provide. Therefore, this is now dead for 8.3+ and will only be maintained for Classic.
-
-AnS [Auctions]
-=======
-
-What is it? A lightweight set of auction buying and selling modules for AnS.
-
-All auctions are sorted based on Price Per Unit from low to high. For efficiency, it uses blizzard built in AH sorting and thus results are always returned low to high.
-
-The scanning of auctions will only go 4 pages deep for two reasons: One efficiency and two to get a good peek at low to average pricing. There really is no need to scan all pages for buying, because as goblins we are always looking for the cheapest prices.
-
-Buy Features
-=============
-Use your filter groups as way to quickly search for buying. The filter group must have ids in it, otherwise it will not be visible in the list.
-
-You can also put in a search string to find what you want.
-* Search string overrides selected filters currently (may change based on feedback)
-
-Scanning must finish before you can buy. You can always stop the scan and restart.
-
-Selling Features
-=================
-It will auto scan your bags for items and list them.
-
-Clicking on an item will scan for auctions, and also populate with pricing provided by the global percent string.
-* Clicking on an auction listing for an item, will set the price to that listing.
-* Double clicking an auction listing will instantly sell based on that listing price.
-* Use the left side to set a custom price and number of items to sell from the stack. 
-    * By default, it will set it to max stack size.
-* You can queue up the scanning of each item by going through and clicking on each one right after the other
-
-Dragging an item into the auction sell slot will have no effect and will not be posted. Please use the list instead.
-
-TODO
-==========
-* Add config option for a different percent string for selling and buying auctions.
-* Add an option for setting default stack size to sell
-* Add an undercut by ... amount
+A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
 
 
 AnS [Auction Snipe] 
@@ -55,14 +18,10 @@ Requires AnS
 
 (Optional) Auctionator addon for percentage calculations.
 
-(Optional) AnsAuctionData for percentage calculations.
 
 Features
 ===============
-* Only ever loads the last page of the auction house for sniping and is refreshed as soon as possible.
-* Due to the above, there is no need to perform another search to purchase.
-
-* To filter out vendor items with unlimited quantities, will require a filter string of: tujdays ~= 252
+* To filter out vendor items with unlimited quantities, will require a filter string of: tujdays ~= 252 and Undermine Journal addon
 
 * Filters must be set before starting a sniping session
 * Changes to filters during a running sniping session has no effect.
@@ -75,25 +34,18 @@ Features
     * Cloth
     * Leather
     * Enchanting
-    * Armor
-    * Weapons
     * Pets
     * Mounts
-    * Recipes
-    * Consumable
-    * Containers
 
  * Allows for quick settings of:
     * Max Percent
     * Max Buyout
     * Min iLevel
     * Min Quality
-    * Min Stack Size
+    * CLevel Range
     * Name filter for further refinement
 
  * Take it to the next level with custom filters, pricing strings, and filter strings
- * For a list of item types and sub-types to use in your custom filters, instead of item ids see: http://wowwiki.wikia.com/wiki/ItemType
-
 
 How to Buy & Other Controls
 ==============
@@ -101,13 +53,7 @@ Double click an auction list item, and ba da bing, ba da boom. It will purchase 
 
 Or set a key binding under ESC -&gt; Bindings -&gt; AnS to buy selected auctions via another button.
 
-(For Advanced Users) There is now a keybinding option to buy the first listed auction item.
-
-Shift + Left Click allows you to temporarily blacklist a listing until the AH window is closed.
-
-CTRL + Left Click allows you to temporarily blacklist the item type until the AH window is closed.
-
-Selecting armor, weapons, or pets, will now display the dress up window with that item.
+CTRL + Left Click will now blacklist the item id.
 
 * Want to use the key bindings through TSM macros instead? Use the following functions: /run AuctionSnipe:BuySelected() and /run AuctionSnipe:BuyFirst()
 
@@ -360,8 +306,8 @@ Without shorthand
 ```
 
 
-AnS Core Library
-=========================
+AnS
+==============
 
 What is it?
 --------------------------
@@ -369,13 +315,11 @@ It is a core library used for various things. But mainly for AnS [Auction Snipe]
 
 It also handles the configuration and storage of custom filters and importing of filters from TSM groups.
 
-More to come...
-
 Classes
 --------------
 * AnsCore (Handles loading of saved variables etc)
 * AnsCore.API.Filter (Auction House Query Filtering)
-* AnsCore.API.Query (Auction House Query)
+* AnsCore.API.GroupQuery (Auction House Query Handler)
 * AnsCore.API.Utils (Show pet battle tip, parse pet item link etc.)
 * AnsConfig (Handles config options etc, adding new custom filters, importing tsm groups)
 * AnsCore.API.Sources (Allows registering multiple price sources for filter / percent strings)
@@ -394,11 +338,6 @@ Data
 * Mounts
 * Ore
 * Pets
-* Consumable
-* Armor
-* Weapons
-* Recipes
-* Container
 
 UI Templates
 --------------
@@ -415,8 +354,7 @@ Font Templates
 
 TODO
 ===========
-* Add more predefined filters for:
-    * Ingots / Bars
-    * Gems
-    * Meat
-    * Consumables
+* Create other addon modules:
+    * Analytics
+
+

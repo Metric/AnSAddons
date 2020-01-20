@@ -1,26 +1,57 @@
 local Ans = select(2, ...);
-local Query = AnsCore.API.Query;
+local BaseData = AnsCore.API.BaseData;
+local Query = AnsCore.API.GroupQuery;
+local Recycler = AnsCore.API.GroupRecycler;
 local AuctionList = Ans.AuctionList;
 local Sources = AnsCore.API.Sources;
 local TreeView = AnsCore.API.UI.TreeView;
+local Utils = AnsCore.API.Utils;
+
+
+local EVENTS_TO_REGISTER = {
+    "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED",
+    "AUCTION_HOUSE_BROWSE_RESULTS_ADDED",
+    "ITEM_SEARCH_RESULTS_UPDATED",
+    "ITEM_SEARCH_RESULTS_ADDED",
+    "COMMODITY_SEARCH_RESULTS_ADDED",
+    "COMMODITY_SEARCH_RESULTS_UPDATED",
+    "COMMODITY_PRICE_UPDATED",
+    "COMMODITY_PRICE_UNAVAILABLE",
+    "COMMODITY_PURCHASED",
+    "COMMODITY_PURCHASE_FAILED",
+    "COMMODITY_PURCHASE_SUCCEEDED"
+};
+
+local rootFrame = nil;
+
+local DEFAULT_BROWSE_QUERY = {};
+DEFAULT_BROWSE_QUERY.searchString = "";
+DEFAULT_BROWSE_QUERY.minLevel = 0; -- zero = any
+DEFAULT_BROWSE_QUERY.maxLevel = 0; -- zero = any
+DEFAULT_BROWSE_QUERY.filters = {};
+DEFAULT_BROWSE_QUERY.itemClassFilters = {};
+DEFAULT_BROWSE_QUERY.sorts = {};
+
+local DEFAULT_ITEM_SORT = { sortOrder = 0, reverseSort = false };
+
+local STATES = {}
+STATES.NONE = 0;
+STATES.INIT = 1;
+STATES.WAITING = 2;
+STATES.FINDING = 3;
+STATES.ITEMS = 4;
+STATES.ITEMS_WAITING = 5;
 
 AuctionSnipe = {};
 AuctionSnipe.__index = AuctionSnipe;
-AuctionSnipe.sortHow = Query.SORT_METHODS.RECENT;
-AuctionSnipe.sortAsc = true;
-AuctionSnipe.query = Query:New("");
-AuctionSnipe.isSniping = false;
-AuctionSnipe.prepareToSnipe = false;
-AuctionSnipe.isRewinding = false;
-AuctionSnipe.firstRewind = false;
-AuctionSnipe.rewindPaused = false;
 AuctionSnipe.isInited = false;
-AuctionSnipe.waitingForResult = false;
-AuctionSnipe.waitingQuery = -1;
 AuctionSnipe.quality = 1;
 AuctionSnipe.activeFilters = {};
+AuctionSnipe.baseFilters = {};
+AuctionSnipe.state = STATES.NONE;
 
 local filterTreeViewItems = {};
+local baseTreeViewItems = {};
 
 local AnsQualityToText = {};
 AnsQualityToText[1] = "Common";
@@ -29,10 +60,51 @@ AnsQualityToText[3] = "Rare";
 AnsQualityToText[4] = "Epic";
 AnsQualityToText[5] = "Legendary";
 
+local AnsQualityToAuctionEnum = {};
+AnsQualityToAuctionEnum[1] = 5;
+AnsQualityToAuctionEnum[2] = 6;
+AnsQualityToAuctionEnum[3] = 7;
+AnsQualityToAuctionEnum[4] = 8;
+AnsQualityToAuctionEnum[5] = 9;
+
+local qualityFilters = {};
+local classFilters = {};
+
+local browseResults = {};
+local itemsFound = {};
+local currentItemScan = nil;
+local validAuctions = {};
+local scanIndex = 1;
+
+local needsToProcessPreviousScan = false;
+local commodityConfirmTime = 0;
+
 local lastScan = time();
+local lastSuccessScan = time();
 
 BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
 BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
+
+local function GetOwners(result)
+    if (#result.owners == 0) then
+        return "";
+    elseif (#result.owners == 1) then
+        return result.owners[1];
+    else
+        return result.owners;
+    end
+end
+
+local function ClearItemsFound()
+    for i,v in ipairs(itemsFound) do
+        Recycler:Recycle(v);
+    end
+    wipe(itemsFound);
+end
+
+local function ClearValidAuctions()
+    wipe(validAuctions);
+end
 
 local function QualitySelected(self, arg1, arg2, checked)
     AuctionSnipe.quality = arg1;
@@ -56,82 +128,15 @@ local function BuildQualityDropDown(frame, level, menuList)
 end
 
 function AuctionSnipe:BuySelected()
-    local s = AuctionList;
-    if (s and self.frame and self.frame:IsShown()) then
-        if (s.selectedEntry > -1 and #s.items > 0) then
-            local block = s.items[s.selectedEntry];
-            if (block) then
-                if (s:Purchase(block)) then
-                    s.selectedEntry = -1;
-                end
-
-                s:Refresh();
-            end
-        end
-    end 
-end
-
-function AuctionSnipe:BuyFirstOnly()
-    local s = AuctionList;
-    if (s and self.frame and self.frame:IsShown()) then
-        if (#s.items > 0) then
-            local block = s.items[1];
-
-            if (block) then
-                if(s:Purchase(block)) then
-                    if (s.selectedEntry == 1) then
-                        s.selectedEntry = -1;
-                    end
-                end
-
-                s:Refresh();
-            end
-        end
+    if (AuctionList) then
+        AuctionList:BuySelected();
     end
 end
 
 function AuctionSnipe:BuyFirst()
-    local s = AuctionList;
-    if (s and self.frame and self.frame:IsShown()) then
-        if (#s.items > 0) then
-            local block = self:GetNextAvailable();
-
-            if (block) then
-                if(s:Purchase(block)) then
-                    if (s.selectedEntry == 1) then
-                        s.selectedEntry = -1;
-                    end
-                end
-
-                s:Refresh();
-            end
-        end
+    if (AuctionList) then
+        AuctionList:BuyFirst();
     end
-end
-
-function AuctionSnipe:GetNextAvailable()
-    local s = AuctionList;
-    for i,v in ipairs(s.items) do
-        if (not self:IsSniped(v.item)) then
-            return v;
-        end 
-    end
-
-    return nil;
-end
-
-function AuctionSnipe:IsSniped(auction)
-    if (not auction.sniped) then
-        return false;
-    end
-
-    for i,v in ipairs(auction.group) do
-        if (not v.item.sniped) then
-            return false;
-        end
-    end
-
-    return true;
 end
 
 function AuctionSnipe:Init()
@@ -143,37 +148,44 @@ function AuctionSnipe:Init()
     self.isInited = true;
 
     --- create main panel
-    local frame = CreateFrame("FRAME", "AnsSnipeMainPanel", AuctionFrame, "AnsSnipeBuyTemplate");
+    local frame = CreateFrame("FRAME", "AnsSnipeMainPanel", AuctionHouseFrame, "AnsSnipeBuyTemplate");
     self.frame = frame;
+
+    frame:HookScript("OnShow", function() AuctionSnipe:Show() end);
+    frame:HookScript("OnHide", function() AuctionSnipe:Close() end);
+
+    -- new in 8.3 let the AH itself handle the tabs
+    -- thanks to blizzard new tab implementation
+    -- we only have to set the Key Value to the Frame
+    -- Add a DisplayMode for the Frame and Tab
+    AuctionHouseFrame["AnsSnipeMainPanel"] = frame;
+    AuctionHouseFrameDisplayMode.Snipe = {"AnsSnipeMainPanel"};
 
     AuctionList:OnLoad(frame);
 
-    AnsCore:AddAHTab("Snipe", 
-        function()
-            AuctionSnipe:Show();
-        end,
-        function()
-            AuctionSnipe:Close();
-        end
-    );
+    AnsCore:AddAHTab("Snipe", AuctionHouseFrameDisplayMode.Snipe);
 
-    self.filterTreeView = TreeView:New(frame, {
-        rowHeight = 20,
+    self.filterTreeView = TreeView:New(_G[frame:GetName().."FilterList"], {
+        rowHeight = 21,
         childIndent = 16, 
         template = "AnsFilterRowTemplate"
     }, function(item) d:ToggleFilter(item.filter) end);
 
+    self.baseTreeView = TreeView:New(_G[frame:GetName().."BaseList"], {
+        rowHeight = 21,
+        childIndent = 16,
+        template = "AnsFilterRowTemplate"
+    }, function(item) d:ToggleBase(item.filter) end);
+
     self.startButton = _G[frame:GetName().."BottomBarStart"];
     self.stopButton = _G[frame:GetName().."BottomBarStop"];
-    self.rewindButton = _G[frame:GetName().."BottomBarRewind"];
 
     self.startButton:Enable();
     self.stopButton:Disable();
-    self.rewindButton:Enable();
 
     self.maxBuyoutInput = _G[frame:GetName().."SearchBarMaxPPU"];
     self.minLevelInput = _G[frame:GetName().."SearchBarMinLevel"];
-    self.minSizeInput = _G[frame:GetName().."SearchBarMinSize"];
+    self.clevelRange = _G[frame:GetName().."SearchBarLevelRange"];
     self.qualityInput = _G[frame:GetName().."SearchBarQuality"];
     self.maxPercentInput = _G[frame:GetName().."SearchBarMaxPercent"];
     self.dingCheckBox = _G[frame:GetName().."SearchBarDingSound"];
@@ -183,7 +195,7 @@ function AuctionSnipe:Init()
 
     MoneyInputFrame_SetCopper(self.maxBuyoutInput, 0);
     self.minLevelInput:SetText("0");
-    self.minSizeInput:SetText("0");
+    self.clevelRange:SetText("0-120");
 
     self.dingCheckBox:SetChecked(ANS_GLOBAL_SETTINGS.dingSound);
     self.maxPercentInput:SetText("100");
@@ -207,6 +219,41 @@ function AuctionSnipe:BuildTreeViewFilters()
     end
 
     self:UpdateSubTreeFilters(filters, filterTreeViewItems);
+end
+
+function AuctionSnipe:BuildTreeViewBase()
+    wipe(self.baseFilters);
+    wipe(baseTreeViewItems);
+    
+    for k,v in ipairs(BaseData) do
+        local pf = {};
+        pf.selected = ANS_BASE_SELECTION[v.path] or false;
+        if (pf.selected) then
+            tinsert(self.baseFilters, v);
+        end
+        pf.name = v.name;
+        pf.expanded = false;
+        pf.filter = v;
+        -- we only have one sub level for each
+        pf.children = {};
+
+        for i = 1, #v.children do
+            local s = v.children[i];
+            local sf = {};
+            sf.selected = ANS_BASE_SELECTION[s.path] or false;
+            if (sf.selected) then
+                tinsert(self.baseFilters, s);
+            end
+            sf.name = s.name;
+            sf.expanded = false;
+            sf.filter = s;
+            sf.children = {};
+
+            tinsert(pf.children, sf);
+        end
+
+        tinsert(baseTreeViewItems, pf);
+    end
 end
 
 function AuctionSnipe:UpdateSubTreeFilters(children, parent)
@@ -286,149 +333,297 @@ function AuctionSnipe:BuildSubTreeFilters(children, parent)
     end
 end
 
-function AuctionSnipe:OnUpdate(frame, elapsed)
-    if (self.isSniping or (self.isRewinding and not self.rewindPaused)) then
+function AuctionSnipe:OnUpdate(frame, elapsed)    
+    if (self.state == STATES.INIT and not AuctionList.isBuying) then
         local tdiff = time() - lastScan;
-        local notDelayed = AuctionList.queryDelay <= 0 or not ANS_GLOBAL_SETTINGS.safeBuy;
+        local tdiff2 = time() - lastSuccessScan;
         local scanReady = tdiff >= ANS_GLOBAL_SETTINGS.rescanTime;
+        local scanDelayReady = tdiff2 >= ANS_GLOBAL_SETTINGS.scanDelayTime;
 
-        if (scanReady and notDelayed and not self.waitingForResult and not AuctionList.buying) then
-            if (self.query:IsReady()) then 
-                self.waitingForResult = true;
-                AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, true);
-                self.query:Search();
+        if (scanReady and scanDelayReady and self.state ~= STATES.WAITING) then
+            currentItemScan = nil;
+            needsToProcessPreviousScan = false;
+            AuctionList.isPurchaseReady = false;
+            scanIndex = 1;
 
-                if (self.snipeStatusText) then
-                    self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Query Sent...");
-                end
+            ClearItemsFound();
+            ClearValidAuctions();
+            wipe(browseResults);
 
-                lastScan = time();
+            AuctionList:SetItems(validAuctions);
+            
+            self.state = STATES.WAITING;
+
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Waiting for Results");
             end
+
+            C_AuctionHouse.SendBrowseQuery(DEFAULT_BROWSE_QUERY);
+        end
+    elseif (self.state == STATES.FINDING) then
+        AuctionList.isPurchaseReady = true;
+
+        if (#browseResults == 0) then
+            self.state = STATES.INIT;
+            return;
         end
 
-        -- if we haven't received a response within 30 seconds
-        -- reset and try again
-        if (tdiff > 30 and self.waitingForResult) then
-            self:Stop();
-            self.query:Reset();
-            Sources:ClearCache();
-            self:Start();
+        local itemsPerUpdate = ANS_GLOBAL_SETTINGS.itemsPerUpdate;
+        local count = 0;
+        while (scanIndex <= #browseResults and count < itemsPerUpdate) do
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Processing "..scanIndex.." of "..#browseResults);
+            end
+
+            local group = browseResults[scanIndex];
+            local auction = Query:IsFilteredGroup(group);
+
+            if (auction) then
+                tinsert(itemsFound, auction);
+            end
+
+            scanIndex = scanIndex + 1;
+            count = count + 1;
+        end
+
+        if (scanIndex > #browseResults and #itemsFound > 0) then
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Gathering Auctions");
+            end
+            scanIndex = 1;
+            self.state = STATES.ITEMS;
+        elseif (scanIndex > #browseResults and #itemsFound == 0) then
+            lastScan = time();
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Waiting to Query");
+            end
+            self.state = STATES.INIT;
+        end
+    elseif (self.state == STATES.ITEMS and AuctionList.commodity == nil) then
+        if (time() - commodityConfirmTime < 2) then
+            return;
+        end
+
+        if (needsToProcessPreviousScan) then
+            if (currentItemScan and currentItemScan.itemKey) then
+                C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+                self.state = STATES.ITEMS_WAITING;
+            else
+                currentItemScan = itemsFound[scanIndex - 1];
+                if (currentItemScan and currentItemScan.itemKey) then
+                    C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+                    self.state = STATES.ITEMS_WAITING;
+                end
+            end 
+            needsToProcessPreviousScan = false;
+            return;
+        end
+
+        if (scanIndex <= #itemsFound) then
+            if (validAuctions and #validAuctions > 0) then
+                AuctionList:SetItems(validAuctions);
+            end
+
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Gathering Auctions "..scanIndex.." of "..#itemsFound..' out of '..#browseResults);
+            end
+
+            currentItemScan = itemsFound[scanIndex];
+            scanIndex = scanIndex + 1;
+
+            C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+            self.state = STATES.ITEMS_WAITING;
+        else
+            if (self.snipeStatusText) then
+                self.snipeStatusText:SetText("Waiting to Query");
+            end
+
+            if (#validAuctions > 0 and ANS_GLOBAL_SETTINGS.dingSound) then
+                PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
+            end
+
+            if (#validAuctions > 0) then
+                lastSuccessScan = time();
+            end
+
+            lastScan = time();
+            AuctionList:SetItems(validAuctions);
+            self.state = STATES.INIT;
         end
     end
-    
-    AuctionList:UpdateDelay();
 end
 
 ----
 -- Events
 ---
 function AuctionSnipe:RegisterEvents(frame)
+    rootFrame = frame;
+
     frame:RegisterEvent("ADDON_LOADED");
-    frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
     frame:RegisterEvent("AUCTION_HOUSE_SHOW");
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
+    --frame:RegisterEvent("PLAYER_MONEY");
 end
 
 function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "ADDON_LOADED") then self:OnAddonLoaded(...) end;
-    if (event == "AUCTION_ITEM_LIST_UPDATE") then self:OnAuctionUpdate(...); end;
+
+    -- new auction house stuff
+    if (event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" or event == "AUCTION_HOUSE_BROWSE_RESULTS_ADDED") then
+        self:OnBrowseResults();
+    end
+    if (event == "ITEM_SEARCH_RESULTS_UPDATED" or event == "ITEM_SEARCH_RESULTS_ADDED") then
+        self:OnItemResults();
+    end
+    if (event == "COMMODITY_SEARCH_RESULTS_ADDED" or event == "COMMODITY_SEARCH_RESULTS_UPDATED") then
+        self:OnCommidityResults();
+    end
+
+    if (event == "COMMODITY_PURCHASE_FAILED" 
+        or event == "COMMODITY_PURCHASED"
+        or event == "COMMODITY_PURCHASE_SUCCEEDED") then
+        AuctionList:OnCommondityPurchased();
+        commodityConfirmTime = time();
+        if (self.state == STATES.ITEMS_WAITING) then
+            needsToProcessPreviousScan = true;
+            self.state = STATES.ITEMS;
+        end
+    elseif (event == "COMMODITY_PRICE_UPDATED") then
+        local unit, total = ...;
+        if (not AuctionList:ConfirmCommoditiesPurchase(total)) then
+            commodityConfirmTime = time();
+            if (self.state == STATES.ITEMS_WAITING) then
+                needsToProcessPreviousScan = true;
+                self.state = STATES.ITEMS;
+            end
+        end
+    elseif (event == "COMMODITY_PRICE_UNAVAILABLE") then
+        AuctionList:CancelCommoditiesPurchase();
+        commodityConfirmTime = time();
+        if (self.state == STATES.ITEMS_WAITING) then
+            needsToProcessPreviousScan = true;
+            self.state = STATES.ITEMS;
+        end
+    end
+
     if (event == "AUCTION_HOUSE_SHOW") then self:OnAuctionHouseShow(); end;
     if (event == "AUCTION_HOUSE_CLOSED") then self:OnAuctionHouseClosed(); end;
 end
 
+function AuctionSnipe:OnItemResults() 
+    if (currentItemScan and not currentItemScan.isCommodity and currentItemScan.itemKey) then
+        if (C_AuctionHouse.HasSearchResults(currentItemScan.itemKey)) then
+            local item = currentItemScan;
+
+            for searchIndex = 1, C_AuctionHouse.GetNumItemSearchResults(currentItemScan.itemKey) do
+                local result = C_AuctionHouse.GetItemSearchResultInfo(currentItemScan.itemKey, searchIndex);
+                if (result.buyoutAmount) then
+                    item.count = result.quantity;
+                    item.ppu = result.buyoutAmount;
+                    item.buyoutPrice = result.buyoutAmount;
+                    item.owner = GetOwners(result);
+
+                    if (result.itemLink) then
+                        item.link = result.itemLink;
+                        item.tsmId = Utils:GetTSMID(item.link);
+                    end
+
+                    if (Query:IsFiltered(item)) then
+                        item.auctionId = result.auctionID;
+                        tinsert(validAuctions, item:Clone());
+                    end
+                end
+            end
+
+            if (self.state == STATES.ITEMS_WAITING) then
+                self.state = STATES.ITEMS;
+            end
+        end
+    end
+end
+
+function AuctionSnipe:OnCommidityResults()
+    if (currentItemScan and currentItemScan.isCommodity and currentItemScan.itemKey) then
+        if (C_AuctionHouse.HasSearchResults(currentItemScan.itemKey)) then
+            local item = currentItemScan;
+            for searchIndex = 1, C_AuctionHouse.GetNumCommoditySearchResults(item.id) do
+                local result = C_AuctionHouse.GetCommoditySearchResultInfo(item.id, searchIndex);
+                item.count = result.quantity;
+                item.ppu = result.unitPrice;
+                item.buyoutPrice = result.unitPrice * result.quantity;
+
+                if (result.itemLink) then
+                    item.link = result.itemLink;
+                    item.tsmId = Utils:GetTSMID(item.link);
+                end
+
+                if (Query:IsFiltered(item)) then
+                    tinsert(validAuctions, item:Clone());
+                else
+                    -- we can break here because it is sorted by price
+                    -- and thus if we find one that is not compatible
+                    -- we can give up sooner
+                    break;
+                end
+            end
+
+            if (self.state == STATES.ITEMS_WAITING) then
+                self.state = STATES.ITEMS;
+            end
+        end
+    end
+end
+
+function AuctionSnipe:OnBrowseResults()
+    if (self.state == STATES.NONE) then 
+        return; 
+    end
+    if (not C_AuctionHouse.HasFullBrowseResults()) then
+        C_AuctionHouse.RequestMoreBrowseResults();
+    else 
+        scanIndex = 1;
+
+        if (self.snipeStatusText) then
+            self.snipeStatusText:SetText("Finding Deals...");
+        end
+
+        browseResults = C_AuctionHouse.GetBrowseResults();
+
+        self.state = STATES.FINDING;
+    end
+end
+
 function AuctionSnipe:OnAddonLoaded(...)
     local addonName = select(1, ...);
-    if (addonName:lower() == "blizzard_auctionui") then
+    if (addonName:lower() == "blizzard_auctionhouseui") then
         self:Init();
     end
 end
 
 function AuctionSnipe:OnAuctionHouseShow()
-    AuctionList:Clear();
+    if (self.isInited) then
+        AuctionList:Clear();
+    end
 end   
 
 function AuctionSnipe:OnAuctionHouseClosed()
-    self:Stop();
-    self.query:Reset();
-    self.filterTreeView:ReleaseView();
-    Sources:ClearCache();
+    if (self.isInited) then
+        self:Stop();
+        self.baseTreeView:ReleaseView();
+        self.filterTreeView:ReleaseView();
+        Sources:ClearCache();
+    end
 end
 
----
---- Auction Update Handler
----
-
-function AuctionSnipe:OnAuctionUpdate(...)
-    if (self.isSniping and not self.prepareToSnipe) then
-        if (not self.query:IsLastPage()) then
-            self.query:LastPage();
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
-            end
-            self.waitingForResult = false;
-        elseif (self.waitingForResult) then
-            self.waitingQuery = self.query.id;
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Processing Data...");
-            end
-            AuctionList:SetStatus(AuctionList.QUERY_ID, self.query.id);
-            self.query:Capture();
-            self.query:Items(self.sortHow, self.sortAsc, AuctionList.items);
-            AuctionList.selectedEntry = -1;
-            AuctionList:Refresh();
-            AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
-            self.query:LastPage();
-
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
-            end
-            self.waitingForResult = false;
-        else
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
-            end
-        end
-    elseif (self.isRewinding and not self.prepareToSnipe) then
-        if (self.firstRewind) then
-            self.query:LastPage();
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query..."); 
-            end
-            self.waitingForResult = false;
-            self.firstRewind = false;
-        elseif (self.waitingForResult) then
-            self.waitingQuery = self.query.id;
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Processing Data...");
-            end
-            AuctionList:SetStatus(AuctionList.QUERY_ID, self.query.id);
-            self.query:Capture();
-            self.query:Items(self.sortHow, self.sortAsc, AuctionList.items);
-            AuctionList.selectedEntry = -1;
-            AuctionList:Refresh();
-            AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
-            self.query:Previous();
-
-            if (self.query.index <= 0) then
-                self.query:LastPage();
-            end
-
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
-            end
-            self.waitingForResult = false;
-        else
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Query ID: "..self.query.id.." Page: "..self.query.index.." - Waiting to Query...");        
-            end
-        end
+local function RegisterEvents(frame, events) 
+    for i,v in ipairs(events) do
+        frame:RegisterEvent(v);
     end
-    if (self.prepareToSnipe and not self.isRewinding) then
-        self.prepareToSnipe = false;
-        self.isSniping = true;
-    elseif (self.prepareToSnipe and self.isRewinding) then
-        self.prepareToSnipe = false;
-        self.isSniping = false;
+end
+
+local function UnregisterEvents(frame, events)
+    for i,v in ipairs(events) do
+        frame:UnregisterEvent(v);
     end
 end
 
@@ -437,11 +632,16 @@ end
 ---
 
 function AuctionSnipe:Close()
-    self.frame:Hide();
+    if(self.frame and self.isInited) then
+        UnregisterEvents(rootFrame, EVENTS_TO_REGISTER);
+    end
+
     self:Stop();
-    self.query:Reset();
 
     wipe(filterTreeViewItems);
+    wipe(baseTreeViewItems);
+
+    self.baseTreeView:ReleaseView();
     self.filterTreeView:ReleaseView();
 end
 
@@ -450,197 +650,99 @@ end
 ---
 
 function AuctionSnipe:Show()
-    AuctionFrameMoneyFrame:Show();
-    AuctionFrameAuctions:Hide();
-    AuctionFrameBrowse:Hide();
-    AuctionFrameBid:Hide();
-
-    AuctionFrameTopLeft:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Browse-TopLeft");
-    AuctionFrameBotLeft:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Browse-BotLeft");
-    AuctionFrameTop:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Browse-Top");
-    AuctionFrameTopRight:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Browse-TopRight");
-    AuctionFrameBotRight:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Bid-BotRight");
-    AuctionFrameBot:SetTexture("Interface\\AuctionFrame\\UI-AuctionFrame-Auction-Bot");
-
-    self.frame:Show();
+    if (self.frame and self.isInited) then
+        RegisterEvents(rootFrame, EVENTS_TO_REGISTER);
+    end
 
     AuctionList:Clear();
-    
+
     self:BuildTreeViewFilters();
     self.filterTreeView.items = filterTreeViewItems;
     self.filterTreeView:Refresh();
-end
 
------
---- Sort Methods
-----
-
-function AuctionSnipe:SortByPrice()
-    if (self.sortHow ~= Query.SORT_METHODS.PRICE) then
-        self.sortAsc = true;
-    else
-        if(self.sortAsc)then
-            self.sortAsc = false;
-        else
-            self.sortAsc = true;
-        end
-    end
-
-    self.sortHow = Query.SORT_METHODS.PRICE;
-    self.query:Items(self.sortHow,self.sortAsc,AuctionList.items);
-    AuctionList:Refresh();
-end
-
-function AuctionSnipe:SortByName()
-    if (self.sortHow ~= Query.SORT_METHODS.NAME) then
-        self.sortAsc = true;
-    else
-        if (self.sortAsc) then
-            self.sortAsc = false;
-        else
-            self.sortAsc = true;
-        end
-    end
-
-    self.sortHow = Query.SORT_METHODS.NAME;
-    self.query:Items(self.sortHow,self.sortAsc,AuctionList.items);
-    AuctionList:Refresh();
-end
-
-function AuctionSnipe:SortByPercent()
-    if (self.sortHow ~= Query.SORT_METHODS.PERCENT) then
-        self.sortAsc = true;
-    else
-        if (self.sortAsc) then
-            self.sortAsc = false;
-        else
-            self.sortAsc = true;
-        end
-    end
-
-    self.sortHow = Query.SORT_METHODS.PERCENT;
-    self.query:Items(self.sortHow,self.sortAsc,AuctionList.items);
-    AuctionList:Refresh();
-end
-
-function AuctionSnipe:SortByRecent()
-    if (self.sortHow ~= Query.SORT_METHODS.RECENT) then
-        self.sortAsc = false;
-    else
-        if (self.sortAsc) then
-            self.sortAsc = false;
-        else
-            self.sortAsc = true;
-        end
-    end
-
-    self.sortHow = Query.SORT_METHODS.RECENT;
-    self.query:Items(self.sortHow,self.sortAsc,AuctionList.items);
-    AuctionList:Refresh();
-end
-
-function AuctionSnipe:SortByILevel()
-    if (self.sortHow ~= Query.SORT_METHODS.ILEVEL) then
-        self.sortAsc = false;
-    else
-        if (self.sortAsc) then
-            self.sortAsc = false;
-        else
-            self.sortAsc = true;
-        end
-    end
-
-    self.sortHow = Query.SORT_METHODS.ILEVEL;
-    self.query:Items(self.sortHow,self.sortAsc,AuctionList.items);
-    AuctionList:Refresh();
+    self:BuildTreeViewBase();
+    self.baseTreeView.items = baseTreeViewItems;
+    self.baseTreeView:Refresh();
 end
 
 ----
 --- Button Handlers for Start & Stop 
 ---
 
+function AuctionSnipe:LoadCLevelFilter()
+    local range = self.clevelRange:GetText();
+
+    if (range) then
+        local low, high = strsplit("-", range);
+        if (low == nil and high == nil) then
+            DEFAULT_BROWSE_QUERY.minLevel = 0;
+            DEFAULT_BROWSE_QUERY.maxLevel = 0;
+        elseif (low ~= nil and high ~= nil) then
+            DEFAULT_BROWSE_QUERY.minLevel = tonumber(low);
+            DEFAULT_BROWSE_QUERY.maxLevel = tonumber(high);
+        elseif (low ~= nil and high == nil) then
+            DEFAULT_BROWSE_QUERY.minLevel = tonumber(low);
+            DEFAULT_BROWSE_QUERY.maxLevel = 0;
+        end
+    else
+        DEFAULT_BROWSE_QUERY.minLevel = 0;
+        DEFAULT_BROWSE_QUERY.maxLevel = 0;
+    end
+end
+
+function AuctionSnipe:LoadBaseFilters()
+    local quality = self.quality;
+
+    wipe(classFilters);
+    wipe(qualityFilters);
+
+    for i = quality, 5 do
+        tinsert(qualityFilters, AnsQualityToAuctionEnum[i]);
+    end
+
+    for i = 1, #self.baseFilters do
+        local item = self.baseFilters[i];
+
+        if (item) then
+            tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID});
+        end
+    end
+end
+
 function AuctionSnipe:Start()
     self.startButton:Disable();
     self.stopButton:Enable();
 
-    if (not self.isRewinding) then
-        self.rewindButton:Disable();
-    end
-
-    AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
-    AuctionList.queryDelay = 0;
-
-    self.waitingForResult = false;
-    self.firstRewind = true;
-
     local maxBuyout = MoneyInputFrame_GetCopper(self.maxBuyoutInput) or 0;
     local ilevel = tonumber(self.minLevelInput:GetText()) or 0;
-    local minSize = tonumber(self.minSizeInput:GetText()) or 0;
     local quality = self.quality;
     local maxPercent = tonumber(self.maxPercentInput:GetText()) or 100;
 
     local search = self.searchInput:GetText();
     
-    self.query.index = 0;
+    self:LoadCLevelFilter();
+    self:LoadBaseFilters();
 
-    AuctionList.selectedEntry = -1;
+    DEFAULT_BROWSE_QUERY.searchString = search;
+    DEFAULT_BROWSE_QUERY.filters = qualityFilters;
+    DEFAULT_BROWSE_QUERY.itemClassFilters = classFilters;
 
-    if (search ~= self.query.search) then
-        self.query:Set(search);
-    end
-
-    if (self.snipeStatusText) then
-        self.snipeStatusText:SetText("Page: 0 - Starting...");
-    end
-
-    AuctionList:SetStatus(AuctionList.QUERY_OBJECT, self.query);
-
-    self.query:ClearLastHash();
-
-    --- add filters into here
-    self.query:AssignFilters(self.activeFilters, ilevel, maxBuyout, quality, minSize, maxPercent);
-
-    self.isSniping = false;
-    self.prepareToSnipe = true;
-
-    SortAuctionClearSort("list");
-    SortAuctionApplySort("list");
+    scanIndex = 1;
+    Query:AssignFilters(self.activeFilters, ilevel, maxBuyout, quality, maxPercent);
+    self.state = STATES.INIT;
 end
 
 function AuctionSnipe:Stop()
-    self.rewindButton:Enable();
+    ClearValidAuctions(); 
+    ClearItemsFound();
+    wipe(browseResults);
+    
     self.startButton:Enable();
     self.stopButton:Disable();
-    self.rewindButton:SetText("Rewind Scan");
-    self.isSniping = false;
-    self.isRewinding = false;
-    self.firstRewind = true;
-    self.waitingForResult = false;
-    self.prepareToSnipe = false;
-    self.waitingQuery = 0;
-    AuctionList:SetStatus(AuctionList.WAITING_FOR_RESULTS, false);
-    AuctionList.queryDelay = 0;
+    self.state = STATES.NONE;
+    
     if (self.snipeStatusText) then
-        self.snipeStatusText:SetText("Page: "..self.query.index.." - Stopped...");
-    end
-end
-
----
---- Rewind Button Handler
----
-function AuctionSnipe:Rewind()
-    if (self.isRewinding) then
-        if (not self.rewindPaused) then
-            self.rewindPaused = true;
-            self.rewindButton:SetText("Resume Rewind");
-        else
-            self.rewindPaused = false;
-            self.rewindButton:SetText("Pause Rewind");
-        end
-    else
-        self.rewindButton:SetText("Pause Rewind");
-        self.isRewinding = true;
-        self:Start();
+        self.snipeStatusText:SetText("Stopped");
     end
 end
 
@@ -665,10 +767,19 @@ function AuctionSnipe:ClearFilters()
     self.filterTreeView:Refresh();
 end
 
+function AuctionSnipe:ClearBase()
+    wipe(ANS_BASE_SELECTION);
+
+    self:BuildTreeViewBase();
+    
+    self.baseTreeView.items = baseTreeViewItems;
+    self.baseTreeView:Refresh();
+end
+
 function AuctionSnipe:ToggleFilter(f)
     local path = f:GetPath();
     if (ANS_FILTER_SELECTION[path]) then
-        self:RemoveFilter(f);
+        self:RemoveFilter(self.activeFilters, f);
         ANS_FILTER_SELECTION[path] = false;
     else
         tinsert(self.activeFilters, f);
@@ -676,10 +787,20 @@ function AuctionSnipe:ToggleFilter(f)
     end
 end
 
-function AuctionSnipe:RemoveFilter(f)
-    for i, v in ipairs(self.activeFilters) do
+function AuctionSnipe:ToggleBase(f)
+    if (ANS_BASE_SELECTION[f.path]) then
+        self:RemoveFilter(self.baseFilters, f);
+        ANS_BASE_SELECTION[f.path] = false;
+    else
+        tinsert(self.baseFilters, f);
+        ANS_BASE_SELECTION[f.path] = true;
+    end
+end
+
+function AuctionSnipe:RemoveFilter(filters, f)
+    for i, v in ipairs(filters) do
         if (v == f) then
-            tremove(self.activeFilters, i);
+            tremove(filters, i);
             return;
         end
     end

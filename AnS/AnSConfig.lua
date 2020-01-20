@@ -22,17 +22,6 @@ StaticPopupDialogs["ANS_DELETE_FILTER_CONFIRM"] = {
     preferredIndex = 3
 };
 
-StaticPopupDialogs["ANS_RESET_REALM_AUCTION_DATA_CONFIRM"] = {
-    text = "This will remove all auction data for this realm",
-    button1 = "DELETE",
-    button2 = "CANCEL",
-    OnAccept = function() AnsConfig:ResetAuctionData() end,
-    timeout = 0,
-    whileDead = false,
-    hideOnEscape = true,
-    preferredIndex = 3
-};
-
 local function AnsCustomVarUpdateRow(dataOffset, line)
     local row = _G["AnsCustomVarRow"..line];
     local nameBox = _G[row:GetName().."Name"];
@@ -87,23 +76,20 @@ function AnsConfig:LoadGlobal(f)
     local rscan = _G[f:GetName().."RescanTime"];
     local rscanText = _G[rscan:GetName().."Text"];
     local showDress = _G[f:GetName().."ShowDressing"];
-    local safeBuy = _G[f:GetName().."SafeBuy"];
-    local safeDelay = _G[f:GetName().."SafeScanDelay"];
-    local safeDelayText = _G[safeDelay:GetName().."Text"];
+    local scanDelay = _G[f:GetName().."ScanDelay"];
+    local delayText = _G[scanDelay:GetName().."Text"];
     local useCoins = _G[f:GetName().."UseCoinIcons"];
 
-
-    safeBuy:SetChecked(ANS_GLOBAL_SETTINGS.safeBuy);
     showDress:SetChecked(ANS_GLOBAL_SETTINGS.showDressing);
     percBox:SetText(ANS_GLOBAL_SETTINGS.percentFn);
     pricBox:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
     rscan:SetValue(ANS_GLOBAL_SETTINGS.rescanTime);
-    safeDelay:SetValue(ANS_GLOBAL_SETTINGS.safeDelay);
+    scanDelay:SetValue(ANS_GLOBAL_SETTINGS.scanDelayTime);
 
     useCoins:SetChecked(ANS_GLOBAL_SETTINGS.useCoinIcons);
 
-    safeDelayText:SetText("New Query Max Safe Delay: " ..ANS_GLOBAL_SETTINGS.safeDelay.."s");
     rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
+    delayText:SetText("Item Found Scan Delay: "..ANS_GLOBAL_SETTINGS.scanDelayTime.."s");
 end
 
 function AnsConfig:LoadBlacklist(f)
@@ -127,16 +113,14 @@ function AnsConfig:Edit(f, type)
         rscan:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
     elseif (type == "dressup") then
         ANS_GLOBAL_SETTINGS.showDressing = f:GetChecked();
-    elseif (type == "safebuy") then
-        ANS_GLOBAL_SETTINGS.safeBuy = f:GetChecked();
-    elseif (type == "safedelay") then
-        local safeText = _G[f:GetName().."Text"];
-        ANS_GLOBAL_SETTINGS.safeDelay = math.floor(f:GetValue());
-        safeText:SetText("New Query Max Safe Delay: "..ANS_GLOBAL_SETTINGS.safeDelay.."s");
     elseif (type == "blacklist") then
         ANS_GLOBAL_SETTINGS.characterBlacklist = f:GetText():lower();
     elseif (type == "coins") then
         ANS_GLOBAL_SETTINGS.useCoinIcons = f:GetChecked();
+    elseif (type == "scandelay") then
+        local rscan = _G[f:GetName().."Text"];
+        ANS_GLOBAL_SETTINGS.scanDelayTime = math.floor(f:GetValue());
+        rscan:SetText("Item Found Scan Delay: "..ANS_GLOBAL_SETTINGS.scanDelayTime.."s");
     end
 end
 
@@ -165,11 +149,8 @@ function AnsConfig:AddFilter()
             useMaxPPU = false,
             useMinLevel = false,
             useQuality = false,
-            useMinStack = false,
             usePercent = true,
-            priceFn = "",
-            types = "",
-            subtypes = ""
+            priceFn = ""
         };
         tinsert(selectedFilter.filter.children, t);
     else
@@ -181,11 +162,8 @@ function AnsConfig:AddFilter()
             useMaxPPU = false,
             useMinLevel = false,
             useQuality = false,
-            useMinStack = false,
             usePercent = true,
-            priceFn = "",
-            types = "",
-            subtypes = ""
+            priceFn = ""
         };
         tinsert(ANS_FILTERS, t);
     end
@@ -321,12 +299,9 @@ function AnsConfig:SaveFilter(row, type)
     local idsBox = _G[row:GetName().."IDs"];
     local priceBox = _G[row:GetName().."PriceString"];
     local gbuyout = _G[row:GetName().."GMaxBuyout"];
-    local gstack = _G[row:GetName().."GMinStack"];
     local glevel = _G[row:GetName().."GMinLevel"];
     local gquality = _G[row:GetName().."GMinQuality"];
     local gpercent = _G[row:GetName().."GPercent"];
-    local subtypes = _G[row:GetName().."SubTypes"];
-    local types = _G[row:GetName().."Types"];
 
     if (selectedFilter and selectedFilter.filter) then
         local f = selectedFilter.filter;
@@ -343,9 +318,6 @@ function AnsConfig:SaveFilter(row, type)
         if (type == "buyout") then
             f.useMaxPPU = gbuyout:GetChecked();
         end
-        if (type == "stack") then
-            f.useMinStack = gstack:GetChecked();
-        end
         if (type == "quality") then
             f.useQuality = gquality:GetChecked();
         end
@@ -354,11 +326,6 @@ function AnsConfig:SaveFilter(row, type)
         end
         if (type == "percent") then
             f.usePercent = gpercent:GetChecked();
-        end
-        if (type == "subtypes") then
-            f.subtypes = subtypes:GetText();
-        elseif (type == "types") then
-            f.types = types:GetText();
         end
 
         -- this is more efficient then doing self:FilterRefresh()
@@ -428,11 +395,8 @@ function AnsConfig:BuildFilters(parent)
         filter.useGlobalMaxBuyout = f.useMaxPPU;
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
-        filter.useGlobalMinStack = f.useMinStack;
         filter.useGlobalPercent = f.usePercent;
         filter:ParseTSM(f.ids);
-        filter:ParseTypes(f.types);
-        filter.ParseSubtypes(f.subtypes);
 
         if (#f.children > 0) then
             self:BuildSubfilters(f.children, filter);
@@ -451,11 +415,8 @@ function AnsConfig:BuildSubfilters(filters, parent)
         filter.useGlobalMaxBuyout = f.useMaxPPU;
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
-        filter.useGlobalMinStack = f.useMinStack;
         filter.useGlobalPercent = f.usePercent;
         filter:ParseTSM(f.ids);
-        filter:ParseTypes(f.types);
-        filter:ParseSubtypes(f.subtypes);
 
         parent:AddChild(filter);
 
@@ -561,23 +522,17 @@ function AnsConfig:SelectFilter(s)
         local idsBox = _G[details:GetName().."IDs"];
         local priceBox = _G[details:GetName().."PriceString"];
         local gbuyout = _G[details:GetName().."GMaxBuyout"];
-        local gstack = _G[details:GetName().."GMinStack"];
         local glevel = _G[details:GetName().."GMinLevel"];
         local gquality = _G[details:GetName().."GMinQuality"];
         local gpercent = _G[details:GetName().."GPercent"];
-        local subtypes = _G[details:GetName().."SubTypes"];
-        local types = _G[details:GetName().."Types"];
 
         nameBox:SetText(f.name);
         idsBox:SetText(f.ids);
         priceBox:SetText(f.priceFn);
         gbuyout:SetChecked(f.useMaxPPU);
-        gstack:SetChecked(f.useMinStack);
         glevel:SetChecked(f.useMinLevel);
         gquality:SetChecked(f.useQuality);
         gpercent:SetChecked(f.usePercent);
-        types:SetText(f.types);
-        subtypes:SetText(f.subtypes);
 
         details:Show();
     else

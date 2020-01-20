@@ -4,7 +4,7 @@ local Fish = {};
 Fish.children = {
     {
         name = "BFA",
-        ids = "i:162515,i:162516,i:162517,i:152543,i:152544,i:152545,i:152546,i:152547,i:152548,i:152549",
+        ids = "i:162515,i:162516,i:162517,i:152543,i:152544,i:152545,i:152546,i:152547,i:152548,i:152549,i:174328,i:174327,i:168302,i:168646",
         useMaxPPU = true,
         useMinLevel = false,
         useQuality = true,

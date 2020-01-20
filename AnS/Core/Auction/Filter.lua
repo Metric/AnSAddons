@@ -17,19 +17,13 @@ function Filter:New(name)
     f.minQuality = 1;
     f.maxBuyout = 0;
     f.ids = {};
-    f.types = {};
-    f.subtypes = {};
-    f.minSize = 0;
     f.subfilters = {};
-    f.typeCount = 0;
-    f.subtypeCount = 0;
     f.idCount = 0;
     
     f.priceFn = "";
     f.maxPercent = 100;
 
     f.useGlobalMaxBuyout = true;
-    f.useGlobalMinStack = true;
     f.useGlobalMinQuality = true;
     f.useGlobalMinILevel = true;
     f.useGlobalPercent = true;
@@ -37,48 +31,6 @@ function Filter:New(name)
     f.parent = nil;
 
     return f;
-end
-
-function Filter:GetSubTypes()
-    local tbl = Utils:GetTable();
-    
-    tinsert(tbl, self);
-
-    while (#tbl > 0) do
-        local v = tremove(tbl, 1);
-
-        if (v.subtypeCount > 0) then
-            Utils:ReleaseTable(tbl);
-            return v;
-        elseif (v.parent) then
-            tinsert(tbl, v.parent);
-        end
-    end
-
-    Utils:ReleaseTable(tbl);
-
-    return self;
-end
-
-function Filter:GetTypes()
-    local tbl = Utils:GetTable();
-    
-    tinsert(tbl, self);
-
-    while (#tbl > 0) do
-        local v = tremove(tbl, 1);
-
-        if (v.typeCount > 0) then
-            Utils:ReleaseTable(tbl);
-            return v;
-        elseif (v.parent) then
-            tinsert(tbl, v.parent);
-        end
-    end
-
-    Utils:ReleaseTable(tbl);
-
-    return self;
 end
 
 function Filter:GetPriceFn()
@@ -102,11 +54,10 @@ function Filter:GetPriceFn()
     return self.priceFn;
 end
 
-function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricingFn)
+function Filter:AssignOptions(ilevel, buyout, quality, maxPercent, pricingFn)
     self.maxPercent = maxPercent or 100;
     self.minILevel = ilevel;
     self.maxBuyout = buyout;
-    self.minSize = size;
     self.minQuality = quality;
 
     if (self:GetPriceFn():len() == 0) then
@@ -125,18 +76,8 @@ function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricing
 
             v.maxPercent = maxPercent or 100;
             v.minILevel = ilevel;
-            v.minSize = size;
             v.maxBuyout = buyout;
             v.minQuality = quality;
-
-            local subtypes = v:GetSubTypes();
-            v.subtypes = subtypes.subtypes;
-            v.subtypeCount = subtypes.subtypeCount;
-
-            local types = v:GetTypes();
-            v.types = types.types;
-            v.typeCount = types.typeCount;
-
             v.priceFn = v:GetPriceFn();
 
             if (#v.subfilters > 0) then
@@ -148,52 +89,6 @@ function Filter:AssignOptions(ilevel, buyout, quality, size, maxPercent, pricing
     end
 
     Utils:ReleaseTable(tbl);
-end
-
-function Filter:ParseTypes(types)
-    if (types and types:len() > 0) then
-        local trim = string.gsub(types:lower(), " ,", ",");
-        trim = string.gsub(trim, ", ", ",");
-        local tbl = { strsplit(",", trim) };
-        self.typeCount = #tbl;
-        wipe(self.types);
-        for i,v in ipairs(tbl) do
-            self.types[v] = 1;
-        end
-    end
-end
-
-function Filter:TypesAsString()
-    local sep = "";
-    local tmp = "";
-    for k,v in pairs(self.types) do
-        tmp = tmp..sep..k;
-        sep = ",";
-    end
-    return tmp;
-end
-
-function Filter:SubtypesAsString()
-    local sep = "";
-    local tmp = "";
-    for k,v in pairs(self.subtypes) do
-        tmp = tmp..sep..k;
-        sep = ",";
-    end
-    return tmp;
-end
-
-function Filter:ParseSubtypes(types) 
-    if (types and types:len() > 0) then
-        local trim = string.gsub(types:lower(), " ,", ",");
-        trim = string.gsub(trim, ", ", ",");
-        local tbl = { strsplit(",", trim) };
-        self.subtypeCount = #tbl;
-        wipe(self.subtypes);
-        for i,v in ipairs(tbl) do
-            self.subtypes[v] = 1;
-        end
-    end
 end
 
 function Filter:RemoveChild(sfilter)
@@ -237,11 +132,6 @@ function Filter:Clone()
     f.minPetLevel = self.minPetLevel;
     f.maxBuyout = self.maxBuyout;
     f.ids = self.ids;
-    f.types = self.types;
-    f.subtypes = self.subtypes;
-    f.minSize = self.minSize;
-    f.subtypeCount = self.subtypeCount;
-    f.typeCount = self.typeCount;
     f.idCount = self.idCount;
 
     if (self.subfilters) then
@@ -260,7 +150,6 @@ function Filter:Clone()
     f.useGlobalMaxBuyout = self.useGlobalMaxBuyout;
     f.useGlobalMinILevel = self.useGlobalMinILevel;
     f.useGlobalMinQuality = self.useGlobalMinQuality;
-    f.useGlobalMinStack = self.useGlobalMinStack;
     f.useGlobalPercent = self.useGlobalPercent;
 
     f.parent = self.parent;
@@ -284,12 +173,9 @@ function Filter:ToConfigFilter()
         ids = self:IdsAsString(),
         useMaxPPU = self.useGlobalMaxBuyout,
         useMinLevel = self.useGlobalMinILevel,
-        useMinStack = self.useGlobalMinStack,
         useQuality = self.useGlobalMinQuality,
         usePercent = self.useGlobalPercent,
         priceFn = self.priceFn,
-        types = self:TypesAsString(),
-        subtypes = self:SubtypesAsString(),
         children = {}
     };
 
@@ -426,6 +312,7 @@ end
 function Filter:ParseTSMItem(item) 
     local _, id = strsplit(":", item);
     if (id ~= nil) then
+        self.ids[_..":"..id] = 1;
         self.ids[item] = 1;
         self.idCount = self.idCount + 1;
     else
@@ -473,7 +360,7 @@ function Filter:HasIds()
     return false;
 end
 
-function Filter:IsValid(item)
+function Filter:IsValid(item, exact)
     if (self.subfilters and #self.subfilters > 0) then
         for i, v in ipairs(self.subfilters) do
             if (v:IsValid(item)) then
@@ -501,37 +388,14 @@ function Filter:IsValid(item)
     if (item.ppu >= self.maxBuyout and self.maxBuyout > 0 and self.useGlobalMaxBuyout) then
         return false;
     end
-    if (item.count < self.minSize and self.useGlobalMinStack) then
-        return false;
-    end
     if (item.percent > self.maxPercent and self.useGlobalPercent) then
         return false;
     end
 
     if (self.idCount > 0) then
         local t,id = strsplit(":", item.tsmId);
-        if (self.ids[item.tsmId] == 1 or self.ids[t..":"..id] == 1) then
-            return true;
-        end
+        return self.ids[item.tsmId] == 1 or (not exact and self.ids[t..":"..id] == 1);
     end
 
-    local ttypes = self.typeCount;
-    local tstypes = self.subtypeCount;
-    
-    local types = self.types;
-    local subtypes = self.subtypes;
-
-    if (ttypes > 0) then
-        if (types[item.type] == 1) then
-            if (tstypes > 0) then
-                if (subtypes[item.subtype] == 1) then
-                    return true;
-                end 
-            else
-                return true;
-            end
-        end
-    end
-
-    return false;
+    return priceFn ~= nil and priceFn:len() > 0;
 end
