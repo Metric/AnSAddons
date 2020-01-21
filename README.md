@@ -19,6 +19,21 @@ Requires AnS
 (Optional) Auctionator addon for percentage calculations.
 
 
+Note for 2.0 Regarding Max Percent
+==================================================
+Max percent may need to be adjusted higher than necessary if looking for equipment with the same id and varying levels of iLevels. Since, the initial browse query filtering is based on the base item id in pricing in TSM / TUJ / Auctionator. However, the final filtering is based on the item id + bonus ids, but only if the initial browse group is considered. You can combat cases of this by using a filter that will override the percent check in the final case and filter out the lower ilevels that are not really deals.
+
+
+Note For 2.0 Regarding Custom Filters and Item IDs + Bonus IDs
+==================================================
+If using the initial 2.0 release then item ids in the custom filter must include the bonus ids if it is an equipment item, or if battle pet it must include the pet level and pet breed quality as well. 
+
+An exact match expects item id + bonus ids for equipment, or if a battle pet then pet species id + pet level + pet breed quality.
+
+Bonus IDs for equipment should be sorted low to high in order to match TSM ordering of bonus IDs.
+
+If using 2.0.1, you can disable the exact matching on custom filters, so you can just use the base item id or pet id without needing bonus ids or pet level and pet breed quality.
+
 Features
 ===============
 * To filter out vendor items with unlimited quantities, will require a filter string of: tujdays ~= 252 and Undermine Journal addon
