@@ -150,6 +150,7 @@ function AnsConfig:AddFilter()
             useMinLevel = false,
             useQuality = false,
             usePercent = true,
+            exactMatch = true,
             priceFn = ""
         };
         tinsert(selectedFilter.filter.children, t);
@@ -163,6 +164,7 @@ function AnsConfig:AddFilter()
             useMinLevel = false,
             useQuality = false,
             usePercent = true,
+            exactMatch = true,
             priceFn = ""
         };
         tinsert(ANS_FILTERS, t);
@@ -302,6 +304,7 @@ function AnsConfig:SaveFilter(row, type)
     local glevel = _G[row:GetName().."GMinLevel"];
     local gquality = _G[row:GetName().."GMinQuality"];
     local gpercent = _G[row:GetName().."GPercent"];
+    local exactMatch = _G[row:GetName().."ExactMatch"];
 
     if (selectedFilter and selectedFilter.filter) then
         local f = selectedFilter.filter;
@@ -326,6 +329,9 @@ function AnsConfig:SaveFilter(row, type)
         end
         if (type == "percent") then
             f.usePercent = gpercent:GetChecked();
+        end
+        if (type == "exactmatch") then
+            f.exactMatch = exactMatch:GetChecked();
         end
 
         -- this is more efficient then doing self:FilterRefresh()
@@ -396,6 +402,13 @@ function AnsConfig:BuildFilters(parent)
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
         filter.useGlobalPercent = f.usePercent;
+        
+        if (f.exactMatch == nil) then
+            filter.exactMatch = true;
+        else
+            filter.exactMatch = f.exactMatch;
+        end
+
         filter:ParseTSM(f.ids);
 
         if (#f.children > 0) then
@@ -416,6 +429,13 @@ function AnsConfig:BuildSubfilters(filters, parent)
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
         filter.useGlobalPercent = f.usePercent;
+        
+        if (f.exactMatch == nil) then
+            filter.exactMatch = true;
+        else
+            filter.exactMatch = f.exactMatch;
+        end
+
         filter:ParseTSM(f.ids);
 
         parent:AddChild(filter);
@@ -525,6 +545,7 @@ function AnsConfig:SelectFilter(s)
         local glevel = _G[details:GetName().."GMinLevel"];
         local gquality = _G[details:GetName().."GMinQuality"];
         local gpercent = _G[details:GetName().."GPercent"];
+        local exactMatch = _G[details:GetName().."ExactMatch"];
 
         nameBox:SetText(f.name);
         idsBox:SetText(f.ids);
@@ -533,6 +554,7 @@ function AnsConfig:SelectFilter(s)
         glevel:SetChecked(f.useMinLevel);
         gquality:SetChecked(f.useQuality);
         gpercent:SetChecked(f.usePercent);
+        exactMatch:SetChecked(f.exactMatch);
 
         details:Show();
     else

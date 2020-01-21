@@ -305,6 +305,15 @@
           <OnClick>AnsConfig:SaveFilter(self:GetParent(), "percent");</OnClick>
         </Scripts>
       </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentExactMatch">
+        <Anchors>
+          <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentGPercent" x="0" y="-5"/>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("Exact ID Matching"); </OnLoad>
+          <OnClick>AnsConfig:SaveFilter(self:GetParent(), "exactmatch");</OnClick>
+        </Scripts>
+      </CheckButton>
       <Button name="$parentDeleteFilter" text="Delete Filter" inherits="UIPanelButtonTemplate">
         <Size x="100" y="32" />
         <Anchors>
@@ -319,7 +328,7 @@
       <Button name="$parentMoveFilter" text="Move" inherits="UIPanelButtonTemplate">
         <Size x="100" y="32" />
         <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="$parentGPercent" relativePoint="BOTTOMLEFT" x="0" y="-5" />
+          <Anchor point="TOPLEFT" relativeTo="$parentExactMatch" relativePoint="BOTTOMLEFT" x="0" y="-5" />
         </Anchors>
         <Scripts>
           <OnClick>

@@ -197,6 +197,13 @@ function AnsCore:LoadFilters()
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
         filter.useGlobalPercent = f.usePercent;
+        
+        if (f.exactMatch == nil) then
+            filter.exactMatch = true;
+        else
+            filter.exactMatch = f.exactMatch;
+        end
+
         filter:ParseTSM(f.ids);
 
         if (#f.children > 0) then
@@ -215,6 +222,13 @@ function AnsCore:LoadSubFilters(filters, parent)
         filter.useGlobalMinILevel = f.useMinLevel;
         filter.useGlobalMinQuality = f.useQuality;
         filter.useGlobalPercent = f.usePercent;
+        
+        if (f.exactMatch == nil) then
+            filter.exactMatch = true;
+        else
+            filter.exactMatch = f.exactMatch;
+        end
+
         filter:ParseTSM(f.ids);
 
         parent:AddChild(filter);
@@ -267,6 +281,7 @@ function AnsCore:MigrateCustomFilters()
                 useMinLevel = false,
                 useQuality = false,
                 usePercent = true,
+                exactMatch = true,
                 priceFn = v.priceFn
             };
 
@@ -295,6 +310,7 @@ function AnsCore:RestoreFilter(children, parent)
                 v2.useQuality = v.useQuality;
                 v2.usePercent = v.usePercent;
                 v2.priceFn = v.priceFn;
+                v2.exactMatch = v.exactMatch;
                 
                 if (v.children and #v.children > 0) then
                     self:RestoreFilter(v.children, v2.children);
@@ -334,6 +350,7 @@ function AnsCore:PopulateFilter(v, parent)
         useMinLevel = v.useMinLevel,
         useQuality = v.useQuality,
         usePercent = v.usePercent,
+        exactMatch = v.exactMatch,
         priceFn = v.priceFn
     };
 

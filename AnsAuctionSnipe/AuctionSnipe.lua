@@ -525,6 +525,13 @@ function AuctionSnipe:OnItemResults()
 
                     if (result.itemLink) then
                         item.link = result.itemLink;
+
+                        if (Utils:IsBattlePetLink(item.link)) then
+                            local info = Utils:ParseBattlePetLink(item.link);
+                            item.iLevel = info.level;
+                            item.quality = info.breedQuality;
+                        end
+
                         item.tsmId = Utils:GetTSMID(item.link);
                     end
 

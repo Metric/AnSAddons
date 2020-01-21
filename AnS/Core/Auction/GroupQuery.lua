@@ -206,6 +206,7 @@ function Query:IsFilteredGroup(group)
     auction.name = groupInfo.itemName;
     auction.itemKey = group.itemKey;
     auction.isCommodity = groupInfo.isCommodity;
+    auction.isPet = false;
     auction.iLevel = group.itemKey.itemLevel;
     auction.id = group.itemKey.itemID;
     auction.count = group.totalQuantity;
@@ -218,6 +219,7 @@ function Query:IsFilteredGroup(group)
 
     if (group.itemKey.battlePetSpeciesID > 0 and groupInfo.battlePetLink) then
         link = groupInfo.battlePetLink;
+        auction.isPet = true;
     elseif (group.itemKey.battlePetSpeciesID > 0 and not groupInfo.battlePetLink) then
         link = nil;
     end
@@ -272,7 +274,7 @@ function Query:IsFilteredGroup(group)
 
         local tf = #self.filters;
         for k = 1, tf do
-            if (self.filters[k]:IsValid(auction, groupInfo.isPet or groupInfo.isCommodity)) then
+            if (self.filters[k]:IsValid(auction, auction.isPet or auction.isCommodity)) then
                 filterAccepted = true;
                 break;
             end

@@ -209,8 +209,10 @@ function AuctionList:Click(row, button, down)
         if (block) then
             local itemLink = block.link;
             if (not block.isCommodity) then
-                if (not DressUpItemLink(itemLink)) then
+                if (block.isPet) then
                     DressUpBattlePet(itemLink);
+                else
+                    DressUpItemLink(itemLink)
                 end
             end
         end

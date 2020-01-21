@@ -1,3 +1,8 @@
+AnS Changes 2.0.1
+-----------------
+* Added support for toggling Exact ID Matching for bonus ids, pet levels and pet breed quality in custom filters. Turn off Exact ID Matching if you want to just use a base item / pet id in the custom filter that does not include bonus ids, or pet level and pet breed quality.
+    - This will be back ported to classic as well
+
 AnS Changes 2.0
 ----------------
 * A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
@@ -5,6 +10,7 @@ AnS Changes 2.0
 * Removed unneeded settings
 * Filters do not require item ids anymore.
     - Thus you can use just the filter string in them now for quicker access to different types of filters without relying on global
+    - this will be back ported for classic as well
 
 
 AnS Changes 1.0.6.7

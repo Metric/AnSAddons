@@ -19,6 +19,7 @@ function Filter:New(name)
     f.ids = {};
     f.subfilters = {};
     f.idCount = 0;
+    f.exactMatch = true;
     
     f.priceFn = "";
     f.maxPercent = 100;
@@ -133,6 +134,7 @@ function Filter:Clone()
     f.maxBuyout = self.maxBuyout;
     f.ids = self.ids;
     f.idCount = self.idCount;
+    f.exactMatch = self.exactMatch;
 
     if (self.subfilters) then
         f.subfilters = {};
@@ -361,6 +363,12 @@ function Filter:HasIds()
 end
 
 function Filter:IsValid(item, exact)
+    local isExact = false;
+
+    if (exact and self.exactMatch) then
+        isExact = true;
+    end
+
     if (self.subfilters and #self.subfilters > 0) then
         for i, v in ipairs(self.subfilters) do
             if (v:IsValid(item)) then
@@ -394,7 +402,7 @@ function Filter:IsValid(item, exact)
 
     if (self.idCount > 0) then
         local t,id = strsplit(":", item.tsmId);
-        return self.ids[item.tsmId] == 1 or (not exact and self.ids[t..":"..id] == 1);
+        return self.ids[item.tsmId] == 1 or (not isExact and self.ids[t..":"..id] == 1);
     end
 
     return priceFn ~= nil and priceFn:len() > 0;

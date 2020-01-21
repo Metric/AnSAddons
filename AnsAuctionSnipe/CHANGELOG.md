@@ -1,3 +1,7 @@
+AnS [Auction Sniper] Changes 2.0.1
+----------------------------
+* Fixed an issue where battle pets were incorrectly listing the quality or pet level in the ilvl field in some cases.
+
 AnS [Auction Sniper] Changes 2.0
 ----------------------------
 * A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
