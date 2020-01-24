@@ -140,8 +140,21 @@
           <OnClick>AnsConfig:Edit(self, "coins")</OnClick>
         </Scripts>
       </CheckButton>
+      <CheckButton inherits="UIRadioButtonTemplate" name="$parentUseCommodityConfirm">
+        <Anchors>
+          <Anchor point="BOTTOMLEFT"  relativePoint="TOPLEFT" relativeTo="$parentUseCoinIcons">
+            <Offset>
+              <AbsDimension x="0" y="5"/>
+            </Offset>
+          </Anchor>
+        </Anchors>
+        <Scripts>
+          <OnLoad>_G[self:GetName().."Text"]:SetText("Use Commodity Confirm"); </OnLoad>
+          <OnClick>AnsConfig:Edit(self, "commodityconfirm")</OnClick>
+        </Scripts>
+      </CheckButton>
       <Slider name="$parentScanDelay" minValue="0" maxValue="30" valueStep="1" inherits="AnsSliderTemplate">
-        <Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parentUseCoinIcons" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="5" /></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="BOTTOMLEFT" relativeTo="$parentUseCommodityConfirm" relativePoint="TOPLEFT"><Offset><AbsDimension x="0" y="5" /></Offset></Anchor></Anchors>
           <Scripts>
             <OnValueChanged>
               AnsConfig:Edit(self, "scandelay");

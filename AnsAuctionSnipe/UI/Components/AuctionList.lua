@@ -27,6 +27,7 @@ local purchaseQueue = {};
 function AuctionList:OnLoad(parent)
     self.parent = parent;
     self.frame = _G[parent:GetName().."ResultsItems"];
+    self.commodityConfirm = _G[parent:GetName().."ResultsCommodityConfirm"];
 
     -- get scroll child and set it's size
     -- since we are using a faux scrollframe 
@@ -50,17 +51,21 @@ function AuctionList:RegisterEvents()
     end
 end
 
-function AuctionList:BuyFirst() 
-    if (self.frame and #self.items > 0) then
-        local block = self.items[1];
-        if (block) then
+function AuctionList:Buy(index)
+    if (self.frame and #self.items > 0 and index > 0 and index <= #self.items) then
+        local block = self.items[index];
+        if (block and not self.isBuying and self.commodity == nil) then
             if (self.isPurchaseReady) then
+                self.isBuying = true;
                 local success, isCommodity = self:Purchase(block);
                 if (not isCommodity and success and block.count <= 0) then
-                    Recycler:Recycle(table.remove(self.items, 1));
-                    if (self.selectedEntry == 1) then
+                    Recycler:Recycle(table.remove(self.items, index));
+                    if (self.selectedEntry == index) then
                         self.selectedEntry = -1;
                     end
+                end
+                if (not isCommodity or not success) then
+                    self.isBuying = false;
                 end
                 self:Refresh();
             end
@@ -68,20 +73,30 @@ function AuctionList:BuyFirst()
     end
 end
 
+function AuctionList:BuyFirst() 
+    if (self.frame and #self.items > 0) then
+        self:Buy(1);
+    end
+end
+
 function AuctionList:BuySelected()
     if (self.frame and #self.items > 0 and self.selectedEntry > 0) then
-        local block = self.items[self.selectedEntry];
-        if (block) then
-            if (self.isPurchaseReady) then
-                local success, isCommodity = self:Purchase(block);
-                if (not isCommodity and success and block.count <= 0) then
-                    Recycler:Recycle(table.remove(self.items, self.selectedEntry));
-                    self.selectedEntry = -1;
-                end
-                self:Refresh();
-            end
-        end
+        self:Buy(self.selectedEntry);
     end
+end
+
+function AuctionList:ItemsExist()
+    return #self.items > 0;
+end
+
+function AuctionList:AddItems(items)
+    for i,v in ipairs(items) do
+        tinsert(self.items, v:Clone());
+    end 
+    table.sort(self.items, function(a,b) 
+        return a.percent < b.percent;
+    end);
+    self:Refresh();
 end
 
 function AuctionList:SetItems(items)
@@ -97,10 +112,8 @@ end
 
 function AuctionList:Purchase(block)
     if (self.commodity ~= nil) then
-        return false;
+        return false, false;
     end
-
-    local fps = math.floor(GetFramerate());
 
     if (block.auctionId ~= nil and not block.isCommodity) then
         if (GetMoney() >= block.buyoutPrice) then
@@ -109,9 +122,13 @@ function AuctionList:Purchase(block)
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
-        if (GetMoney() >= block.buyoutPrice) then
+        if (ANS_GLOBAL_SETTINGS.useCommodityConfirm) then
             self.commodity = block:Clone();
-            C_AuctionHouse.StartCommoditiesPurchase(self.commodity.id, self.commodity.count, self.commodity.ppu);
+            self.commodityConfirm:Show();
+            return true, true;
+        elseif (GetMoney() >= block.buyoutPrice) then
+            self.commodity = block:Clone();
+            self:PurchaseCommodity(self.commodity.count);
             return true, true;
         end
     end
@@ -119,37 +136,96 @@ function AuctionList:Purchase(block)
     return false, false;
 end
 
-function AuctionList:ConfirmCommoditiesPurchase(price)
-    if (self.commodity == nil) then
+function AuctionList:PurchaseCommodity(total)
+    if (self.commodity == nil or total < 1) then
         return false;
     end
 
-    if (price > self.commodity.buyoutPrice) then
-        self:CancelCommoditiesPurchase();
+    self.commodity.toPurchase = total;
+    
+    if (self.commodity.toPurchase * self.commodity.ppu > GetMoney()) then
+        print("AnS: Not enough gold to purchase "..total.." of "..self.commodity.name);
         return false;
     end
+    
 
-    C_AuctionHouse.ConfirmCommoditiesPurchase(self.commodity.id, self.commodity.count);
+    C_AuctionHouse.StartCommoditiesPurchase(self.commodity.id, self.commodity.toPurchase, self.commodity.ppu);
     return true;
 end
 
-function AuctionList:OnCommondityPurchased()
+function AuctionList:ConfirmCommoditiesPurchase(ppu, total)
+    if (self.commodity == nil) then
+        return false;
+    end
+
+    if (total > self.commodity.ppu * self.commodity.toPurchase) then
+        print("AnS: Updated total price of commodities is higher than original total purchase price.");
+        self:CancelCommoditiesPurchase(true);
+        return false;
+    elseif (ppu * self.commodity.toPurchase > GetMoney()) then
+        print("AnS: You do not have enough gold to purchase everything at the updated price per unit!");
+        self:CancelCommoditiesPurchase(false);
+        return false;
+    end
+
+    C_AuctionHouse.ConfirmCommoditiesPurchase(self.commodity.id, self.commodity.toPurchase);
+    return true;
+end
+
+function AuctionList:OnCommondityPurchased(failed)
     if (self.commodity == nil) then
         return;
     end
 
-    self:RemoveAuction(self.commodity);
+    self.isBuying = false;
+    if (not failed) then
+        self:RemoveAuctionAmount(self.commodity, self.commodity.toPurchase);
+    else
+        print("AnS: Failed to buy "..self.commodity.toPurchase.." of "..self.commodity.name);
+    end
     self.commodity = nil;
 end
 
-function AuctionList:CancelCommoditiesPurchase()
+function AuctionList:CancelCommoditiesPurchase(remove)
     if (self.commodity == nil) then
         return;
     end
 
+    self.isBuying = false;
     C_AuctionHouse.CancelCommoditiesPurchase();
-    self:RemoveAuction(self.commodity);
+    
+    if (remove) then
+        self:RemoveAuction(self.commodity);
+    end
+
     self.commodity = nil;
+end
+
+function AuctionList:RemoveAuctionAmount(block, count)
+    for i = 1, #self.items do
+        local item = self.items[i];
+        if (item.id == block.id
+            and item.link == block.link
+            and item.name == block.name
+            and item.ppu == block.ppu
+            and item.buyoutPrice == block.buyoutPrice
+            and item.count == block.count) then
+
+            block.count = block.count - count;
+            item.count = item.count - count;
+
+            if (item.count <= 0) then
+                Recycler:Recycle(table.remove(self.items, i));
+
+                if (self.selectedEntry == i) then
+                    self.selectedEntry = -1;
+                end
+            end
+
+            self:Refresh();
+            return;
+        end
+    end 
 end
 
 function AuctionList:RemoveAuction(block) 
@@ -208,31 +284,14 @@ function AuctionList:Click(row, button, down)
 
         if (block) then
             local itemLink = block.link;
-            if (not block.isCommodity) then
-                if (block.isPet) then
-                    DressUpBattlePet(itemLink);
-                else
-                    DressUpItemLink(itemLink)
-                end
+            if (not block.isCommodity and not block.isPet) then
+                DressUpItemLink(itemLink)
             end
         end
     end
 
     if (clickCount == 2) then
-        local block = self.items[id];
-        if (block) then
-            if (self.isPurchaseReady) then
-                self.isBuying = true;
-                local success, isCommodity = self:Purchase(block);
-                if (not isCommodity and success and block.count <= 0) then
-                    Recycler:Recycle(table.remove(self.items, id));
-                    if (self.selectedEntry == id) then
-                        self.selectedEntry = -1;
-                    end
-                end
-                self.isBuying = false;
-            end
-        end
+        self:Buy(id);
         clickCount = 0;
     end
 

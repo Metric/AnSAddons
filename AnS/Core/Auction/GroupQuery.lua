@@ -200,7 +200,7 @@ function Query:IsFilteredGroup(group)
 
     if (groupInfo == nil) then
         Recycler:Recycle(auction);
-        return nil;
+        return nil, true;
     end
 
     auction.name = groupInfo.itemName;
@@ -226,7 +226,7 @@ function Query:IsFilteredGroup(group)
 
     if (link == nil) then
         Recycler:Recycle(auction);
-        return nil;
+        return nil, false;
     end
 
     auction.texture = itexture;
@@ -286,5 +286,5 @@ function Query:IsFilteredGroup(group)
     end
 
     Recycler:Recycle(auction);
-    return nil;
+    return nil, false;
 end

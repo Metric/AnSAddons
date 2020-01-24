@@ -1,3 +1,7 @@
+AnS Changes 2.0.2
+-------------------
+* Added an option to turn on Commodity Purchase Confirm. The confirmation allows you to set the number of items to buy before purchasing.
+
 AnS Changes 2.0.1
 -----------------
 * Added support for toggling Exact ID Matching for bonus ids, pet levels and pet breed quality in custom filters. Turn off Exact ID Matching if you want to just use a base item / pet id in the custom filter that does not include bonus ids, or pet level and pet breed quality.

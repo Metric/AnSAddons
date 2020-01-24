@@ -79,6 +79,7 @@ function AnsConfig:LoadGlobal(f)
     local scanDelay = _G[f:GetName().."ScanDelay"];
     local delayText = _G[scanDelay:GetName().."Text"];
     local useCoins = _G[f:GetName().."UseCoinIcons"];
+    local useCommodity = _G[f:GetName().."UseCommodityConfirm"];
 
     showDress:SetChecked(ANS_GLOBAL_SETTINGS.showDressing);
     percBox:SetText(ANS_GLOBAL_SETTINGS.percentFn);
@@ -87,6 +88,7 @@ function AnsConfig:LoadGlobal(f)
     scanDelay:SetValue(ANS_GLOBAL_SETTINGS.scanDelayTime);
 
     useCoins:SetChecked(ANS_GLOBAL_SETTINGS.useCoinIcons);
+    useCommodity:SetChecked(ANS_GLOBAL_SETTINGS.useCommodityConfirm);
 
     rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
     delayText:SetText("Item Found Scan Delay: "..ANS_GLOBAL_SETTINGS.scanDelayTime.."s");
@@ -121,6 +123,8 @@ function AnsConfig:Edit(f, type)
         local rscan = _G[f:GetName().."Text"];
         ANS_GLOBAL_SETTINGS.scanDelayTime = math.floor(f:GetValue());
         rscan:SetText("Item Found Scan Delay: "..ANS_GLOBAL_SETTINGS.scanDelayTime.."s");
+    elseif (type == "commodityconfirm") then
+        ANS_GLOBAL_SETTINGS.useCommodityConfirm = f:GetChecked();
     end
 end
 

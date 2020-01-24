@@ -10,7 +10,8 @@ ANS_GLOBAL_SETTINGS = {
     scanDelayTime = 5,
     characterBlacklist = "",
     useCoinIcons = false,
-    itemBlacklist = {}
+    itemBlacklist = {},
+    useCommodityConfirm = false
 };
 ANS_FILTER_SELECTION = {};
 ANS_BASE_SELECTION = {};

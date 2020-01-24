@@ -266,6 +266,9 @@ function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.itemBlacklist == nil) then
         ANS_GLOBAL_SETTINGS.itemBlacklist = {};
     end
+    if (ANS_GLOBAL_SETTINGS.useCommodityConfirm == nil) then
+        ANS_GLOBAL_SETTINGS.useCommodityConfirm = false;
+    end
 end
 
 function AnsCore:MigrateCustomFilters()

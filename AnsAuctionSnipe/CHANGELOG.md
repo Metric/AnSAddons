@@ -1,3 +1,17 @@
+AnS [Auction Sniper] Changes 2.0.2
+------------------------------------
+* Fixed an issue where some items were being skipped, due to not requesting all available pages of the items / commodities.
+* Fixed an issue where trying to buy a commodity right before a new scan started would cause a weird state transition. Thus, needing a /reload to fix it. 
+    - The next scan will now wait for the commodity to finish via success or failure before moving on.
+* Fixed an issue where it was trying to dress up a battle pet.
+* Added info for how many items processing in the browse query.
+* Added chat error messages for various things.
+* Added a new purchase overlay letting you know it is trying to purchase the selected commodity / item.
+* Added a new Commodity Confirm option 
+    - It is off by default in the settings
+    - If you leave it off then things will work as previously where you will buy all available at the selected line item PPU and count.
+    - Turning it on will allow you to input the number you want to buy. By default it is set to total of the line item that you selected. The ppu is based on the line item selected.
+
 AnS [Auction Sniper] Changes 2.0.1
 ----------------------------
 * Fixed an issue where battle pets were incorrectly listing the quality or pet level in the ilvl field in some cases.
