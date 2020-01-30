@@ -20,7 +20,8 @@ local EVENTS_TO_REGISTER = {
     "COMMODITY_PURCHASED",
     "COMMODITY_PURCHASE_FAILED",
     "COMMODITY_PURCHASE_SUCCEEDED",
-    --"ITEM_KEY_ITEM_INFO_RECEIVED"
+    "ITEM_KEY_ITEM_INFO_RECEIVED",
+    "GET_ITEM_INFO_RECEIVED"
 };
 
 local rootFrame = nil;
@@ -154,6 +155,7 @@ function AuctionSnipe:Init()
 
     --- create main panel
     local frame = CreateFrame("FRAME", "AnsSnipeMainPanel", AuctionHouseFrame, "AnsSnipeBuyTemplate");
+    local this = self;
     self.frame = frame;
 
     frame:HookScript("OnShow", function() AuctionSnipe:Show() end);
@@ -240,7 +242,6 @@ function AuctionSnipe:BuildTreeViewBase()
         pf.name = v.name;
         pf.expanded = false;
         pf.filter = v;
-        -- we only have one sub level for each
         pf.children = {};
 
         for i = 1, #v.children do
@@ -256,6 +257,22 @@ function AuctionSnipe:BuildTreeViewBase()
             sf.children = {};
 
             tinsert(pf.children, sf);
+
+            local subchildren = v.children[i].children;
+            for k = 1, #subchildren do
+                local ss = subchildren[k];
+                local ssf = {};
+                ssf.selected = ANS_BASE_SELECTION[ss.path] or false;
+                if (ssf.selected) then
+                    tinsert(self.baseFilters, ss);
+                end
+                ssf.name = ss.name;
+                ssf.expanded = false;
+                ssf.filter = ss;
+                ssf.children = {};
+
+                tinsert(sf.children, ssf);
+            end
         end
 
         tinsert(baseTreeViewItems, pf);
@@ -339,6 +356,32 @@ function AuctionSnipe:BuildSubTreeFilters(children, parent)
     end
 end
 
+--- do not use without first checking
+--- the actual self.state
+function AuctionSnipe:TryAndSearch()
+    if (not currentItemScan) then
+        return;
+    end
+
+    self.state = STATES.INFO;
+    --before sending query GetItemInfo
+    local _ = GetItemInfo(currentItemScan.id);
+
+    if (_) then
+        -- get itemKey info
+        local info = C_AuctionHouse.GetItemKeyInfo(currentItemScan.itemKey);
+        if (info) then
+            self.state = STATES.ITEMS_WAITING;
+            C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+        end
+    end
+    -- if neither item info or item key info
+    -- then we must wait for the events for item info or item key info
+    -- then try again
+    -- otherwise, the SendSearchQuery may fail for some unknown reason
+    -- and will never trigger an event properly.
+end
+
 function AuctionSnipe:OnUpdate(frame, elapsed)
     if (self.frame) then   
         if (AuctionList.commodity ~= nil or AuctionList.isBuying) then
@@ -370,6 +413,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             AuctionList.isPurchaseReady = false;
             scanIndex = 1;
 
+            Sources:ClearValueCache();
             ClearItemsFound();
             ClearValidAuctions();
             wipe(browseResults);
@@ -397,11 +441,11 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
 
         while (scanIndex <= #browseResults and count < itemsPerUpdate) do
             if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Processing "..scanIndex.." of "..#browseResults);
+                self.snipeStatusText:SetText("Processed Groups "..(scanIndex + totalResultsFound));
             end
 
             local group = browseResults[scanIndex];
-            local auction, noInfo = Query:IsFilteredGroup(group);
+            local auction, noInfo = Query:IsFilteredGroupNoInfo(group);
 
             if (auction) then
                 tinsert(itemsFound, auction);
@@ -455,13 +499,11 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
 
         if (needsToProcessPreviousScan) then
             if (currentItemScan and currentItemScan.itemKey) then
-                self.state = STATES.ITEMS_WAITING;
-                C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+                self:TryAndSearch();
             else
                 currentItemScan = itemsFound[scanIndex - 1];
                 if (currentItemScan and currentItemScan.itemKey) then
-                    self.state = STATES.ITEMS_WAITING;
-                    C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+                    self:TryAndSearch();
                 end
             end 
             needsToProcessPreviousScan = false;
@@ -481,8 +523,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             currentItemScan = itemsFound[scanIndex];
             scanIndex = scanIndex + 1;
 
-            self.state = STATES.ITEMS_WAITING;
-            C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+            self:TryAndSearch();
         else
             if (validAuctions and #validAuctions > 0) then
                 AuctionList:AddItems(validAuctions);
@@ -522,31 +563,38 @@ end
 function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "ADDON_LOADED") then self:OnAddonLoaded(...) end;
 
-    -- new auction house stuff
     if (event == "ITEM_KEY_ITEM_INFO_RECEIVED") then
-        local itemID = select(1, ...);
-        if (infoKey == itemID and self.state == STATES.INFO) then
-            self.state = STATES.FINDING;
+        lastResult = time();
+        local id = select(1, ...);
+        if (currentItemScan and currentItemScan.id == id and self.state == STATES.INFO) then
+            self:TryAndSearch();
         end
-    elseif (event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" 
-        or event == "AUCTION_HOUSE_BROWSE_RESULTS_ADDED") then
+    elseif (event == "GET_ITEM_INFO_RECEIVED") then
+        lastResult = time();
+        local id = select(1, ...);
+        if (currentItemScan and currentItemScan.id == id and self.state == STATES.INFO) then
+            self:TryAndSearch();
+        end
+    end
+
+    if (event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" or event == "AUCTION_HOUSE_BROWSE_RESULTS_ADDED") then
         self:OnBrowseResults(...);
-    elseif (event == "ITEM_SEARCH_RESULTS_UPDATED"
-        or event == "ITEM_SEARCH_RESULTS_ADDED") then
+    end
+    if (event == "ITEM_SEARCH_RESULTS_UPDATED" or event == "ITEM_SEARCH_RESULTS_ADDED") then
         self:OnItemResults();
-    elseif (event == "COMMODITY_SEARCH_RESULTS_UPDATED"
-        or event == "COMMODITY_SEARCH_RESULTS_ADDED") then
+    end
+    if (event == "COMMODITY_SEARCH_RESULTS_UPDATED" or event == "COMMODITY_SEARCH_RESULTS_ADDED") then
         self:OnCommidityResults();
-    elseif (event == "COMMODITY_PURCHASE_FAILED" 
-        or event == "COMMODITY_PURCHASED"
-        or event == "COMMODITY_PURCHASE_SUCCEEDED") then
+    end
+    if (event == "COMMODITY_PURCHASE_FAILED" or event == "COMMODITY_PURCHASED" or event == "COMMODITY_PURCHASE_SUCCEEDED") then
         AuctionList:OnCommondityPurchased(event == "COMMODITY_PURCHASE_FAILED");
         commodityConfirmTime = time();
         if (self.state == STATES.ITEMS_WAITING) then
             needsToProcessPreviousScan = true;
             self.state = STATES.ITEMS;
         end
-    elseif (event == "COMMODITY_PRICE_UPDATED") then
+    end 
+    if (event == "COMMODITY_PRICE_UPDATED") then
         local unit, total = ...;
         if (not AuctionList:ConfirmCommoditiesPurchase(unit, total)) then
             commodityConfirmTime = time();
@@ -555,7 +603,8 @@ function AuctionSnipe:EventHandler(frame, event, ...)
                 self.state = STATES.ITEMS;
             end
         end
-    elseif (event == "COMMODITY_PRICE_UNAVAILABLE") then
+    end
+    if (event == "COMMODITY_PRICE_UNAVAILABLE") then
         AuctionList:CancelCommoditiesPurchase(true);
         commodityConfirmTime = time();
         if (self.state == STATES.ITEMS_WAITING) then
@@ -571,6 +620,24 @@ end
 function AuctionSnipe:OnItemResults() 
     if (currentItemScan and currentItemScan.itemKey) then
         local item = currentItemScan;
+        item.isCommodity = false;
+
+        local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
+
+        item.quality = itemRarity;
+        item.name = itemName;
+        item.link = itemLink;
+        item.type = itemType;
+        item.subtype = itemSubType;
+        item.texture = itemIcon;
+        item.vendorsell = itemSellPrice;
+
+        if (not item.name) then
+            if (self.state == STATES.ITEMS_WAITING) then
+                self.state = STATES.ITEMS;
+            end
+            return;
+        end
 
         if (not C_AuctionHouse.HasFullItemSearchResults(currentItemScan.itemKey)) then
             C_AuctionHouse.RequestMoreItemSearchResults(currentItemScan.itemKey);
@@ -593,6 +660,7 @@ function AuctionSnipe:OnItemResults()
                         item.name = info.name;
                         item.iLevel = info.level;
                         item.quality = info.breedQuality;
+                        item.texture = info.icon;
                     end
 
                     item.tsmId = Utils:GetTSMID(item.link);
@@ -614,6 +682,22 @@ end
 function AuctionSnipe:OnCommidityResults()
     if (currentItemScan and currentItemScan.itemKey) then
         local item = currentItemScan;
+        item.isCommodity = true;
+        local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
+        item.quality = itemRarity;
+        item.name = itemName;
+        item.link = itemLink;
+        item.type = itemType;
+        item.subtype = itemSubType;
+        item.texture = itemIcon;
+        item.vendorsell = itemSellPrice;
+
+        if (not item.name) then
+            if (self.state == STATES.ITEMS_WAITING) then
+                self.state = STATES.ITEMS;
+            end
+            return;
+        end
 
         if (not C_AuctionHouse.HasFullCommoditySearchResults(currentItemScan.id)) then
             C_AuctionHouse.RequestMoreCommoditySearchResults(currentItemScan.id);
@@ -783,7 +867,7 @@ function AuctionSnipe:LoadBaseFilters()
         local item = self.baseFilters[i];
 
         if (item) then
-            tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID});
+            tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
         end
     end
 end

@@ -1,6 +1,6 @@
 ## Interface: 83000
 ## Title: AnS
-## Version: 2.0.2
+## Version: 2.0.3
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
 ## SavedVariables: ANS_CUSTOM_FILTERS, ANS_FILTERS, ANS_BASE_SELECTION, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION
@@ -26,8 +26,10 @@ UI\Templates\Buttons\Buttons.xml
 UI\Templates\Buttons\DropdownItem.xml
 UI\Templates\Buttons\Dropdown.xml
 UI\Templates\Buttons\RecordRowMin.xml
+UI\Templates\Buttons\RecordRowFull.xml
 UI\Templates\Buttons\AuctionTreeRow.xml
 UI\Templates\Frames\RecordsHeadingMin.xml
+UI\Templates\Frames\RecordsHeadingFull.xml
 UI\Templates\Frames\Graph.xml
 
 UI\Components\Core.lua

@@ -405,5 +405,5 @@ function Filter:IsValid(item, exact)
         return self.ids[item.tsmId] == 1 or (not isExact and self.ids[t..":"..id] == 1);
     end
 
-    return priceFn ~= nil and priceFn:len() > 0;
+    return priceFn ~= nil and priceFn:len() > 0 and not self:HasIds();
 end

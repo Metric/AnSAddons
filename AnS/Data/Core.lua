@@ -5,11 +5,41 @@ Ans.Data = Data;
 
 Ans.BaseData = { path = "" };
 
-local function AddBaseData(classID, subClassID, parent)
+local armorBasicSubtypes = {
+    LE_ITEM_ARMOR_PLATE,
+    LE_ITEM_ARMOR_MAIL,
+    LE_ITEM_ARMOR_LEATHER,
+    LE_ITEM_ARMOR_CLOTH
+};
+
+local armorInventoryTypes = {
+    LE_INVENTORY_TYPE_HEAD_TYPE,
+    LE_INVENTORY_TYPE_SHOULDER_TYPE,
+    LE_INVENTORY_TYPE_CHEST_TYPE,
+    LE_INVENTORY_TYPE_WAIST_TYPE,
+    LE_INVENTORY_TYPE_LEGS_TYPE,
+    LE_INVENTORY_TYPE_FEET_TYPE,
+    LE_INVENTORY_TYPE_WRIST_TYPE,
+    LE_INVENTORY_TYPE_HAND_TYPE,
+};
+
+local miscArmorInventoryTypes = {
+    LE_INVENTORY_TYPE_NECK_TYPE,
+    LE_INVENTORY_TYPE_CLOAK_TYPE,
+    LE_INVENTORY_TYPE_FINGER_TYPE,
+    LE_INVENTORY_TYPE_TRINKET_TYPE,
+    LE_INVENTORY_TYPE_HOLDABLE_TYPE,
+    LE_INVENTORY_TYPE_BODY_TYPE,
+    LE_INVENTORY_TYPE_HEAD_TYPE
+};
+
+local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
-    if classID and subClassID then
+    if (inventoryType) then
+        name = GetItemInventorySlotInfo(inventoryType);
+    elseif (classID and subClassID) then
         name = GetItemSubClassInfo(classID, subClassID);
-    elseif classID then
+    elseif (classID) then
         name = GetItemClassInfo(classID);
     else
         return nil;
@@ -19,6 +49,7 @@ local function AddBaseData(classID, subClassID, parent)
         name = name,
         classID = classID,
         subClassID = subClassID,
+        inventoryType = inventoryType,
         children = {},
         path = ""
     };
@@ -44,6 +75,21 @@ local function AddSubBaseData(classID, parent)
     end
 end
 
+local function BulkAddSubBaseData(classID, subclasses, parent, itemTypes)
+    local items = {};
+    for i = 1, #subclasses do
+        local subClassID = subclasses[i];
+        local item = AddBaseData(classID, subClassID, parent);
+        tinsert(items, item);
+        if (itemTypes and item) then
+            for k = 1, #itemTypes do
+                AddBaseData(classID, subClassID, item, itemTypes[k]);
+            end
+        end
+    end
+    return items;
+end
+
 local weaponsRoot = AddBaseData(LE_ITEM_CLASS_WEAPON, nil, Ans.BaseData);
 local armorRoot = AddBaseData(LE_ITEM_CLASS_ARMOR, nil, Ans.BaseData);
 local containerRoot = AddBaseData(LE_ITEM_CLASS_CONTAINER, nil, Ans.BaseData);
@@ -61,7 +107,13 @@ AddBaseData(LE_ITEM_CLASS_QUESTITEM, nil, Ans.BaseData);
 local miscRoot = AddBaseData(LE_ITEM_CLASS_MISCELLANEOUS, nil, Ans.BaseData);
 
 AddSubBaseData(LE_ITEM_CLASS_WEAPON, weaponsRoot);
-AddSubBaseData(LE_ITEM_CLASS_ARMOR, armorRoot);
+
+-- basic armor
+BulkAddSubBaseData(LE_ITEM_CLASS_ARMOR, armorBasicSubtypes, armorRoot, armorInventoryTypes);
+-- misc armor
+local miscArmorRoots = BulkAddSubBaseData(LE_ITEM_CLASS_ARMOR, {LE_ITEM_ARMOR_GENERIC}, armorRoot, miscArmorInventoryTypes);
+AddBaseData(LE_ITEM_CLASS_ARMOR, LE_ITEM_ARMOR_SHIELD, miscArmorRoots[1]);
+
 AddSubBaseData(LE_ITEM_CLASS_CONTAINER, containerRoot);
 AddSubBaseData(LE_ITEM_CLASS_GEM, gemRoot);
 AddSubBaseData(LE_ITEM_CLASS_ITEM_ENHANCEMENT, enhanceRoot);

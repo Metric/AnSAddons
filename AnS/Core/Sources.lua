@@ -98,6 +98,10 @@ function Sources:ClearCache()
     wipe(OperationCache);
 end
 
+function Sources:ClearValueCache()
+    wipe(OpValueCache);
+end
+
 function Sources:LoadCustomVars()
     wipe(VarCodes);
     local i;
@@ -342,7 +346,7 @@ Sources.contains = function(v1, v2)
 end
 
 function Sources:Query(q, item)
-    local itemId = item.link;
+    local itemId = item.link or item.id;
     local buyout = item.buyoutPrice;
     local stackSize = item.count;
     local quality = item.quality;
@@ -402,14 +406,14 @@ function Sources:Query(q, item)
 
         fn, error = loadstring(pstr);
 
-        if(not fn and error) then
+        if(not fn or error) then
             print("AnS Filter / Pricing String Error: "..error);
             return nil;
         end
 
         _, fn = pcall(fn);
 
-        if (not _) then
+        if (not _ or not fn) then
             print("AnS Invalid Filter / Pricing String: "..q);
             return nil;
         end

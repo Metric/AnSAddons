@@ -193,6 +193,96 @@ function Query:IsFiltered(auction)
     return false;
 end
 
+function Query:IsFilteredGroupNoInfo(group)
+    local auction = Recycler:Get();
+
+    auction.name = nil;
+    auction.itemKey = group.itemKey;
+    auction.isCommodity = false;
+    auction.isPet = false;
+    auction.iLevel = group.itemKey.itemLevel;
+    auction.id = group.itemKey.itemID;
+    auction.count = group.totalQuantity;
+
+    auction.ppu = group.minPrice;
+    auction.buyoutPrice = auction.ppu;
+
+    auction.link = nil;
+
+    if (group.itemKey.battlePetSpeciesID > 0) then
+        local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
+        if (not groupInfo) then
+            Recycler:Recycle(auction);
+            return nil, false;
+        end
+
+        auction.link = groupInfo.battlePetLink;
+        auction.isPet = true;
+    end
+
+    auction.texture = nil;
+    auction.quality = 1; --default to common base
+    auction.type = 0;
+    auction.subtype = 0;
+    auction.vendorsell = 0;
+
+    if (auction.link and Utils:IsBattlePetLink(auction.link)) then
+        local info = Utils:ParseBattlePetLink(auction.link);
+        auction.texture = info.icon;
+        auction.iLevel = info.level;
+        auction.name = info.name;
+        auction.quality = info.breedQuality;
+        auction.tsmId = Utils:GetTSMID(auction.link);
+    else
+        auction.tsmId = "i:"..auction.id;
+    end
+
+    if (auction.buyoutPrice > 0) then
+        local avg = Sources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
+        if (not avg or avg <= 0) then 
+            avg = auction.vendorsell or 1; 
+        end
+
+        if (avg <= 1) then
+            auction.avg = 1;
+            auction.percent = 9999;
+        else
+            auction.avg = avg;
+            auction.percent = math.floor(auction.ppu / avg * 100);
+        end
+
+        local filterAccepted = false;
+        local k;
+
+        if (#self.filters == 0) then
+            local allowed = Sources:Query(ANS_GLOBAL_SETTINGS.pricingFn, auction);
+
+            if (type(allowed) == "boolean" or type(allowed) == "number") then
+                if (allowed and self:IsValid(auction)) then
+                    filterAccepted = true;
+                end
+            else
+                filterAccepted = self:IsValid(auction);
+            end
+        end
+
+        local tf = #self.filters;
+        for k = 1, tf do
+            if (self.filters[k]:IsValid(auction, auction.isPet)) then
+                filterAccepted = true;
+                break;
+            end
+        end
+
+        if (filterAccepted) then
+            return auction;
+        end
+    end
+
+    Recycler:Recycle(auction);
+    return nil, false;
+end
+
 function Query:IsFilteredGroup(group)
     local auction = Recycler:Get();
 

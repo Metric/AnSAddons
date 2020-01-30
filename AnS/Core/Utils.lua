@@ -119,6 +119,7 @@ function Utils:ParseBattlePetLink(link)
     BattlePetTempTable.power = tonumber(power);
     BattlePetTempTable.speed = tonumber(speed);
     BattlePetTempTable.customName = nil;
+    BattlePetTempTable.icon = icon;
 
     return BattlePetTempTable;
 end

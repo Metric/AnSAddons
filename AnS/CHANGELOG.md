@@ -1,3 +1,9 @@
+AnS Changes 2.0.3
+------------------
+* Added base data support for sub sub base filters
+* Added a new method for the group filtering part, so the sniper will not get stuck.
+* Fixed an issue where a parent custom filter would still return true if it only had a filter string and no ids, but it had children with ids.
+
 AnS Changes 2.0.2
 -------------------
 * Added an option to turn on Commodity Purchase Confirm. The confirmation allows you to set the number of items to buy before purchasing.

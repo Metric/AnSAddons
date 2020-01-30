@@ -11,7 +11,11 @@ ANS_GLOBAL_SETTINGS = {
     characterBlacklist = "",
     useCoinIcons = false,
     itemBlacklist = {},
-    useCommodityConfirm = false
+    useCommodityConfirm = false,
+    tooltipRealmRecent = true,
+    tooltipRealmMin = true,
+    tooltipRealm3Day = true,
+	tooltipRealmMarket = true,
 };
 ANS_FILTER_SELECTION = {};
 ANS_BASE_SELECTION = {};

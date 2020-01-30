@@ -269,6 +269,18 @@ function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.useCommodityConfirm == nil) then
         ANS_GLOBAL_SETTINGS.useCommodityConfirm = false;
     end
+    if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealm3Day = true;
+    end
+	if (ANS_GLOBAL_SETTINGS.tooltipRealmMarket == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmMarket = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRealmRecent == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmRecent = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
+        ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
+    end
 end
 
 function AnsCore:MigrateCustomFilters()

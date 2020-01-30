@@ -1,0 +1,68 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Button name="AnsRecordRowFullTemplate" virtual="true" hidden="true">
+        <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Color r="1" g="1" b="1" a="0.25" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.10" />
+                </Texture>
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="128" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="6" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentWho" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="100" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT" x="0" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentType" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="64" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentWho" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentStack" justifyH="RIGHT" inherits="AnsGameFontSmall">
+                    <Size x="64" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentType" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentAmount" inherits="AnsGameFontSmall" justifyH="RIGHT">
+                    <Size x="128" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentStack" x="0" y="0" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentDate" inherits="AnsGameFontSmall" justifyH="RIGHT">
+                    <Size x="100" y="16" />
+                    <Anchors>
+                        <Anchor point="RIGHT" x="-6" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
+</Ui>

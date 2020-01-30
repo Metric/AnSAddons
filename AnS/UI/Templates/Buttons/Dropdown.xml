@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-     <Button name="AnsDropdownTemplate" virtual="true">
+     <Button name="AnsDropdownTemplate" virtual="true" enableMouse="true">
         <ButtonText justifyH="LEFT" inherits="AnsGameFontNormalDark">
             <Anchors>
                 <Anchor point="LEFT" x="5" y="0" />
@@ -25,7 +25,7 @@
             </Layer>
         </Layers>
         <Frames>
-            <Frame name="$parentList" hidden="true">
+            <Frame name="$parentList" hidden="true" frameStrata="HIGH" enableMouse="true">
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="BOTTOMLEFT" x="0" y="0" />
                 </Anchors>
@@ -40,7 +40,7 @@
                     </Layer>
                 </Layers>
                 <Frames>
-                    <ScrollFrame name="$parentScrollFrame" frameStrata="LOW" inherits="UIPanelScrollFrameCodeTemplate">
+                    <ScrollFrame name="$parentScrollFrame" inherits="UIPanelScrollFrameCodeTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
                         </Anchors>
@@ -48,7 +48,7 @@
                             <OnScrollRangeChanged function=""/>
                         </Scripts>
                         <ScrollChild>
-                            <Frame hidden="true" frameStrata="LOW" name="$parentScrollChildFrame" parentKey="ScrollChildFrame">
+                            <Frame hidden="true" name="$parentScrollChildFrame" parentKey="ScrollChildFrame">
                                 <Size x="300" y="334"/>
                             </Frame>
                         </ScrollChild>
@@ -76,22 +76,22 @@
                         </Frames>
                     </ScrollFrame>
 
-                    <Button name="$parentItem1" inherits="AnsDropdownItemTemplate">
+                    <Button name="$parentItem1" frameLevel="999" inherits="AnsDropdownItemTemplate"> 
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
                         </Anchors>
                     </Button>
-                    <Button name="$parentItem2" inherits="AnsDropdownItemTemplate">
+                    <Button name="$parentItem2" frameLevel="999" inherits="AnsDropdownItemTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentItem1" relativePoint="BOTTOMLEFT" x="0" y="0" />
                         </Anchors>
                     </Button>
-                    <Button name="$parentItem3"  inherits="AnsDropdownItemTemplate">
+                    <Button name="$parentItem3" frameLevel="999" inherits="AnsDropdownItemTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT"  relativeTo="$parentItem2" relativePoint="BOTTOMLEFT" x="0" y="0" />
                         </Anchors>
                     </Button>
-                    <Button name="$parentItem4"  inherits="AnsDropdownItemTemplate">
+                    <Button name="$parentItem4" frameLevel="999" inherits="AnsDropdownItemTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentItem3" relativePoint="BOTTOMLEFT" x="0" y="0" />
                         </Anchors>

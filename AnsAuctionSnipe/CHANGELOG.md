@@ -1,3 +1,11 @@
+AnS [Auction Sniper] Changes 2.0.3
+-----------------------------------
+* Fixed an issue where it would get stuck if lots of categories or subcategories were selected at once.
+    - Note: If using TUG for pricing, then it will not find all items if selecting many categories. Because, TUJ does not support looking up by just a numeric ItemID at the moment. TUJ will find some but is limited, because of how much cached item info the WoW client stores for auction item key info and item info. It seems the WoW client will only cache the last 5000 or so. So, by the next time the scan comes back around TUJ still return no data, because it uses GetItemInfo() which will have to query the server again. Since, by then it would have already been pushed out of the 5000 cache if scanning lots of items. 
+    - I have put in a github issue with erorus for the TUJ addon and provided code for the fix. As to if or when he updates it, I cannot say.
+    - TSM is not affected by this issue, since TSM automatically converts numeric ItemID's to the proper TSM key string it needs to lookup the item, without using GetItemInfo().
+* Added sub sub categories for Armor.
+
 AnS [Auction Sniper] Changes 2.0.2
 ------------------------------------
 * Fixed an issue where some items were being skipped, due to not requesting all available pages of the items / commodities.
