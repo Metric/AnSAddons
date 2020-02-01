@@ -200,6 +200,8 @@ function Query:IsFilteredGroupNoInfo(group)
     auction.itemKey = group.itemKey;
     auction.isCommodity = false;
     auction.isPet = false;
+    auction.texture = nil;
+    auction.quality = 99;
     auction.iLevel = group.itemKey.itemLevel;
     auction.id = group.itemKey.itemID;
     auction.count = group.totalQuantity;
@@ -209,8 +211,9 @@ function Query:IsFilteredGroupNoInfo(group)
 
     auction.link = nil;
 
+    local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
+
     if (group.itemKey.battlePetSpeciesID > 0) then
-        local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
         if (not groupInfo) then
             Recycler:Recycle(auction);
             return nil, false;
@@ -219,9 +222,14 @@ function Query:IsFilteredGroupNoInfo(group)
         auction.link = groupInfo.battlePetLink;
         auction.isPet = true;
     end
+    
+    if (groupInfo) then
+        auction.quality = groupInfo.quality;
+        auction.texture = groupInfo.iconFileID;
+        auction.name = groupInfo.itemName;
+        auction.isCommodity = groupInfo.isCommodity;
+    end
 
-    auction.texture = nil;
-    auction.quality = 1; --default to common base
     auction.type = 0;
     auction.subtype = 0;
     auction.vendorsell = 0;

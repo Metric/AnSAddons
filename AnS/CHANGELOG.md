@@ -1,3 +1,7 @@
+AnS Changes 2.0.4
+---------------------
+* Fixed an issue where group quality level default was set incorrectly in 2.0.3. Thus, preventing proper filtering and returning no results in some cases.
+
 AnS Changes 2.0.3
 ------------------
 * Added base data support for sub sub base filters

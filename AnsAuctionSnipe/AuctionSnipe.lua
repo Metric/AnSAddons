@@ -882,7 +882,7 @@ function AuctionSnipe:Start()
     local maxPercent = tonumber(self.maxPercentInput:GetText()) or 100;
 
     local search = self.searchInput:GetText();
-    
+
     self:LoadCLevelFilter();
     self:LoadBaseFilters();
 
