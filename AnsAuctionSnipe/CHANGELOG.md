@@ -1,3 +1,7 @@
+AnS [Auction Sniper] Changes 2.0.4
+-----------------------------------
+* Owner / account items and commodites are now filtered out of the results properly in the sniper window.
+
 AnS [Auction Sniper] Changes 2.0.3
 -----------------------------------
 * Fixed an issue where it would get stuck if lots of categories or subcategories were selected at once.

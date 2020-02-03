@@ -136,11 +136,30 @@ end
 
 function Query:IsFiltered(auction)
     local blacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
+
+    -- ensure the blacklist is in table
+    -- format, if not make it table and cache it
+    -- this won't hurt anything since
+    -- the config already handles if it is in a table
+    -- and will fill in the edit box appropriately
+    if (type(blacklist) == "string") then
+        blacklist = { strsplit("\r\n", blacklist:lower()) };
+        ANS_GLOBAL_SETTINGS.characterBlacklist = blacklist;
+    end
+
     local isOnBlacklist = false;
 
-    if (auction.owner) then
+    if (auction.owner and #blacklist > 0) then
         if (type(auction.owner) ~= "table") then
             isOnBlacklist = Utils:InTable(blacklist, auction.owner:lower());
+        else
+            for i,v in ipairs(auction.owner) do
+                local contains = Utils:InTable(blacklist, v:lower());
+                if (contains) then
+                    isOnBlacklist = true;
+                    break;
+                end
+            end
         end
     end
 

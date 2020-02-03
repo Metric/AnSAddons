@@ -175,13 +175,13 @@ function AuctionSnipe:Init()
     self.filterTreeView = TreeView:New(_G[frame:GetName().."FilterList"], {
         rowHeight = 21,
         childIndent = 16, 
-        template = "AnsFilterRowTemplate"
+        template = "AnsFilterRowTemplate", multiselect = true
     }, function(item) d:ToggleFilter(item.filter) end);
 
     self.baseTreeView = TreeView:New(_G[frame:GetName().."BaseList"], {
         rowHeight = 21,
         childIndent = 16,
-        template = "AnsFilterRowTemplate"
+        template = "AnsFilterRowTemplate", multiselect = true
     }, function(item) d:ToggleBase(item.filter) end);
 
     self.startButton = _G[frame:GetName().."BottomBarStart"];
@@ -372,7 +372,7 @@ function AuctionSnipe:TryAndSearch()
         local info = C_AuctionHouse.GetItemKeyInfo(currentItemScan.itemKey);
         if (info) then
             self.state = STATES.ITEMS_WAITING;
-            C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, false);
+            C_AuctionHouse.SendSearchQuery(currentItemScan.itemKey, DEFAULT_ITEM_SORT, true);
         end
     end
     -- if neither item info or item key info
@@ -646,11 +646,13 @@ function AuctionSnipe:OnItemResults()
 
         for searchIndex = 1, C_AuctionHouse.GetNumItemSearchResults(currentItemScan.itemKey) do
             local result = C_AuctionHouse.GetItemSearchResultInfo(currentItemScan.itemKey, searchIndex);
+
             if (result.buyoutAmount) then
                 item.count = result.quantity;
                 item.ppu = result.buyoutAmount;
                 item.buyoutPrice = result.buyoutAmount;
                 item.owner = GetOwners(result);
+                item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
 
                 if (result.itemLink) then
                     item.link = result.itemLink;
@@ -666,7 +668,7 @@ function AuctionSnipe:OnItemResults()
                     item.tsmId = Utils:GetTSMID(item.link);
                 end
 
-                if (Query:IsFiltered(item)) then
+                if (not item.isOwnerItem and Query:IsFiltered(item)) then
                     item.auctionId = result.auctionID;
                     tinsert(validAuctions, item:Clone());
                 end
@@ -710,19 +712,22 @@ function AuctionSnipe:OnCommidityResults()
             item.ppu = result.unitPrice;
             item.buyoutPrice = result.unitPrice * result.quantity;
             item.owner = GetOwners(result);
+            item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
 
             if (result.itemLink) then
                 item.link = result.itemLink;
                 item.tsmId = Utils:GetTSMID(item.link);
             end
 
-            if (Query:IsFiltered(item)) then
-                tinsert(validAuctions, item:Clone());
-            else
-                -- we can break here because it is sorted by price
-                -- and thus if we find one that is not compatible
-                -- we can give up sooner
-                break;
+            if (not item.isOwnerItem) then
+                if (Query:IsFiltered(item)) then
+                    tinsert(validAuctions, item:Clone());
+                else
+                    -- we can break here because it is sorted by price
+                    -- and thus if we find one that is not compatible
+                    -- we can give up sooner
+                    break;
+                end
             end
         end
 

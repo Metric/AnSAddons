@@ -1,3 +1,8 @@
+AnS Changes 2.0.5
+-------------------
+* Fixed an issue where blacklist would not work properly if you had just edited it.
+* Added blacklist checking for multiple owners on commodities
+
 AnS Changes 2.0.4
 ---------------------
 * Fixed an issue where group quality level default was set incorrectly in 2.0.3. Thus, preventing proper filtering and returning no results in some cases.
