@@ -10,11 +10,11 @@ function Dropdown:New(name, parent)
     dp.frame = CreateFrame("BUTTON", name, parent, "AnsDropdownTemplate");
 
     dp.list = _G[dp.frame:GetName().."List"];
-    dp.selected = 1;
     dp.scrollFrame = _G[dp.list:GetName().."ScrollFrame"];
     dp.scrollBar = _G[dp.scrollFrame:GetName().."ScrollBar"];
 
-
+    dp.selected = 1;
+    dp.multiselect = false;
     dp.parent = parent;
     dp.hoverCount = 0;
 
@@ -33,6 +33,22 @@ function Dropdown:SetSize(width, height)
     for i = 1, 4 do
         _G[self.list:GetName().."Item"..i]:SetSize(width, height);
     end
+end
+
+function Dropdown:Hide()
+    if (not self.frame) then
+        return;
+    end
+
+    self.frame:Hide();
+end
+
+function Dropdown:Show()
+    if (not self.frame) then
+        return;
+    end
+
+    self.frame:Show();
 end
 
 function Dropdown:SetPoint(point, anchor, x, y)
@@ -82,33 +98,67 @@ end
 
 function Dropdown:ItemClick(f)
     local offset = f:GetID();
-
-    local item = self.items[offset];
-    self.selected = offset;
-
-    self.frame:SetText(item.text);
-
-    item.fn();
-
+    self:SetSelected(offset);
     self:Close();
 end
 
 function Dropdown:ClearItems()
     wipe(self.items);
+    if (self.multiselect) then
+        self.selected = {};
+    else
+        self.selected = 1;
+    end
     self:Refresh();
     self:Close();
 end
 
 function Dropdown:SetSelected(index)
-    self.selected = index;
-
-    if(self.selected < 1) then
-        self.selected = 1;
-    elseif (self.selected > #self.items) then
-        self.selected = 1;
+    if(index < 1) then
+        index = 1;
+    elseif (index > #self.items) then
+        index = 1;
     end
 
-    local item = self.items[self.selected];
+    local item = self.items[index];
+
+    if (self.multiselect) then
+        if (type(self.selected) ~= "table") then
+            if (self.selected == index) then
+                self.selected = {};
+            else
+                self.selected = {index};
+            end
+        else
+            if (Utils:InTable(self.selected, index)) then
+                for i,v in ipairs(self.selected) do
+                    if (v == index) then
+                        tremove(self.selected, i);
+                        break;
+                    end
+                end
+            else
+                tinsert(self.selected, index);
+            end
+        end
+    else
+        self.selected = index;
+    end
+
+    if (self.multiselect) then
+        local label = "";
+        local sep = "";
+        for i,v in ipairs(self.selected) do
+            local item = self.items[v];
+            if (item) then
+                label = label..sep..item.text;
+                sep = ",";
+            end
+        end
+        self.frame:SetText(label);
+    elseif (item) then
+        self.frame:SetText(item.text);
+    end
 
     if (item) then
         item.fn();
@@ -130,8 +180,10 @@ end
 function Dropdown:AddItem(text, fn)
     tinsert(self.items, {text = text, fn = fn});
 
-    if(#self.items == 1) then
-        self.frame:SetText(text);
+    if (not self.multiselect) then
+        if(#self.items == 1) then
+            self.frame:SetText(text);
+        end
     end
 
     self:Refresh();

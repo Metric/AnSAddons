@@ -24,6 +24,8 @@ local OP_SHORT_HAND = {
     legendary = "5"
 };
 
+local hooks = {};
+
 --- Standard Utils ---
 
 function Utils:GetTable()
@@ -76,7 +78,7 @@ function Utils:PriceToString(val)
         return GetMoneyString(val, true);
     end
 
-    local gold, silver, copper  = self:GSC(val);
+    local gold, silver, copper = self:GSC(val);
     local st = "";
 
     if (gold ~= 0) then
@@ -93,6 +95,10 @@ function Utils:PriceToString(val)
         st = st.."|cFFFFFFFF"..format("%02i|cFF9B502Fc", copper);
     elseif (copper ~= 0) then
         st = st.."|cFFFFFFFF"..copper.."|cFF9B502Fc";
+    end
+
+    if (st == "") then
+        st = "|cFFFFFFFF0|cFF9B502Fc";
     end
 
     return st;
@@ -366,4 +372,21 @@ function Utils:InTable(tbl, val)
     end
 
     return false;
+end
+
+function Utils:HookSecure(name, fn)
+    hooksecurefunc(name, fn);
+end
+
+function Utils:Hook(name, fn)
+    hooks[name] = _G[name];
+    _G[name] = function(...) fn(hooks[name], ...); end;
+end
+
+function Utils:Guid()
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
+        return string.format('%x', v)
+    end)
 end

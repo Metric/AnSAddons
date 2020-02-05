@@ -7,19 +7,23 @@ local Sources = Ans.Sources;
 
 local Utils = Ans.Utils;
 
-local Data = Ans.Data;
-
-local Filter = Ans.Filter;
+local DefaultGroups = Ans.Data;
 
 local AHTabs = {};
 local AHTabIndexToTab = {};
 
+local MinimapIcon = Ans.MinimapIcon;
+local EventManager = Ans.EventManager;
+local Window = Ans.Window;
+local Analytics = Ans.Analytics;
+local Operations = Ans.Operations;
+local SnipingOperation = Operations.Sniping;
+
 AnsCore = {};
 AnsCore.__index = AnsCore;
 
-Ans.Filters = {};
-
 AnsCore.API = Ans;
+AnsCore.Window = Window;
 
 local AH_TAB_CLICK = nil;
 
@@ -33,18 +37,13 @@ StaticPopupDialogs["ANS_NO_PRICING"] = {
     preferredIndex = 3
 };
 
---local function AHTabClick(self, button, down)
---    AH_TAB_CLICK(self, button, down);
---    AnsCore:AHTabClick(self, button, down);
---end
-
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
 local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
 local ATRPercentFn = "atrvalue";
 local ATRTSMPercentFn = "min(atrvalue,dbmarket)";
 local ATRTUJPercentFn = "min(atrvalue,tujmarket)";
-local AnsOnlyPercentFn = "ansmarket";
+local AnsOnlyPercentFn = "min(ansrecent,ansmarket)";
 
 function AnsCore:AddAHTab(name, displayMode)
     local n = #AuctionHouseFrame.Tabs + 1;
@@ -66,20 +65,86 @@ function AnsCore:AddAHTab(name, displayMode)
 end
 
 function AnsCore:RegisterEvents(frame)
+    self.frame = frame;
     frame:RegisterEvent("VARIABLES_LOADED");
+    Analytics:RegisterEvents(frame);
 end
 
 function AnsCore:EventHandler(frame, event, ...)
-    if (event == "VARIABLES_LOADED") then self:OnLoad(); end;
+    EventManager:Emit(event, ...);
+
+    if (event == "VARIABLES_LOADED") then 
+        self:OnLoad();
+    end
+end
+
+function AnsCore.SaveMiniButton(angle)
+    ANS_WINDOW_MINI_POSITION = angle;
 end
 
 function AnsCore:OnLoad()
     self:MigrateGlobalSettings();
-    self:CreateDefaultFilters();
-    self:MigrateCustomFilters();
+    self:MigrateFiltersToGroups(ANS_FILTERS, ANS_GROUPS);
+    self:MigrateFiltersToSnipingOperations(ANS_FILTERS);
+
+    -- clear ANS_FILTERS!
+    ANS_FILTERS = {};
+
+    self:SetDefaults();
     self:RegisterPriceSources();
-    self:LoadFilters();
     self:LoadCustomVars();
+
+    Ans.MiniButton = MinimapIcon:New("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
+    function() Window:Toggle() end, AnsCore.SaveMiniButton, ANS_WINDOW_MINI_POSITION, {"|cFFCC00FFAnS ["..GetAddonMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
+
+    Window:OnLoad(self.frame);
+end
+
+function AnsCore:MigrateFiltersToGroups(parent, root)
+    for i,f in ipairs(parent) do
+        local t = {
+            id = Utils:Guid(),
+            name = f.name,
+            ids = f.ids,
+            children = {}
+        };
+
+        f.id = t.id;
+        tinsert(root, t);
+
+        if (#f.children > 0) then
+            self:MigrateFiltersToGroups(f.children, t.children);
+        end
+    end
+end
+
+function AnsCore:MigrateFiltersToSnipingOperations(items, parentName)
+    for i,f in ipairs(items) do
+        local snipeName = f.name;
+        if (parentName) then
+            snipeName = parentName.."."..f.name;
+        end
+
+        if (f.priceFn and #f.priceFn > 0) then
+            local tmp = SnipingOperation:NewConfig(snipeName);
+            tmp.price = f.priceFn;
+            tmp.exactMatch = f.exactMatch;
+            if (f.id) then
+                tinsert(tmp.groups, f.id);
+            end
+            tinsert(ANS_OPERATIONS.Sniping, tmp);
+        end
+
+        if (#f.children > 0) then
+            self:MigrateFiltersToSnipingOperations(f.children, snipeName);
+        end
+    end
+end
+
+function AnsCore:SetDefaults()
+    if (#ANS_GROUPS == 0) then
+        ANS_GROUPS = DefaultGroups;
+    end
 end
 
 function AnsCore:RegisterPriceSources()
@@ -186,61 +251,6 @@ function AnsCore:LoadCustomVars()
     Sources:LoadCustomVars();
 end
 
-function AnsCore:LoadFilters()
-    wipe(Ans.Filters);
-
-    for i, f in ipairs(ANS_FILTERS) do
-        local filter = Filter:New(f.name);
-        
-        filter.priceFn = f.priceFn;
-        filter.useGlobalMaxBuyout = f.useMaxPPU;
-        filter.useGlobalMinILevel = f.useMinLevel;
-        filter.useGlobalMinQuality = f.useQuality;
-        filter.useGlobalPercent = f.usePercent;
-        
-        if (f.exactMatch == nil) then
-            filter.exactMatch = true;
-        else
-            filter.exactMatch = f.exactMatch;
-        end
-
-        filter:ParseTSM(f.ids);
-
-        if (#f.children > 0) then
-            self:LoadSubFilters(f.children, filter);
-        end
-
-        tinsert(Ans.Filters, filter);
-    end
-end
-
-function AnsCore:LoadSubFilters(filters, parent)
-    for i, f in ipairs(filters) do
-        local filter = Filter:New(f.name);
-        filter.priceFn = f.priceFn;
-        filter.useGlobalMaxBuyout = f.useMaxPPU;
-        filter.useGlobalMinILevel = f.useMinLevel;
-        filter.useGlobalMinQuality = f.useQuality;
-        filter.useGlobalPercent = f.usePercent;
-        
-        if (f.exactMatch == nil) then
-            filter.exactMatch = true;
-        else
-            filter.exactMatch = f.exactMatch;
-        end
-
-        filter:ParseTSM(f.ids);
-
-        parent:AddChild(filter);
-
-        -- probably should do this as a stack
-        -- but for now will do recursive
-        if (#f.children > 0) then
-            self:LoadSubFilters(f.children, filter);
-        end
-    end
-end
-
 function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.rescanTime == nil) then
         ANS_GLOBAL_SETTINGS.rescanTime = 0;
@@ -281,99 +291,4 @@ function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
         ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
     end
-end
-
-function AnsCore:MigrateCustomFilters()
-    ANS_CUSTOM_FILTERS = ANS_CUSTOM_FILTERS or {};
-
-    if (#ANS_CUSTOM_FILTERS > 0) then
-        for i, v in ipairs(ANS_CUSTOM_FILTERS) do
-            local t = {
-                name = v.name,
-                ids = v.ids,
-                children = {},
-                useMaxPPU = false,
-                useMinLevel = false,
-                useQuality = false,
-                usePercent = true,
-                exactMatch = true,
-                priceFn = v.priceFn
-            };
-
-            tinsert(ANS_FILTERS, t);
-        end
-    end
-
-    -- migrating away from custom filters
-    -- and combined them with all filters
-    ANS_CUSTOM_FILTERS = {};
-end
-
-function AnsCore:RestoreDefaultFilters()
-    self:RestoreFilter(Data, ANS_FILTERS);
-end
-
-function AnsCore:RestoreFilter(children, parent)
-    for i,v in ipairs(children) do
-        local restored = false;
-
-        for i2, v2 in ipairs(parent) do
-            if (v2.name == v.name) then
-                v2.ids = v.ids;
-                v2.useMaxPPU = v.useMaxPPU;
-                v2.useMinLevel = v.useMinLevel;
-                v2.useQuality = v.useQuality;
-                v2.usePercent = v.usePercent;
-                v2.priceFn = v.priceFn;
-                v2.exactMatch = v.exactMatch;
-                
-                if (v.children and #v.children > 0) then
-                    self:RestoreFilter(v.children, v2.children);
-                end
-
-                restored = true;
-                break;
-            end
-        end
-
-        if (not restored) then
-            self:PopulateFilter(v, parent);
-        end
-    end
-end
-
-function AnsCore:CreateDefaultFilters()
-    if (not ANS_BASE_SELECTION) then
-        ANS_BASE_SELECTION = {};
-    end
-
-    if (not ANS_FILTERS or #ANS_FILTERS == 0) then
-        ANS_FILTERS = {};
-        -- reset filter selection as a new method will now
-        -- be used
-        ANS_FILTER_SELECTION = {};
-        self:RestoreFilter(Data, ANS_FILTERS);
-    end
-end
-
-function AnsCore:PopulateFilter(v, parent)
-    local t = {
-        name = v.name,
-        ids = v.ids,
-        children = {},
-        useMaxPPU = v.useMaxPPU,
-        useMinLevel = v.useMinLevel,
-        useQuality = v.useQuality,
-        usePercent = v.usePercent,
-        exactMatch = v.exactMatch,
-        priceFn = v.priceFn
-    };
-
-    if (v.children and #v.children > 0) then
-        for i2, v2 in ipairs(v.children) do
-            self:PopulateFilter(v2, t.children);
-        end 
-    end
-
-    tinsert(parent, t);
 end

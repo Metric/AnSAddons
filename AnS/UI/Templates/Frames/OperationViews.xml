@@ -1,0 +1,80 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsSnipeOpEditorTemplate" virtual="true" hidden="true">
+        <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="-32" />
+        </Anchors>
+        <Frames>
+            <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+            <ScrollFrame name="$parentPrice" parentKey="Price" inherits="AnsScrollFrameTemplate">
+                <Size x="475" y="128" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentOpName" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox name="$parentText" parentKey="Text" inherits="AnsEditBoxTemplate">
+                        <Size x="256" y="123" />
+                    </EditBox>
+                </ScrollChild>
+            </ScrollFrame>
+            <EditBox parentKey="MaxPercent" text="0" name="$parentMaxPercent" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentPrice" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="MinLevel" text="0" name="$parentMinLevel" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPercent" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="MinCLevel" text="0" name="$parentMinCLevel" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPercent" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="MaxCLevel" text="120" name="$parentMaxCLevel" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="LEFT" x="5" y="0" relativePoint="RIGHT" relativeTo="$parentMinCLevel" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="MaxPPU" text="0" name="$parentMaxPPU" inherits="AnsEditBoxTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxCLevel" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="Search" maxBytes="64" text="" name="$parentSearch" inherits="AnsEditBoxTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPPU" />
+                </Anchors>
+            </EditBox>
+            <CheckButton parentKey="ExactMatch" name="$parentExactMatch" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentSearch" />
+                </Anchors>
+            </CheckButton>
+        </Frames>
+    </Frame>
+</Ui>

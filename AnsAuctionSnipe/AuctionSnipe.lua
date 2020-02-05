@@ -7,7 +7,6 @@ local Sources = AnsCore.API.Sources;
 local TreeView = AnsCore.API.UI.TreeView;
 local Utils = AnsCore.API.Utils;
 
-
 local EVENTS_TO_REGISTER = {
     "AUCTION_HOUSE_BROWSE_RESULTS_ADDED",
     "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED",

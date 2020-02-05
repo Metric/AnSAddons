@@ -35,7 +35,7 @@
                 <FontString name="$parentDate" text="Date" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
                     <Size x="100" y="16" />
                     <Anchors>
-                        <Anchor point="RIGHT" x="-6" y="0" />
+                        <Anchor point="RIGHT" x="-6" y="-4" />
                     </Anchors>
                 </FontString>
 

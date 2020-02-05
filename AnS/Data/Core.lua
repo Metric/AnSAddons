@@ -5,6 +5,7 @@ Ans.Data = Data;
 
 Ans.BaseData = { path = "" };
 
+
 local armorBasicSubtypes = {
     LE_ITEM_ARMOR_PLATE,
     LE_ITEM_ARMOR_MAIL,
@@ -33,6 +34,16 @@ local miscArmorInventoryTypes = {
     LE_INVENTORY_TYPE_HEAD_TYPE
 };
 
+Ans.InventoryTypes = {};
+
+for i,v in ipairs(armorInventoryTypes) do
+    tinsert(Ans.InventoryTypes, v);
+end
+for i,v in ipairs(miscArmorInventoryTypes) do
+    tinsert(Ans.InventoryTypes, v);
+end
+
+
 local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
     if (inventoryType) then
@@ -42,6 +53,10 @@ local function AddBaseData(classID, subClassID, parent, inventoryType)
     elseif (classID) then
         name = GetItemClassInfo(classID);
     else
+        return nil;
+    end
+
+    if (not name) then
         return nil;
     end
 
@@ -68,10 +83,18 @@ local function AddBaseData(classID, subClassID, parent, inventoryType)
 end
 
 local function AddSubBaseData(classID, parent)
-    local subclasses = C_AuctionHouse.GetAuctionItemSubClasses(classID);
-    for i = 1, #subclasses do
-        local subClassID = subclasses[i];
-        AddBaseData(classID, subClassID, parent);
+    if (BattlePetTooltip) then
+        local subclasses = C_AuctionHouse.GetAuctionItemSubClasses(classID);
+        for i = 1, #subclasses do
+            local subClassID = subclasses[i];
+            AddBaseData(classID, subClassID, parent);
+        end
+    else
+        local subclasses = GetAuctionItemSubClasses(classID);
+        for i = 1, #subclasses do
+            local subClassID = subclasses[i];
+            AddBaseData(classID, subClassID, parent);
+        end
     end
 end
 

@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <!-- Frame to handle all core events -->
+    <Frame name="AnsAuctionDataCore">
+        <Scripts>
+            <OnLoad>AnsAuctionData:OnLoad();</OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

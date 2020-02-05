@@ -1,8 +1,6 @@
-OMG It is Happening... An update for 8.3 Sniper
-=========================================
-
-A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
-
+Experimental Branch
+========================
+Do not use this in your live play sessions. This is for testing new stuff only. Experimental will be moved to live as it is ready.
 
 AnS [Auction Snipe] 
 ===========================

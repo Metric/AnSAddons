@@ -1,0 +1,101 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsGroupEditTemplate" virtual="true">
+        <Size x="570" y="386" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="-32" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="InventoryList" name="$parentInventoryList">
+                <Size x="256" y="249" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-64" />
+                </Anchors>
+                <Layers>
+                     <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <ScrollFrame name="$parentListView" parentKey="ListView" inherits="AnsFauxScrollFrameTemplate" >
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0" />
+                        </Anchors>
+                        <Size x="256" y="244" />
+                    </ScrollFrame>
+                </Frames>
+            </Frame>
+            <Button parentKey="AddItem" name="$parentAddItem" text=">" inherits="AnsStandardButtonTemplate">
+                <Size x="32" y="32" />
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentInventoryList" x="12" y="-5" />
+                </Anchors>
+            </Button>
+            <ScrollFrame name="$parentIds" parentKey="Ids" inherits="AnsScrollFrameTemplate">
+                <Size x="256" y="249" />
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="0" y="-64" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox name="$parentText" parentKey="Text" inherits="AnsEditBoxTemplate">
+                        <Size x="256" y="200" />
+                    </EditBox>
+                </ScrollChild>
+            </ScrollFrame>
+            <Button parentKey="RemoveGroup" name="$parentRemoveGroup" text="Delete Group" inherits="AnsWarningButtonTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parentIds" x="0" y="-5" />
+                </Anchors>
+            </Button>
+            <Button parentKey="MoveGroup" name="$parentMoveGroup" text="Move Group" inherits="AnsStandardButtonTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="0" y="32" />
+                </Anchors>
+            </Button>
+            <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-182" y="32" />
+                    <Anchor point="BOTTOMRIGHT" x="15" y="32" />
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString text="Inventory" inherits="GameFontNormal" justifyH="LEFT">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-42" />
+                    </Anchors>
+                    <FontHeight>
+                        <AbsValue val="32" />
+                    </FontHeight>
+                </FontString>
+                <FontString text="Ids in Group" inherits="GameFontNormal" justifyH="LEFT">
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-185" y="-42" />
+                    </Anchors>
+                    <FontHeight>
+                        <AbsValue val="32" />
+                    </FontHeight>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Frame>
+</Ui>

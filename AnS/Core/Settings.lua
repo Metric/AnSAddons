@@ -17,5 +17,16 @@ ANS_GLOBAL_SETTINGS = {
     tooltipRealm3Day = true,
 	tooltipRealmMarket = true,
 };
+ANS_GROUPS = {};
 ANS_FILTER_SELECTION = {};
 ANS_BASE_SELECTION = {};
+ANS_OPERATIONS = {
+    Auctioning = {},
+    Crafing = {},
+    Mailing = {},
+    Shopping = {},
+    Sniping = {},
+    Vendoring = {},
+    Warehousing = {}
+};
+ANS_WINDOW_MINI_POSITION = 35;

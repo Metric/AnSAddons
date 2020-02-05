@@ -13,7 +13,7 @@ function TreeView:New(parent, style, selectFn, upFn, downFn, renderFn)
     fv.frame = _G[parent:GetName().."TreeView"];
     fv.scrollFrame = fv.frame;
     fv.childFrame = _G[fv.scrollFrame:GetName().."ScrollChildFrame"];
-     fv.childFrame:SetSize(fv.frame:GetWidth(), fv.frame:GetHeight());
+    fv.childFrame:SetSize(fv.frame:GetWidth(), fv.frame:GetHeight());
 
     fv.parent = parent;
 
@@ -22,7 +22,9 @@ function TreeView:New(parent, style, selectFn, upFn, downFn, renderFn)
     fv.style = style or {
         rowHeight = 20,
         childIndent = 16,
-        template = "AnsTreeRowTemplate"
+        template = "AnsTreeRowTemplate",
+        multiselect = true,
+        useNormalTexture = false
     };
     
     fv.style.totalRows = math.floor(fv.frame:GetHeight() / fv.style.rowHeight);
@@ -53,6 +55,8 @@ function TreeView:CreateRows()
             f.origTextWidth = txt:GetWidth();
         end
 
+        f:SetHeight(self.style.rowHeight);
+        f:SetWidth(self.scrollFrame:GetWidth());
         f:ClearAllPoints();
         f:SetPoint("TOPLEFT", self.scrollFrame, "TOPLEFT", 0, (i - 1) * -self.style.rowHeight);
 
@@ -96,7 +100,11 @@ function TreeView:Refresh()
 
     for i,v in ipairs(self.items) do
         if (not v.hidden) then
-            v.offset = self.style.childIndent;
+            if (i == 1) then
+                v.offset = 0;
+            else
+                v.offset = self.style.childIndent;
+            end
             tinsert(self.view, v);
 
             if (v.children and #v.children > 0 and v.expanded) then
@@ -127,24 +135,10 @@ function TreeView:ReleaseView()
 end
 
 function TreeView:UpdateByData(data)
-    -- offset is 0 based
-    local offset = FauxScrollFrame_GetOffset(self.scrollFrame);
-    local rid = 0;
-    local idx = 0;
-
-    for i, v in ipairs(self.view) do
-        if (v == data) then
-            rid = i - offset;
-            idx = i;
-            break;
-        end
-    end
-
-    if (rid > 0 and idx > 0) then
-        local row = self.rows[rid];
-
-        if (row) then
-            self:UpdateRow(idx, row);
+    for i,v in ipairs(self.rows) do
+        if (v.item == data) then
+            self:UpdateRow(v:GetID(), v);
+            return;
         end
     end
 end
@@ -161,15 +155,17 @@ function TreeView:UpdateRow(offset, row)
         row:SetID(offset);
 
         local expander = _G[row:GetName().."Expander"];
-        if (row.item.children and #row.item.children > 0) then
-            if (row.item.expanded) then
-                expander:SetText("-");
+        if (expander) then
+            if (row.item.children and #row.item.children > 0) then
+                if (row.item.expanded) then
+                    expander:SetText("-");
+                else
+                    expander:SetText("+");
+                end
+                expander:Show();
             else
-                expander:SetText("+");
+                expander:Hide();
             end
-            expander:Show();
-        else
-            expander:Hide();
         end
 
         if (row.item.selected) then
@@ -179,12 +175,12 @@ function TreeView:UpdateRow(offset, row)
         end
 
         if (_G[row:GetName().."Text"]) then
-            _G[row:GetName().."Text"]:SetPoint("LEFT", row.item.offset, 0);
+            _G[row:GetName().."Text"]:SetPoint("TOPLEFT", row.item.offset, 0);
             _G[row:GetName().."Text"]:SetWidth(row.origTextWidth - row.item.offset);
             _G[row:GetName().."Text"]:SetText(row.item.name);
         end
 
-        if (row:GetNormalTexture()) then
+        if (row:GetNormalTexture() and self.style.useNormalTexture) then
             if (row.item.offset > self.style.childIndent) then
                 row:GetNormalTexture():SetAlpha(0);
             else
@@ -192,7 +188,7 @@ function TreeView:UpdateRow(offset, row)
             end
         end
 
-        if (type(self.renderFn) == "function") then
+        if (self.renderFn) then
             self.renderFn(row, row.item);
         end
 
@@ -215,7 +211,20 @@ function TreeView:InsertChildren(children, offset)
     end
 end
 
+function TreeView:RemoveSelections()
+    if (not self.style.multiselect) then
+        for i,v in ipairs(self.items) do
+            v.selected = false;
+        end
+        for i,v in ipairs(self.rows) do
+            self:UpdateRow(v:GetID(), v);
+        end
+    end
+end
+
 function TreeView:OnSelect(f)
+    self:RemoveSelections();
+
     if (f.item.selected) then
         f.item.selected = false;
     else

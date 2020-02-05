@@ -1,0 +1,12 @@
+## Interface: 83000
+## Title: AnS [Auction Data]
+## License: MIT
+## Version: 1.0.1
+## Dependencies: AnS
+## Notes: A library for tracking auction prices and showing via tooltip
+## SavedVariables: ANS_AUCTION_DATA
+
+Statistics.lua
+Data.lua
+AnsAuctionData.lua
+AnsAuctionData.xml
