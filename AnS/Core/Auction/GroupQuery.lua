@@ -118,16 +118,16 @@ function Query:AssignFilters(filters, ilevel, buyout, quality, maxPercent)
 end
 
 function Query:IsValid(item) 
-    if (item.iLevel < self.minILevel) then
+    if (item.iLevel < self.minILevel and self.minILevel > 0) then
         return false;
     end
     if (item.ppu > self.maxBuyout and self.maxBuyout > 0) then
         return false;
     end
-    if (item.percent > self.maxPercent) then
+    if (item.percent > self.maxPercent and self.maxPercent > 0) then
         return false;
     end
-    if (item.quality < self.quality) then
+    if (item.quality < self.quality and self.quality > 0) then
         return false;
     end
 
@@ -151,13 +151,17 @@ function Query:IsFiltered(auction)
 
     if (auction.owner and #blacklist > 0) then
         if (type(auction.owner) ~= "table") then
-            isOnBlacklist = Utils:InTable(blacklist, auction.owner:lower());
+            if (auction.owner ~= "" and auction.owner:len() > 0) then
+                isOnBlacklist = Utils:InTable(blacklist, auction.owner:lower());
+            end
         else
             for i,v in ipairs(auction.owner) do
-                local contains = Utils:InTable(blacklist, v:lower());
-                if (contains) then
-                    isOnBlacklist = true;
-                    break;
+                if (v ~= "" and v:len() > 0) then
+                    local contains = Utils:InTable(blacklist, v:lower());
+                    if (contains) then
+                        isOnBlacklist = true;
+                        break;
+                    end
                 end
             end
         end

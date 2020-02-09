@@ -94,6 +94,10 @@ function Utils:PriceToString(val)
     elseif (copper ~= 0) then
         st = st.."|cFFFFFFFF"..copper.."|cFF9B502Fc";
     end
+	
+	if (st == "") then
+		st = "|cFFFFFFFF0|cFF9B502Fc";
+    end
 
     return st;
 end
@@ -276,6 +280,7 @@ function Utils:ReplaceShortHandPercent(str)
 end
 
 function Utils:MoneyStringToCopper(str)
+	str = gsub(str, "%s+", "");
     local g, s, c = string.match(str, "(%d+)g(%d+)s(%d+)c");
     local value = 0;
 

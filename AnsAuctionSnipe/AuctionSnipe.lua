@@ -622,23 +622,6 @@ function AuctionSnipe:OnItemResults()
         local item = currentItemScan;
         item.isCommodity = false;
 
-        local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
-
-        item.quality = itemRarity;
-        item.name = itemName;
-        item.link = itemLink;
-        item.type = itemType;
-        item.subtype = itemSubType;
-        item.texture = itemIcon;
-        item.vendorsell = itemSellPrice;
-
-        if (not item.name) then
-            if (self.state == STATES.ITEMS_WAITING) then
-                self.state = STATES.ITEMS;
-            end
-            return;
-        end
-
         if (not C_AuctionHouse.HasFullItemSearchResults(currentItemScan.itemKey)) then
             C_AuctionHouse.RequestMoreItemSearchResults(currentItemScan.itemKey);
             return;
@@ -656,6 +639,13 @@ function AuctionSnipe:OnItemResults()
 
                 if (result.itemLink) then
                     item.link = result.itemLink;
+
+                    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.link); 
+
+                    item.quality = itemRarity;
+                    item.name = itemName;
+                    item.texture = itemIcon;
+                    item.vendorsell = itemSellPrice;
 
                     if (Utils:IsBattlePetLink(item.link)) then
                         local info = Utils:ParseBattlePetLink(item.link);
@@ -685,23 +675,8 @@ function AuctionSnipe:OnCommidityResults()
     if (currentItemScan and currentItemScan.itemKey) then
         local item = currentItemScan;
         item.isCommodity = true;
-        local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
-        item.quality = itemRarity;
-        item.name = itemName;
-        item.link = itemLink;
-        item.type = itemType;
-        item.subtype = itemSubType;
-        item.texture = itemIcon;
-        item.vendorsell = itemSellPrice;
-
-        if (not item.name) then
-            if (self.state == STATES.ITEMS_WAITING) then
-                self.state = STATES.ITEMS;
-            end
-            return;
-        end
-
-        if (not C_AuctionHouse.HasFullCommoditySearchResults(currentItemScan.id)) then
+		
+		if (not C_AuctionHouse.HasFullCommoditySearchResults(currentItemScan.id)) then
             C_AuctionHouse.RequestMoreCommoditySearchResults(currentItemScan.id);
             return;
         end
@@ -714,19 +689,19 @@ function AuctionSnipe:OnCommidityResults()
             item.owner = GetOwners(result);
             item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
 
-            if (result.itemLink) then
-                item.link = result.itemLink;
-                item.tsmId = Utils:GetTSMID(item.link);
+            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
+
+            if (itemName and itemLink) then
+                item.link = itemLink;
+                item.quality = itemRarity;
+                item.name = itemName;
+                item.texture = itemIcon;
+                item.vendorsell = itemSellPrice;
             end
 
-            if (not item.isOwnerItem) then
+            if (not item.isOwnerItem and item.name) then
                 if (Query:IsFiltered(item)) then
-                    tinsert(validAuctions, item:Clone());
-                else
-                    -- we can break here because it is sorted by price
-                    -- and thus if we find one that is not compatible
-                    -- we can give up sooner
-                    break;
+					tinsert(validAuctions, item:Clone());
                 end
             end
         end
