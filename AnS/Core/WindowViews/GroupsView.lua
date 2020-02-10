@@ -12,6 +12,7 @@ local rootGroup = {
     expanded = true,
     selected = false,
     children = {},
+    showAddButton = true
 };
 
 local groupTreeItems = { rootGroup };
@@ -211,15 +212,13 @@ function Groups:OnLoad(f)
 
     self.groups = tab.Groups;
     self.moveGroup = tab.MoveGroup;
-    self.newGroup = tab.NewGroup;
-
-    self.newGroup:SetScript("OnClick", Groups.NewGroup);
 
     self.groupsTree = TreeView:New(self.groups,
         nil,
         this.Select,
         this.MoveGroupUp,
-        this.MoveGroupDown
+        this.MoveGroupDown,
+        this.NewGroup
     );
     self.moveGroupTree = TreeView:New(self.moveGroup,
         nil,
@@ -241,17 +240,7 @@ function Groups:Hide()
     if (self.tab) then
         self.selected = false;
         self.tab:Hide();
-        self:Save();
     end
-end
-
-function Groups:Save()
-    AnsCore:LoadFilters();
-    
-    wipe(groupTreeItems);
-
-    self.groupsTree:ReleaseView();
-    self.moveGroupTree:ReleaseView();
 end
 
 function Groups.OnEdit()
@@ -340,7 +329,16 @@ function Groups:Refresh()
         tinsert(groupTreeItems, rootGroup);
     end
 
-    self:BuildTree(rootGroup);
+    self:BuildTree(rootGroup.children, 
+        function(v) 
+            if (not GroupEdit.selected) then
+                return false;
+            end
+
+            return v == GroupEdit.selected.filter
+        end,
+        true
+    );
     self.groupsTree.items = groupTreeItems;
     self.groupsTree:Refresh();
     self.moveGroupTree.items = groupTreeItems;
@@ -414,7 +412,7 @@ function Groups.RenderMoveRow(row, item)
     end
 end
 
-function Groups:BuildTree(rootChildren)
+function Groups:BuildTree(rootChildren, selectedComparer, showAdd)
     local filters = ANS_GROUPS;
     local root = rootChildren;
 
@@ -425,30 +423,26 @@ function Groups:BuildTree(rootChildren)
         end
     end
 
-    self:UpdateTree(filters, root, nil);
+    self:UpdateTree(filters, root, nil, selectedComparer, showAdd);
 end
 
-function Groups:UpdateTree(children, parent, filter)
+function Groups:UpdateTree(children, parent, filter, selectedComparer, showAdd)
     for i,v in ipairs(children) do
         local child = parent[i];
-        local selected = false;
-
-        if (GroupEdit.selected) then
-            selected = v == GroupEdit.selected.filter;
-        end
+        local selected = selectedComparer(v);
 
         if (child) then
             child.selected = selected;
             child.parent = filter;
 
-            if (child.name ~= v.name) then
+            if (child.filter.id ~= v.id) then
                 child.expanded = false;
                 child.name = v.name;
                 child.filter = v;
                 child.children = {};
 
                 if (#v.children > 0) then
-                    self:UpdateTree(v.children, child.children, v);
+                    self:UpdateTree(v.children, child.children, v, selectedComparer, showAdd);
                 end
             else
                 if (#v.children > 0) then
@@ -458,7 +452,7 @@ function Groups:UpdateTree(children, parent, filter)
                         end
                     end
 
-                    self:UpdateTree(v.children, child.children, v);
+                    self:UpdateTree(v.children, child.children, v, selectedComparer, showAdd);
                 else
                     wipe(child.children);
                 end
@@ -470,11 +464,12 @@ function Groups:UpdateTree(children, parent, filter)
                 expanded = false,
                 parent = filter,
                 filter = v,
-                children = {}
+                children = {},
+                showAddButton = showAdd
             };
 
             if (#v.children > 0) then
-                self:UpdateTree(v.children, t.children, v);
+                self:UpdateTree(v.children, t.children, v, selectedComparer, showAdd);
             end
 
             tinsert(parent, t);
@@ -482,7 +477,7 @@ function Groups:UpdateTree(children, parent, filter)
     end
 end
 
-function Groups.NewGroup()
+function Groups.NewGroup(item)
     local i = 1;
     local t = {
         id = Utils:Guid(),
@@ -491,15 +486,15 @@ function Groups.NewGroup()
         children = {},
     };
 
-    if (GroupEdit.selected and GroupEdit.selected.filter) then
-        local selected = GroupEdit.selected;
-        i = #selected.filter.children + 1;
-        t.name = t.name..i;
-        tinsert(selected.filter.children, t);
-    else
+    if (item == rootGroup) then
         i = #ANS_GROUPS + 1;
         t.name = t.name..i;
         tinsert(ANS_GROUPS, t);
+    elseif (item.filter) then
+        i = #item.filter.children + 1;
+        t.name = t.name..i;
+        tinsert(item.filter.children, t);
     end
+
     Groups:Refresh();
 end

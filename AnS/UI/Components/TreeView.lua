@@ -4,7 +4,10 @@ TreeView.__index = TreeView;
 
 Ans.UI.TreeView = TreeView;
 
-function TreeView:New(parent, style, selectFn, upFn, downFn, renderFn)
+local PI = 3.14159265358;
+local Deg2Rad = PI / 180;
+
+function TreeView:New(parent, style, selectFn, upFn, downFn, addFn, renderFn)
     local fv = {};
     setmetatable(fv, TreeView);
     fv.view = {};
@@ -33,11 +36,24 @@ function TreeView:New(parent, style, selectFn, upFn, downFn, renderFn)
     fv.upFn = upFn;
     fv.downFn = downFn;
     fv.renderFn = renderFn;
+    fv.addFn = addFn;
 
     fv:RegisterEvents();
     fv:CreateRows();
 
     return fv;
+end
+
+function TreeView:Hide()
+    if (self.parent) then
+        self.parent:Hide();
+    end
+end
+
+function TreeView:Show()
+    if(self.parent) then
+        self.parent:Show();
+    end
 end
 
 function TreeView:CreateRows()
@@ -72,6 +88,10 @@ function TreeView:CreateRows()
         if (moveDown) then
             moveDown:SetScript("OnClick", function() fv:OnDown(f) end);
         end
+        local add = _G[f:GetName().."Add"];
+        if (add) then
+            add:SetScript("OnClick", function() fv:OnAdd(f) end);
+        end
 
         f:SetScript("OnClick", function() fv:OnSelect(f) end);
     end
@@ -89,6 +109,12 @@ function TreeView:OnDown(r)
     end
 end
 
+function TreeView:OnAdd(r)
+    if (self.addFn) then
+        self.addFn(r.item);
+    end
+end
+
 function TreeView:Refresh()
     local fv = self;
     wipe(self.view);
@@ -100,11 +126,7 @@ function TreeView:Refresh()
 
     for i,v in ipairs(self.items) do
         if (not v.hidden) then
-            if (i == 1) then
-                v.offset = 0;
-            else
-                v.offset = self.style.childIndent;
-            end
+            v.offset = self.style.childIndent;
             tinsert(self.view, v);
 
             if (v.children and #v.children > 0 and v.expanded) then
@@ -166,6 +188,15 @@ function TreeView:UpdateRow(offset, row)
             else
                 expander:Hide();
             end
+        end
+
+        local addButton = _G[row:GetName().."Add"];
+        if (addButton and not row.item.showAddButton) then
+            addButton:Hide();
+        elseif (addButton) then
+            addButton:Show();
+            addButton:GetNormalTexture():SetRotation(45 * Deg2Rad);
+            addButton:GetHighlightTexture():SetRotation(45 * Deg2Rad);
         end
 
         if (row.item.selected) then

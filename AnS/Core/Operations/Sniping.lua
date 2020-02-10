@@ -26,16 +26,12 @@ function Sniping:Init(name)
     self.minCLevel = 0;
     self.maxCLevel = 120;
     self.exactMatch = false;
-    self.classID = 0;
-    self.subClassID = 0;
-    self.inventoryType = 0;
     self.search = "";
     self.groups = {};
     self.ids = {};
     self.idCount = 0;
-    self.classIDIndex = 1;
-    self.subClassIDIndex = 1;
-    self.inventoryTypeIndex = 1;
+
+    self.config = Sniping:NewConfig(name);
 end
 
 function Sniping:NewConfig(name)
@@ -47,15 +43,7 @@ function Sniping:NewConfig(name)
         minILevel = 0,
         maxPPU = 0,
         minQuality = 0,
-        minCLevel = 0,
-        maxCLevel = 120,
         exactMatch = false,
-        classID = 0,
-        subClassID = 0,
-        inventoryType = 0,
-        classIDIndex = 1,
-        subClassIDIndex = 1,
-        inventoryTypeIndex = 1,
         search = "",
         groups = {}
     };
@@ -72,16 +60,9 @@ function Sniping:FromConfig(snipe)
     n.minILevel = snipe.minILevel;
     n.maxPPU = snipe.maxPPU;
     n.minQuality = snipe.minQuality;
-    n.minCLevel = snipe.minCLevel;
-    n.maxCLevel = snipe.maxCLevel;
     n.exactMatch = snipe.exactMatch;
-    n.classID = snipe.classID;
-    n.subClassID = snipe.subClassID;
-    n.inventoryType = snipe.inventoryType;
     n.search = snipe.search;
-    n.classIDIndex = snipe.classIDIndex;
-    n.subClassIDIndex = snipe.subClassIDIndex;
-    n.inventoryTypeIndex = snipe.inventoryTypeIndex;
+    
 
     for i,v in ipairs(snipe.groups) do
         local g = Sniping.GetGroupFromId(v);
@@ -89,6 +70,8 @@ function Sniping:FromConfig(snipe)
             tinsert(n.groups, g);
         end
     end
+
+    n.config = snipe;
 
     return n;
 end
@@ -136,27 +119,34 @@ function Sniping.GetGroupFromId(id)
 end
 
 function Sniping:ToConfig()
-    local t = {
-        id = self.id,
-        name = self.name,
-        price = self.price,
-        maxPercent = self.maxPercent,
-        minILevel = self.minILevel,
-        maxPPU = self.maxPPU,
-        minQuality = self.minQuality,
-        minCLevel = self.minCLevel,
-        maxCLevel = self.maxCLevel,
-        exactMatch = self.exactMatch,
-        classID = self.classID,
-        subClassID = self.subClassID,
-        inventoryType = self.inventoryType,
-        classIDIndex = self.classIDIndex,
-        subClassIDIndex = self.subClassIDIndex,
-        inventoryTypeIndex = self.inventoryTypeIndex,
-        search = self.search,
-        groups = {}
-    };
+    local t = self.config;
 
+    if (not t) then
+        t = {
+            id = self.id,
+            name = self.name,
+            price = self.price,
+            maxPercent = self.maxPercent,
+            minILevel = self.minILevel,
+            maxPPU = self.maxPPU,
+            minQuality = self.minQuality,
+            exactMatch = self.exactMatch,
+            search = self.search,
+            groups = {}
+        };
+    else
+        t.id = self.id;
+        t.name = self.name;
+        t.price = self.price;
+        t.maxPercent = self.maxPercent;
+        t.minILevel = self.minILevel;
+        t.maxPPU = self.maxPPU;
+        t.minQuality = self.minQuality;
+        t.exactMatch = self.exactMatch;
+        t.search = self.search;
+    end
+
+    wipe(t.groups);
     for i,v in ipairs(self.groups) do
         tinsert(t.groups, v.id);
     end
@@ -214,7 +204,7 @@ end
 
 function Sniping:ParseItem(item)
     local _, id = strsplit(":", item);
-    if (id ~= nil) then
+    if (id) then
         self.ids[_..":"..id] = 1;
         self.ids[item] = 1;
         self.idCount = self.idCount + 1;
@@ -252,6 +242,9 @@ function Sniping:IsValid(item, exact)
         return false;
     end
     if (item.percent > self.maxPercent and self.maxPercent > 0) then
+        return false;
+    end
+    if (item.name and self.search and self.search ~= "" and not strfind(item.name, self.search)) then
         return false;
     end
 

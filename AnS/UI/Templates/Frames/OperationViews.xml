@@ -2,8 +2,42 @@
     <Frame name="AnsSnipeOpEditorTemplate" virtual="true" hidden="true">
         <Size x="525" y="345" />
         <Anchors>
-            <Anchor point="TOPLEFT" x="0" y="-32" />
+            <Anchor point="TOPLEFT" x="168" y="-32" />
         </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Price Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-25" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" text="Max Percent" name="$parentPercentLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-174" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" name="$parentLevelLabel" text="Min iLevel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentPercentLabel" x="5" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" name="$parentPPULabel" text="Max PPU" inherits="AnsGameFontWhiteTrans">
+                    <Size x="125" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentLevelLabel" relativePoint="TOPRIGHT" x="90" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" name="$parentNameLabel" text="Name Filter" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-214" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
         <Frames>
             <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
                 <Size x="100" y="20" />
@@ -11,10 +45,10 @@
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>
             </EditBox>
-            <ScrollFrame name="$parentPrice" parentKey="Price" inherits="AnsScrollFrameTemplate">
-                <Size x="475" y="128" />
+            <ScrollFrame parentKey="Price" name="$parentPrice" inherits="AnsScrollFrameTemplate">
+                <Size x="435" y="128" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentOpName" />
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPriceLabel" />
                 </Anchors>
                 <Layers>
                     <Layer level="BACKGROUND">
@@ -28,53 +62,53 @@
                     </Layer>
                 </Layers>
                 <ScrollChild>
-                    <EditBox name="$parentText" parentKey="Text" inherits="AnsEditBoxTemplate">
-                        <Size x="256" y="123" />
+                    <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                        <Size x="435" y="123" />
                     </EditBox>
                 </ScrollChild>
             </ScrollFrame>
             <EditBox parentKey="MaxPercent" text="0" name="$parentMaxPercent" numeric="true" inherits="AnsEditBoxTemplate">
-                <Size x="46" y="20" />
+                <Size x="64" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentPrice" />
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPercentLabel" />
                 </Anchors>
             </EditBox>
             <EditBox parentKey="MinLevel" text="0" name="$parentMinLevel" numeric="true" inherits="AnsEditBoxTemplate">
-                <Size x="46" y="20" />
+                <Size x="64" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPercent" />
-                </Anchors>
-            </EditBox>
-            <EditBox parentKey="MinCLevel" text="0" name="$parentMinCLevel" numeric="true" inherits="AnsEditBoxTemplate">
-                <Size x="46" y="20" />
-                <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPercent" />
-                </Anchors>
-            </EditBox>
-            <EditBox parentKey="MaxCLevel" text="120" name="$parentMaxCLevel" numeric="true" inherits="AnsEditBoxTemplate">
-                <Size x="46" y="20" />
-                <Anchors>
-                    <Anchor point="LEFT" x="5" y="0" relativePoint="RIGHT" relativeTo="$parentMinCLevel" />
-                </Anchors>
-            </EditBox>
-            <EditBox parentKey="MaxPPU" text="0" name="$parentMaxPPU" inherits="AnsEditBoxTemplate">
-                <Size x="100" y="20" />
-                <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxCLevel" />
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentLevelLabel" />
                 </Anchors>
             </EditBox>
             <EditBox parentKey="Search" maxBytes="64" text="" name="$parentSearch" inherits="AnsEditBoxTemplate">
                 <Size x="100" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPPU" />
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentNameLabel" />
                 </Anchors>
             </EditBox>
-            <CheckButton parentKey="ExactMatch" name="$parentExactMatch" inherits="AnsCheckboxTemplate">
+            <CheckButton parentKey="ExactMatch" text="Exact ID Match" name="$parentExactMatch" inherits="AnsCheckboxTemplate">
                 <Size x="46" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeTo="$parentSearch" />
+                    <Anchor point="TOPLEFT" x="25" y="-2" relativePoint="TOPRIGHT" relativeTo="$parentMinLevel" />
                 </Anchors>
             </CheckButton>
+            <EditBox parentKey="MaxPPU" text="0" name="$parentMaxPPU" inherits="AnsEditBoxTemplate">
+                <Size x="125" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPPULabel" />
+                </Anchors>
+            </EditBox>
+            <Button parentKey="RemoveGroup" name="$parentRemoveGroup" text="Delete Operation" inherits="AnsWarningButtonTemplate">
+                <Size x="125" y="20" />
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="65" y="30" />
+                </Anchors>
+            </Button>
+            <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-168" y="32" />
+                    <Anchor point="BOTTOMRIGHT" x="85" y="0" />
+                </Anchors>
+            </Frame>
         </Frames>
     </Frame>
 </Ui>

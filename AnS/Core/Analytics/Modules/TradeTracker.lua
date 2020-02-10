@@ -17,6 +17,10 @@ function TradeTracker:OnLoad()
 end
 
 function TradeTracker:OnTradeComplete()
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return;
+    end
+
     if (info.player.money or info.player.items or info.target.items or info.target.money) then   
         local titems = info.target.items;
         local pitems = info.player.items;
@@ -48,6 +52,10 @@ function TradeTracker:OnTradeComplete()
 end
 
 function TradeTracker.OnUpdate(player, target)
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return;
+    end
+
     if ((player == 1 or target == 1) and not (GetTradePlayerItemLink(7) or GetTradeTargetItemLink(7))) then
         info.player.money = tonumber(GetPlayerTradeMoney());
         info.target.money = tonumber(GetTargetTradeMoney());

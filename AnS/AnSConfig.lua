@@ -47,7 +47,13 @@ end
 
 local function AnsConfigFinalize()
     AnsCore:LoadCustomVars();
-    ANS_GLOBAL_SETTINGS.characterBlacklist = { strsplit("\r\n", ANS_GLOBAL_SETTINGS.characterBlacklist) };
+    if (type(ANS_GLOBAL_SETTINGS.characterBlacklist) == "string") then
+        if (ANS_GLOBAL_SETTINGS.characterBlacklist == "" or ANS_GLOBAL_SETTINGS.characterBlacklist:len() == 0) then
+            ANS_GLOBAL_SETTINGS.characterBlacklist = {};
+        else
+            ANS_GLOBAL_SETTINGS.characterBlacklist = { strsplit("\r\n", ANS_GLOBAL_SETTINGS.characterBlacklist) };
+        end
+    end
 end
 
 function AnsConfig:SetHelpText(f)

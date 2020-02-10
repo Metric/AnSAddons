@@ -15,6 +15,8 @@ Ans.GroupRecycler = Recycler;
 local Auction = {};
 Auction.__index = Auction;
 
+local SnipingOp = Ans.Operations.Sniping;
+
 function Auction:New()
     local a = {};
     setmetatable(a, Auction);
@@ -99,35 +101,36 @@ local function ItemHash(item)
     return item.link..item.count..item.ppu..owner;
 end
 
-Query.filters = {};
+Query.ops = {};
 
-function Query:AssignFilters(filters, ilevel, buyout, quality, maxPercent)
-    wipe(self.filters);
-
+function Query:AssignDefaults(ilevel, buyout, quality, maxPercent)
     self.minILevel = ilevel;
     self.maxBuyout = buyout;
     self.quality = quality;
     self.maxPercent = maxPercent;
+end
 
-    local i;
-    for i = 1, #filters do
-        local f = filters[i]:Clone();
-        f:AssignOptions(ilevel, buyout, quality, maxPercent, ANS_GLOBAL_SETTINGS.pricingFn);
-        tinsert(self.filters, f);
+function Query:AssignSnipingOps(ops) 
+    wipe(self.ops);
+
+    for i,v in ipairs(ops) do
+        local op = SnipingOp:FromConfig(v);
+        op:ParseGroups();
+        tinsert(self.ops, op);
     end
 end
 
 function Query:IsValid(item) 
-    if (item.iLevel < self.minILevel) then
+    if (item.iLevel < self.minILevel and self.minILevel > 0) then
         return false;
     end
     if (item.ppu > self.maxBuyout and self.maxBuyout > 0) then
         return false;
     end
-    if (item.percent > self.maxPercent) then
+    if (item.percent > self.maxPercent and self.maxPercent > 0) then
         return false;
     end
-    if (item.quality < self.quality) then
+    if (item.quality < self.quality and self.quality > 0) then
         return false;
     end
 
@@ -135,7 +138,7 @@ function Query:IsValid(item)
 end
 
 function Query:IsFiltered(auction)
-    local blacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
+    local blacklist = ANS_SNIPE_SETTINGS.characterBlacklist;
 
     -- ensure the blacklist is in table
     -- format, if not make it table and cache it
@@ -143,21 +146,29 @@ function Query:IsFiltered(auction)
     -- the config already handles if it is in a table
     -- and will fill in the edit box appropriately
     if (type(blacklist) == "string") then
-        blacklist = { strsplit("\r\n", blacklist:lower()) };
-        ANS_GLOBAL_SETTINGS.characterBlacklist = blacklist;
+        if (blacklist == "" or blacklist:len() == 0) then
+            blacklist = {};
+        else
+            blacklist = { strsplit("\r\n", blacklist:lower()) };
+            ANS_SNIPE_SETTINGS.characterBlacklist = blacklist;
+        end
     end
 
     local isOnBlacklist = false;
 
     if (auction.owner and #blacklist > 0) then
         if (type(auction.owner) ~= "table") then
-            isOnBlacklist = Utils:InTable(blacklist, auction.owner:lower());
+            if (auction.owner ~= "" and auction.owner:len() > 0) then
+                isOnBlacklist = Utils:InTable(blacklist, auction.owner:lower());
+            end
         else
             for i,v in ipairs(auction.owner) do
-                local contains = Utils:InTable(blacklist, v:lower());
-                if (contains) then
-                    isOnBlacklist = true;
-                    break;
+                if (v ~= "" and v:len() > 0) then
+                    local contains = Utils:InTable(blacklist, v:lower());
+                    if (contains) then
+                        isOnBlacklist = true;
+                        break;
+                    end
                 end
             end
         end
@@ -167,12 +178,12 @@ function Query:IsFiltered(auction)
         return false;
     end
 
-    if (ANS_GLOBAL_SETTINGS.itemBlacklist[auction.tsmId]) then
+    if (ANS_SNIPE_SETTINGS.itemBlacklist[auction.tsmId]) then
         return false;
     end
 
     if (auction.buyoutPrice > 0) then
-        local avg = Sources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
+        local avg = Sources:Query(ANS_SNIPE_SETTINGS.source, auction);
         if (not avg or avg <= 0) then avg = auction.vendorsell or 1; end;
 
         if (avg <= 1) then
@@ -186,8 +197,8 @@ function Query:IsFiltered(auction)
         local filterAccepted = false;
         local k;
 
-        if (#self.filters == 0) then
-            local allowed = Sources:Query(ANS_GLOBAL_SETTINGS.pricingFn, auction);
+        if (#self.ops == 0) then
+            local allowed = Sources:Query(ANS_SNIPE_SETTINGS.pricing, auction);
 
             if (type(allowed) == "boolean") then
                 if (allowed and self:IsValid(auction)) then
@@ -198,9 +209,9 @@ function Query:IsFiltered(auction)
             end
         end
 
-        local tf = #self.filters;
+        local tf = #self.ops;
         for k = 1, tf do
-            if (self.filters[k]:IsValid(auction, true)) then
+            if (self.ops[k]:IsValid(auction, true)) then
                 filterAccepted = true;
                 break;
             end
@@ -212,7 +223,7 @@ function Query:IsFiltered(auction)
     return false;
 end
 
-function Query:IsFilteredGroupNoInfo(group)
+function Query:IsFilteredGroup(group)
     local auction = Recycler:Get();
 
     auction.name = nil;
@@ -221,7 +232,7 @@ function Query:IsFilteredGroupNoInfo(group)
     auction.isPet = false;
     auction.texture = nil;
     auction.quality = 99;
-    auction.iLevel = group.itemKey.itemLevel;
+    auction.iLevel = group.itemKey.itemLevel or 0;
     auction.id = group.itemKey.itemID;
     auction.count = group.totalQuantity;
 
@@ -265,7 +276,7 @@ function Query:IsFilteredGroupNoInfo(group)
     end
 
     if (auction.buyoutPrice > 0) then
-        local avg = Sources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
+        local avg = Sources:Query(ANS_SNIPE_SETTINGS.source, auction);
         if (not avg or avg <= 0) then 
             avg = auction.vendorsell or 1; 
         end
@@ -281,117 +292,27 @@ function Query:IsFilteredGroupNoInfo(group)
         local filterAccepted = false;
         local k;
 
-        if (#self.filters == 0) then
-            local allowed = Sources:Query(ANS_GLOBAL_SETTINGS.pricingFn, auction);
+        if (#self.ops == 0) then
+            local allowed = Sources:Query(ANS_SNIPE_SETTINGS.pricing, auction);
 
             if (type(allowed) == "boolean" or type(allowed) == "number") then
-                if (allowed and self:IsValid(auction)) then
-                    filterAccepted = true;
+                if (type(allowed) == "number") then
+                    if (allowed > 0 and self:IsValid(auction)) then
+                        filterAccepted = true;
+                    end
+                else
+                    if (allowed and self:IsValid(auction)) then
+                        filterAccepted = true;
+                    end
                 end
             else
                 filterAccepted = self:IsValid(auction);
             end
         end
 
-        local tf = #self.filters;
+        local tf = #self.ops;
         for k = 1, tf do
-            if (self.filters[k]:IsValid(auction, auction.isPet)) then
-                filterAccepted = true;
-                break;
-            end
-        end
-
-        if (filterAccepted) then
-            return auction;
-        end
-    end
-
-    Recycler:Recycle(auction);
-    return nil, false;
-end
-
-function Query:IsFilteredGroup(group)
-    local auction = Recycler:Get();
-
-    local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
-
-    if (groupInfo == nil) then
-        Recycler:Recycle(auction);
-        return nil, true;
-    end
-
-    auction.name = groupInfo.itemName;
-    auction.itemKey = group.itemKey;
-    auction.isCommodity = groupInfo.isCommodity;
-    auction.isPet = false;
-    auction.iLevel = group.itemKey.itemLevel;
-    auction.id = group.itemKey.itemID;
-    auction.count = group.totalQuantity;
-
-    auction.ppu = group.minPrice;
-    auction.buyoutPrice = auction.ppu;
-
-    local _, link, iquality, iLevel, _, itype, subtype, 
-    _, _, itexture, vendorsell = GetItemInfo(auction.id);
-
-    if (group.itemKey.battlePetSpeciesID > 0 and groupInfo.battlePetLink) then
-        link = groupInfo.battlePetLink;
-        auction.isPet = true;
-    elseif (group.itemKey.battlePetSpeciesID > 0 and not groupInfo.battlePetLink) then
-        link = nil;
-    end
-
-    if (link == nil) then
-        Recycler:Recycle(auction);
-        return nil, false;
-    end
-
-    auction.texture = itexture;
-    auction.quality = iquality;
-    auction.link = link;
-    auction.type = itype;
-    auction.subtype = subtype;
-    auction.vendorsell = vendorsell;
-
-    if (Utils:IsBattlePetLink(auction.link)) then
-        local info = Utils:ParseBattlePetLink(auction.link);
-        auction.iLevel = info.level;
-        auction.quality = info.breedQuality;
-    end
-    auction.tsmId = Utils:GetTSMID(auction.link);
-
-    if (auction.buyoutPrice > 0) then
-        local avg = Sources:Query(ANS_GLOBAL_SETTINGS.percentFn, auction);
-        if (not avg or avg <= 0) then 
-            avg = auction.vendorsell or 1; 
-        end
-
-        if (avg <= 1) then
-            auction.avg = 1;
-            auction.percent = 9999;
-        else
-            auction.avg = avg;
-            auction.percent = math.floor(auction.ppu / avg * 100);
-        end
-
-        local filterAccepted = false;
-        local k;
-
-        if (#self.filters == 0) then
-            local allowed = Sources:Query(ANS_GLOBAL_SETTINGS.pricingFn, auction);
-
-            if (type(allowed) == "boolean" or type(allowed) == "number") then
-                if (allowed and self:IsValid(auction)) then
-                    filterAccepted = true;
-                end
-            else
-                filterAccepted = self:IsValid(auction);
-            end
-        end
-
-        local tf = #self.filters;
-        for k = 1, tf do
-            if (self.filters[k]:IsValid(auction, auction.isPet or auction.isCommodity)) then
+            if (self.ops[k]:IsValid(auction, auction.isPet)) then
                 filterAccepted = true;
                 break;
             end

@@ -24,6 +24,10 @@ function MerchantTracker:OnLoad()
 end
 
 function MerchantTracker.Buy(ofn, ...)
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return ofn(...);
+    end
+
     local index, qty = select(1, ...);
     local link = GetMerchantItemLink(index);
     local name, _, price, quantity, numAvailable, isPurchasable = GetMerchantItemInfo(index);
@@ -37,6 +41,10 @@ function MerchantTracker.Buy(ofn, ...)
 end
 
 function MerchantTracker.Buyback(ofn, ...)
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return ofn(...);
+    end
+
     local index = select(1, ...);
     local link = GetBuybackItemLink(index);
     local name, _, price, quantity, numAvailable = GetBuybackItemInfo(index);
@@ -49,6 +57,10 @@ function MerchantTracker.Buyback(ofn, ...)
 end
 
 function MerchantTracker.RepairAll(ofn, ...)
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return ofn(...);
+    end
+
     local isGuildRepair = select(1, ...);
     local cost, canRepair = GetRepairAllCost();
  
@@ -60,6 +72,10 @@ function MerchantTracker.RepairAll(ofn, ...)
 end
 
 function MerchantTracker.Sell(bag, slot) 
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return;
+    end
+
     if (MerchantFrame:IsShown()) then
         local _, count, locked, quality, readable, lootable, link, isFiltered, noValue, id = GetContainerItemInfo(bag, slot);
         if (link) then
@@ -76,6 +92,10 @@ function MerchantTracker.Sell(bag, slot)
 end
 
 function MerchantTracker.OnUpdate()
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return;
+    end
+
     local i;
     local tpending = #pending.item;
 

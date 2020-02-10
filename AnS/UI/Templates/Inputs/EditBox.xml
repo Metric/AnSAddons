@@ -15,7 +15,7 @@
                 </Texture>
             </Layer>
             <Layer level="ARTWORK">
-                <FontString name="$parentLabel" inherits="AnsGameFontNormalWhiteTrans">
+                <FontString name="$parentLabel" inherits="AnsGameFontWhiteTrans">
                     <Anchors>
                         <Anchor point="LEFT" x="5" y="0" />
                     </Anchors>
@@ -31,12 +31,12 @@
                 <NormalTexture file="Interface\AddOns\AnS\Images\icons">
                     <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
                     <Size x="18" y="18" />
-                    <Color r="0" g="0" b="0" a="0.75" />
+                    <Color r="1" g="1" b="1" a="0.75" />
                 </NormalTexture>
                 <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
                     <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
                     <Size x="18" y="18" />
-                    <Color r="0" g="0" b="0" a="1" />
+                    <Color r="1" g="1" b="1" a="1" />
                 </HighlightTexture>
             </Button>
         </Frames>

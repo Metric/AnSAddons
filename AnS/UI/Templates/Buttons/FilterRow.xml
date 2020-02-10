@@ -10,10 +10,10 @@
 		<HighlightTexture atlas="auctionhouse-nav-button-highlight" alphaMode="ADD"/>
 		<Layers>
 			<Layer level="ARTWORK">
-				<FontString name="$parentText" inherits="GameFontNormalSmallLeft">
-                    <Size x="125" y="8" />
+				<FontString name="$parentText" justifyV="CENTER" justifyH="LEFT" inherits="GameFontNormalSmallLeft">
                     <Anchors>
-                        <Anchor point="LEFT" x="4" y="0" />
+                        <Anchor point="TOPLEFT" x="4" y="0" />
+						<Anchor point="BOTTOMRIGHT" x="-4" y="0" />
                     </Anchors>
                 </FontString>
 			</Layer>

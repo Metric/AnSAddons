@@ -95,7 +95,7 @@ function AnsCore:OnLoad()
     self:LoadCustomVars();
 
     Ans.MiniButton = MinimapIcon:New("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
-    function() Window:Toggle() end, AnsCore.SaveMiniButton, ANS_WINDOW_MINI_POSITION, {"|cFFCC00FFAnS ["..GetAddonMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
+    function() Window:Toggle() end, AnsCore.SaveMiniButton, ANS_WINDOW_MINI_POSITION, {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
 
     Window:OnLoad(self.frame);
 end
@@ -171,25 +171,25 @@ function AnsCore:RegisterPriceSources()
 
     if (tujEnabled and tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default tuj and tsm percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = TUJAndTSMPercentFn;
+        ANS_SNIPE_SETTINGS.source = TUJAndTSMPercentFn;
     elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default tuj percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = TUJOnlyPercentFn;
+        ANS_SNIPE_SETTINGS.source = TUJOnlyPercentFn;
     elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default tsm percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = TSMOnlyPercentFn;
+        ANS_SNIPE_SETTINGS.source = TSMOnlyPercentFn;
     elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default auctionator percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = ATRPercentFn;
+        ANS_SNIPE_SETTINGS.source = ATRPercentFn;
     elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default auctionator and tuj percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = ATRTUJPercentFn;
+        ANS_SNIPE_SETTINGS.source = ATRTUJPercentFn;
     elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default auctionator and tsm percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = ATRTSMPercentFn;
+        ANS_SNIPE_SETTINGS.source = ATRTSMPercentFn;
     elseif (ansEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
         print("AnS: setting default AnsAuctionData percent fn");
-        ANS_GLOBAL_SETTINGS.percentFn = AnsOnlyPercentFn;
+        ANS_SNIPE_SETTINGS.source = AnsOnlyPercentFn;
     end
 
     if (not tsmEnabled and not tujEnabled and not auctionatorEnabled and not ansEnabled) then
@@ -252,17 +252,27 @@ function AnsCore:LoadCustomVars()
 end
 
 function AnsCore:MigrateGlobalSettings()
-    if (ANS_GLOBAL_SETTINGS.rescanTime == nil) then
-        ANS_GLOBAL_SETTINGS.rescanTime = 0;
+    if (ANS_SNIPE_SETTINGS.percentFn and ANS_GLOBAL_SETTINGS.percentFn ~= "") then
+        ANS_SNIPE_SETTINGS.source = ANS_GLOBAL_SETTINGS.percentFn;
+        ANS_GLOBAL_SETTINGS.percentFn = nil;
+    end
+    if (ANS_GLOBAL_SETTINGS.priceFn and ANS_GLOBAL_SETTINGS.priceFn ~= "") then
+        ANS_SNIPE_SETTINGS.pricing = ANS_SNIPE_SETTINGS.priceFn;
+        ANS_GLOBAL_SETTINGS.priceFn = nil;
+    end
+    if (ANS_GLOBAL_SETTINGS.rescanTime ~= nil) then
+        ANS_GLOBAL_SETTINGS.rescanTime = nil;
     end
     if (ANS_GLOBAL_SETTINGS.showDressing == nil) then
         ANS_GLOBAL_SETTINGS.showDressing = false;
     end
-    if (ANS_GLOBAL_SETTINGS.dingSound == nil) then
-        ANS_GLOBAL_SETTINGS.dingSound = true;
+    if (ANS_GLOBAL_SETTINGS.dingSound ~= nil) then
+        ANS_SNIPE_SETTINGS.dingSound = ANS_GLOBAL_SETTINGS.dingSound;
+        ANS_GLOBAL_SETTINGS.dingSound = nil;
     end
-    if (ANS_GLOBAL_SETTINGS.scanDelayTime == nil) then
-        ANS_GLOBAL_SETTINGS.scanDelayTime = 5;
+    if (ANS_GLOBAL_SETTINGS.scanDelayTime ~= nil) then
+        ANS_SNIPE_SETTINGS.scanDelayTime = ANS_GLOBAL_SETTINGS.scanDelayTime;
+        ANS_GLOBAL_SETTINGS.scanDelayTime = nil;
     end
     if (ANS_GLOBAL_SETTINGS.characterBlacklist == nil) then
         ANS_GLOBAL_SETTINGS.characterBlacklist = "";
@@ -270,14 +280,17 @@ function AnsCore:MigrateGlobalSettings()
     if (ANS_GLOBAL_SETTINGS.useCoinIcons == nil) then
         ANS_GLOBAL_SETTINGS.useCoinIcons = false;
     end
-    if (ANS_GLOBAL_SETTINGS.itemsPerUpdate == nil) then
-        ANS_GLOBAL_SETTINGS.itemsPerUpdate = 20;
+    if (ANS_GLOBAL_SETTINGS.itemsPerUpdate ~= nil) then
+        ANS_SNIPE_SETTINGS.itemsPerUpdate = ANS_GLOBAL_SETTINGS.itemsPerUpdate;
+        ANS_GLOBAL_SETTINGS.itemsPerUpdate = nil;
     end
-    if (ANS_GLOBAL_SETTINGS.itemBlacklist == nil) then
-        ANS_GLOBAL_SETTINGS.itemBlacklist = {};
+    if (ANS_GLOBAL_SETTINGS.itemBlacklist ~= nil) then
+        ANS_SNIPE_SETTINGS.itemBlacklist = ANS_GLOBAL_SETTINGS.itemBlacklist;
+        ANS_GLOBAL_SETTINGS.itemBlacklist = nil;
     end
-    if (ANS_GLOBAL_SETTINGS.useCommodityConfirm == nil) then
-        ANS_GLOBAL_SETTINGS.useCommodityConfirm = false;
+    if (ANS_GLOBAL_SETTINGS.useCommodityConfirm ~= nil) then
+        ANS_SNIPE_SETTINGS.useCommodityConfirm = ANS_GLOBAL_SETTINGS.useCommodityConfirm;
+        ANS_GLOBAL_SETTINGS.useCommodityConfirm = nil;
     end
     if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day == nil) then
         ANS_GLOBAL_SETTINGS.tooltipRealm3Day = true;
@@ -290,5 +303,15 @@ function AnsCore:MigrateGlobalSettings()
     end
     if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
         ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
+    end
+    if (ANS_GLOBAL_SETTINGS.trackDataAnalytics == nil) then
+        ANS_GLOBAL_SETTINGS.trackDataAnalytics = true;
+    end
+    if (ANS_SNIPE_SETTINGS.keepResults == nil) then
+        ANS_SNIPE_SETTINGS.keepResults = false;
+    end
+    if (ANS_GLOBAL_SETTINGS.characterBlacklist ~= nil) then
+        ANS_SNIPE_SETTINGS.characterBlacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
+        ANS_GLOBAL_SETTINGS.characterBlacklist = nil;
     end
 end

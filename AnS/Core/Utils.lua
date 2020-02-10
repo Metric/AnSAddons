@@ -73,13 +73,29 @@ function Utils:FormatNumber(amount)
 end
 
 
-function Utils:PriceToString(val)
-    if (ANS_GLOBAL_SETTINGS.useCoinIcons) then
+function Utils:PriceToString(val, override, noFormatting)
+    if (ANS_GLOBAL_SETTINGS.useCoinIcons and not override) then
         return GetMoneyString(val, true);
     end
 
     local gold, silver, copper = self:GSC(val);
     local st = "";
+
+    if (noFormatting) then
+        if (gold ~= 0) then
+            st = gold.."g";
+        end
+        if (silver ~= 0) then
+            st = st..silver.."s";
+        end
+        if (copper ~= 0) then
+            st = st..copper.."c";
+        end
+        if (st == "") then
+            st = "0c";
+        end
+        return st;
+    end
 
     if (gold ~= 0) then
         st = "|cFFFFFFFF"..self:FormatNumber(""..gold).."|cFFD7BC45g ";
@@ -282,8 +298,8 @@ function Utils:ReplaceShortHandPercent(str)
 end
 
 function Utils:MoneyStringToCopper(str)
+    str = gsub(str, "%s+", "");
     local g, s, c = string.match(str, "(%d+)g(%d+)s(%d+)c");
-    local value = 0;
 
     if (g and s and c) then
         return g.."g"..s.."s"..c.."c", tonumber(g) * 10000 + tonumber(s) * 100 + tonumber(c);

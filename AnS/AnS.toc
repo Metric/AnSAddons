@@ -1,9 +1,9 @@
 ## Interface: 80300
 ## Title: AnS
-## Version: 2.0.5
+## Version: 2.0.6
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
-## SavedVariables: ANS_FILTERS, ANS_GROUPS, ANS_OPERATIONS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_WINDOW_MINI_POSITION, ANS_ANALYTICS_DATA
+## SavedVariables: ANS_FILTERS, ANS_SNIPE_SETTINGS, ANS_BASE_SELECTION, ANS_SNIPE_SELECTION, ANS_GROUPS, ANS_OPERATIONS, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_WINDOW_MINI_POSITION, ANS_ANALYTICS_DATA
 
 ## Default Settings
 Core\Settings.lua
@@ -30,6 +30,7 @@ UI\Templates\Frames\LedgerListView.xml
 UI\Templates\Frames\ConfirmDialog.xml
 UI\Templates\Frames\GroupEdit.xml
 UI\Templates\Frames\OperationViews.xml
+UI\Templates\Frames\SettingsViews.xml
 
 UI\Components\Core.lua
 UI\Components\Common\Dropdown.lua
@@ -63,10 +64,6 @@ Core\Auction\Database\TUJ.lua
 ## Filters & Price Sources
 Core\PriceSource.lua
 Core\Sources.lua
-Core\Auction\Filter.lua
-
-## Auction Queries
-Core\Auction\GroupQuery.lua
 
 ## BagScanner
 Core\BagScanner.lua
@@ -91,13 +88,21 @@ Core\Analytics\Modules\MailTracker.lua
 Core\Analytics\Modules\TradeTracker.lua
 Core\Analytics\Query.lua
 
+## Auction Queries
+Core\Auction\GroupQuery.lua
+
 ## AnS Core
 Core\WindowViews\DashboardView.lua
 Core\WindowViews\LedgerView.lua
 Core\WindowViews\GroupsView.lua
 Core\WindowViews\Subviews\SnipingOpView.lua
 Core\WindowViews\OperationsView.lua
+Core\WindowViews\Subviews\SniperSettingsView.lua
+Core\WindowViews\Subviews\GeneralSettingsView.lua
+Core\WindowViews\Subviews\CustomSourcesView.lua
+Core\WindowViews\SettingsView.lua
 Core\Window.lua
+
 AnS.lua
 AnS.xml
 

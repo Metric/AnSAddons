@@ -1,3 +1,10 @@
+AnS Changes 2.0.6
+-------------------
+* Fixed issue where stuff would not show up until the second scan, or not at all when it came to commodities.
+* Will now only check global max percent and global ilevel if they are greater than 0.
+* Fixed a formatting issue in Utils for PriceToString.
+* Fixed an issue where MoneyStringToCopper would not return the proper results due to spaces.
+
 AnS Changes 2.0.5
 -------------------
 * Fixed an issue where blacklist would not work properly if you had just edited it.

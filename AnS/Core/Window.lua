@@ -2,11 +2,12 @@ local Ans = select(2, ...);
 local Dashboard = Ans.DashboardView;
 local Ledger = Ans.LedgerView;
 local Groups = Ans.GroupsView;
+local Operations = Ans.OperationsView;
 
 local Window = {};
 Window.__index = Window;
 Window.selectedTab = 1;
-Window.tabs = {Dashboard,Ledger,Groups};
+Window.tabs = {Dashboard, Ledger, Groups, Operations};
 Window.frame = nil;
 
 Ans.Window = Window;

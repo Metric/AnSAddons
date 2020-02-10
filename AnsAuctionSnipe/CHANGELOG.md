@@ -1,3 +1,7 @@
+AnS [Auction Sniper] Changes 2.0.5
+-----------------------------------
+* Fixed issue where stuff would not show up until the second scan, or not at all when it came to commodities.
+
 AnS [Auction Sniper] Changes 2.0.4
 -----------------------------------
 * Owner / account items and commodites are now filtered out of the results properly in the sniper window.

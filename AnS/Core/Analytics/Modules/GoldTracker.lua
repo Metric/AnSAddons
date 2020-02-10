@@ -26,6 +26,10 @@ function GoldTracker:GetNames(tbl,includeGuilds)
 end
 
 function GoldTracker:OnLoad()
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return;
+    end
+
     GOLD_LOG_TAG = GOLD_LOG_TAG..GetRealmName();
 
     self.log = Data:Get(GOLD_LOG_TAG) or {};

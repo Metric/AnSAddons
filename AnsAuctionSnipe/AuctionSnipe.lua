@@ -48,11 +48,11 @@ AuctionSnipe = {};
 AuctionSnipe.__index = AuctionSnipe;
 AuctionSnipe.isInited = false;
 AuctionSnipe.quality = 1;
-AuctionSnipe.activeFilters = {};
+AuctionSnipe.activeOps = {};
 AuctionSnipe.baseFilters = {};
 AuctionSnipe.state = STATES.NONE;
 
-local filterTreeViewItems = {};
+local opTreeViewItems = {};
 local baseTreeViewItems = {};
 
 local AnsQualityToText = {};
@@ -86,6 +86,9 @@ local commodityConfirmTime = 0;
 local lastScan = time();
 local lastSuccessScan = time();
 local lastResult = time();
+local totalValidAuctionsFound = 0;
+
+local seenResults = {};
 
 BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
 BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
@@ -204,7 +207,7 @@ function AuctionSnipe:Init()
     self.minLevelInput:SetText("0");
     self.clevelRange:SetText("0-120");
 
-    self.dingCheckBox:SetChecked(ANS_GLOBAL_SETTINGS.dingSound);
+    self.dingCheckBox:SetChecked(ANS_SNIPE_SETTINGS.dingSound);
     self.maxPercentInput:SetText("100");
 
     UIDropDownMenu_Initialize(self.qualityInput, BuildQualityDropDown);
@@ -215,17 +218,24 @@ end
 
 --- builds treeview item list from known filters
 function AuctionSnipe:BuildTreeViewFilters()
-    local filters = AnsCore.API.Filters;
+    local ops = ANS_OPERATIONS.Sniping or {};
 
-    wipe(self.activeFilters);
+    wipe(opTreeViewItems);
+    wipe(self.activeOps);
 
-    if (#filters < #filterTreeViewItems) then
-        while (#filterTreeViewItems > #filters) do
-            tremove(filterTreeViewItems);
+    for i,v in ipairs(ops) do
+        local pf = {};
+        pf.selected = ANS_SNIPE_SELECTION[v.id] or false;
+        if (pf.selected) then
+            tinsert(self.activeOps, v);
         end
-    end
+        pf.name = v.name;
+        pf.expanded = false;
+        pf.children = {};
+        pf.filter = v;
 
-    self:UpdateSubTreeFilters(filters, filterTreeViewItems);
+        tinsert(opTreeViewItems, pf);
+    end
 end
 
 function AuctionSnipe:BuildTreeViewBase()
@@ -258,8 +268,8 @@ function AuctionSnipe:BuildTreeViewBase()
             tinsert(pf.children, sf);
 
             local subchildren = v.children[i].children;
-            for k = 1, #subchildren do
-                local ss = subchildren[k];
+            for j = 1, #subchildren do
+                local ss = subchildren[j];
                 local ssf = {};
                 ssf.selected = ANS_BASE_SELECTION[ss.path] or false;
                 if (ssf.selected) then
@@ -275,83 +285,6 @@ function AuctionSnipe:BuildTreeViewBase()
         end
 
         tinsert(baseTreeViewItems, pf);
-    end
-end
-
-function AuctionSnipe:UpdateSubTreeFilters(children, parent)
-    for i, v in ipairs(children) do
-        local pf = parent[i];
-
-        if (pf) then
-            pf.selected = ANS_FILTER_SELECTION[v:GetPath()] or false;
-
-            if (pf.selected) then
-                tinsert(self.activeFilters, v);
-            end
-
-            if (pf.name ~= v.name) then
-                pf.expanded = false;
-                pf.name = v.name;
-                pf.filter = v;
-                pf.children = {};
-
-                if(#v.subfilters > 0) then
-                    self:BuildSubTreeFilters(v.subfilters, pf.children);
-                end
-            else
-                if(#v.subfilters > 0) then
-                    if (#v.subfilters < #pf.children) then
-                        while (#pf.children > #v.subfilters) do
-                            tremove(pf.children);
-                        end
-                    end
-
-                    self:UpdateSubTreeFilters(v.subfilters, pf.children);
-                else
-                    pf.children = {};
-                end
-            end
-        else
-            local t = {
-                selected = ANS_FILTER_SELECTION[v:GetPath()] or false,
-                name = v.name,
-                expanded = false,
-                filter = v,
-                children = {}
-            };
-
-            if (t.selected) then
-                tinsert(self.activeFilters, v);
-            end
-
-            if (#v.subfilters > 0) then
-                self:BuildSubTreeFilters(v.subfilters, t.children);
-            end
-    
-            tinsert(parent, t);
-        end
-    end
-end
-
-function AuctionSnipe:BuildSubTreeFilters(children, parent)
-    for i,v in ipairs(children) do
-        local t = {
-            selected = ANS_FILTER_SELECTION[v:GetPath()] or false,
-            name = v.name,
-            expanded = false,
-            filter = v,
-            children = {}
-        };
-
-        if (t.selected) then
-            tinsert(self.activeFilters, v);
-        end
-
-        if (#v.subfilters > 0) then
-            self:BuildSubTreeFilters(v.subfilters, t.children);
-        end
-
-        tinsert(parent, t);
     end
 end
 
@@ -399,10 +332,9 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
     if (self.state == STATES.INIT) then
         local tdiff = time() - lastScan;
         local tdiff2 = time() - lastSuccessScan;
-        local scanReady = tdiff >= ANS_GLOBAL_SETTINGS.rescanTime;
-        local scanDelayReady = tdiff2 >= ANS_GLOBAL_SETTINGS.scanDelayTime;
+        local scanDelayReady = tdiff2 >= ANS_SNIPE_SETTINGS.scanDelayTime;
 
-        if (scanReady and scanDelayReady and self.state ~= STATES.WAITING 
+        if (scanDelayReady and self.state ~= STATES.WAITING 
             and AuctionList.commodity == nil and not AuctionList.isBuying) then
             
             currentItemScan = nil;
@@ -412,12 +344,16 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             AuctionList.isPurchaseReady = false;
             scanIndex = 1;
 
+            totalValidAuctionsFound = 0;
+
             Sources:ClearValueCache();
             ClearItemsFound();
             ClearValidAuctions();
             wipe(browseResults);
 
-            AuctionList:SetItems(validAuctions);
+            if (not ANS_SNIPE_SETTINGS.keepResults) then
+                AuctionList:SetItems(validAuctions);
+            end
             
             self.state = STATES.WAITING;
 
@@ -435,7 +371,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             return;
         end
 
-        local itemsPerUpdate = ANS_GLOBAL_SETTINGS.itemsPerUpdate;
+        local itemsPerUpdate = ANS_SNIPE_SETTINGS.itemsPerUpdate;
         local count = 0;
 
         while (scanIndex <= #browseResults and count < itemsPerUpdate) do
@@ -444,7 +380,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             end
 
             local group = browseResults[scanIndex];
-            local auction, noInfo = Query:IsFilteredGroupNoInfo(group);
+            local auction, noInfo = Query:IsFilteredGroup(group);
 
             if (auction) then
                 tinsert(itemsFound, auction);
@@ -470,6 +406,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
                 scanIndex = 1;
                 wipe(browseResults);
                 self.state = STATES.WAITING;
+                AuctionList.isPurchaseReady = false;
                 C_AuctionHouse.RequestMoreBrowseResults();
             end
         elseif (scanIndex > #browseResults and #itemsFound == 0) then
@@ -488,6 +425,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
                 scanIndex = 1;
                 wipe(browseResults);
                 self.state = STATES.WAITING;
+                AuctionList.isPurchaseReady = false;
                 C_AuctionHouse.RequestMoreBrowseResults();
             end
         end
@@ -511,6 +449,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
 
         if (scanIndex <= #itemsFound) then
             if (validAuctions and #validAuctions > 0) then
+                totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
                 AuctionList:AddItems(validAuctions);
                 ClearValidAuctions();
             end
@@ -525,6 +464,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             self:TryAndSearch();
         else
             if (validAuctions and #validAuctions > 0) then
+                totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
                 AuctionList:AddItems(validAuctions);
                 ClearValidAuctions();
             end
@@ -533,11 +473,11 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
                 self.snipeStatusText:SetText("Waiting to Query");
             end
 
-            if (AuctionList:ItemsExist() and ANS_GLOBAL_SETTINGS.dingSound) then
+            if (totalValidAuctionsFound > 0 and ANS_SNIPE_SETTINGS.dingSound) then
                 PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
             end
 
-            if (AuctionList:ItemsExist()) then
+            if (totalValidAuctionsFound > 0) then
                 lastSuccessScan = time();
             end
 
@@ -621,23 +561,6 @@ function AuctionSnipe:OnItemResults()
         local item = currentItemScan;
         item.isCommodity = false;
 
-        local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
-
-        item.quality = itemRarity;
-        item.name = itemName;
-        item.link = itemLink;
-        item.type = itemType;
-        item.subtype = itemSubType;
-        item.texture = itemIcon;
-        item.vendorsell = itemSellPrice;
-
-        if (not item.name) then
-            if (self.state == STATES.ITEMS_WAITING) then
-                self.state = STATES.ITEMS;
-            end
-            return;
-        end
-
         if (not C_AuctionHouse.HasFullItemSearchResults(currentItemScan.itemKey)) then
             C_AuctionHouse.RequestMoreItemSearchResults(currentItemScan.itemKey);
             return;
@@ -656,6 +579,13 @@ function AuctionSnipe:OnItemResults()
                 if (result.itemLink) then
                     item.link = result.itemLink;
 
+                    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.link); 
+
+                    item.quality = itemRarity;
+                    item.name = itemName;
+                    item.texture = itemIcon;
+                    item.vendorsell = itemSellPrice;
+
                     if (Utils:IsBattlePetLink(item.link)) then
                         local info = Utils:ParseBattlePetLink(item.link);
                         item.name = info.name;
@@ -667,9 +597,17 @@ function AuctionSnipe:OnItemResults()
                     item.tsmId = Utils:GetTSMID(item.link);
                 end
 
-                if (not item.isOwnerItem and Query:IsFiltered(item)) then
-                    item.auctionId = result.auctionID;
-                    tinsert(validAuctions, item:Clone());
+                local preventResult = ANS_SNIPE_SETTINGS.keepResults and seenResults[result.auctionID];
+
+                if (not preventResult) then
+                    if (not item.isOwnerItem and Query:IsFiltered(item)) then
+                        if (ANS_SNIPE_SETTINGS.keepResults) then
+                            seenResults[result.auctionID] = true;
+                        end
+
+                        item.auctionId = result.auctionID;
+                        tinsert(validAuctions, item:Clone());
+                    end
                 end
             end
         end
@@ -684,22 +622,7 @@ function AuctionSnipe:OnCommidityResults()
     if (currentItemScan and currentItemScan.itemKey) then
         local item = currentItemScan;
         item.isCommodity = true;
-        local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
-        item.quality = itemRarity;
-        item.name = itemName;
-        item.link = itemLink;
-        item.type = itemType;
-        item.subtype = itemSubType;
-        item.texture = itemIcon;
-        item.vendorsell = itemSellPrice;
-
-        if (not item.name) then
-            if (self.state == STATES.ITEMS_WAITING) then
-                self.state = STATES.ITEMS;
-            end
-            return;
-        end
-
+        
         if (not C_AuctionHouse.HasFullCommoditySearchResults(currentItemScan.id)) then
             C_AuctionHouse.RequestMoreCommoditySearchResults(currentItemScan.id);
             return;
@@ -713,19 +636,25 @@ function AuctionSnipe:OnCommidityResults()
             item.owner = GetOwners(result);
             item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
 
-            if (result.itemLink) then
-                item.link = result.itemLink;
-                item.tsmId = Utils:GetTSMID(item.link);
+            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
+
+            if (itemName and itemLink) then
+                item.link = itemLink;
+                item.quality = itemRarity;
+                item.name = itemName;
+                item.texture = itemIcon;
+                item.vendorsell = itemSellPrice;
             end
 
-            if (not item.isOwnerItem) then
+            local commodityId = item.id..item.count..item.ppu;
+            local preventResult = ANS_SNIPE_SETTINGS.keepResults and seenResults[commodityId];
+
+            if (not item.isOwnerItem and not preventResult and item.name) then
                 if (Query:IsFiltered(item)) then
+                    if (ANS_SNIPE_SETTINGS.keepResults) then
+                        seenResults[commodityId] = true;
+                    end
                     tinsert(validAuctions, item:Clone());
-                else
-                    -- we can break here because it is sorted by price
-                    -- and thus if we find one that is not compatible
-                    -- we can give up sooner
-                    break;
                 end
             end
         end
@@ -805,7 +734,7 @@ function AuctionSnipe:Close()
 
     self:Stop();
 
-    wipe(filterTreeViewItems);
+    wipe(opTreeViewItems);
     wipe(baseTreeViewItems);
 
     self.baseTreeView:ReleaseView();
@@ -824,7 +753,7 @@ function AuctionSnipe:Show()
     AuctionList:Clear();
 
     self:BuildTreeViewFilters();
-    self.filterTreeView.items = filterTreeViewItems;
+    self.filterTreeView.items = opTreeViewItems;
     self.filterTreeView:Refresh();
 
     self:BuildTreeViewBase();
@@ -890,12 +819,18 @@ function AuctionSnipe:Start()
     self:LoadCLevelFilter();
     self:LoadBaseFilters();
 
+    ClearItemsFound();
+    ClearValidAuctions();
+    Sources:ClearValueCache();
+    wipe(seenResults);
+
     DEFAULT_BROWSE_QUERY.searchString = search;
     DEFAULT_BROWSE_QUERY.filters = qualityFilters;
     DEFAULT_BROWSE_QUERY.itemClassFilters = classFilters;
 
     scanIndex = 1;
-    Query:AssignFilters(self.activeFilters, ilevel, maxBuyout, quality, maxPercent);
+    Query:AssignDefaults(ilevel, maxBuyout, quality, maxPercent);
+    Query:AssignSnipingOps(self.activeOps);
     self.state = STATES.INIT;
 end
 
@@ -903,7 +838,10 @@ function AuctionSnipe:Stop()
     ClearValidAuctions(); 
     ClearItemsFound();
     wipe(browseResults);
+    wipe(seenResults);
     
+    AuctionList:CancelCommoditiesPurchase();
+
     self.startButton:Enable();
     self.stopButton:Disable();
     self.state = STATES.NONE;
@@ -918,7 +856,7 @@ end
 ---
 
 function AuctionSnipe:DingSound(f)
-    ANS_GLOBAL_SETTINGS.dingSound = f:GetChecked();
+    ANS_SNIPE_SETTINGS.dingSound = f:GetChecked();
 end
 
 ---
@@ -926,11 +864,11 @@ end
 ---
 
 function AuctionSnipe:ClearFilters()
-    wipe(ANS_FILTER_SELECTION);
+    wipe(ANS_SNIPE_SELECTION);
 
     self:BuildTreeViewFilters();
     
-    self.filterTreeView.items = filterTreeViewItems;
+    self.filterTreeView.items = opTreeViewItems;
     self.filterTreeView:Refresh();
 end
 
@@ -944,13 +882,12 @@ function AuctionSnipe:ClearBase()
 end
 
 function AuctionSnipe:ToggleFilter(f)
-    local path = f:GetPath();
-    if (ANS_FILTER_SELECTION[path]) then
-        self:RemoveFilter(self.activeFilters, f);
-        ANS_FILTER_SELECTION[path] = false;
+    if (ANS_SNIPE_SELECTION[f.id]) then
+        self:RemoveFilter(self.activeOps, f);
+        ANS_SNIPE_SELECTION[f.id] = false;
     else
-        tinsert(self.activeFilters, f);
-        ANS_FILTER_SELECTION[path] = true;
+        tinsert(self.activeOps, f);
+        ANS_SNIPE_SELECTION[f.id] = true;
     end
 end
 

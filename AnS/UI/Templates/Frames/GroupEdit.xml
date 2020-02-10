@@ -67,7 +67,7 @@
             <Button parentKey="MoveGroup" name="$parentMoveGroup" text="Move Group" inherits="AnsStandardButtonTemplate">
                 <Size x="100" y="20" />
                 <Anchors>
-                    <Anchor point="TOPRIGHT" x="0" y="32" />
+                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentInventoryList" x="0" y="-5" />
                 </Anchors>
             </Button>
             <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
@@ -79,7 +79,7 @@
         </Frames>
         <Layers>
             <Layer level="ARTWORK">
-                <FontString text="Inventory" inherits="GameFontNormal" justifyH="LEFT">
+                <FontString text="Inventory" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
                     <Anchors>
                         <Anchor point="TOPLEFT" x="0" y="-42" />
                     </Anchors>
@@ -87,7 +87,7 @@
                         <AbsValue val="32" />
                     </FontHeight>
                 </FontString>
-                <FontString text="Ids in Group" inherits="GameFontNormal" justifyH="LEFT">
+                <FontString text="Ids in Group" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
                     <Anchors>
                         <Anchor point="TOPRIGHT" x="-185" y="-42" />
                     </Anchors>

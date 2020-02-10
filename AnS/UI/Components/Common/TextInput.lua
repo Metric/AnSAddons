@@ -10,10 +10,10 @@ function TextInput:New(parent, name)
     return t;
 end
 
-function TextInput:NewFrom(frame)
+function TextInput:NewFrom(f)
     local t = {};
     setmetatable(t, TextInput);
-    t:InitFrom(frame);
+    t:InitFrom(f);
     return t;
 end
 
@@ -38,13 +38,13 @@ function TextInput:Init(parent, name)
     self.clearButton:Hide();
 end
 
-function TextInput:InitFrom(frame)
+function TextInput:InitFrom(f)
     local this = self;
-    local name = frame:GetName();
-    self.parent = frame:GetParent();
-    self.name = frame:GetName();
+    local name = f:GetName();
+    self.parent = f:GetParent();
+    self.name = f:GetName();
     self.lastInputTime = time();
-    self.frame = frame;
+    self.frame = f;
 
     self.onTextChanged = nil;
     self.asyncWait = 1;

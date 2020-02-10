@@ -2,23 +2,15 @@ ANS_FILTERS = {};
 ANS_CUSTOM_FILTERS = {};
 ANS_CUSTOM_VARS = {};
 ANS_GLOBAL_SETTINGS = {
-    percentFn = "",
-    pricingFn = "tujdays ~= 252",
-    rescanTime = 0,
     showDressing = false,
-    dingSound = true,
-    scanDelayTime = 5,
-    characterBlacklist = "",
     useCoinIcons = false,
-    itemBlacklist = {},
-    useCommodityConfirm = false,
     tooltipRealmRecent = true,
     tooltipRealmMin = true,
     tooltipRealm3Day = true,
-	tooltipRealmMarket = true,
+    tooltipRealmMarket = true,
+    trackDataAnalytics = true
 };
 ANS_GROUPS = {};
-ANS_FILTER_SELECTION = {};
 ANS_BASE_SELECTION = {};
 ANS_OPERATIONS = {
     Auctioning = {},
@@ -30,3 +22,15 @@ ANS_OPERATIONS = {
     Warehousing = {}
 };
 ANS_WINDOW_MINI_POSITION = 35;
+ANS_SNIPE_SELECTION = {};
+ANS_SNIPE_SETTINGS = {
+    source = "",
+    pricing = "",
+    characterBlacklist = "",
+    scanDelayTime = 5,
+    useCommodityConfirm = false,
+    keepResults = false,
+    dingSound = true,
+    itemsPerUpdate = 20,
+    itemBlacklist = {}
+};

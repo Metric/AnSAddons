@@ -122,7 +122,7 @@ function AuctionList:Purchase(block)
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
-        if (ANS_GLOBAL_SETTINGS.useCommodityConfirm) then
+        if (ANS_SNIPE_SETTINGS.useCommodityConfirm) then
             self.commodity = block:Clone();
             self.commodityConfirm:Show();
             return true, true;
@@ -271,7 +271,7 @@ function AuctionList:Click(row, button, down)
         local block = self.items[id];
 
         if (block) then
-            ANS_GLOBAL_SETTINGS.itemBlacklist[block.tsmId] = true;
+            ANS_SNIPE_SETTINGS.itemBlacklist[block.tsmId] = block.link;
             Recycler:Recycle(table.remove(self.items, id));
         end
 

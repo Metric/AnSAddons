@@ -62,6 +62,9 @@ end
 
 function MailTracker.OnMailUpdate()
     if (mailShown) then
+        if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+            return;
+        end
         -- so data will be availble by the time
         -- the mail is actually opened for looting
         local num = GetInboxNumItems();
@@ -90,13 +93,17 @@ function MailTracker.SendMail(ofn, ...)
 end
 
 function MailTracker:ProcessMail(idx, itemIndex)
-    local sender, subject, money, codAmount, daysLeft, itemCount, wasRead = select(3, GetInboxHeaderInfo(idx));
-
-    if (wasRead or not subject or idx > readyToProcessMail) then
-        return false;
+    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        return true;
     end
 
+
+    local sender, subject, money, codAmount, daysLeft, itemCount, wasRead = select(3, GetInboxHeaderInfo(idx));
     local invoiceType, itemName, buyer, bid, _, deposit, ahcut, _, _, _, quantity = GetInboxInvoiceInfo(idx);
+
+    if (idx > readyToProcessMail) then
+        return false;
+    end
 
     if (not buyer and invoiceType == "seller") then
         buyer = AUCTION_HOUSE_MAIL_MULTIPLE_BUYERS;
@@ -149,17 +156,6 @@ function MailTracker:ProcessMail(idx, itemIndex)
                 local buyTime = mailCheckTime + (daysLeft - 3) * SECONDS_PER_DAY;
                 Transactions:InsertCOD(count, ppu, link, sender, buyTime);
             end
-        else
-            for i = 1, ATTACHMENTS_MAX_RECEIVE do
-                local link = GetInboxItemLink(idx, i);
-                local count = select(4, GetInboxItem(idx, i)) or 0;
-
-                if (link and count and count > 0) then
-                    local ppu = Sources.round(codAmount / count);
-                    local buyTime = mailCheckTime + (daysLeft - 3) * SECONDS_PER_DAY;
-                    Transactions:InsertCOD(count, ppu, link, sender, buyTime);
-                end
-            end
         end
     -- Auction expired
     elseif (string.find(subject, EXPIRED_TEXT)) then
@@ -171,15 +167,6 @@ function MailTracker:ProcessMail(idx, itemIndex)
             if (link and qty and qty > 0) then
                 Transactions:InsertExpire(qty, link, expiredTime);
             end
-        else
-            for i = 1, ATTACHMENTS_MAX_RECEIVE do
-                local link = GetInboxItemLink(idx, i);
-                local qty = select(4, GetInboxItem(idx, i)) or 0;
-
-                if (link and qty and qty > 0) then
-                    Transactions:InsertExpire(qty, link, expiredTime);
-                end
-            end
         end
     -- Auction cancelled
     elseif (string.find(subject, CANCELLED_TEXT)) then
@@ -190,15 +177,6 @@ function MailTracker:ProcessMail(idx, itemIndex)
 
             if (link and qty and qty > 0) then
                 Transactions:InsertCancel(qty, link, cancelTime);
-            end
-        else
-            for i = 1, ATTACHMENTS_MAX_RECEIVE do
-                local link = GetInboxItemLink(idx, i);
-                local qty = select(4, GetInboxItem(idx, i)) or 0;
-
-                if (link and qty and qty > 0) then
-                    Transactions:InsertCancel(qty, link, cancelTime);
-                end
             end
         end
     elseif (money > 0 and not string.find(subject, OUTBID_TEXT)) then
