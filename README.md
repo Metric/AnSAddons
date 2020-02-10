@@ -1,7 +1,9 @@
-OMG It is Happening... An update for 8.3 Sniper
-=========================================
+Discord
+===================
+Need help, have questions, suggestions or just found a bug?
 
-A BIG shout out to u/turmixer123 on Reddit for helping test this update and giving me an idea on how to make this faster than TSM sniper for 8.3.
+https://discord.gg/DZueXS7
+
 
 
 AnS [Auction Snipe] 
