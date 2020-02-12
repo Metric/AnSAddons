@@ -45,9 +45,10 @@ function CommodityInputMixin:Cancel()
 end
 
 function CommodityInputMixin:Purchase()
-    if (AuctionList:PurchaseCommodity(self.Total:GetNumber())) then
-        self.confirmed = true;
-        self.commodity = nil;
-        self:Hide();
-    end
+    AuctionList.commodity.toPurchase = self.Total:GetNumber();
+    AuctionList:PurchaseCommodity();
+
+    self.confirmed = true;
+    self.commodity = nil;
+    self:Hide();
 end

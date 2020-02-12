@@ -27,9 +27,9 @@ function TextInput:Init(parent, name)
     self.asyncWait = 1;
     self.textDidChange = false;
     self.frame = CreateFrame("EDITBOX", name, parent, "AnsEditBoxTemplate");
-    self.frame:SetScript("OnTextSet", function() this:OnTextChanged() end);
-    self.frame:SetScript("OnTextChanged", function() this:OnTextChanged() end);
-    self.frame:SetScript("OnUpdate", function() this:OnUpdate() end);
+    self.frame:HookScript("OnTextSet", function() this:OnTextChanged() end);
+    self.frame:HookScript("OnTextChanged", function() this:OnTextChanged() end);
+    self.frame:HookScript("OnUpdate", function() this:OnUpdate() end);
     self.frame:SetTextInsets(5,10,5,5);
     self.frame:ClearFocus();
     self.clearButton = self.frame.Clear;
@@ -49,9 +49,9 @@ function TextInput:InitFrom(f)
     self.onTextChanged = nil;
     self.asyncWait = 1;
     self.textDidChange = false;
-    self.frame:SetScript("OnTextSet", function() this:OnTextChanged() end);
-    self.frame:SetScript("OnTextChanged", function() this:OnTextChanged() end);
-    self.frame:SetScript("OnUpdate", function() this:OnUpdate() end);
+    self.frame:HookScript("OnTextSet", function() this:OnTextChanged() end);
+    self.frame:HookScript("OnTextChanged", function() this:OnTextChanged() end);
+    self.frame:HookScript("OnUpdate", function() this:OnUpdate() end);
     self.frame:SetTextInsets(5,10,5,5);
     self.frame:ClearFocus();
     self.clearButton = self.frame.Clear;

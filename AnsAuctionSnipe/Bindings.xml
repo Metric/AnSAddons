@@ -9,4 +9,7 @@
             AuctionSnipe:BuyFirst();
         end
     </Binding>
+    <Binding name="ANSNEXT" runOnUp="true" category="AnS">
+        AuctionSnipe:Next();
+    </Binding>
 </Bindings>

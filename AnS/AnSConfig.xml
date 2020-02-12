@@ -96,18 +96,10 @@
           </OnTextChanged>
         </Scripts>
       </EditBox>
-      <Slider name="$parentRescanTime" minValue="0" maxValue="30" valueStep="1" inherits="AnsSliderTemplate">
-        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
-          <Scripts>
-            <OnValueChanged>
-              AnsConfig:Edit(self, "rescan");
-            </OnValueChanged>
-          </Scripts>
-      </Slider>
       <SimpleHTML>
         <FontStringHeader2 inherits="GameFontHighlightLarge"/>
         <Size><AbsDimension x="512" y="512" /></Size>
-        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentRescanTime" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
+        <Anchors><Anchor point="TOPLEFT" relativeTo="$parentPriceString" relativePoint="BOTTOMLEFT"><Offset><AbsDimension x="0" y="-15" /></Offset></Anchor></Anchors>
         <Scripts>
           <OnLoad>
             AnsConfig:SetHelpText(self);
@@ -116,7 +108,7 @@
       </SimpleHTML>             
       <CheckButton inherits="UIRadioButtonTemplate" name="$parentShowDressing">
         <Anchors>
-          <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentRescanTime">
+          <Anchor point="LEFT"  relativePoint="RIGHT" relativeTo="$parentPriceString">
             <Offset>
               <AbsDimension x="5" y="0"/>
             </Offset>
@@ -161,61 +153,6 @@
             </OnValueChanged>
           </Scripts>
       </Slider>
-    </Frames>
-  </Frame>
-
-  <Frame name="AnsCustomVarRowTemplate" virtual="true">
-    <Size x="512" y="32" />
-    <Frames>
-      <EditBox name="$parentName" autoFocus="false" inherits="InputBoxTemplate">
-        <Size><AbsDimension x="100" y="32" /></Size>
-        <Anchors><Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor></Anchors>
-        <Layers>
-          <Layer level="ARTWORK">
-            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="VAR Name">
-              <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
-                  <Offset x="0" y="5"/>
-                </Anchor>
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-        <Scripts>
-          <OnTextChanged>
-            AnsConfig:SaveVarRow(self:GetParent(), "name");
-          </OnTextChanged>
-        </Scripts>
-      </EditBox>
-      <EditBox name="$parentValue" autoFocus="false" inherits="InputBoxTemplate">
-        <Size><AbsDimension x="200" y="32" /></Size>
-        <Anchors><Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
-        <Layers>
-          <Layer level="ARTWORK">
-            <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="VAR Value">
-              <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT">
-                  <Offset x="0" y="5"/>
-                </Anchor>
-              </Anchors>
-            </FontString>
-          </Layer>
-        </Layers>
-        <Scripts>
-          <OnTextChanged>
-            AnsConfig:SaveVarRow(self:GetParent(), "value");
-          </OnTextChanged>
-        </Scripts>
-      </EditBox>
-      <Button name="$parentDeleteVar" text="Delete" inherits="UIPanelButtonTemplate">
-        <Size><AbsDimension x="64" y="32" /></Size>
-        <Anchors><Anchor point="LEFT" relativeTo="$parentValue" relativePoint="RIGHT"><Offset><AbsDimension x="10" y="0" /></Offset></Anchor></Anchors>
-        <Scripts>
-          <OnClick>
-            AnsConfig:DeleteVarRow(self:GetParent());
-          </OnClick>
-        </Scripts>
-      </Button>
     </Frames>
   </Frame>
 
@@ -351,107 +288,7 @@
       </Button>
     </Frames>
   </Frame>
-
-  <Frame enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate" name="AnsCustomVarsFrame" parent="UIParent">
-    <Scripts>
-      <OnLoad>
-            AnsConfig:LoadPanel(self, "AnS", "Custom VARS");
-            AnsCustomVarsRefresh();
-        </OnLoad>
-        <OnShow>
-          AnsCustomVarsRefresh();
-        </OnShow>
-    </Scripts>
-    <Frames>
-      <ScrollFrame name="AnsCustomVarsScrollFrame" inherits="FauxScrollFrameTemplate">
-        <Size x="565" y="425" />
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarsFrame_BTitle" relativePoint="BOTTOMLEFT" x="0" y="-40" />
-        </Anchors>
-        <Scripts>
-          <OnVerticalScroll>
-            FauxScrollFrame_OnVerticalScroll(self, offset, 32, AnsCustomVarsRefresh);
-          </OnVerticalScroll>
-        </Scripts>
-      </ScrollFrame>
-      <Frame name="AnsCustomVarRow1" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarsScrollFrame" relativePoint="TOPLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow2" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow1" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow3" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow2" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow4" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow3" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow5" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow4" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow6" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow5" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow7" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow6" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow8" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow7" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow9" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow8" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow10" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow9" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow11" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow10" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow12" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow11" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Frame name="AnsCustomVarRow13" inherits="AnsCustomVarRowTemplate">
-        <Anchors>
-          <Anchor point="TOPLEFT" relativeTo="AnsCustomVarRow12" relativePoint="BOTTOMLEFT" x="0" y="0" />
-        </Anchors>
-      </Frame>
-      <Button name="AnsAddCustomVar" text="New VAR" inherits="UIPanelButtonTemplate">
-        <Size x="100" y="32" />
-        <Anchors>
-          <Anchor point="TOPRIGHT" relativeTo="AnsCustomVarsScrollFrame" relativePoint="BOTTOMRIGHT" x="20" y="-20" />
-        </Anchors>
-        <Scripts>
-          <OnClick>
-            AnsConfig:AddVarRow();
-          </OnClick>
-        </Scripts>
-      </Button>
-    </Frames>
-  </Frame>
+  
   <Frame name="AnsBlacklistOptionsFrame" enableMouse="true" hidden="true" inherits="AnsOptionPanelTemplate">
     <Scripts>
       <OnLoad>

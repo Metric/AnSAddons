@@ -26,7 +26,7 @@ function SnipingView:OnLoad(f)
     local this = self;
     self.selected = nil;
     self.parent = f;
-    self.frame = CreateFrame("FRAME", "SnipingEditor", f, "AnsSnipeOpEditorTemplate");
+    self.frame = CreateFrame("Frame", "AnsSnipingEditor", f, "AnsSnipeOpEditorTemplate");
 
     self.name = TextInput:NewFrom(self.frame.OpName);
     self.price = TextInput:NewFrom(self.frame.Price.Text);

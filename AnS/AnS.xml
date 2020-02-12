@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-    <Frame name="AnsCore" hidden="true" enableMouse="true" movable="true">
+    <Frame name="AnsCore" hidden="true" enableMouse="true" movable="true" frameStrata="HIGH">
         <Scripts>
             <OnLoad>
                 AnsCore:RegisterEvents(self);
@@ -101,6 +101,16 @@
                     <Button id="4" name="$parentTab4" text="Operations" inherits="AnsTabTemplate">
                         <Anchors>
                             <Anchor point="LEFT" relativeTo="$parentTab3" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AnsCore.Window:OnTabClick(self);
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                     <Button id="5" name="$parentTab5" text="Settings" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" x="0" y="0" />
                         </Anchors>
                         <Scripts>
                             <OnClick>
@@ -441,6 +451,28 @@
                                     <Anchor point="TOPLEFT" x="0" y="0" />
                                 </Anchors>
                                 <Size x="148" y="340" />
+                            </ScrollFrame>
+                        </Frames>
+                    </Frame>
+                </Frames>
+            </Frame>
+            <Frame name="$parentTabView5" hidden="true">
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentTabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                    <Frame parentKey="Items" name="$parentItems">
+                        <Size x="148" y="396" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="-32" />
+                        </Anchors>
+                        <Frames>
+                            <ScrollFrame parentKey="ScrollFrame" name="$parentListView" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                                <Size x="148" y="386" />
                             </ScrollFrame>
                         </Frames>
                     </Frame>

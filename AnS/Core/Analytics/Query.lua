@@ -82,50 +82,86 @@ function DataQuery:GetAllExpired(name, tbl, search)
     self:GetAllTransactions(name, "expire", nil, tbl, true, search);
 end
 
-function DataQuery:JoinExpired(names, tbl, search)
+function DataQuery:Sort(tbl, sortMode)
+    if (sortMode and sortMode.reversed) then
+        table.sort(tbl, 
+            function(x,y)
+                if (sortMode.key == "type") then
+                    if (x.type == y.type and x.subtype and y.subtype) then
+                        return x.subtype > y.subtype;
+                    else
+                        return x.type > y.type; 
+                    end
+                end 
+                if (not x or not y or not x[sortMode.key] or not y[sortMode.key]) then
+                    return false;
+                end
+                return x[sortMode.key] > y[sortMode.key]; 
+            end);
+    elseif(sortMode and not sortMode.reversed) then
+        table.sort(tbl,
+            function(x,y)
+                if (sortMode.key == "type") then
+                    if (x.type == y.type and x.subtype and y.subtype) then
+                        return x.subtype < y.subtype;
+                    else
+                        return x.type < y.type; 
+                    end
+                end 
+                if (not x or not y or not x[sortMode.key] or not y[sortMode.key]) then
+                    return false;
+                end
+                return x[sortMode.key] < y[sortMode.key]; 
+            end);
+    end
+end
+
+function DataQuery:JoinExpired(names, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllExpired(v, tbl, search);
     end
+    self:Sort(tbl, sortMode);
 end
 
-function DataQuery:JoinCancelled(names, tbl, search)
+function DataQuery:JoinCancelled(names, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllCancelled(v, tbl, search);
     end
+    self:Sort(tbl, sortMode);
 end
 
-function DataQuery:JoinSales(names, subtype, tbl, search)
+function DataQuery:JoinSales(names, subtype, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllSales(v, subtype, tbl, search);
     end
-    table.sort(tbl, function(x, y) return x.time > y.time; end);
+    self:Sort(tbl, sortMode);
 end
 
-function DataQuery:JoinPurchases(names, subtype, tbl, search)
+function DataQuery:JoinPurchases(names, subtype, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllPurchases(v, subtype, tbl, search);
     end
-    table.sort(tbl, function(x, y) return x.time > y.time; end);
+    self:Sort(tbl, sortMode);
 end
 
-function DataQuery:JoinExpenses(names, types, subtype, tbl, search)
+function DataQuery:JoinExpenses(names, types, subtype, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllExpenses(v, types, subtype, tbl, search);
     end
-    table.sort(tbl, function(x, y) return x.time > y.time; end);
+    self:Sort(tbl, sortMode);
 end
 
-function DataQuery:JoinIncome(names, subtype, tbl, search)
+function DataQuery:JoinIncome(names, subtype, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllIncome(v, subtype, tbl, search);
     end
-    table.sort(tbl, function(x, y) return x.time > y.time; end);
+    self:Sort(tbl, sortMode);
 end
 
 function DataQuery:GetTotalProfit(name, stime)

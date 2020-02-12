@@ -27,8 +27,8 @@ local PI = 3.14159265358;
 local Deg2Rad = PI / 180;
 
 function Operations.RenderGroupRow(row, item)
-    local moveUp = _G[row:GetName().."moveUp"];
-    local moveDown = _G[row:GetName().."moveDown"];
+    local moveUp = _G[row:GetName().."MoveUp"];
+    local moveDown = _G[row:GetName().."MoveDown"];
 
     local addButton = _G[row:GetName().."Add"];
     if (addButton) then

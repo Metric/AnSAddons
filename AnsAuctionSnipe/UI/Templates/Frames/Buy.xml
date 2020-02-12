@@ -225,35 +225,6 @@
                             <OnClick>AuctionSnipe:DingSound(self)</OnClick>
                         </Scripts>
                     </CheckButton>
-                    <EditBox name="$parentGlobalFilter" autoFocus="false" inherits="InputBoxTemplate">
-                        <Size x="220" y="24" />
-                        <Anchors>
-							<Anchor point="TOPLEFT" relativeTo="$parentSearch" relativePoint="BOTTOMLEFT" x="120" y="0"/>
-						</Anchors>
-                        <Layers>
-                            <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlight" text="Global Filter String" justifyH="RIGHT">
-									<Anchors>
-										<Anchor point="LEFT" relativePoint="LEFT" x="-120" y="0"/>
-									</Anchors>
-								</FontString>
-							</Layer>
-                        </Layers>
-                        <Scripts>
-                            <OnShow>
-                                self:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
-                            </OnShow>
-                            <OnTextChanged>
-                                AnsConfig:Edit(self, "pricing");
-                            </OnTextChanged>
-                            <OnEnterPressed>
-                                self:ClearFocus();
-                            </OnEnterPressed>
-                            <OnEscapePressed>
-                                self:ClearFocus();
-                            </OnEscapePressed>
-                        </Scripts>
-                    </EditBox>
                 </Frames>
             </Frame>
 
@@ -310,24 +281,44 @@
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0"/>
                         </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("ppu");
+                            </OnClick>
+                        </Scripts>
                     </Button>
                     <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
                         <Size x="108" y="20"/>
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentPrice" relativePoint="TOPRIGHT" x="60" y="0"/>
                         </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("count");
+                            </OnClick>
+                        </Scripts>
                     </Button>
                     <Button name="$parentPercent" text="Percent %" inherits="AnsAuctionHeadingTemplate">
                         <Size x="70" y="20"/>
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="TOPRIGHT" x="100" y="0"/>
                         </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("percent");
+                            </OnClick>
+                        </Scripts>
                     </Button>
                     <Button name="$parentLevel" text="iLvL" inherits="AnsAuctionHeadingTemplate">
                         <Size x="50" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentPercent" relativePoint="TOPRIGHT" x="10" y="0" />
                         </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("ilevel");
+                            </OnClick>
+                        </Scripts>
                     </Button>
                 </Frames>
             </Frame>

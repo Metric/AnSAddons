@@ -47,13 +47,6 @@ end
 
 local function AnsConfigFinalize()
     AnsCore:LoadCustomVars();
-    if (type(ANS_GLOBAL_SETTINGS.characterBlacklist) == "string") then
-        if (ANS_GLOBAL_SETTINGS.characterBlacklist == "" or ANS_GLOBAL_SETTINGS.characterBlacklist:len() == 0) then
-            ANS_GLOBAL_SETTINGS.characterBlacklist = {};
-        else
-            ANS_GLOBAL_SETTINGS.characterBlacklist = { strsplit("\r\n", ANS_GLOBAL_SETTINGS.characterBlacklist) };
-        end
-    end
 end
 
 function AnsConfig:SetHelpText(f)
@@ -64,8 +57,6 @@ end
 function AnsConfig:LoadGlobal(f)
     local percBox = _G[f:GetName().."PercentString"];
     local pricBox = _G[f:GetName().."PriceString"];
-    local rscan = _G[f:GetName().."RescanTime"];
-    local rscanText = _G[rscan:GetName().."Text"];
     local showDress = _G[f:GetName().."ShowDressing"];
     local scanDelay = _G[f:GetName().."ScanDelay"];
     local delayText = _G[scanDelay:GetName().."Text"];
@@ -73,49 +64,44 @@ function AnsConfig:LoadGlobal(f)
     local useCommodity = _G[f:GetName().."UseCommodityConfirm"];
 
     showDress:SetChecked(ANS_GLOBAL_SETTINGS.showDressing);
-    percBox:SetText(ANS_GLOBAL_SETTINGS.percentFn);
-    pricBox:SetText(ANS_GLOBAL_SETTINGS.pricingFn);
-    rscan:SetValue(ANS_GLOBAL_SETTINGS.rescanTime);
-    scanDelay:SetValue(ANS_GLOBAL_SETTINGS.scanDelayTime);
+    percBox:SetText(ANS_SNIPE_SETTINGS.source);
+    pricBox:SetText(ANS_SNIPE_SETTINGS.pricing);
+    scanDelay:SetValue(ANS_SNIPE_SETTINGS.scanDelayTime);
 
     useCoins:SetChecked(ANS_GLOBAL_SETTINGS.useCoinIcons);
-    useCommodity:SetChecked(ANS_GLOBAL_SETTINGS.useCommodityConfirm);
+    useCommodity:SetChecked(ANS_SNIPE_SETTINGS.useCommodityConfirm);
 
-    rscanText:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
-    delayText:SetText("Item Found Scan Delay: "..ANS_GLOBAL_SETTINGS.scanDelayTime.."s");
+    delayText:SetText("Item Found Scan Delay: "..ANS_SNIPE_SETTINGS.scanDelayTime.."s");
 end
 
 function AnsConfig:LoadBlacklist(f)
     local box = _G[f:GetName().."Blacklist"];
 
-    if (type(ANS_GLOBAL_SETTINGS.characterBlacklist) == "table") then
-        box.EditBox:SetText(table.concat(ANS_GLOBAL_SETTINGS.characterBlacklist, "\r\n"));
+    if (type(ANS_SNIPE_SETTINGS.characterBlacklist) == "table") then
+        box.EditBox:SetText(table.concat(ANS_SNIPE_SETTINGS.characterBlacklist, "\r\n"));
     else
-        box.EditBox:SetText(ANS_GLOBAL_SETTINGS.characterBlacklist);
+        box.EditBox:SetText(ANS_SNIPE_SETTINGS.characterBlacklist);
     end
 end
 
 function AnsConfig:Edit(f, type) 
     if (type == "pricing") then
-        ANS_GLOBAL_SETTINGS.pricingFn = f:GetText();
+        ANS_SNIPE_SETTINGS.pricing = f:GetText();
     elseif (type == "percent") then
-        ANS_GLOBAL_SETTINGS.percentFn = f:GetText();
+        ANS_SNIPE_SETTINGS.source = f:GetText();
     elseif (type == "rescan") then
-        local rscan = _G[f:GetName().."Text"];
-        ANS_GLOBAL_SETTINGS.rescanTime = math.floor(f:GetValue());
-        rscan:SetText("Rescan Time: "..ANS_GLOBAL_SETTINGS.rescanTime.."s");
     elseif (type == "dressup") then
         ANS_GLOBAL_SETTINGS.showDressing = f:GetChecked();
     elseif (type == "blacklist") then
-        ANS_GLOBAL_SETTINGS.characterBlacklist = f:GetText():lower();
+        ANS_SNIPE_SETTINGS.characterBlacklist = f:GetText():lower();
     elseif (type == "coins") then
         ANS_GLOBAL_SETTINGS.useCoinIcons = f:GetChecked();
     elseif (type == "scandelay") then
         local rscan = _G[f:GetName().."Text"];
-        ANS_GLOBAL_SETTINGS.scanDelayTime = math.floor(f:GetValue());
-        rscan:SetText("Item Found Scan Delay: "..ANS_GLOBAL_SETTINGS.scanDelayTime.."s");
+        ANS_SNIPE_SETTINGS.scanDelayTime = math.floor(f:GetValue());
+        rscan:SetText("Item Found Scan Delay: "..ANS_SNIPE_SETTINGS.scanDelayTime.."s");
     elseif (type == "commodityconfirm") then
-        ANS_GLOBAL_SETTINGS.useCommodityConfirm = f:GetChecked();
+        ANS_SNIPE_SETTINGS.useCommodityConfirm = f:GetChecked();
     end
 end
 

@@ -15,8 +15,17 @@ AuctionList.style = {
     rowHeight = 16
 };
 AuctionList.isBuying = false;
-AuctionList.isPurchaseReady = false;
 AuctionList.commodity = nil;
+AuctionList.auction = nil;
+
+AuctionList.sortMode = {
+    ["ppu"] = false,
+    ["stack"] = false,
+    ["percent"] = false,
+    ["ilevel"] = false
+};
+
+AuctionList.lastSortMode = "percent";
 
 local stepTime = 1;
 local clickTime = time();
@@ -51,24 +60,12 @@ function AuctionList:RegisterEvents()
     end
 end
 
-function AuctionList:Buy(index)
+function AuctionList:Buy(index) 
     if (self.frame and #self.items > 0 and index > 0 and index <= #self.items) then
         local block = self.items[index];
-        if (block and not self.isBuying and self.commodity == nil) then
-            if (self.isPurchaseReady) then
-                self.isBuying = true;
-                local success, isCommodity = self:Purchase(block);
-                if (not isCommodity and success and block.count <= 0) then
-                    Recycler:Recycle(table.remove(self.items, index));
-                    if (self.selectedEntry == index) then
-                        self.selectedEntry = -1;
-                    end
-                end
-                if (not isCommodity or not success) then
-                    self.isBuying = false;
-                end
-                self:Refresh();
-            end
+        if (block and not self.isBuying 
+            and self.commodity == nil and self.auction == nil) then
+            self:Purchase(block);
         end
     end
 end
@@ -93,10 +90,7 @@ function AuctionList:AddItems(items)
     for i,v in ipairs(items) do
         tinsert(self.items, v:Clone());
     end 
-    table.sort(self.items, function(a,b) 
-        return a.percent < b.percent;
-    end);
-    self:Refresh();
+    self:Sort(self.lastSortMode, true);
 end
 
 function AuctionList:SetItems(items)
@@ -104,10 +98,7 @@ function AuctionList:SetItems(items)
     for i,v in ipairs(items) do
         tinsert(self.items, v:Clone());
     end 
-    table.sort(self.items, function(a,b) 
-        return a.percent < b.percent;
-    end)
-    self:Refresh();
+    self:Sort(self.lastSortMode, true);
 end
 
 function AuctionList:Purchase(block)
@@ -117,18 +108,24 @@ function AuctionList:Purchase(block)
 
     if (block.auctionId ~= nil and not block.isCommodity) then
         if (GetMoney() >= block.buyoutPrice) then
-            C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);
-            block.count = block.count - 1;
+            self.isBuying = true;
+            self.auction = block;
+            self:PurchaseAuction();
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
         if (ANS_SNIPE_SETTINGS.useCommodityConfirm) then
+            self.isBuying = true;
             self.commodity = block:Clone();
+            self.auction = self.commodity;
             self.commodityConfirm:Show();
             return true, true;
         elseif (GetMoney() >= block.buyoutPrice) then
+            self.isBuying = true;
+            self.auction = block;
             self.commodity = block:Clone();
-            self:PurchaseCommodity(self.commodity.count);
+            self.commodity.toPurchase = self.commodity.count;
+            self:PurchaseCommodity();
             return true, true;
         end
     end
@@ -136,39 +133,78 @@ function AuctionList:Purchase(block)
     return false, false;
 end
 
-function AuctionList:PurchaseCommodity(total)
-    if (self.commodity == nil or total < 1) then
+function AuctionList:PurchaseAuction()
+    local block = self.auction;
+    
+    if (GetMoney() >= block.buyoutPrice) then
+        C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);         
+        self:RemoveAuctionAmount(block, 1);
+    end
+    
+    self.auction = nil;
+    self.isBuying = false;
+    self:Refresh();
+end
+
+function AuctionList:Sort(type, noFlip)
+    if (self.sortMode[type]) then
+        table.sort(self.items, function(x,y) return x[type] > y[type]; end);
+        if (not noFlip) then
+            self.sortMode[type] = false;
+        end
+    else
+        table.sort(self.items, function(x,y) return x[type] < y[type]; end);
+        if (not noFlip) then
+            self.sortMode[type] = true;
+        end
+    end
+    self:Refresh();
+end
+
+function AuctionList:PurchaseCommodity()
+    if (self.commodity == nil or not self.commodity.toPurchase or self.commodity.toPurchase < 1) then
+        self.auction = nil;
+        self.commodity = nil;
+        self.isBuying = false;
+
         return false;
     end
-
-    self.commodity.toPurchase = total;
     
     if (self.commodity.toPurchase * self.commodity.ppu > GetMoney()) then
         print("AnS: Not enough gold to purchase "..total.." of "..self.commodity.name);
+        
+        self.auction = nil;
+        self.commodity = nil;
+        self.isBuying = false;
+
         return false;
     end
     
-
+    self.removeListing = false;
     C_AuctionHouse.StartCommoditiesPurchase(self.commodity.id, self.commodity.toPurchase, self.commodity.ppu);
     return true;
 end
 
-function AuctionList:ConfirmCommoditiesPurchase(ppu, total)
+-- the second boolean returned is whether to remove
+-- the listing on cancel
+function AuctionList:ConfirmCommoditiesPurchase()
     if (self.commodity == nil) then
+        self.removeListing = false;
         return false;
     end
 
-    if (total > self.commodity.ppu * self.commodity.toPurchase) then
+    if (self.commodityTotal > self.commodity.ppu * self.commodity.toPurchase) then
         print("AnS: Updated total price of commodities is higher than original total purchase price.");
-        self:CancelCommoditiesPurchase(true);
+        self.removeListing = true;
         return false;
-    elseif (ppu * self.commodity.toPurchase > GetMoney()) then
+    elseif (self.commodityPPU * self.commodity.toPurchase > GetMoney()) then
         print("AnS: You do not have enough gold to purchase everything at the updated price per unit!");
-        self:CancelCommoditiesPurchase(false);
+        self.removeListing = false;
         return false;
     end
 
     C_AuctionHouse.ConfirmCommoditiesPurchase(self.commodity.id, self.commodity.toPurchase);
+    self.removeListing = false;
     return true;
 end
 
@@ -183,10 +219,11 @@ function AuctionList:OnCommondityPurchased(failed)
     else
         print("AnS: Failed to buy "..self.commodity.toPurchase.." of "..self.commodity.name);
     end
+    self.auction = nil;
     self.commodity = nil;
 end
 
-function AuctionList:CancelCommoditiesPurchase(remove)
+function AuctionList:CancelCommoditiesPurchase()
     if (self.commodity == nil) then
         return;
     end
@@ -194,10 +231,12 @@ function AuctionList:CancelCommoditiesPurchase(remove)
     self.isBuying = false;
     C_AuctionHouse.CancelCommoditiesPurchase();
     
-    if (remove) then
+    if (self.removeListing) then
         self:RemoveAuction(self.commodity);
     end
 
+    self.removeListing = false;
+    self.auction = nil;
     self.commodity = nil;
 end
 

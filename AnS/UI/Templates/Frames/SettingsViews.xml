@@ -1,2 +1,215 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsCustomSourceRowTemplate" virtual="true">
+        <Size x="525" y="24" />
+        <Frames>
+            <EditBox parentKey="Name" name="$parentName" autoFocus="false" inherits="AnsEditBoxTemplate">
+                <Size x="100" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Name">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="5"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <EditBox parentKey="Value" name="$parentValue" autoFocus="false" inherits="AnsEditBoxTemplate">
+                <Size x="200" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="TOPRIGHT" x="10" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Value">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="5"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <Button parentKey="Delete" text="Delete Source" name="$parentDelete" inherits="AnsWarningButtonTemplate">
+                <Size x="100" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentValue" relativePoint="TOPRIGHT" x="10" y="0" />
+                </Anchors>
+            </Button>
+        </Frames>
+    </Frame>
+
+    <Frame name="AnsCustomSourcesTemplate" virtual="true">
+        <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="-32" />
+        </Anchors>
+        <Frames>
+            <Button parentKey="NewSource" text="Add Source" name="$parentNewSource" inherits="AnsStandardButtonTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="32" />
+                </Anchors>
+            </Button>
+            <ScrollFrame parentKey="ScrollFrame" name="$parentListView" inherits="AnsFauxScrollFrameTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+                <Size x="525" y="340" />
+            </ScrollFrame>
+        </Frames>
+    </Frame>
+
+    <Frame name="AnsGeneralSettingsTemplate" virtual="true">
+         <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="-32" />
+        </Anchors>
+        <Frames>
+             <CheckButton parentKey="DressUp" text="Show Dressup" name="$parentDressUp" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="Coins" text="Use Coin Icons" name="$parentCoins" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0" relativePoint="TOPRIGHT" relativeTo="$parentDressUp" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="Analytics" text="Track Gold, Auctions etc." name="$parentAnalytics" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0"  relativePoint="TOPRIGHT" relativeTo="$parentCoins" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RRTooltip" text="Show Realm Recent Tooltip" name="$parentRRTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeTo="$parentDressUp" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RMTooltip" text="Show Realm Min Tooltip" name="$parentRMTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0"  relativePoint="TOPRIGHT" relativeTo="$parentRRTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RThreeTooltip" text="Show Realm 3-Day Tooltip" name="$parentRThreeTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0"  relativePoint="TOPRIGHT" relativeTo="$parentRMTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RMMTooltip" text="Show Realm Market Tooltip" name="$parentRMMTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeTo="$parentRRTooltip" />
+                </Anchors>
+            </CheckButton>
+        </Frames>
+    </Frame>
+
+    <Frame name="AnsSniperSettingsTemplate" virtual="true">
+        <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="-32" />
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Price Source" name="$parentSourceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Default Price Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-45" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" text="Character Blacklist (one entry per line)" name="$parentBlacklistLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-194" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <EditBox parentKey="Source" text="" name="$parentSourceValue" inherits="AnsEditBoxTemplate">
+                <Size x="200" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSourceLabel" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+            <ScrollFrame parentKey="Price" name="$parentPriceValue" inherits="AnsScrollFrameTemplate">
+                <Size x="575" y="128" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPriceLabel" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                        <Size x="575" y="123" />
+                    </EditBox>
+                </ScrollChild>
+            </ScrollFrame>
+            <ScrollFrame parentKey="Blacklist" name="$parentBlacklist" inherits="AnsScrollFrameTemplate">
+                <Size x="200" y="128" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentBlacklistLabel" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                        <Size x="200" y="123" />
+                    </EditBox>
+                </ScrollChild>
+            </ScrollFrame>
+            <CheckButton parentKey="CommodityConfirm" text="Use Commodity Confirm" name="$parentCommodityConfirm" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentBlacklistLabel" x="20" y="-15" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="Ding" text="Use Ding Sound" name="$parentDing" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentCommodityConfirm" x="0" y="-10" />
+                </Anchors>
+            </CheckButton>
+            <EditBox parentKey="ItemsUpdate" name="$parentItemsUpdate" text="" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTOTMLEFT" relativeTo="$parentDing" x="0" y="-40" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Items Processed Per Frame" inherits="AnsGameFontWhiteTrans">
+                            <Size x="150" y="20" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="20" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+        </Frames>
+    </Frame>
 </Ui>

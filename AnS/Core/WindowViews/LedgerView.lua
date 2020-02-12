@@ -6,6 +6,16 @@ Ledger.selected = false;
 Ledger.loaded = false;
 Ledger.index = 2;
 Ledger.filter = "sales";
+Ledger.sortMode = {
+    ["copper"] = false,
+    ["from"] = false,
+    ["quantity"] = false,
+    ["type"] = false,
+    ["item"] = false,
+    ["time"] = false
+};
+
+Ledger.lastSortMode = "time";
 
 local Dropdown = Ans.UI.Dropdown;
 local TextInput = Ans.UI.TextInput;
@@ -57,12 +67,26 @@ function Ledger:OnLoad(f)
     self.totalItemsText = _G[tab:GetName().."ListStatsTotalItems"];
     self.filtersView = tab.Filters;
 
+    self.listView.Header.dataProvider = self;
+
     self:LoadCharacterDropdown();
     self:LoadListView();
     self:LoadFilters();
     self:LoadSubFilterDropdown();
     self:LoadSearchInput();
     self:LoadExpenseDropdown();
+end
+
+function Ledger:Sort(type, noFlip)
+    self.lastSortMode = type;
+    if (not noFlip) then
+        if (self.sortMode[type]) then
+            self.sortMode[type] = false;
+        else
+            self.sortMode[type] = true;
+        end
+    end
+    self:Refresh();
 end
 
 function Ledger:Show()
@@ -218,21 +242,22 @@ function Ledger:LoadData(names)
     self.expenseSelect:Hide();
 
     if (self.filter == "sales") then
-        DataQuery:JoinSales(names, subtype, tempTbl, self.searchFilter);
+        DataQuery:JoinSales(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     elseif (self.filter == "purchases") then
-        DataQuery:JoinPurchases(names, subtype, tempTbl, self.searchFilter);
+        DataQuery:JoinPurchases(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
         neg = "-";
     elseif (self.filter == "expenses") then
         local expenseSelected = self.expenseSelect.selected;
-        DataQuery:JoinExpenses(names, expenseFilters[expenseSelected].types, subtype, tempTbl, self.searchFilter);
+        DataQuery:JoinExpenses(names, expenseFilters[expenseSelected].types, subtype, tempTbl, self.searchFilter, 
+            {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
         self.expenseSelect:Show();
         neg = "-";
     elseif (self.filter == "income") then
-        DataQuery:JoinIncome(names, subtype, tempTbl, self.searchFilter);
+        DataQuery:JoinIncome(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     elseif (self.filter == "cancelled") then
-        DataQuery:JoinCancelled(names, tempTbl, self.searchFilter);
+        DataQuery:JoinCancelled(names, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     elseif (self.filter == "expired") then
-        DataQuery:JoinExpired(names, tempTbl, self.searchFilter);
+        DataQuery:JoinExpired(names, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     end
 
     local total = 0;

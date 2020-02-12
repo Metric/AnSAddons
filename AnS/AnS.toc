@@ -105,7 +105,3 @@ Core\Window.lua
 
 AnS.lua
 AnS.xml
-
-## AnS Config -- This will be moving to separate modules eventually.
-AnsConfig.lua
-AnsConfig.xml

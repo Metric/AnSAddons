@@ -20,7 +20,11 @@ local EVENTS_TO_REGISTER = {
     "COMMODITY_PURCHASE_FAILED",
     "COMMODITY_PURCHASE_SUCCEEDED",
     "ITEM_KEY_ITEM_INFO_RECEIVED",
-    "GET_ITEM_INFO_RECEIVED"
+    "GET_ITEM_INFO_RECEIVED",
+    "AUCTION_HOUSE_THROTTLED_MESSAGE_RESPONSE_RECEIVED",
+    "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED",
+    "AUCTION_HOUSE_THROTTLED_MESSAGE_SENT",
+    "AUCTION_HOUSE_THROTTLED_MESSAGE_QUEUED"
 };
 
 local rootFrame = nil;
@@ -43,6 +47,13 @@ STATES.FINDING = 3;
 STATES.ITEMS = 4;
 STATES.ITEMS_WAITING = 5;
 STATES.INFO = 6;
+STATES.SEARCH = 7;
+STATES.SEARCH_MORE = 8;
+STATES.BROWSE_MORE = 9;
+STATES.CONFIRM_COMMODITY = 10;
+STATES.CANCEL_COMMODITY = 11;
+STATES.UPDATING_COMMODITY = 12;
+STATES.WAITING_COMMODITY_PURCHASE = 13;
 
 AuctionSnipe = {};
 AuctionSnipe.__index = AuctionSnipe;
@@ -77,18 +88,15 @@ local itemsFound = {};
 local currentItemScan = nil;
 local validAuctions = {};
 local infoKey = nil;
+
 local scanIndex = 1;
 local totalResultsFound = 0;
-
-local needsToProcessPreviousScan = false;
-local commodityConfirmTime = 0;
-
-local lastScan = time();
-local lastSuccessScan = time();
-local lastResult = time();
 local totalValidAuctionsFound = 0;
 
 local seenResults = {};
+local throttleMessageReceived = true;
+local throttleWaitingForSend = false;
+local throttleTime = time();
 
 BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
 BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
@@ -288,9 +296,21 @@ function AuctionSnipe:BuildTreeViewBase()
     end
 end
 
+function AuctionSnipe:Sort(type)
+    AuctionList:Sort(type);
+end
+
 --- do not use without first checking
 --- the actual self.state
 function AuctionSnipe:TryAndSearch()
+    if (self:IsThrottled()) then
+        return;
+    end
+
+    if (self.state ~= STATES.SEARCH) then
+        return;    
+    end
+
     if (not currentItemScan) then
         return;
     end
@@ -314,6 +334,10 @@ function AuctionSnipe:TryAndSearch()
     -- and will never trigger an event properly.
 end
 
+function AuctionSnipe:IsThrottled()
+    return time() - throttleTime < 4;
+end
+
 function AuctionSnipe:OnUpdate(frame, elapsed)
     if (self.frame) then   
         if (AuctionList.commodity ~= nil or AuctionList.isBuying) then
@@ -329,19 +353,72 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
         end
     end
 
-    if (self.state == STATES.INIT) then
-        local tdiff = time() - lastScan;
-        local tdiff2 = time() - lastSuccessScan;
-        local scanDelayReady = tdiff2 >= ANS_SNIPE_SETTINGS.scanDelayTime;
+    if (not throttleMessageReceived or throttleWaitingForSend) then
+        throttleTime = time();
+        return;
+    end
 
-        if (scanDelayReady and self.state ~= STATES.WAITING 
+    if (AuctionList.auction and AuctionList.commodity) then
+        if (self:IsThrottled()) then
+            return;
+        end
+
+        if (self.commodityState == STATES.CONFIRM_COMMODITY) then         
+            if (AuctionList:ConfirmCommoditiesPurchase()) then
+                self.commodityState = STATES.WAITING_COMMODITY_PURCHASE;
+            else
+                self.commodityState = STATES.CANCEL_COMMODITY;
+            end
+        elseif (self.commodityState == STATES.CANCEL_COMMODITY) then
+            self.commodityState = STATES.NONE;
+
+            AuctionList:CancelCommoditiesPurchase();
+
+            -- continue on if we got caught in a weird state
+            if (self.state == STATES.ITEMS_WAITING) then
+                self.state = STATES.ITEMS;
+            elseif (self.state == STATES.WAITING) then
+                self.state = STATES.BROWSE_MORE;
+            end
+        end
+        return;
+    end
+
+    if (self.state == STATES.SEARCH) then
+        self:TryAndSearch();
+    elseif(self.state == STATES.BROWSE_MORE) then
+        if (self:IsThrottled()) then
+            return;
+        end
+
+        self.state = STATES.WAITING;
+
+        C_AuctionHouse.RequestMoreBrowseResults();
+    elseif (self.state == STATES.SEARCH_MORE) then
+        if (self:IsThrottled()) then
+            return;
+        end
+
+        self.state = STATES.ITEMS_WAITING;
+
+        if (currentItemScan.isCommodity) then
+            C_AuctionHouse.RequestMoreCommoditySearchResults(currentItemScan.id);
+        else
+            C_AuctionHouse.RequestMoreItemSearchResults(currentItemScan.itemKey);
+        end
+    elseif (self.state == STATES.INIT) then
+        if (self.state ~= STATES.WAITING 
             and AuctionList.commodity == nil and not AuctionList.isBuying) then
             
+            if (self:IsThrottled()) then
+                return;
+            end
+
             currentItemScan = nil;
+            
             self.fullBrowseResults = false;
+
             totalResultsFound = 0;
-            needsToProcessPreviousScan = false;
-            AuctionList.isPurchaseReady = false;
             scanIndex = 1;
 
             totalValidAuctionsFound = 0;
@@ -350,22 +427,16 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             ClearItemsFound();
             ClearValidAuctions();
             wipe(browseResults);
-
-            if (not ANS_SNIPE_SETTINGS.keepResults) then
-                AuctionList:SetItems(validAuctions);
-            end
             
             self.state = STATES.WAITING;
 
             if (self.snipeStatusText) then
                 self.snipeStatusText:SetText("Waiting for Results");
             end
-
+            
             C_AuctionHouse.SendBrowseQuery(DEFAULT_BROWSE_QUERY);
         end
     elseif (self.state == STATES.FINDING) then
-        AuctionList.isPurchaseReady = true;
-
         if (#browseResults == 0) then
             self.state = STATES.INIT;
             return;
@@ -390,63 +461,33 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             count = count + 1;
         end
 
-        if (scanIndex > #browseResults and #itemsFound > 0) then
-            if (self.fullBrowseResults) then
-
+        if (scanIndex > #browseResults) then
+            if (#itemsFound > 0) then
                 if (self.snipeStatusText) then
                     self.snipeStatusText:SetText("Gathering Auctions");
                 end
 
+                scanIndex = 1;
                 self.state = STATES.ITEMS;
-                scanIndex = 1;
                 totalResultsFound = totalResultsFound + #browseResults;
                 wipe(browseResults);
-            else
-                totalResultsFound = totalResultsFound + #browseResults;
-                scanIndex = 1;
-                wipe(browseResults);
-                self.state = STATES.WAITING;
-                AuctionList.isPurchaseReady = false;
-                C_AuctionHouse.RequestMoreBrowseResults();
-            end
-        elseif (scanIndex > #browseResults and #itemsFound == 0) then
-            if (self.fullBrowseResults) then
-                
+            elseif (self.fullBrowseResults) then
                 if (self.snipeStatusText) then
                     self.snipeStatusText:SetText("Waiting to Query");
                 end
 
                 scanIndex = 1;
-                lastScan = time();
                 self.state = STATES.INIT;
+
                 wipe(browseResults);
             else
                 totalResultsFound = totalResultsFound + #browseResults;
                 scanIndex = 1;
                 wipe(browseResults);
-                self.state = STATES.WAITING;
-                AuctionList.isPurchaseReady = false;
-                C_AuctionHouse.RequestMoreBrowseResults();
+                self.state = STATES.BROWSE_MORE;
             end
         end
-    elseif (self.state == STATES.ITEMS and AuctionList.commodity == nil and not AuctionList.isBuying) then
-        if (time() - commodityConfirmTime < 2) then
-            return;
-        end
-
-        if (needsToProcessPreviousScan) then
-            if (currentItemScan and currentItemScan.itemKey) then
-                self:TryAndSearch();
-            else
-                currentItemScan = itemsFound[scanIndex - 1];
-                if (currentItemScan and currentItemScan.itemKey) then
-                    self:TryAndSearch();
-                end
-            end 
-            needsToProcessPreviousScan = false;
-            return;
-        end
-
+    elseif (self.state == STATES.ITEMS and not AuctionList.isBuying and not AuctionList.auction and not AuctionList.commodity) then
         if (scanIndex <= #itemsFound) then
             if (validAuctions and #validAuctions > 0) then
                 totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
@@ -461,7 +502,7 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
             currentItemScan = itemsFound[scanIndex];
             scanIndex = scanIndex + 1;
 
-            self:TryAndSearch();
+            self.state = STATES.SEARCH;
         else
             if (validAuctions and #validAuctions > 0) then
                 totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
@@ -469,20 +510,26 @@ function AuctionSnipe:OnUpdate(frame, elapsed)
                 ClearValidAuctions();
             end
 
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Waiting to Query");
-            end
-
             if (totalValidAuctionsFound > 0 and ANS_SNIPE_SETTINGS.dingSound) then
                 PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
             end
 
             if (totalValidAuctionsFound > 0) then
-                lastSuccessScan = time();
+                totalValidAuctionsFound = 0;
             end
 
-            lastScan = time();
-            self.state = STATES.INIT;
+            ClearItemsFound();
+
+            if (not self.fullBrowseResults) then
+                scanIndex = 1;
+                self.state = STATES.BROWSE_MORE;
+            else
+                if (self.snipeStatusText) then
+                    self.snipeStatusText:SetText("Waiting to Query");
+                end
+                scanIndex = 1;
+                self.state = STATES.INIT;
+            end
         end
     end
 end
@@ -503,17 +550,32 @@ function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "ADDON_LOADED") then self:OnAddonLoaded(...) end;
 
     if (event == "ITEM_KEY_ITEM_INFO_RECEIVED") then
-        lastResult = time();
         local id = select(1, ...);
         if (currentItemScan and currentItemScan.id == id and self.state == STATES.INFO) then
-            self:TryAndSearch();
+            self.state = STATES.SEARCH;
         end
     elseif (event == "GET_ITEM_INFO_RECEIVED") then
-        lastResult = time();
         local id = select(1, ...);
         if (currentItemScan and currentItemScan.id == id and self.state == STATES.INFO) then
-            self:TryAndSearch();
+            self.state = STATES.SEARCH;
         end
+    end
+
+    if (event == "AUCTION_HOUSE_THROTTLED_MESSAGE_RESPONSE_RECEIVED") then
+        throttleMessageReceived = true;
+    elseif (event == "AUCTION_HOUSE_THROTTLED_MESSAGE_QUEUED") then
+        throttleMessageReceived = false;
+        throttleWaitingForSend = true;
+    elseif(event == "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED") then
+        throttleWaitingForSend = false;
+        throttleMessageReceived = true;
+
+        -- cancel purchase screen if the throttle message is dropped
+        if (AuctionList.auction and AuctionList.commodity) then
+            self.commodityState = STATES.CANCEL_COMMODITY;
+        end
+    elseif (event == "AUCTION_HOUSE_THROTTLED_MESSAGE_SENT") then
+        throttleWaitingForSend = false;
     end
 
     if (event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" or event == "AUCTION_HOUSE_BROWSE_RESULTS_ADDED") then
@@ -525,30 +587,32 @@ function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "COMMODITY_SEARCH_RESULTS_UPDATED" or event == "COMMODITY_SEARCH_RESULTS_ADDED") then
         self:OnCommidityResults();
     end
+
     if (event == "COMMODITY_PURCHASE_FAILED" or event == "COMMODITY_PURCHASED" or event == "COMMODITY_PURCHASE_SUCCEEDED") then
         AuctionList:OnCommondityPurchased(event == "COMMODITY_PURCHASE_FAILED");
-        commodityConfirmTime = time();
-        if (self.state == STATES.ITEMS_WAITING) then
-            needsToProcessPreviousScan = true;
-            self.state = STATES.ITEMS;
+        if (self.commodityState == STATES.WAITING_COMMODITY_PURCHASE) then
+            self.commodityState = STATES.NONE;
+
+            -- continue on if we got caught in a weird state
+            if (self.state == STATES.ITEMS_WAITING) then
+                self.state = STATES.ITEMS;
+            elseif (self.state == STATES.WAITING) then
+                self.state = STATES.BROWSE_MORE;
+            end
         end
     end 
     if (event == "COMMODITY_PRICE_UPDATED") then
         local unit, total = ...;
-        if (not AuctionList:ConfirmCommoditiesPurchase(unit, total)) then
-            commodityConfirmTime = time();
-            if (self.state == STATES.ITEMS_WAITING) then
-                needsToProcessPreviousScan = true;
-                self.state = STATES.ITEMS;
-            end
+        if (AuctionList.isBuying and AuctionList.commodity) then
+            AuctionList.commodityTotal = total;
+            AuctionList.commodityPPU = unit;
+            self.commodityState = STATES.CONFIRM_COMMODITY;
         end
     end
     if (event == "COMMODITY_PRICE_UNAVAILABLE") then
-        AuctionList:CancelCommoditiesPurchase(true);
-        commodityConfirmTime = time();
-        if (self.state == STATES.ITEMS_WAITING) then
-            needsToProcessPreviousScan = true;
-            self.state = STATES.ITEMS;
+        if (AuctionList.isBuying and AuctionList.commodity) then
+            AuctionList.removeListing = false;
+            self.commodityState = STATES.CANCEL_COMMODITY;
         end
     end
 
@@ -562,7 +626,7 @@ function AuctionSnipe:OnItemResults()
         item.isCommodity = false;
 
         if (not C_AuctionHouse.HasFullItemSearchResults(currentItemScan.itemKey)) then
-            C_AuctionHouse.RequestMoreItemSearchResults(currentItemScan.itemKey);
+            self.state = STATES.SEARCH_MORE;
             return;
         end
 
@@ -597,14 +661,11 @@ function AuctionSnipe:OnItemResults()
                     item.tsmId = Utils:GetTSMID(item.link);
                 end
 
-                local preventResult = ANS_SNIPE_SETTINGS.keepResults and seenResults[result.auctionID];
+                local preventResult = seenResults[result.auctionID];
 
-                if (not preventResult) then
-                    if (not item.isOwnerItem and Query:IsFiltered(item)) then
-                        if (ANS_SNIPE_SETTINGS.keepResults) then
-                            seenResults[result.auctionID] = true;
-                        end
-
+                if (not preventResult and not item.isOwnerItem) then
+                    seenResults[result.auctionID] = true;
+                    if (Query:IsFiltered(item)) then
                         item.auctionId = result.auctionID;
                         tinsert(validAuctions, item:Clone());
                     end
@@ -624,7 +685,7 @@ function AuctionSnipe:OnCommidityResults()
         item.isCommodity = true;
         
         if (not C_AuctionHouse.HasFullCommoditySearchResults(currentItemScan.id)) then
-            C_AuctionHouse.RequestMoreCommoditySearchResults(currentItemScan.id);
+            self.state = STATES.SEARCH_MORE;
             return;
         end
 
@@ -647,13 +708,12 @@ function AuctionSnipe:OnCommidityResults()
             end
 
             local commodityId = item.id..item.count..item.ppu;
-            local preventResult = ANS_SNIPE_SETTINGS.keepResults and seenResults[commodityId];
+            local preventResult = seenResults[commodityId];
 
             if (not item.isOwnerItem and not preventResult and item.name) then
+                seenResults[commodityId] = true;
+                
                 if (Query:IsFiltered(item)) then
-                    if (ANS_SNIPE_SETTINGS.keepResults) then
-                        seenResults[commodityId] = true;
-                    end
                     tinsert(validAuctions, item:Clone());
                 end
             end
@@ -705,6 +765,8 @@ end
 function AuctionSnipe:OnAuctionHouseClosed()
     if (self.isInited) then
         self:Stop();
+        wipe(seenResults);
+        AuctionList:SetItems({});
         self.baseTreeView:ReleaseView();
         self.filterTreeView:ReleaseView();
         Sources:ClearCache();
@@ -822,7 +884,6 @@ function AuctionSnipe:Start()
     ClearItemsFound();
     ClearValidAuctions();
     Sources:ClearValueCache();
-    wipe(seenResults);
 
     DEFAULT_BROWSE_QUERY.searchString = search;
     DEFAULT_BROWSE_QUERY.filters = qualityFilters;
@@ -838,7 +899,6 @@ function AuctionSnipe:Stop()
     ClearValidAuctions(); 
     ClearItemsFound();
     wipe(browseResults);
-    wipe(seenResults);
     
     AuctionList:CancelCommoditiesPurchase();
 

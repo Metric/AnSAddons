@@ -169,25 +169,25 @@ function AnsCore:RegisterPriceSources()
         tujEnabled = true;
     end
 
-    if (tujEnabled and tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    if (tujEnabled and tsmEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default tuj and tsm percent fn");
         ANS_SNIPE_SETTINGS.source = TUJAndTSMPercentFn;
-    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default tuj percent fn");
         ANS_SNIPE_SETTINGS.source = TUJOnlyPercentFn;
-    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default tsm percent fn");
         ANS_SNIPE_SETTINGS.source = TSMOnlyPercentFn;
-    elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default auctionator percent fn");
         ANS_SNIPE_SETTINGS.source = ATRPercentFn;
-    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default auctionator and tuj percent fn");
         ANS_SNIPE_SETTINGS.source = ATRTUJPercentFn;
-    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default auctionator and tsm percent fn");
         ANS_SNIPE_SETTINGS.source = ATRTSMPercentFn;
-    elseif (ansEnabled and ANS_GLOBAL_SETTINGS.percentFn:len() == 0) then
+    elseif (ansEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
         print("AnS: setting default AnsAuctionData percent fn");
         ANS_SNIPE_SETTINGS.source = AnsOnlyPercentFn;
     end
@@ -252,7 +252,7 @@ function AnsCore:LoadCustomVars()
 end
 
 function AnsCore:MigrateGlobalSettings()
-    if (ANS_SNIPE_SETTINGS.percentFn and ANS_GLOBAL_SETTINGS.percentFn ~= "") then
+    if (ANS_GLOBAL_SETTINGS.percentFn and ANS_GLOBAL_SETTINGS.percentFn ~= "") then
         ANS_SNIPE_SETTINGS.source = ANS_GLOBAL_SETTINGS.percentFn;
         ANS_GLOBAL_SETTINGS.percentFn = nil;
     end
@@ -271,11 +271,7 @@ function AnsCore:MigrateGlobalSettings()
         ANS_GLOBAL_SETTINGS.dingSound = nil;
     end
     if (ANS_GLOBAL_SETTINGS.scanDelayTime ~= nil) then
-        ANS_SNIPE_SETTINGS.scanDelayTime = ANS_GLOBAL_SETTINGS.scanDelayTime;
         ANS_GLOBAL_SETTINGS.scanDelayTime = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.characterBlacklist == nil) then
-        ANS_GLOBAL_SETTINGS.characterBlacklist = "";
     end
     if (ANS_GLOBAL_SETTINGS.useCoinIcons == nil) then
         ANS_GLOBAL_SETTINGS.useCoinIcons = false;
@@ -306,9 +302,6 @@ function AnsCore:MigrateGlobalSettings()
     end
     if (ANS_GLOBAL_SETTINGS.trackDataAnalytics == nil) then
         ANS_GLOBAL_SETTINGS.trackDataAnalytics = true;
-    end
-    if (ANS_SNIPE_SETTINGS.keepResults == nil) then
-        ANS_SNIPE_SETTINGS.keepResults = false;
     end
     if (ANS_GLOBAL_SETTINGS.characterBlacklist ~= nil) then
         ANS_SNIPE_SETTINGS.characterBlacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
