@@ -76,7 +76,7 @@ function Operations:Show()
     if (self.tab) then
         self.tab:Show();
         self.selected = true;
-        self:Refresh();
+        self:Refresh(true);
     end
 end
 
@@ -210,10 +210,10 @@ function Operations.Select(item)
     Operations:Refresh();
 end
 
-function Operations:Refresh()
+function Operations:Refresh(sort)
     self:BuildTree();
     self.opTree.items = operationTreeItems;
-    self.opTree:Refresh();
+    self.opTree:Refresh(sort);
 end
 
 function Operations:RefreshGroups()
@@ -226,7 +226,7 @@ function Operations:RefreshGroups()
     self.groupTree:Refresh();
 end
 
-function Operations:BuildTree()
+function Operations:BuildTree(sort)
     local index = 1;
     for k,v in pairs(ANS_OPERATIONS) do
         local t = operationTreeItems[index];
@@ -246,7 +246,9 @@ function Operations:BuildTree()
             t.selected = false;
         end
 
-        table.sort(v, function(a,b) return a.name < b.name; end);
+        if (sort) then
+            table.sort(v, function(a,b) return a.name < b.name; end);
+        end
 
         if (#v < #t.children) then
             for i = #v + 1, #t.children do
