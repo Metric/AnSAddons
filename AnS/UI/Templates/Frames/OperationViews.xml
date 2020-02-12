@@ -40,7 +40,7 @@
         </Layers>
         <Frames>
             <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
-                <Size x="100" y="20" />
+                <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>
@@ -97,18 +97,6 @@
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPPULabel" />
                 </Anchors>
             </EditBox>
-            <Button parentKey="RemoveGroup" name="$parentRemoveGroup" text="Delete Operation" inherits="AnsWarningButtonTemplate">
-                <Size x="125" y="20" />
-                <Anchors>
-                    <Anchor point="TOPRIGHT" x="65" y="30" />
-                </Anchors>
-            </Button>
-            <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
-                <Anchors>
-                    <Anchor point="TOPLEFT" x="-168" y="32" />
-                    <Anchor point="BOTTOMRIGHT" x="85" y="0" />
-                </Anchors>
-            </Frame>
         </Frames>
     </Frame>
 </Ui>

@@ -26,6 +26,8 @@ local OP_SHORT_HAND = {
 
 local hooks = {};
 
+local linkToNameCache = {};
+
 --- Standard Utils ---
 
 function Utils:GetTable()
@@ -59,6 +61,20 @@ function Utils:GSC(val)
     local c = rv;
   
     return g, s, c
+end
+
+function Utils:GetNameFromLink(link)
+    if (not link) then
+        return "";
+    end
+
+    if (linkToNameCache[link]) then
+        return linkToNameCache[link][4];
+    end
+
+    local tbl = { strsplit("%|", link) };
+    linkToNameCache[link] = tbl;
+    return tbl[4];
 end
 
 function Utils:FormatNumber(amount)

@@ -140,6 +140,8 @@ function GroupEdit:BuildInventoryList()
         end
     end
 
+    table.sort(inventoryItemList, function(x,y) return Utils:GetNameFromLink(x.link) < Utils:GetNameFromLink(y.link); end);
+
     self.inventoryList.items = inventoryItemList;
     self.inventoryList:Refresh();
 end
@@ -223,7 +225,7 @@ function Groups:OnLoad(f)
     self.moveGroupTree = TreeView:New(self.moveGroup,
         nil,
         function(item) this:MoveGroupTo(item); end,
-        nil, nil,
+        nil, nil, nil,
         this.RenderMoveRow
     );
 end
@@ -403,6 +405,11 @@ end
 function Groups.RenderMoveRow(row, item)
     local moveUp = _G[row:GetName().."MoveUp"];
     local moveDown = _G[row:GetName().."MoveDown"];
+    local addButton = _G[row:GetName().."Add"];
+
+    if (addButton) then
+        addButton:Hide();
+    end
 
     if (moveUp) then
         moveUp:Hide();

@@ -200,9 +200,15 @@ function Query:IsFiltered(auction)
         if (#self.ops == 0) then
             local allowed = Sources:Query(ANS_SNIPE_SETTINGS.pricing, auction);
 
-            if (type(allowed) == "boolean") then
-                if (allowed and self:IsValid(auction)) then
-                    filterAccepted = true;
+            if (type(allowed) == "boolean" or type(allowed) == "number") then
+                if (type(allowed) == "number") then
+                    if (auction.ppu <= allowed and self:IsValid(auction)) then
+                        filterAccepted = true;
+                    end
+                else
+                    if (allowed and self:IsValid(auction)) then
+                        filterAccepted = true;
+                    end
                 end
             else
                 filterAccepted = self:IsValid(auction);
@@ -297,7 +303,7 @@ function Query:IsFilteredGroup(group)
 
             if (type(allowed) == "boolean" or type(allowed) == "number") then
                 if (type(allowed) == "number") then
-                    if (allowed > 0 and self:IsValid(auction)) then
+                    if (auction.ppu <= allowed and self:IsValid(auction)) then
                         filterAccepted = true;
                     end
                 else

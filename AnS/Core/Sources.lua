@@ -21,11 +21,16 @@ function OpCodes:New()
     op.buyout = 0;
     op.ilevel = 0;
     op.vendorsell = 0;
+    op.vendorSell = 0;
+    op.VendorSell = 0;
+    op.VendorBuy = 0;
+    op.vendorbuy = 0;
+    op.vendorBuy = 0;
     op.quality = 1;
     op.dbmarket = 0;
     op.dbminbuyout = 0; 
     op.dbhistorical = 0; 
-    op.dbregionmarketavg = 0; 
+    op.dbregionmarketavg = 0;
     op.dbregionminbuyoutavg = 0; 
     op.dbregionhistorical = 0; 
     op.dbregionsaleavg = 0; 
@@ -75,11 +80,20 @@ local ParseTemplate = [[
         local ppu = ops.ppu;
         local stacksize = ops.stacksize;
         local buyout = ops.buyout;
-        local ilevel = ops.ilevel;
-        local quality = ops.quality;
-        local vendorsell = ops.vendorsell;
+        local ilevel, itemLevel, ItemLevel, itemlevel, Itemlevel = ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel;
+        local quality, itemquality, itemQuality, ItemQuality, Itemquality = ops.quality, ops.quality, ops.quality, ops.quality, ops.quality;
+        local vendorsell, vendorSell, Vendorsell, VendorSell = ops.vendorsell, ops.vendorsell, ops.vendorsell, ops.vendorsell;
         local tsmId = ops.tsmId;
         local id = ops.id;
+
+        local DBMarket, Dbmarket = ops.dbmarket, ops.dbmarket;
+        local DBMinBuyout, Dbminbuyout = ops.dbminbuyout, ops.dbminbuyout;
+        local DBHistorical, Dbhistorical = ops.dbhistorical, ops.dbhistorical;
+
+        local DBRegionMinBuyoutAvg, Dbregionminbuyoutavg = ops.dbregionminbuyoutavg, ops.dbregionminbuyoutavg;
+        local DBRegionMarketAvg, Dbregionmarketavg = ops.dbregionmarketavg, ops.dbregionmarketavg;
+        local DBRegionHistorical, Dbregionhistorical = ops.dbregionhistorical, ops.dbregionhistorical;
+        local DBRegionSaleAvg, Dbregionsaleavg = ops.dbregionsaleavg, ops.dbregionsaleavg;
 
         %s
 

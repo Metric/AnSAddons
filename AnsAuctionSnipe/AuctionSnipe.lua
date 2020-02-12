@@ -335,7 +335,7 @@ function AuctionSnipe:TryAndSearch()
 end
 
 function AuctionSnipe:IsThrottled()
-    return time() - throttleTime < 4;
+    return time() - throttleTime < 5;
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
@@ -562,6 +562,7 @@ function AuctionSnipe:EventHandler(frame, event, ...)
     end
 
     if (event == "AUCTION_HOUSE_THROTTLED_MESSAGE_RESPONSE_RECEIVED") then
+        throttleTime = time();
         throttleMessageReceived = true;
     elseif (event == "AUCTION_HOUSE_THROTTLED_MESSAGE_QUEUED") then
         throttleMessageReceived = false;
@@ -575,6 +576,7 @@ function AuctionSnipe:EventHandler(frame, event, ...)
             self.commodityState = STATES.CANCEL_COMMODITY;
         end
     elseif (event == "AUCTION_HOUSE_THROTTLED_MESSAGE_SENT") then
+        throttleTime = time();
         throttleWaitingForSend = false;
     end
 

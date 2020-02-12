@@ -454,6 +454,12 @@
                             </ScrollFrame>
                         </Frames>
                     </Frame>
+                    <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="10" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="10" />
+                        </Anchors>
+                    </Frame>
                 </Frames>
             </Frame>
             <Frame name="$parentTabView5" hidden="true">

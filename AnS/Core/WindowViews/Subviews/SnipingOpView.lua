@@ -17,7 +17,6 @@ AnsQualityToText[5] = "Legendary";
 
 local SnipingView = {}
 SnipingView.__index = SnipingView;
-SnipingView.onDelete = nil;
 SnipingView.onEdit = nil;
 
 Ans.SnipingOpView = SnipingView;
@@ -51,43 +50,7 @@ function SnipingView:OnLoad(f)
     self.subClassIDSelected = 0;
     self.inventoryTypeSelected = 0;
 
-    self.removeGroup = self.frame.RemoveGroup;
-    self.confirmDelete = self.frame.ConfirmDelete;
-
-    if(self.removeGroup) then
-        self.removeGroup:SetScript("OnClick", 
-            function()
-                if (not this.selected) then
-                    return;
-                end
-                ConfirmDialog:Show(this.confirmDelete, "Delete Operation: "..this.selected.name.."?", "DELETE",
-                    function(data)
-                        this:Delete(data);
-                    end,
-                    this.selected
-                );
-            end 
-        );
-    end
-
     self:LoadDropdowns();
-end
-
-function SnipingView:Delete(data)
-    if (not data) then
-        return;
-    end
-
-    local tbl = ANS_OPERATIONS.Sniping;
-    for i,v in ipairs(tbl) do
-        if (v.id == data.id) then
-            tremove(tbl, i);
-            if (self.onDelete) then
-                self.onDelete();
-            end
-            return;
-        end
-    end
 end
 
 function SnipingView:Hide()

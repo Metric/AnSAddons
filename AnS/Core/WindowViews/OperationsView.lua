@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local GroupsView = Ans.GroupsView;
+local ConfirmDialog = Ans.UI.ConfirmDialog;
 local TextInput = Ans.UI.TextInput;
 local ConfirmDialog = Ans.UI.ConfirmDialog;
 local Dropdown = Ans.UI.Dropdown;
@@ -50,6 +51,8 @@ function Operations:OnLoad(f)
     self.tab = _G[f:GetName().."TabView"..self.index];
     
 
+    self.confirmDelete = self.tab.ConfirmDelete;
+
     SnipingOpView:OnLoad(self.tab);
     self.opTree = TreeView:New(self.tab.Ops,
         {rowHeight = 20, childIndent = 20, template = "AnsTreeRowAddTemplate", multiselect = false, useNormalTexture = false},
@@ -59,7 +62,6 @@ function Operations:OnLoad(f)
         Operations.RenderRow
     );
     SnipingOpView:Hide();
-    SnipingOpView.onDelete = function() this:Refresh(); end;
     SnipingOpView.onEdit = function() this:Refresh(); end;
 
     self.groupTree = TreeView:New(self.tab.Groups,
@@ -116,6 +118,26 @@ function Operations.RenderRow(row, item)
         end
     end
 
+    if (item.showDelete) then
+        local deleteButton = _G[row:GetName().."Delete"];
+        if (deleteButton) then
+            deleteButton:SetScript("OnClick", 
+            function()
+                ConfirmDialog:Show(Operations.confirmDelete, "Delete Operation: "..item.parent.."."..item.name.."?", "DELETE",
+                    function(data)
+                        Operations:Delete(data);
+                    end,
+                item)
+            end);
+            deleteButton:Show();
+        end
+    else
+        local deleteButton = _G[row:GetName().."Delete"];
+        if (deleteButton) then
+            deleteButton:Hide();
+        end
+    end
+
     local moveUp = _G[row:GetName().."moveUp"];
     local moveDown = _G[row:GetName().."moveDown"];
 
@@ -143,8 +165,28 @@ function Operations.Add(item)
     end
 end
 
-function Operations.Delete()
-    Operations:Refresh();
+function Operations:Delete(data)
+    if (not data or not data.parent) then
+        return;
+    end
+
+    local tbl = ANS_OPERATIONS[data.parent];
+
+    if (not tbl) then
+        return;
+    end
+
+    for i,v in ipairs(tbl) do
+        if (v.id == data.op.id) then
+            if (data.op == SnipingOpView.selected) then
+                SnipingOpView:Hide();
+                Operations.groupTree:Hide();
+            end
+            tremove(tbl, i);
+            self:Refresh();
+            return;
+        end
+    end
 end
 
 function Operations.Select(item)
@@ -194,6 +236,7 @@ function Operations:BuildTree()
                 name = k,
                 expanded = true,
                 showAddButton = true,
+                showDelete = false,
                 selected = false,
                 children = {}
             };
@@ -220,6 +263,7 @@ function Operations:BuildTree()
                     op = o,
                     expanded = false,
                     showAddButton = false,
+                    showDelete = true,
                     selected = false,
                     parent = k,
                     children = {}

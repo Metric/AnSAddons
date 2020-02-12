@@ -32,10 +32,10 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <Button parentKey="Delete" text="Delete Source" name="$parentDelete" inherits="AnsWarningButtonTemplate">
-                <Size x="100" y="24" />
+            <Button parentKey="Delete" name="$parentDelete" inherits="AnsIconDeleteTemplate">
+                <Size x="16" y="16" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentValue" relativePoint="TOPRIGHT" x="10" y="0" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentValue" relativePoint="TOPRIGHT" x="10" y="-4" />
                 </Anchors>
             </Button>
         </Frames>

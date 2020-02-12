@@ -15,12 +15,12 @@
     <Button name="AnsIconDeleteTemplate" virtual="true">
         <Size x="18" y="18" />
         <NormalTexture file="Interface\AddOns\AnS\Images\icons">
-            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <TexCoords left="1" right="0.5" top="0.5" bottom="1" />
             <Size x="18" y="18" />
             <Color r="1" g="0.2" b="0.2" a="0.85" />
         </NormalTexture>
         <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
-            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <TexCoords left="1" right="0.5" top="0.5" bottom="1" />
             <Size x="18" y="18" />
             <Color r="1" g="1" b="1" a="0.25" />
         </HighlightTexture>
@@ -293,6 +293,12 @@
                 <Size x="16" y="16" />
                 <Anchors>
                     <Anchor point="RIGHT" x="-4" y="0" />
+                </Anchors>
+            </Button>
+            <Button name="$parentDelete" inherits="AnsIconDeleteTemplate">
+                <Size x="16" y="16" />
+                <Anchors>
+                    <Anchor point="RIGHT" x="-2" y="0" />
                 </Anchors>
             </Button>
         </Frames>
