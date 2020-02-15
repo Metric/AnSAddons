@@ -29,7 +29,7 @@ function ItemTracker:OnLoad()
     --if (self.guildName and not self.log[self.guildName]) then self.log[self.guildName] = {}; end;
 
     EventManager:On("BAG_UPDATE_DELAYED", self.OnBagUpdate);
-	if (BattlePetTooltip) then
+	if (not Utils:IsClassic()) then
 		EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
 		EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
 		EventManager:On("REAGENTBANK_UPDATE", self.OnReagentUpdate);
@@ -108,7 +108,7 @@ function ItemTracker:ScanBags(type)
             end
         end
 
-        if (BattlePetTooltip) then
+        if (not Utils:IsClassic()) then
             local REAGENT_NUM_SLOTS = GetContainerNumSlots(REAGENTBANK_CONTAINER);
             for i = 1, REAGENT_NUM_SLOTS do
                 local link = GetContainerItemLink(REAGENTBANK_CONTAINER, i);
@@ -156,7 +156,7 @@ function ItemTracker:ScanBags(type)
 end
 
 
-EventManager:On("VARIABLES_LOADED", 
+EventManager:On("ANS_DATA_READY", 
     function()
         ItemTracker:OnLoad();
     end

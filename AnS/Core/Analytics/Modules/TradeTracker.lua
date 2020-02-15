@@ -1,4 +1,5 @@
 local Ans = select(2, ...);
+local Config = Ans.Config;
 local TradeTracker = {};
 TradeTracker.__index = TradeTracker;
 
@@ -17,7 +18,7 @@ function TradeTracker:OnLoad()
 end
 
 function TradeTracker:OnTradeComplete()
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return;
     end
 
@@ -52,7 +53,7 @@ function TradeTracker:OnTradeComplete()
 end
 
 function TradeTracker.OnUpdate(player, target)
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return;
     end
 

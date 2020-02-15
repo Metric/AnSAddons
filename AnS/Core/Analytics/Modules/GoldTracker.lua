@@ -1,4 +1,6 @@
 local Ans = select(2, ...);
+local Utils = Ans.Utils;
+local Config = Ans.Config;
 local GoldTracker = { log = {}, name = nil, guildName = nil};
 local guildOpen = false;
 local MAX_TIME_LIMIT = 60 * 24 * 30 * 11;
@@ -26,7 +28,7 @@ function GoldTracker:GetNames(tbl,includeGuilds)
 end
 
 function GoldTracker:OnLoad()
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return;
     end
 
@@ -39,7 +41,7 @@ function GoldTracker:OnLoad()
     if (self.guildName and not self.log[self.guildName]) then self.log[self.guildName] = {ledger = {}, current = 0}; end;
 
     EventManager:On("PLAYER_MONEY", self.OnPlayerMoneyChange);
-	if (BattlePetTooltip) then
+	if (not Utils:IsClassic()) then
 		EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
 		EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
 		EventManager:On("GUILDBANK_UPDATE_MONEY", self.OnGuildVaultMoneyChange);
@@ -165,7 +167,7 @@ function GoldTracker:CompactLog(log)
     end
 end
 
-EventManager:On("VARIABLES_LOADED", 
+EventManager:On("ANS_DATA_READY", 
     function()
         GoldTracker:OnLoad();
     end

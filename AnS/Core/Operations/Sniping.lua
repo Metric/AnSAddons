@@ -1,9 +1,12 @@
 local Ans = select(2, ...);
 local Utils = Ans.Utils;
+local Sources = Ans.Sources;
 local Sniping = {};
 
 local tempTbl = {};
 local queueTbl = {};
+
+local Config = Ans.Config;
 
 Sniping.__index = Sniping;
 Ans.Operations.Sniping = Sniping;
@@ -90,7 +93,7 @@ function Sniping.GetGroupFromId(id)
     wipe(tempTbl);
     wipe(queueTbl);
 
-    for i,v in ipairs(ANS_GROUPS) do
+    for i,v in ipairs(Config.Groups()) do
         tinsert(queueTbl, v);
     end
 
@@ -218,6 +221,15 @@ function Sniping:ParseItem(item)
     end
 end
 
+function Sniping:UpdatePercent(item, avg)
+    if (not avg or avg <= 1) then
+        return;
+    end
+
+    item.avg = avg;
+    item.percent = math.floor(item.ppu / avg * 100);
+end
+
 function Sniping:IsValid(item, exact)
     local isExact = false;
     if (exact and self.exactMatch) then
@@ -225,11 +237,16 @@ function Sniping:IsValid(item, exact)
     end
 
     local price = self.price;
+    local presult = nil;
     if (price ~= nil and #price > 0) then
-        local presult = Sources:Query(price, item);
+        presult = Sources:Query(price, item);
         if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and presult > item.ppu)) then
             return false;
         end
+    end
+
+    if (presult and type(presult) == "number" and presult > 0) then
+        self:UpdatePercent(item, presult);
     end
 
     if (item.iLevel < self.minILevel and self.minILevel > 0) then

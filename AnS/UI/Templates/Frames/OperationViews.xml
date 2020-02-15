@@ -6,8 +6,8 @@
         </Anchors>
         <Layers>
             <Layer level="ARTWORK">
-                <FontString justifyH="LEFT" text="Price Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
-                    <Size x="100" />
+                <FontString justifyH="LEFT" text="Min Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" />
                     <Anchors>
                         <Anchor point="TOPLEFT" x="0" y="-25" />
                     </Anchors>

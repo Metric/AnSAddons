@@ -58,6 +58,12 @@ function Ledger:OnLoad(f)
     local tab = _G[f:GetName().."TabView"..self.index];
     self.tab = tab;
 
+    EventManager:On("ANS_DATA_READY", function() this:Init(); end);
+end
+
+function Ledger:Init()
+    local tab = self.tab;
+
     EventManager:On("LOG_UPDATE", function() this:Refresh(); end);
     self.characters = { unpack(DataQuery:GetGoldCharacters()) };
     table.sort(self.characters, function(x,y) return x < y; end);

@@ -4,11 +4,12 @@ local Ledger = Ans.LedgerView;
 local Groups = Ans.GroupsView;
 local Operations = Ans.OperationsView;
 local Settings = Ans.SettingsView;
+local ImportExport = Ans.ImportExportView;
 
 local Window = {};
 Window.__index = Window;
 Window.selectedTab = 1;
-Window.tabs = {Dashboard, Ledger, Groups, Operations, Settings};
+Window.tabs = {Dashboard, Ledger, Groups, Operations, Settings, ImportExport};
 Window.frame = nil;
 
 Ans.Window = Window;

@@ -2,7 +2,9 @@
     <!-- Frame to handle all core events -->
     <Frame name="AnsAuctionDataCore">
         <Scripts>
-            <OnLoad>AnsAuctionData:OnLoad();</OnLoad>
+            <OnLoad>AnsAuctionData:OnLoad(self);</OnLoad>
+            <OnUpdate>AnsAuctionData:OnUpdate( self, elapsed );</OnUpdate>
+            <OnEvent>AnsAuctionData:EventHandler( self, event, ... );</OnEvent>
         </Scripts>
     </Frame>
 </Ui>

@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local TextInput = Ans.UI.TextInput;
+local Config = Ans.Config;
 local SniperSettings = {};
 SniperSettings.__index = SniperSettings;
 Ans.SnipeSettingsView = SniperSettings;
@@ -21,6 +22,9 @@ function SniperSettings:OnLoad(f)
 
     self.commodityConfirm = self.frame.CommodityConfirm;
     self.commodityConfirm:SetScript("OnClick", self.SaveCommodityConfirm);
+
+    self.scanDelay = TextInput:NewFrom(self.frame.ScanDelay);
+    self.scanDelay.onTextChanged = self.SaveScanDelay;
 
     self.ding = self.frame.Ding;
     self.ding:SetScript("OnClick", self.SaveDing);
@@ -44,39 +48,44 @@ function SniperSettings:Hide()
 end
 
 function SniperSettings:Load()
-    self.source:Set(ANS_SNIPE_SETTINGS.source);
-    self.price:Set(ANS_SNIPE_SETTINGS.pricing);
-    if (type(ANS_SNIPE_SETTINGS.characterBlacklist) == "table") then
-        self.blacklist:Set(table.concat(ANS_SNIPE_SETTINGS.characterBlacklist, "\r\n"));
+    self.scanDelay:Set(Config.Sniper().scanDelay or "10");
+    self.source:Set(Config.Sniper().source or "");
+    self.price:Set(Config.Sniper().pricing or "");
+    if (type(Config.Sniper().characterBlacklist) == "table") then
+        self.blacklist:Set(table.concat(Config.Sniper().characterBlacklist, "\r\n"));
     else
-        ANS_SNIPE_SETTINGS.characterBlacklist = { strsplit("\r\n", ANS_SNIPE_SETTINGS.characterBlacklist) };
-        self.blacklist:Set(table.concat(ANS_SNIPE_SETTINGS.characterBlacklist, "\r\n"));
+        Config.Sniper().characterBlacklist = { strsplit("\r\n", Config.Sniper().characterBlacklist) };
+        self.blacklist:Set(table.concat(Config.Sniper().characterBlacklist, "\r\n"));
     end
-    self.commodityConfirm:SetChecked(ANS_SNIPE_SETTINGS.useCommodityConfirm);
-    self.ding:SetChecked(ANS_SNIPE_SETTINGS.dingSound);
-    self.itemsUpdate:Set(ANS_SNIPE_SETTINGS.itemsPerUpdate.."");
+    self.commodityConfirm:SetChecked(Config.Sniper().useCommodityConfirm);
+    self.ding:SetChecked(Config.Sniper().dingSound);
+    self.itemsUpdate:Set(Config.Sniper().itemsPerUpdate.."");
 end
 
 function SniperSettings.SaveSource()
-    ANS_SNIPE_SETTINGS.source = SniperSettings.source:Get();
+    Config.Sniper().source = SniperSettings.source:Get();
 end
 
 function SniperSettings.SavePrice()
-    ANS_SNIPE_SETTINGS.pricing = SniperSettings.price:Get();
+    Config.Sniper().pricing = SniperSettings.price:Get();
 end
 
 function SniperSettings.SaveBlacklist()
-    ANS_SNIPE_SETTINGS.characterBlacklist = { strsplit("\r\n", SniperSettings.blacklist:Get()) };
+    Config.Sniper().characterBlacklist = { strsplit("\r\n", SniperSettings.blacklist:Get()) };
 end
 
 function SniperSettings.SaveCommodityConfirm()
-    ANS_SNIPE_SETTINGS.useCommodityConfirm = SniperSettings.commodityConfirm:GetChecked();
+    Config.Sniper().useCommodityConfirm = SniperSettings.commodityConfirm:GetChecked();
 end
 
 function SniperSettings.SaveDing()
-    ANS_SNIPE_SETTINGS.dingSound = SniperSettings.ding:GetChecked();
+    Config.Sniper().dingSound = SniperSettings.ding:GetChecked();
 end
 
 function SniperSettings.SaveItemsUpdate()
-    ANS_SNIPE_SETTINGS.itemsPerUpdate = tonumber(SniperSettings.itemsUpdate:Get()) or 20;
+    Config.Sniper().itemsPerUpdate = tonumber(SniperSettings.itemsUpdate:Get()) or 20;
+end
+
+function SniperSettings:SaveScanDelay()
+    Config.Sniper().scanDelay = tonumber(SniperSettings.scanDelay:Get()) or 10;
 end

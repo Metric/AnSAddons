@@ -1,4 +1,7 @@
 local Ans = select(2, ...);
+local Utils = AnsCore.API.Utils;
+local Scanner = Ans.Scanner;
+local Config = AnsCore.API.Config;
 local Realms = Ans.Realms;
 
 local stats = Ans.Statistics;
@@ -39,15 +42,13 @@ local faction = "";
 
 local ValidIDCache = {};
 
+local CraftIDCache = {};
+
 local hooked = false;
 
 local petTipLines = {};
 
 local tracker = {};
-
-local function OnClear(tooltip)
-    tooltip.ansDataTooltip = false;
-end
 
 local function IsSoulbound()
     local numlines = GameTooltip:NumLines();
@@ -110,25 +111,25 @@ local function ShowDataPetFloat(tooltip, pet)
     local ltxt = "";
     local rtxt = "";
 
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmRecent and realmRecent > 0) then
+    if (Config.General().tooltipRealmRecent and realmRecent > 0) then
         p = Utils:PriceToString(realmRecent);
 
         ltxt = ltxt.."|cFF00BBFFAnS Recent\r\n";
         rtxt = rtxt..p.."\r\n";
     end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmMarket and realmMarket > 0) then
+    if (Config.General().tooltipRealmMarket and realmMarket > 0) then
         p = Utils:PriceToString(realmMarket);
 
         ltxt = ltxt.."|cFF00BBFFAnS Market\r\n";
         rtxt = rtxt..p.."\r\n";
     end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmMin and realmMin > 0) then
+    if (Config.General().tooltipRealmMin and realmMin > 0) then
         p = Utils:PriceToString(realmMin);
 
         ltxt = ltxt.."|cFF00BBFFAnS Min\r\n";
         rtxt = rtxt..p.."\r\n";
     end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day and realm3Day > 0) then
+    if (Config.General().tooltipRealm3Day and realm3Day > 0) then
         p = Utils:PriceToString(realm3Day);
 
         ltxt = ltxt.."|cFF00BBFFAnS 3-Day\r\n";
@@ -148,38 +149,47 @@ local function ShowDataPetFloat(tooltip, pet)
     end
 end
 
-local function ShowData(tooltip)
-    if (not tooltip.ansDataTooltip) then
-        tooltip.ansDataTooltip = true;
+local function ShowData(tooltip, extra)
+    local name, link = tooltip:GetItem();
+    
+    if (CraftIDCache[link]) then
+        link = CraftIDCache[link];
+    end
 
-        local name, link = tooltip:GetItem();
-        if (link) then
-            local realmRecent = AnsAuctionData.GetRealmValue(link, "recent");
-            local realmMin = AnsAuctionData.GetRealmValue(link, "min");
-            local realm3Day = AnsAuctionData.GetRealmValue(link, "3day");
-            local realmMarket = AnsAuctionData.GetRealmValue(link, "market");
+    link = extra or link;
 
-            if (ANS_GLOBAL_SETTINGS.tooltipRealmRecent and realmRecent > 0) then
-                p = Utils:PriceToString(realmRecent);
+    if (link) then
+        local realmRecent = AnsAuctionData.GetRealmValue(link, "recent");
+        local realmMin = AnsAuctionData.GetRealmValue(link, "min");
+        local realm3Day = AnsAuctionData.GetRealmValue(link, "3day");
+        local realmMarket = AnsAuctionData.GetRealmValue(link, "market");
 
-                tooltip:AddDoubleLine("AnS Recent", p, 0, 0.75, 1, 1, 1, 1);
-            end
-            if (ANS_GLOBAL_SETTINGS.tooltipRealmMarket and realmMarket > 0) then
-                p = Utils:PriceToString(realmMarket);
-
-                tooltip:AddDoubleLine("AnS Market", p, 0, 0.75, 1, 1, 1, 1);
-            end
-            if (ANS_GLOBAL_SETTINGS.tooltipRealmMin and realmMin > 0) then
-                p = Utils:PriceToString(realmMin);
-
-                tooltip:AddDoubleLine("AnS Min", p, 0, 0.75, 1, 1, 1, 1);
-            end
-            if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day and realm3Day > 0) then
-                p = Utils:PriceToString(realm3Day);
-
-                tooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
-            end
+        if (Config.General().tooltipRealmRecent and realmRecent > 0) then
+            p = Utils:PriceToString(realmRecent);
+            tooltip:AddDoubleLine("AnS Recent", p, 0, 0.75, 1, 1, 1, 1);
         end
+        if (Config.General().tooltipRealmMarket and realmMarket > 0) then
+            p = Utils:PriceToString(realmMarket);
+            tooltip:AddDoubleLine("AnS Market", p, 0, 0.75, 1, 1, 1, 1);
+        end
+        if (Config.General().tooltipRealmMin and realmMin > 0) then
+            p = Utils:PriceToString(realmMin);
+            tooltip:AddDoubleLine("AnS Min", p, 0, 0.75, 1, 1, 1, 1);
+        end
+        if (Config.General().tooltipRealm3Day and realm3Day > 0) then
+            p = Utils:PriceToString(realm3Day);
+            tooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
+        end
+    end
+end
+
+local function CaptureLink(link)
+    if (link) then
+        if (not CraftIDCache[link]) then
+            local _, id = strsplit(":", link);
+            id = tonumber(id);
+            CraftIDCache[link] = id;
+        end 
     end
 end
 
@@ -187,22 +197,46 @@ local function HookTooltip()
     if (not hooked) then
         hooked = true;
 
-        GameTooltip:HookScript("OnTooltipSetItem", function(...) ShowData(GameTooltip); end);
-        GameTooltip:HookScript("OnTooltipCleared", function(...) OnClear(GameTooltip); end);
-        ItemRefTooltip:HookScript("OnTooltipSetItem", function(...) ShowData(ItemRefTooltip); end);
-        ItemRefTooltip:HookScript("OnTooltipCleared", function(...) OnClear(ItemRefTooltip); end);
+        GameTooltip:HookScript("OnTooltipSetItem", ShowData);
+        ItemRefTooltip:HookScript("OnTooltipSetItem", ShowData);
 
 		if (BattlePetToolTip_Show and BattlePetTooltipTemplate_SetBattlePet and FloatingBattlePet_Show) then
 			hooksecurefunc(_G, "BattlePetTooltipTemplate_SetBattlePet", ShowDataPetFloat);
 			hooksecurefunc(_G, "BattlePetToolTip_Show", function() HandlePetTip(BattlePetTooltip) end);
-			hooksecurefunc(_G, "FloatingBattlePet_Show", function() HandlePetTip(FloatingBattlePetTooltip) end);
+            hooksecurefunc(_G, "FloatingBattlePet_Show", function() HandlePetTip(FloatingBattlePetTooltip) end);
+            hooksecurefunc(GameTooltip, "SetRecipeReagentItem", 
+                function(self, recipeID, reagentIndex) 
+                    ShowData(self, C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, reagentIndex));
+                end);
+            hooksecurefunc(GameTooltip, "SetRecipeResultItem", 
+                function(self, recipeID)
+                    CaptureLink(C_TradeSkillUI.GetRecipeItemLink(recipeID));
+                end);
 		end
     end
 end
 
-function AnsAuctionData:OnLoad()
+function AnsAuctionData:OnLoad(frame)
     HookTooltip();
+
+    self.frame = frame;
+
+    frame:RegisterEvent("AUCTION_HOUSE_SHOW");
+    frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
+
+    if (Utils:IsClassic()) then
+        frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
+    end
+
     self:Release();
+end
+
+function AnsAuctionData:OnUpdate()
+    Scanner:OnUpdate();
+end
+
+function AnsAuctionData:EventHandler(frame, event, ...)
+    Scanner:EventHandler(frame, event, ...);
 end
 
 -- release unnecessary data that
@@ -338,11 +372,19 @@ function AnsAuctionData:Unpack(r, id)
 end
 
 function AnsAuctionData.GetRealmValue(link, key)
+    if (not link) then
+        return 0;
+    end
+
     if (not AnsAuctionData:HasData()) then
         return 0;
     end
 
     local tsmId = Utils:GetTSMID(link);
+
+    if (not tsmId) then
+        return 0;
+    end
 
     local vid = AnsAuctionData:GetValidID(tsmId);
 

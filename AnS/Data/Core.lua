@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local Data = {};
+local Utils = Ans.Utils;
 
 Ans.Data = Data;
 
@@ -33,16 +34,6 @@ local miscArmorInventoryTypes = {
     LE_INVENTORY_TYPE_BODY_TYPE,
     LE_INVENTORY_TYPE_HEAD_TYPE
 };
-
-Ans.InventoryTypes = {};
-
-for i,v in ipairs(armorInventoryTypes) do
-    tinsert(Ans.InventoryTypes, v);
-end
-for i,v in ipairs(miscArmorInventoryTypes) do
-    tinsert(Ans.InventoryTypes, v);
-end
-
 
 local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
@@ -83,14 +74,14 @@ local function AddBaseData(classID, subClassID, parent, inventoryType)
 end
 
 local function AddSubBaseData(classID, parent)
-    if (BattlePetTooltip) then
+    if (not Utils:IsClassic()) then
         local subclasses = C_AuctionHouse.GetAuctionItemSubClasses(classID);
         for i = 1, #subclasses do
             local subClassID = subclasses[i];
             AddBaseData(classID, subClassID, parent);
         end
     else
-        local subclasses = GetAuctionItemSubClasses(classID);
+        local subclasses = {GetAuctionItemSubClasses(classID)};
         for i = 1, #subclasses do
             local subClassID = subclasses[i];
             AddBaseData(classID, subClassID, parent);
@@ -103,7 +94,9 @@ local function BulkAddSubBaseData(classID, subclasses, parent, itemTypes)
     for i = 1, #subclasses do
         local subClassID = subclasses[i];
         local item = AddBaseData(classID, subClassID, parent);
-        tinsert(items, item);
+        if (item) then
+            tinsert(items, item);
+        end
         if (itemTypes and item) then
             for k = 1, #itemTypes do
                 AddBaseData(classID, subClassID, item, itemTypes[k]);
@@ -116,14 +109,27 @@ end
 local weaponsRoot = AddBaseData(LE_ITEM_CLASS_WEAPON, nil, Ans.BaseData);
 local armorRoot = AddBaseData(LE_ITEM_CLASS_ARMOR, nil, Ans.BaseData);
 local containerRoot = AddBaseData(LE_ITEM_CLASS_CONTAINER, nil, Ans.BaseData);
-local gemRoot = AddBaseData(LE_ITEM_CLASS_GEM, nil, Ans.BaseData);
+
+if (not Utils:IsClassic()) then
+    local gemRoot = AddBaseData(LE_ITEM_CLASS_GEM, nil, Ans.BaseData);
+    AddSubBaseData(LE_ITEM_CLASS_GEM, gemRoot);
+end
+
 local enhanceRoot = AddBaseData(LE_ITEM_CLASS_ITEM_ENHANCEMENT, nil, Ans.BaseData);
 local consumableRoot = AddBaseData(LE_ITEM_CLASS_CONSUMABLE, nil, Ans.BaseData);
 local tradeRoot = AddBaseData(LE_ITEM_CLASS_TRADEGOODS, nil, Ans.BaseData);
-local glyphRoot = AddBaseData(LE_ITEM_CLASS_GLYPH, nil, Ans.BaseData);
+
+if (not Utils:IsClassic()) then
+    local glyphRoot = AddBaseData(LE_ITEM_CLASS_GLYPH, nil, Ans.BaseData);
+    AddSubBaseData(LE_ITEM_CLASS_GLYPH, glyphRoot);
+end
+
 local recipeRoot = AddBaseData(LE_ITEM_CLASS_RECIPE, nil, Ans.BaseData);
 
-local battlePetRoot = AddBaseData(LE_ITEM_CLASS_BATTLEPET, nil, Ans.BaseData);
+if (not Utils:IsClassic()) then
+    local battlePetRoot = AddBaseData(LE_ITEM_CLASS_BATTLEPET, nil, Ans.BaseData);
+    AddSubBaseData(LE_ITEM_CLASS_BATTLEPET, battlePetRoot);
+end
 
 AddBaseData(LE_ITEM_CLASS_QUESTITEM, nil, Ans.BaseData);
 
@@ -138,11 +144,10 @@ local miscArmorRoots = BulkAddSubBaseData(LE_ITEM_CLASS_ARMOR, {LE_ITEM_ARMOR_GE
 AddBaseData(LE_ITEM_CLASS_ARMOR, LE_ITEM_ARMOR_SHIELD, miscArmorRoots[1]);
 
 AddSubBaseData(LE_ITEM_CLASS_CONTAINER, containerRoot);
-AddSubBaseData(LE_ITEM_CLASS_GEM, gemRoot);
+
 AddSubBaseData(LE_ITEM_CLASS_ITEM_ENHANCEMENT, enhanceRoot);
 AddSubBaseData(LE_ITEM_CLASS_CONSUMABLE, consumableRoot);
 AddSubBaseData(LE_ITEM_CLASS_TRADEGOODS, tradeRoot);
-AddSubBaseData(LE_ITEM_CLASS_GLYPH, glyphRoot);
+
 AddSubBaseData(LE_ITEM_CLASS_RECIPE, recipeRoot);
 AddSubBaseData(LE_ITEM_CLASS_MISCELLANEOUS, miscRoot);
-AddSubBaseData(LE_ITEM_CLASS_BATTLEPET, battlePetRoot);

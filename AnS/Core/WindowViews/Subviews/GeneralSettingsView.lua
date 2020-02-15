@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local GeneralSettings = {};
+local Config = Ans.Config;
 GeneralSettings.__index = GeneralSettings;
 Ans.GeneralSettingsView = GeneralSettings;
 
@@ -39,21 +40,21 @@ function GeneralSettings:Hide()
 end
 
 function GeneralSettings.Save()
-    ANS_GLOBAL_SETTINGS.showDressing = GeneralSettings.dressup:GetChecked();
-    ANS_GLOBAL_SETTINGS.useCoinIcons = GeneralSettings.coins:GetChecked();
-    ANS_GLOBAL_SETTINGS.trackDataAnalytics = GeneralSettings.analytics:GetChecked();
-    ANS_GLOBAL_SETTINGS.tooltipRealmRecent = GeneralSettings.rrtooltip:GetChecked();
-    ANS_GLOBAL_SETTINGS.tooltipRealmMin = GeneralSettings.rmtooltip:GetChecked();
-    ANS_GLOBAL_SETTINGS.tooltipRealm3Day = GeneralSettings.r3tooltip:GetChecked();
-    ANS_GLOBAL_SETTINGS.tooltipRealmMarket = GeneralSettings.rmmtooltip:GetChecked();
+    Config.General().showDressing = GeneralSettings.dressup:GetChecked();
+    Config.General().useCoinIcons = GeneralSettings.coins:GetChecked();
+    Config.General().trackDataAnalytics = GeneralSettings.analytics:GetChecked();
+    Config.General().tooltipRealmRecent = GeneralSettings.rrtooltip:GetChecked();
+    Config.General().tooltipRealmMin = GeneralSettings.rmtooltip:GetChecked();
+    Config.General().tooltipRealm3Day = GeneralSettings.r3tooltip:GetChecked();
+    Config.General().tooltipRealmMarket = GeneralSettings.rmmtooltip:GetChecked();
 end
 
 function GeneralSettings:Load()
-    self.dressup:SetChecked(ANS_GLOBAL_SETTINGS.showDressing);
-    self.coins:SetChecked(ANS_GLOBAL_SETTINGS.useCoinIcons);
-    self.analytics:SetChecked(ANS_GLOBAL_SETTINGS.trackDataAnalytics);
-    self.rrtooltip:SetChecked(ANS_GLOBAL_SETTINGS.tooltipRealmRecent);
-    self.rmtooltip:SetChecked(ANS_GLOBAL_SETTINGS.tooltipRealmMin);
-    self.r3tooltip:SetChecked(ANS_GLOBAL_SETTINGS.tooltipRealm3Day);
-    self.rmmtooltip:SetChecked(ANS_GLOBAL_SETTINGS.tooltipRealmMarket);
+    self.dressup:SetChecked(Config.General().showDressing);
+    self.coins:SetChecked(Config.General().useCoinIcons);
+    self.analytics:SetChecked(Config.General().trackDataAnalytics);
+    self.rrtooltip:SetChecked(Config.General().tooltipRealmRecent);
+    self.rmtooltip:SetChecked(Config.General().tooltipRealmMin);
+    self.r3tooltip:SetChecked(Config.General().tooltipRealm3Day);
+    self.rmmtooltip:SetChecked(Config.General().tooltipRealmMarket);
 end

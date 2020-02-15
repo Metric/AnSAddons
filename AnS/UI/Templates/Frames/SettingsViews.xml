@@ -106,6 +106,43 @@
         </Frames>
     </Frame>
 
+    <Frame name="AnsCraftSettingsTemplate" virtual="true">
+        <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="-32" />
+        </Anchors>
+         <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Craft Value" name="$parentValueLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Material Cost" justifyV="CENTER" name="$parentMCostLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-45" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <EditBox parentKey="CraftValue" text="" name="$parentCraftValue" inherits="AnsEditBoxTemplate">
+                <Size x="525" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentValueLabel" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="MaterialCost" text="" name="$parentMaterialCost" inherits="AnsEditBoxTemplate">
+                <Size x="525" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentMCostLabel" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+        </Frames>
+    </Frame>
+
     <Frame name="AnsSniperSettingsTemplate" virtual="true">
         <Size x="525" y="345" />
         <Anchors>
@@ -119,8 +156,8 @@
                         <Anchor point="TOPLEFT" x="0" y="0" />
                     </Anchors>
                 </FontString>
-                <FontString justifyH="LEFT" text="Default Price Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
-                    <Size x="100" y="20" />
+                <FontString justifyH="LEFT" text="Default Min Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
                     <Anchors>
                         <Anchor point="TOPLEFT" x="0" y="-45" />
                     </Anchors>
@@ -197,7 +234,7 @@
             <EditBox parentKey="ItemsUpdate" name="$parentItemsUpdate" text="" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativePoint="BOTOTMLEFT" relativeTo="$parentDing" x="0" y="-40" />
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentDing" x="0" y="-30" />
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
@@ -205,6 +242,27 @@
                             <Size x="150" y="20" />
                             <Anchors>
                                 <Anchor point="TOPLEFT" x="0" y="20" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <EditBox parentKey="ScanDelay" name="$parentScanDelay" text="" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentItemsUpdate" x="0" y="-20" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Found Scan Delay (Classic)" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" y="20" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="20" />
+                            </Anchors>
+                        </FontString>
+                        <FontString justifyH="LEFT" text="seconds" inherits="AnsGameFontWhiteTrans">
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent" x="5" y="0" />
                             </Anchors>
                         </FontString>
                     </Layer>

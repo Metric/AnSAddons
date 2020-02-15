@@ -2,8 +2,8 @@ local Ans = select(2, ...);
 local EventManager = Ans.EventManager;
 local Analytics = {};
 local Data = {store = {}};
-
-ANS_ANALYTICS_DATA = {};
+local Config = Ans.Config;
+local Utils = Ans.Utils;
 
 Data.__index = Data;
 Analytics.__index = Analytics;
@@ -16,7 +16,7 @@ function Analytics:RegisterEvents(frame)
 
     frame:RegisterEvent("PLAYER_MONEY");
 	
-	if (BattlePetTooltip) then
+	if (not Utils:IsClassic()) then
 		frame:RegisterEvent("GUILDBANKFRAME_OPENED");
 		frame:RegisterEvent("GUILDBANKFRAME_CLOSED");
         frame:RegisterEvent("GUILDBANK_UPDATE_MONEY");
@@ -44,21 +44,19 @@ function Analytics:RegisterEvents(frame)
 end
 
 function Data:OnLoad()
-    self.store = ANS_ANALYTICS_DATA or {};
-    self:Set("PREVIOUS_LOGIN", self.store["LOGIN_TIME"] or time()); 
+    self:Set("PREVIOUS_LOGIN", Config.Analytics()["LOGIN_TIME"] or time()); 
     self:Set("LOGIN_TIME", time());
 end
 
 function Data:Get(name)
-    return self.store[name];
+    return Config.Analytics()[name];
 end
 
 function Data:Set(name, value)
-    self.store[name] = value;
-    ANS_ANALYTICS_DATA = self.store;
+    Config.Analytics()[name] = value;
 end
 
-EventManager:On("VARIABLES_LOADED", 
+EventManager:On("ANS_DATA_READY", 
     function()
         Data:OnLoad();
     end

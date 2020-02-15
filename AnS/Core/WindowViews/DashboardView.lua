@@ -43,6 +43,12 @@ function Dashboard:OnLoad(f)
     local tab = _G[f:GetName().."TabView1"];
     self.tab = tab;
     
+    EventManager:On("ANS_DATA_READY", function() this:Init(); end);
+end
+
+function Dashboard:Init()
+    local tab = self.tab;
+
     -- register for event updates to gold log
     -- get known characters
     EventManager:On("GOLDLOG_UPDATE", function() this:UpdateGraph() end);

@@ -1,6 +1,7 @@
 local Ans = select(2, ...);
 local ListView = Ans.UI.ListView;
 local TextInput = Ans.UI.TextInput;
+local Config = Ans.Config;
 local CustomSources = {};
 CustomSources.__index = CustomSources;
 Ans.CustomSourcesView = CustomSources;
@@ -36,15 +37,15 @@ function CustomSources:Show()
 end
 
 function CustomSources:Add()
-    local id = #ANS_CUSTOM_VARS + 1;
+    local id = #Config.CustomSources() + 1;
     local f = {name = "Source"..id, value = ""};
-    ANS_CUSTOM_VARS[id] = f;
+    Config.CustomSources()[id] = f;
     self:Refresh();
 end
 
 function CustomSources:Refresh()
     wipe(listItems);
-    for i,v in ipairs(ANS_CUSTOM_VARS) do
+    for i,v in ipairs(Config.CustomSources()) do
         local pf = {};
         pf.source = v;
         tinsert(listItems, pf);
@@ -55,7 +56,7 @@ function CustomSources:Refresh()
 end
 
 function CustomSources:Remove(id)
-    tremove(ANS_CUSTOM_VARS, id);
+    tremove(Config.CustomSources(), id);
     self:Refresh();
 end
 

@@ -9,8 +9,15 @@ local Utils = Ans.Utils;
 
 local DefaultGroups = Ans.Data;
 
-local AHTabs = {};
-local AHTabIndexToTab = {};
+local AHFrame = nil;
+local AH_TAB_CLICK = nil;
+
+-- temporary for now to make sure
+-- ANS_FILTERS exist in some form
+-- even if you did not have it originally
+ANS_FILTERS = ANS_FILTERS or {};
+
+local Config = Ans.Config;
 
 local MinimapIcon = Ans.MinimapIcon;
 local EventManager = Ans.EventManager;
@@ -24,8 +31,6 @@ AnsCore.__index = AnsCore;
 
 AnsCore.API = Ans;
 AnsCore.Window = Window;
-
-local AH_TAB_CLICK = nil;
 
 StaticPopupDialogs["ANS_NO_PRICING"] = {
     text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, AnsAuctionData, and Auctionator are currently supported.",
@@ -44,19 +49,47 @@ local ATRPercentFn = "atrvalue";
 local ATRTSMPercentFn = "min(atrvalue,dbmarket)";
 local ATRTUJPercentFn = "min(atrvalue,tujmarket)";
 local AnsOnlyPercentFn = "min(ansrecent,ansmarket)";
+local TSMMaterialCost = "min(dbmarket, first(vendorbuy, dbminbuyout))";
+local TSMCraftingValue = "first(dbminbuyout, dbmarket)";
+local AnsMaterialCost = "min(ansmarket, first(vendorbuy, ansrecent))";
+local AnsCraftingValue = "first(ansmin, ansmarket)";
+local TujMatCraftValue = "min(tujmarket, firsT(vendorbuy, tujmarket))";
 
-function AnsCore:AddAHTab(name, displayMode)
-    local n = #AuctionHouseFrame.Tabs + 1;
-    local lastTab = AuctionHouseFrame.Tabs[n - 1];
+local function AuctionTab_OnClick(self, button, down, index)
+    AH_TAB_CLICK(self, button, down, index);
+
+    for i = 1, AHFrame.numTabs do
+        local tab = _G["AuctionFrameTab"..i];
+        if (tab.displayMode) then
+            for k,v in ipairs(tab.displayMode) do
+                if (AHFrame[v]) then
+                    AHFrame[v]:Hide();
+                end
+            end
+        end
+    end
+
+    if (self.displayMode) then
+        for k,v in ipairs(self.displayMode) do
+            if (AHFrame[v]) then
+                AHFrame[v]:Show();
+            end
+        end
+    end
+end
+
+local function AddRetailAHTab(name, displayMode)
+    local n = #AHFrame.Tabs + 1;
+    local lastTab = AHFrame.Tabs[n - 1];
     local framename = "AuctionHouseFrameTab"..n;
-    local frame = CreateFrame("BUTTON", framename, AuctionHouseFrame, "AuctionHouseFrameDisplayModeTabTemplate");
+    local frame = CreateFrame("BUTTON", framename, AHFrame, "AuctionHouseFrameDisplayModeTabTemplate");
 
     frame:SetID(n);
     frame:SetText(name);
     frame:SetNormalFontObject(_G["AnsFontOrange"]);
     frame:SetPoint("LEFT", lastTab, "RIGHT", -15, 0);
     frame.displayMode = displayMode;
-    frame:HookScript("OnClick", function() AuctionHouseFrame:SetTitle(name) end);
+    frame:HookScript("OnClick", function() AHFrame:SetTitle(name) end);
 
     tinsert(AuctionHouseFrame.Tabs, frame);
     AuctionHouseFrame.tabsForDisplayMode[displayMode] = n;
@@ -64,14 +97,60 @@ function AnsCore:AddAHTab(name, displayMode)
     PanelTemplates_SetNumTabs(AuctionHouseFrame, n);
 end
 
+local function AddClassicAHTab(name, displayMode)
+    local n = AHFrame.numTabs + 1;
+    local lastTab = _G["AuctionFrameTab"..(n - 1)];
+    local framename = "AuctionFrameTab"..n;
+    local frame = CreateFrame("BUTTON", framename, AHFrame, "AuctionTabTemplate");
+
+    frame:SetID(n);
+    frame:SetText(name);
+    frame:SetNormalFontObject(_G["AnsFontOrange"]);
+    frame:SetPoint("LEFT", lastTab, "RIGHT", -15, 0);
+    frame.displayMode = displayMode;
+    frame:SetScript("OnClick", AuctionTab_OnClick);
+
+    PanelTemplates_SetNumTabs(AHFrame, n);
+    PanelTemplates_EnableTab(AHFrame, n);
+
+    if (AH_TAB_CLICK == nil) then
+        AH_TAB_CLICK = AuctionFrameTab_OnClick;
+        AuctionFrameTab_OnClick = AuctionTab_OnClick;
+    end
+end
+
+function AnsCore:AddAHTab(name, displayMode)
+    if (Utils:IsClassic()) then
+        AddClassicAHTab(name, displayMode);
+    else
+        AddRetailAHTab(name, displayMode);
+    end
+end
+
 function AnsCore:RegisterEvents(frame)
     self.frame = frame;
     frame:RegisterEvent("VARIABLES_LOADED");
+    frame:RegisterEvent("ADDON_LOADED");
+
+    -- move trade skill to Crafting:RegisterEvents()
+    frame:RegisterEvent("TRADE_SKILL_SHOW");
+    frame:RegisterEvent("TRADE_SKILL_CLOSE");
     Analytics:RegisterEvents(frame);
+end
+
+function AnsCore:AddOnLoaded(...)
+    local addonName = select(1, ...);
+    if (addonName:lower() == "blizzard_auctionhouseui" or addonName:lower() == "blizzard_auctionui") then
+        AHFrame = AuctionHouseFrame or AuctionFrame;
+    end
 end
 
 function AnsCore:EventHandler(frame, event, ...)
     EventManager:Emit(event, ...);
+
+    if (event == "ADDON_LOADED") then
+        self:AddOnLoaded(...);
+    end
 
     if (event == "VARIABLES_LOADED") then 
         self:OnLoad();
@@ -79,25 +158,22 @@ function AnsCore:EventHandler(frame, event, ...)
 end
 
 function AnsCore.SaveMiniButton(angle)
-    ANS_WINDOW_MINI_POSITION = angle;
+    Config.MiniButton(angle);
+end
+
+local function CreateMiniButton()
+    Ans.MiniButton = MinimapIcon:New("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
+    function() Window:Toggle() end, AnsCore.SaveMiniButton, Config.MiniButton(), {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
 end
 
 function AnsCore:OnLoad()
-    self:MigrateGlobalSettings();
-    self:MigrateFiltersToGroups(ANS_FILTERS, ANS_GROUPS);
-    self:MigrateFiltersToSnipingOperations(ANS_FILTERS);
-
-    -- clear ANS_FILTERS!
-    ANS_FILTERS = {};
-
-    self:SetDefaults();
+    self:Migrate();
     self:RegisterPriceSources();
-    self:LoadCustomVars();
 
-    Ans.MiniButton = MinimapIcon:New("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
-    function() Window:Toggle() end, AnsCore.SaveMiniButton, ANS_WINDOW_MINI_POSITION, {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
+    CreateMiniButton();
 
     Window:OnLoad(self.frame);
+    EventManager:Emit("ANS_DATA_READY");
 end
 
 function AnsCore:MigrateFiltersToGroups(parent, root)
@@ -132,18 +208,12 @@ function AnsCore:MigrateFiltersToSnipingOperations(items, parentName)
             if (f.id) then
                 tinsert(tmp.groups, f.id);
             end
-            tinsert(ANS_OPERATIONS.Sniping, tmp);
+            tinsert(Config.Operations().Sniping, tmp);
         end
 
         if (#f.children > 0) then
             self:MigrateFiltersToSnipingOperations(f.children, snipeName);
         end
-    end
-end
-
-function AnsCore:SetDefaults()
-    if (#ANS_GROUPS == 0) then
-        ANS_GROUPS = DefaultGroups;
     end
 end
 
@@ -169,27 +239,49 @@ function AnsCore:RegisterPriceSources()
         tujEnabled = true;
     end
 
-    if (tujEnabled and tsmEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default tuj and tsm percent fn");
-        ANS_SNIPE_SETTINGS.source = TUJAndTSMPercentFn;
-    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default tuj percent fn");
-        ANS_SNIPE_SETTINGS.source = TUJOnlyPercentFn;
-    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default tsm percent fn");
-        ANS_SNIPE_SETTINGS.source = TSMOnlyPercentFn;
-    elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default auctionator percent fn");
-        ANS_SNIPE_SETTINGS.source = ATRPercentFn;
-    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default auctionator and tuj percent fn");
-        ANS_SNIPE_SETTINGS.source = ATRTUJPercentFn;
-    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default auctionator and tsm percent fn");
-        ANS_SNIPE_SETTINGS.source = ATRTSMPercentFn;
-    elseif (ansEnabled and ANS_SNIPE_SETTINGS.source:len() == 0) then
-        print("AnS: setting default AnsAuctionData percent fn");
-        ANS_SNIPE_SETTINGS.source = AnsOnlyPercentFn;
+    -- set sniping default source
+    if (tujEnabled and tsmEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default tuj and tsm source");
+        Config.Sniper().source = TUJAndTSMPercentFn;
+    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default tuj source");
+        Config.Sniper().source = TUJOnlyPercentFn;
+    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default tsm source");
+        Config.Sniper().source = TSMOnlyPercentFn;
+    elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default auctionator source");
+        Config.Sniper().source = ATRPercentFn;
+    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default auctionator and tuj source");
+        Config.Sniper().source = ATRTUJPercentFn;
+    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default auctionator and tsm source");
+        Config.Sniper().source = ATRTSMPercentFn;
+    elseif (ansEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default AnsAuctionData source");
+        Config.Sniper().source = AnsOnlyPercentFn;
+    end
+
+    -- set default crafting stuff
+    if (tujEnabled and tsmEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = TSMMaterialCost;
+        Config.Crafting().craftValue = TSMCraftingValue;
+    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = TujMatCraftValue;
+        Config.Crafting().craftValue = TujMatCraftValue;
+    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = TSMMaterialCost;
+        Config.Crafting().craftValue = TSMCraftingValue;
+    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = TujMatCraftValue;
+        Config.Crafting().craftValue = TujMatCraftValue;
+    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = TSMMaterialCost;
+        Config.Crafting().craftValue = TSMCraftingValue;
+    elseif (ansEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = AnsMaterialCost;
+        Config.Crafting().craftValue = AnsCraftingValue;
     end
 
     if (not tsmEnabled and not tujEnabled and not auctionatorEnabled and not ansEnabled) then
@@ -245,66 +337,38 @@ function AnsCore:RegisterPriceSources()
     end
 end
 
-function AnsCore:LoadCustomVars()
-    ANS_CUSTOM_VARS = ANS_CUSTOM_VARS or {};
-    Sources:ClearCache();
-    Sources:LoadCustomVars();
-end
+function AnsCore:Migrate()
 
-function AnsCore:MigrateGlobalSettings()
-    if (ANS_GLOBAL_SETTINGS.percentFn and ANS_GLOBAL_SETTINGS.percentFn ~= "") then
-        ANS_SNIPE_SETTINGS.source = ANS_GLOBAL_SETTINGS.percentFn;
-        ANS_GLOBAL_SETTINGS.percentFn = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.priceFn and ANS_GLOBAL_SETTINGS.priceFn ~= "") then
-        ANS_SNIPE_SETTINGS.pricing = ANS_SNIPE_SETTINGS.priceFn;
-        ANS_GLOBAL_SETTINGS.priceFn = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.rescanTime ~= nil) then
-        ANS_GLOBAL_SETTINGS.rescanTime = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.showDressing == nil) then
-        ANS_GLOBAL_SETTINGS.showDressing = false;
-    end
-    if (ANS_GLOBAL_SETTINGS.dingSound ~= nil) then
-        ANS_SNIPE_SETTINGS.dingSound = ANS_GLOBAL_SETTINGS.dingSound;
-        ANS_GLOBAL_SETTINGS.dingSound = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.scanDelayTime ~= nil) then
-        ANS_GLOBAL_SETTINGS.scanDelayTime = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.useCoinIcons == nil) then
-        ANS_GLOBAL_SETTINGS.useCoinIcons = false;
-    end
-    if (ANS_GLOBAL_SETTINGS.itemsPerUpdate ~= nil) then
-        ANS_SNIPE_SETTINGS.itemsPerUpdate = ANS_GLOBAL_SETTINGS.itemsPerUpdate;
-        ANS_GLOBAL_SETTINGS.itemsPerUpdate = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.itemBlacklist ~= nil) then
-        ANS_SNIPE_SETTINGS.itemBlacklist = ANS_GLOBAL_SETTINGS.itemBlacklist;
-        ANS_GLOBAL_SETTINGS.itemBlacklist = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.useCommodityConfirm ~= nil) then
-        ANS_SNIPE_SETTINGS.useCommodityConfirm = ANS_GLOBAL_SETTINGS.useCommodityConfirm;
-        ANS_GLOBAL_SETTINGS.useCommodityConfirm = nil;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealm3Day == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealm3Day = true;
-    end
-	if (ANS_GLOBAL_SETTINGS.tooltipRealmMarket == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmMarket = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmRecent == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmRecent = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.tooltipRealmMin == nil) then
-        ANS_GLOBAL_SETTINGS.tooltipRealmMin = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.trackDataAnalytics == nil) then
-        ANS_GLOBAL_SETTINGS.trackDataAnalytics = true;
-    end
-    if (ANS_GLOBAL_SETTINGS.characterBlacklist ~= nil) then
-        ANS_SNIPE_SETTINGS.characterBlacklist = ANS_GLOBAL_SETTINGS.characterBlacklist;
-        ANS_GLOBAL_SETTINGS.characterBlacklist = nil;
+    Config.MigrateCopy("ANS_ANALYTICS_DATA", Config.Analytics(), true);
+    Config.MigrateArray("ANS_CUSTOM_VARS", Config.CustomSources(), true);
+    Config.MigrateDict("ANS_GLOBAL_SETTINGS", Config.General(),
+        {
+            ["showDressing"] = "showDressing",
+            ["useCoinIcons"] = "useCoinIcons",
+            ["tooltipRealm3Day"] = "tooltipRealm3Day",
+            ["tooltipRealmMarket"] = "tooltipRealmMarket",
+            ["tooltipRealmRecent"] = "tooltipRealmRecent",
+            ["tooltipRealmMin"] = "tooltipRealmMin"
+        }
+    );
+    Config.MigrateDict("ANS_GLOBAL_SETTINGS", Config.Sniper(),
+        {
+            ["percentFn"] = "source",
+            ["priceFn"] = "pricing",
+            ["dingSound"] = "dingSound",
+            ["itemsPerUpdate"] = "itemsPerUpdate",
+            ["useCommodityConfirm"] = "useCommodityConfirm",
+            ["characterBlacklist"] = "characterBlacklist"
+        },
+        true
+    );
+
+    self:MigrateFiltersToGroups(ANS_FILTERS, Config.Groups());
+    self:MigrateFiltersToSnipingOperations(ANS_FILTERS);
+
+    wipe(ANS_FILTERS);
+
+    if (#Config.Groups() == 0) then
+        Config.Groups(DefaultGroups);
     end
 end

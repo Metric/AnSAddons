@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local Utils = {};
+local Config = Ans.Config;
 Utils.__index = Utils;
 
 Ans.Utils = Utils;
@@ -29,6 +30,14 @@ local hooks = {};
 local linkToNameCache = {};
 
 --- Standard Utils ---
+
+function Utils:IsClassic()
+    if (BattlePetTooltip) then
+        return false;
+    end
+
+    return true;
+end
 
 function Utils:GetTable()
     if (#temporaryTables > 0) then
@@ -89,8 +98,41 @@ function Utils:FormatNumber(amount)
 end
 
 
+function Utils:PriceToFormatted(prefix, val, negative)
+    local color = "|cFFFFFFFF";
+
+    if (negative) then
+        color = "|cFFFF0000";
+    end
+
+    local gold, silver, copper = self:GSC(val);
+    local st = "";
+
+    if (gold ~= 0) then
+        st = color..prefix..self:FormatNumber(""..gold).."|cFFD7BC45g ";
+    end
+
+    if (st ~= "") then
+        st = st..color..format("%02i|cFF9C9B9Cs ", silver);
+    elseif (silver ~= 0) then
+        st = st..color..prefix..silver.."|cFF9C9B9Cs ";
+    end
+
+    if (st ~= "") then
+        st = st..color..format("%02i|cFF9B502Fc", copper);
+    elseif (copper ~= 0) then
+        st = st..color..prefix..copper.."|cFF9B502Fc";
+    end
+
+    if (st == "") then
+        st = color.."0|cFF9B502Fc";
+    end
+
+    return st;
+end
+
 function Utils:PriceToString(val, override, noFormatting)
-    if (ANS_GLOBAL_SETTINGS.useCoinIcons and not override) then
+    if (Config.General().useCoinIcons and not override) then
         return GetMoneyString(val, true);
     end
 
@@ -407,7 +449,7 @@ function Utils:InTable(tbl, val)
 end
 
 function Utils:HookSecure(name, fn)
-    hooksecurefunc(name, fn);
+    hooksecurefunc(_G, name, fn);
 end
 
 function Utils:Hook(name, fn)

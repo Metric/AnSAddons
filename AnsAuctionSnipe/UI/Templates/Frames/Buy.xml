@@ -316,7 +316,7 @@
                         </Anchors>
                         <Scripts>
                             <OnClick>
-                                AuctionSnipe:Sort("ilevel");
+                                AuctionSnipe:Sort("iLevel");
                             </OnClick>
                         </Scripts>
                     </Button>
@@ -344,7 +344,10 @@
                 </Layers>
                 <Scripts>
                     <OnLoad>
-                        AuctionHouseBackgroundMixin.OnLoad(self);
+                        if (AuctionHouseBackgroundMixin) then
+                            AuctionHouseBackgroundMixin.OnLoad(self);
+                        end
+                        
                         self.NineSlice:SetPoint("BOTTOMRIGHT", -22, 0);
                     </OnLoad>
                 </Scripts>
@@ -578,6 +581,511 @@
                         </Texture>
                     </Layer>
                 </Layers>
+            </Frame>
+        </Frames>
+    </Frame>
+
+    <Frame name="AnsSnipeBuyClassicTemplate" virtual="true">
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0"/>
+            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="0" y="0"/>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+				<Texture name="$parentTopLeft" file="Interface\AuctionFrame\UI-AuctionFrame-Browse-TopLeft">
+					<Size x="256" y="256"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentTop" file="Interface\AuctionFrame\UI-AuctionFrame-Browse-Top">
+					<Size x="320" y="256"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="256" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentTopRight" file="Interface\AuctionFrame\UI-AuctionFrame-Browse-TopRight">
+					<Size x="256" y="256"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentTop" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentBotLeft" file="Interface\AuctionFrame\UI-AuctionFrame-Browse-BotLeft">
+					<Size x="256" y="256"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="0" y="-256"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentBot" file="Interface\AuctionFrame\UI-AuctionFrame-Browse-Bot">
+					<Size x="320" y="256"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="256" y="-256"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentBotRight" file="Interface\AuctionFrame\UI-AuctionFrame-Browse-BotRight">
+					<Size x="256" y="256"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeTo="$parentBot" relativePoint="TOPRIGHT" x="0" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+        </Layers>
+        <Frames>
+            <Frame name="$parentSearchBar">
+                <Size x="605" y="22" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="190" y="-55" />
+                </Anchors>
+                <Frames>
+                    <EditBox name="$parentSearch" autoFocus="false" inherits="InputBoxTemplate" bytes="63">
+                        <Size x="100" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0"/>
+                        </Anchors>
+                        <FontString inherits="ChatFontNormal" />
+
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" text="Name Filter" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                    </EditBox>
+
+                    <EditBox name="$parentMaxPercent" autoFocus="false" numeric="true" bytes="6" inherits="InputBoxTemplate">
+                        <Size x="48" y="20" />
+                        <Anchors>
+                            <Anchor point="RIGHT" relativeTo="$parentSearch" relativePoint="LEFT" x="-15" y="0" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" text="Max %" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                    </EditBox>
+
+                    <Frame name="$parentMaxPPU" inherits="MoneyInputFrameTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentSearch" relativePoint="RIGHT" x="10" y="0" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString inherits="GameFontHighlight" text="Max PPU" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
+									</Anchors>
+								</FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+
+                    <EditBox name="$parentMinLevel" letters="3" numeric="true" autoFocus="false" inherits="InputBoxTemplate">
+                        <Size x="32" y="24" />
+                        <Anchors>
+							<Anchor point="LEFT" relativeTo="$parentMaxPPU" relativePoint="RIGHT" x="10" y="0"/>
+						</Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" text="Min iLevel" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                    </EditBox>
+
+                    <Frame name="$parentQuality" inherits="UIDropDownMenuTemplate">
+                        <Size x="100" y="32" />
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentMinLevel" relativePoint="RIGHT" x="20" y="0" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" text="Min Quality" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="LEFT" x="24" y="15"/>
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+                    </Frame>
+
+                    <EditBox name="$parentLevelRange" text="0-120" letters="7" numeric="false" autoFocus="false" inherits="InputBoxTemplate">
+                        <Size x="64" y="24" />
+                        <Anchors>
+							<Anchor point="LEFT" relativeTo="$parentQuality" relativePoint="RIGHT" x="65" y="0"/>
+						</Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+								<FontString inherits="GameFontHighlight" text="CLevel Range" justifyH="RIGHT">
+									<Anchors>
+										<Anchor point="LEFT" relativePoint="LEFT" x="0" y="15" />
+									</Anchors>
+								</FontString>
+							</Layer>
+                        </Layers>
+                        <Scripts>
+                            <OnEnterPressed>
+                                self:ClearFocus();
+                            </OnEnterPressed>
+                            <OnEscapePressed>
+                                self:ClearFocus();
+                            </OnEscapePressed>
+                        </Scripts>
+                    </EditBox>
+                    <CheckButton inherits="UIRadioButtonTemplate" name="$parentDingSound">
+                        <Anchors>
+                            <Anchor point="TOPLEFT"  relativePoint="BOTTOMLEFT" relativeTo="$parentLevelRange" x="-2" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnLoad>_G[self:GetName().."Text"]:SetText("Ding Sound");</OnLoad>
+                            <OnClick>AuctionSnipe:DingSound(self)</OnClick>
+                        </Scripts>
+                    </CheckButton>
+                </Frames>
+            </Frame>
+
+            <Frame name="$parentBottomBar">
+                <Size x="160" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="-50" y="14" />
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString name="$parentStatus" text="Stopped" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="RIGHT" relativePoint="LEFT" x="-50" y="0" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button name="$parentStart" text="Start" inherits="UIPanelButtonTemplate">
+                        <Size x="78" y="22" />
+                        <Anchors>
+                            <Anchor point="RIGHT" relativePoint="RIGHT" x="-40" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Start();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="$parentStop" text="Stop" inherits="UIPanelButtonTemplate">
+                        <Size x="78" y="22" />
+                        <Anchors>
+                            <Anchor point="RIGHT" relativeTo="$parentStart" relativePoint="LEFT" x="0" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Stop();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                </Frames>
+            </Frame>
+
+            <Frame name="$parentHeader">
+                <size y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="250" y="-100" />
+                    <Anchor point="RIGHT" x="-4" />
+                </Anchors>
+                <Frames>
+                    <Button name="$parentPrice" text="PPU" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("ppu");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="108" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentPrice" relativePoint="TOPRIGHT" x="60" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("count");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentPercent" text="Percent %" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="70" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentName" relativePoint="TOPRIGHT" x="100" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("percent");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentLevel" text="iLvL" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="50" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentPercent" relativePoint="TOPRIGHT" x="10" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("iLevel");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                </Frames>
+            </Frame>
+
+            <Frame name="$parentResults">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT" x="0" y="0" />
+                    <Anchor point="BOTTOMRIGHT" x="-10" y="36" />
+                </Anchors>
+                <Frames>
+                    <ScrollFrame name="$parentItems" inherits="FauxScrollFrameTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-6" />
+                            <Anchor point="BOTTOMRIGHT" x="-22" y="3" />
+                        </Anchors>
+                        <Layers>
+                             <Layer level="BORDER">
+                                <Texture parentKey="scrollBorderTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                    <Size x="28" y="48"/>
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="28" y="4"/>
+                                    </Anchors>
+                                    <TexCoords left="0" right="0.484375" top="0" bottom="0.2"/>
+                                </Texture>
+                                <Texture parentKey="scrollBorderBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                    <Size x="28" y="67"/>
+                                    <Anchors>
+                                        <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="28" y="-2"/>
+                                    </Anchors>
+                                    <TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
+                                </Texture>
+                                <Texture parentKey="scrollBorderMiddle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="BOTTOMLEFT"/>
+                                        <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="TOPRIGHT"/>
+                                    </Anchors>
+                                    <TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
+                                </Texture>
+                            </Layer>
+                            <Layer level="BACKGROUND">
+                                <Texture parentKey="scrollFrameScrollBarBackground">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="TOPLEFT"/>
+                                    <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="BOTTOMRIGHT"/>
+                                </Anchors>
+                                <Color r="0" g="0" b="0"/>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </ScrollFrame>
+                    <Frame name="$parentProcessing" mixin="SpinnerMixin" enableMouse="true" frameLevel="999">
+                        <Anchors>
+                            <Anchor point="TOPLEFT"/>
+                            <Anchor point="BOTTOMRIGHT" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <FontString inherits="GameFontNormal" text="Purchasing...">
+                                    <Anchors>
+                                        <Anchor point="CENTER" x="0" y="0" />
+                                    </Anchors>
+                                    <Color color="NORMAL_FONT_COLOR"/>
+                                    <Shadow>
+                                        <Offset>
+                                            <AbsDimension x="1" y="-1"/>
+                                        </Offset>
+                                        <Color r="0" g="0" b="0"/>
+                                    </Shadow>
+                                </FontString>
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT"/>
+                                        <Anchor point="BOTTOMRIGHT" />
+                                    </Anchors>
+                                    <Color r="0" g="0" b="0" a="0.75" />
+                                </Texture>
+                                <Texture parentKey="LoadingSpinner" file="Interface\AddOns\AnS\Images\SpinnerForClassic">
+                                    <Size x="146" y="146"/>
+                                    <Anchors>
+                                        <Anchor point="CENTER" x="0" y="0"/>
+                                    </Anchors>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <Animations>
+                            <AnimationGroup parentKey="SpinnerAnim" looping="REPEAT">
+                                <Rotation childKey="LoadingSpinner" order="1" duration="1" degrees="-360"/>
+                            </AnimationGroup>
+                        </Animations>
+                        <Scripts>
+                            <OnLoad>
+                                self:Init();
+                            </OnLoad>
+                        </Scripts>
+                    </Frame>
+                    <Frame name="$parentCommodityConfirm" inherits="CommodityInputTemplate" frameLevel="1000"></Frame>
+                </Frames>
+            </Frame>
+
+            <Frame name="$parentBaseList">
+                <Size x="168" y="394" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="18" y="-100" />
+                </Anchors>
+                <Frames>
+                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="4" y="-4"/>
+                            <Anchor point="BOTTOMRIGHT" x="-29" y="86"/>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BORDER">
+                                <Texture parentKey="scrollBorderTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                <Size x="28" y="48"/>
+                                <Anchors>
+                                    <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="28" y="4"/>
+                                </Anchors>
+                                <TexCoords left="0" right="0.484375" top="0" bottom="0.2"/>
+                                </Texture>
+                                <Texture parentKey="scrollBorderBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                <Size x="28" y="67"/>
+                                <Anchors>
+                                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="28" y="-2"/>
+                                </Anchors>
+                                <TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
+                                </Texture>
+                                <Texture parentKey="scrollBorderMiddle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="BOTTOMLEFT"/>
+                                    <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="TOPRIGHT"/>
+                                </Anchors>
+                                <TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
+                                </Texture>
+                            </Layer>
+                            <Layer level="BACKGROUND">
+                                <Texture parentKey="scrollFrameScrollBarBackground">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="TOPLEFT"/>
+                                    <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="BOTTOMRIGHT"/>
+                                </Anchors>
+                                <Color r="0" g="0" b="0"/>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </ScrollFrame>
+                    <Button name="$parentReset" text="Reset" inherits="UIPanelButtonTemplate">
+                        <Size x="52" y="22" />
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" x="20" y="4" relativeTo="$parentTreeView" relativePoint="TOPLEFT" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:ClearBase();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                </Frames>
+            </Frame>
+
+            <Frame name="$parentFilterList">
+                <Size x="168" y="394" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="18" y="-100" />
+                </Anchors>
+                <Frames>
+                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="4" y="-4"/>
+                            <Anchor point="BOTTOMRIGHT" x="-29" y="86"/>
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BORDER">
+                                <Texture parentKey="scrollBorderTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                <Size x="28" y="48"/>
+                                <Anchors>
+                                    <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="28" y="4"/>
+                                </Anchors>
+                                <TexCoords left="0" right="0.484375" top="0" bottom="0.2"/>
+                                </Texture>
+                                <Texture parentKey="scrollBorderBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                <Size x="28" y="67"/>
+                                <Anchors>
+                                    <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="28" y="-2"/>
+                                </Anchors>
+                                <TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
+                                </Texture>
+                                <Texture parentKey="scrollBorderMiddle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="BOTTOMLEFT"/>
+                                    <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="TOPRIGHT"/>
+                                </Anchors>
+                                <TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
+                                </Texture>
+                            </Layer>
+                            <Layer level="BACKGROUND">
+                                <Texture parentKey="scrollFrameScrollBarBackground">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="TOPLEFT"/>
+                                    <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="BOTTOMRIGHT"/>
+                                </Anchors>
+                                <Color r="0" g="0" b="0"/>
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </ScrollFrame>
+                    <Button name="$parentReset" text="Reset" inherits="UIPanelButtonTemplate">
+                        <Size x="52" y="22" />
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" x="20" y="4" relativeTo="$parentTreeView" relativePoint="TOPLEFT" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:ClearFilters();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                </Frames>
             </Frame>
         </Frames>
     </Frame>

@@ -27,4 +27,38 @@
 			</Button>
 		</Frames>
     </Button>
+	<Button name="AnsFilterRowClassicTemplate" virtual="true">
+		<Size x="136" y="21"/>
+		<NormalTexture name="$parentNormalTexture" file="Interface\AuctionFrame\UI-AuctionFrame-FilterBg">
+			<TexCoords left="0" right="0.53125" top="0" bottom="0.625"/>
+		</NormalTexture>
+		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentLines" file="Interface\AuctionFrame\UI-AuctionFrame-FilterLines">
+					<Size x="7" y="20"/>
+					<Anchors>
+						<Anchor point="LEFT" x="13" y="0"/>
+					</Anchors>
+					<TexCoords left="0" right="0.4375" top="0" bottom="0.625"/>
+				</Texture>
+			</Layer>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" justifyV="CENTER" justifyH="LEFT" inherits="GameFontNormalSmallLeft">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="4" y="0" />
+						<Anchor point="BOTTOMRIGHT" x="-4" y="0" />
+                    </Anchors>
+                </FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parentExpander" text="+" inherits="UIPanelButtonTemplate">
+				<Size x="16" y="14" />
+				<Anchors>
+					<Anchor point="RIGHT" x="0" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+				</Anchors>
+			</Button>
+		</Frames>
+	</Button>
 </Ui>

@@ -1,6 +1,7 @@
 local Ans = select(2, ...);
 local TextInput = Ans.UI.TextInput;
 local ConfirmDialog = Ans.UI.ConfirmDialog;
+local Config = Ans.Config;
 local TreeView = Ans.UI.TreeView;
 local ListView = Ans.UI.ListView;
 local Utils = Ans.Utils;
@@ -134,7 +135,7 @@ function GroupEdit:BuildInventoryList()
             tinsert(inventoryItemList, v);
         else
             local id = Utils:GetTSMID(v.link);
-            if (not strfind(txt, id)) then
+            if (not strfind(txt, id..",") and not strfind(txt, id.."$")) then
                 tinsert(inventoryItemList, v);
             end
         end
@@ -268,9 +269,9 @@ function Groups:MoveGroupTo(item)
                 end
             end
         else
-            for i,v in ipairs(ANS_GROUPS) do
+            for i,v in ipairs(Config.Groups()) do
                 if (v == f) then
-                    tremove(ANS_GROUPS, i);
+                    tremove(Config.Groups(), i);
                     break;
                 end
             end
@@ -280,7 +281,7 @@ function Groups:MoveGroupTo(item)
             tinsert(item.filter.children, f);
             selected.parent = item.filter;
         else
-            tinsert(ANS_GROUPS, f);
+            tinsert(Config.Groups(), f);
             selected.parent = nil;
         end
 
@@ -302,9 +303,9 @@ function Groups.DeleteGroup(group)
                 end
             end
         else
-            for i,v in ipairs(ANS_GROUPS) do
+            for i,v in ipairs(Config.Groups()) do
                 if (v == f) then
-                    tremove(ANS_GROUPS, i);
+                    tremove(Config.Groups(), i);
                     break;
                 end
             end
@@ -350,7 +351,7 @@ end
 function Groups.MoveGroupUp(s)
     local p = s.parent;
     if (not p) then
-        p = ANS_GROUPS;
+        p = Config.Groups();
     else
         p = s.parent.children;
     end
@@ -375,7 +376,7 @@ function Groups.MoveGroupDown(s)
     local p = s.parent;
     
     if (not p) then
-        p = ANS_GROUPS;
+        p = Config.Groups();
     else
         p = s.parent.children;
     end
@@ -420,7 +421,7 @@ function Groups.RenderMoveRow(row, item)
 end
 
 function Groups:BuildTree(rootChildren, selectedComparer, showAdd)
-    local filters = ANS_GROUPS;
+    local filters = Config.Groups();
     local root = rootChildren;
 
     rootGroup.selected = rootGroup == GroupEdit.selected;
@@ -494,9 +495,9 @@ function Groups.NewGroup(item)
     };
 
     if (item == rootGroup) then
-        i = #ANS_GROUPS + 1;
+        i = #Config.Groups() + 1;
         t.name = t.name..i;
-        tinsert(ANS_GROUPS, t);
+        tinsert(Config.Groups(), t);
     elseif (item.filter) then
         i = #item.filter.children + 1;
         t.name = t.name..i;

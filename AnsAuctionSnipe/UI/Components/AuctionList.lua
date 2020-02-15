@@ -1,10 +1,12 @@
 local Ans = select(2, ...);
+local Config = AnsCore.API.Config;
 local AuctionList = {};
 AuctionList.__index = AuctionList;
 
 Ans.AuctionList = AuctionList;
 
-local Recycler = AnsCore.API.GroupRecycler;
+local Recycler = AnsCore.API.Auctions.Recycler;
+local Query = AnsCore.API.Auctions.Query;
 local Utils = AnsCore.API.Utils;
 
 AuctionList.selectedEntry = -1;
@@ -22,10 +24,11 @@ AuctionList.sortMode = {
     ["ppu"] = false,
     ["stack"] = false,
     ["percent"] = false,
-    ["ilevel"] = false
+    ["iLevel"] = false
 };
 
 AuctionList.lastSortMode = "percent";
+AuctionList.lastBuyTry = time();
 
 local stepTime = 1;
 local clickTime = time();
@@ -60,13 +63,67 @@ function AuctionList:RegisterEvents()
     end
 end
 
+function AuctionList:CheckAndPurchase(auction)
+    if (auction and not auction.sniped) then
+        local index = auction.itemIndex;
+        local link = GetAuctionItemLink("list", index);
+        if (link and auction.link == link) then
+            local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
+            _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
+            if (hasAllInfo and count == auction.count and buyoutPrice and
+                buyoutPrice <= auction.buyoutPrice and GetMoney() >= buyoutPrice) then
+                PlaceAuctionBid("list", index, buyoutPrice);
+                auction.sniped = true;
+                return true;
+            end
+        end
+    end
+
+    return false;
+end
+
+function AuctionList:ClassicPurchase(block)
+    if (not block) then
+        return false;
+    end
+
+    if (block.count <= 0) then
+        return false;
+    end
+
+    if (#block.auctions <= 0) then
+        return false;
+    end
+
+    local auction = block.auctions[1];
+    if (not auction) then
+        return false;
+    end
+
+    if (self:CheckAndPurchase(auction)) then
+        tremove(block.auctions);
+        self:RemoveAuctionAmount(block, auction.count);
+        Recycler:Recycle(auction);
+        return true;
+    end
+
+    return false;
+end
+
 function AuctionList:Buy(index) 
     if (self.frame and #self.items > 0 and index > 0 and index <= #self.items) then
         local block = self.items[index];
         if (block and not self.isBuying 
             and self.commodity == nil and self.auction == nil) then
-            self:Purchase(block);
+
+            if (Utils:IsClassic()) then
+                self:ClassicPurchase(block);
+            else
+                self:Purchase(block);
+            end
         end
+
+        self.lastBuyTry = time();
     end
 end
 
@@ -88,7 +145,9 @@ end
 
 function AuctionList:AddItems(items)
     for i,v in ipairs(items) do
-        tinsert(self.items, v:Clone());
+        if (not Query:IsBlacklisted(v)) then
+            tinsert(self.items, v:Clone());
+        end
     end 
     self:Sort(self.lastSortMode, true);
 end
@@ -96,7 +155,9 @@ end
 function AuctionList:SetItems(items)
     wipe(self.items);
     for i,v in ipairs(items) do
-        tinsert(self.items, v:Clone());
+        if (not Query:IsBlacklisted(v)) then
+            tinsert(self.items, v:Clone());
+        end
     end 
     self:Sort(self.lastSortMode, true);
 end
@@ -114,7 +175,7 @@ function AuctionList:Purchase(block)
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
-        if (ANS_SNIPE_SETTINGS.useCommodityConfirm) then
+        if (Config.Sniper().useCommodityConfirm) then
             self.isBuying = true;
             self.commodity = block:Clone();
             self.auction = self.commodity;
@@ -240,6 +301,20 @@ function AuctionList:CancelCommoditiesPurchase()
     self.commodity = nil;
 end
 
+function AuctionList:Recycle()
+    for i,v in ipairs(self.items) do
+        if (v.auctions) then
+            for k,c in ipairs(v.auctions) do
+                Recycler:Recycle(c);
+            end
+        end
+
+        Recycler:Recycle(v);
+    end
+
+    wipe(self.items);
+end
+
 function AuctionList:RemoveAuctionAmount(block, count)
     for i = 1, #self.items do
         local item = self.items[i];
@@ -250,7 +325,10 @@ function AuctionList:RemoveAuctionAmount(block, count)
             and item.buyoutPrice == block.buyoutPrice
             and item.count == block.count) then
 
-            block.count = block.count - count;
+            if (not Utils:IsClassic()) then
+                block.count = block.count - count;
+            end
+        
             item.count = item.count - count;
 
             if (item.count <= 0) then
@@ -306,11 +384,21 @@ function AuctionList:Click(row, button, down)
 
     local fps = math.floor(GetFramerate());
 
-    if (clickCount == 1 and IsControlKeyDown()) then
+    if (clickCount == 1 and IsShiftKeyDown()) then
         local block = self.items[id];
 
         if (block) then
-            ANS_SNIPE_SETTINGS.itemBlacklist[block.tsmId] = block.link;
+            Query:Blacklist(block);
+            Recycler:Recycle(table.remove(self.items, id));
+        end
+
+        self.selectedEntry = -1;
+        clickCount = 0;
+    elseif (clickCount == 1 and IsControlKeyDown()) then
+        local block = self.items[id];
+
+        if (block) then
+            Config.Sniper().itemBlacklist[block.tsmId] = block.link;
             Recycler:Recycle(table.remove(self.items, id));
         end
 
@@ -318,7 +406,7 @@ function AuctionList:Click(row, button, down)
         clickCount = 0;
     end
 
-    if (clickCount == 1 and ANS_GLOBAL_SETTINGS.showDressing) then
+    if (clickCount == 1 and Config.General().showDressing) then
         local block = self.items[id];
 
         if (block) then

@@ -161,7 +161,7 @@ function Transactions:Compact()
     Data:Set(TRANSACTION_TAG, self.log);
 end
 
-EventManager:On("VARIABLES_LOADED", 
+EventManager:On("ANS_DATA_READY", 
     function()
         Transactions:OnLoad();
     end

@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local MailTracker = {};
+local Config = Ans.Config;
 MailTracker.__index = MailTracker;
 
 Ans.Analytics.MailTracker = MailTracker;
@@ -62,7 +63,7 @@ end
 
 function MailTracker.OnMailUpdate()
     if (mailShown) then
-        if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+        if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
             return;
         end
         -- so data will be availble by the time
@@ -93,7 +94,7 @@ function MailTracker.SendMail(ofn, ...)
 end
 
 function MailTracker:ProcessMail(idx, itemIndex)
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return true;
     end
 

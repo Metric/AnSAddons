@@ -7,6 +7,7 @@ local Dropdown = Ans.UI.Dropdown;
 local TreeView = Ans.UI.TreeView;
 local ListView = Ans.UI.ListView;
 local Utils = Ans.Utils;
+local Config = Ans.Config;
 
 local operationTreeItems = {};
 local groupTreeItems = {};
@@ -155,7 +156,7 @@ end
 function Operations.Add(item)
     if (item.name == "Sniping") then
         local opConfig = SnipingOp:NewConfig("Snipe "..(#item.children + 1));
-        local tbl = ANS_OPERATIONS[item.name];
+        local tbl = Config.Operations()[item.name];
 
         if (tbl) then
             tinsert(tbl, opConfig);
@@ -170,7 +171,7 @@ function Operations:Delete(data)
         return;
     end
 
-    local tbl = ANS_OPERATIONS[data.parent];
+    local tbl = Config.Operations()[data.parent];
 
     if (not tbl) then
         return;
@@ -228,7 +229,7 @@ end
 
 function Operations:BuildTree(sort)
     local index = 1;
-    for k,v in pairs(ANS_OPERATIONS) do
+    for k,v in pairs(Config.Operations()) do
         local t = operationTreeItems[index];
 
         if (not t) then

@@ -18,6 +18,9 @@
             <OnDragStop>
                 self:StopMovingOrSizing();
             </OnDragStop>
+            <OnMouseDown>
+                self:Raise();
+            </OnMouseDown>
         </Scripts>
         <Anchors>
             <Anchor point="CENTER" x="0" y="0" />
@@ -108,9 +111,19 @@
                             </OnClick>
                         </Scripts>
                     </Button>
-                     <Button id="5" name="$parentTab5" text="Settings" inherits="AnsTabTemplate">
+                    <Button id="5" name="$parentTab5" text="Settings" inherits="AnsTabTemplate">
                         <Anchors>
                             <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AnsCore.Window:OnTabClick(self);
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button id="6" name="$parentTab6" text="Import/Export" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" x="0" y="0" />
                         </Anchors>
                         <Scripts>
                             <OnClick>
@@ -482,6 +495,48 @@
                             </ScrollFrame>
                         </Frames>
                     </Frame>
+                </Frames>
+            </Frame>
+            <Frame name="$parentTabView6" hidden="true">
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parentTabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                   <Button parentKey="ImportGroups" text="Import Groups" name="$parentImportGroups" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="ExportGroups" text="Export Groups" name="$parentExportGroups" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0" />
+                        </Anchors>
+                    </Button>
+                    <ScrollFrame parentKey="Input" name="$parentInput" inherits="AnsScrollFrameTemplate">
+                        <Size x="748" y="256" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="-30" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.05" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <ScrollChild>
+                            <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                                <Size x="748" y="256" />
+                            </EditBox>
+                        </ScrollChild>
+                    </ScrollFrame>
                 </Frames>
             </Frame>
         </Frames>

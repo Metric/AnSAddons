@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local MerchantTracker = {};
+local Config = Ans.Config;
 MerchantTracker.__index = MerchantTracker;
 Ans.Analytics.MerchantTracker = MerchantTracker;
 
@@ -24,7 +25,7 @@ function MerchantTracker:OnLoad()
 end
 
 function MerchantTracker.Buy(ofn, ...)
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return ofn(...);
     end
 
@@ -41,7 +42,7 @@ function MerchantTracker.Buy(ofn, ...)
 end
 
 function MerchantTracker.Buyback(ofn, ...)
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return ofn(...);
     end
 
@@ -57,7 +58,7 @@ function MerchantTracker.Buyback(ofn, ...)
 end
 
 function MerchantTracker.RepairAll(ofn, ...)
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return ofn(...);
     end
 
@@ -72,7 +73,7 @@ function MerchantTracker.RepairAll(ofn, ...)
 end
 
 function MerchantTracker.Sell(bag, slot) 
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return;
     end
 
@@ -92,7 +93,7 @@ function MerchantTracker.Sell(bag, slot)
 end
 
 function MerchantTracker.OnUpdate()
-    if (not ANS_GLOBAL_SETTINGS.trackDataAnalytics and ANS_GLOBAL_SETTINGS.trackDataAnalytics ~= nil) then
+    if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
         return;
     end
 
@@ -114,6 +115,25 @@ function MerchantTracker.OnUpdate()
     wipe(pending.item);
     wipe(pending.copper);
     wipe(pending.quantity);
+
+    MerchantTracker.Scan();
+end
+
+function MerchantTracker.Scan()
+    for i = 1, GetMerchantNumItems() do
+        local id = Utils:GetTSMID(GetMerchantItemLink(i));
+        if (id) then
+            local currentValue = Config.Vendor()[id];
+            local newValue = nil;
+            local _, _, price, quantity, _, _, _, extendedCost = GetMerchantItemInfo(i);
+			if (price > 0 and (not extendedCost or GetMerchantItemCostInfo(i) == 0)) then
+				newValue = Sources.round(price / quantity);
+			end
+			if (newValue ~= currentValue) then
+				Config.Vendor()[id] = newValue;
+			end
+        end
+    end
 end
 
 -- we hook and setup events here

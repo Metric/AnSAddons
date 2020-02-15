@@ -1,4 +1,5 @@
 local Ans = select(2, ...);
+local Config = Ans.Config;
 local Sources = { items = {}};
 Sources.__index = Sources;
 Ans.Sources = Sources;
@@ -21,10 +22,6 @@ function OpCodes:New()
     op.buyout = 0;
     op.ilevel = 0;
     op.vendorsell = 0;
-    op.vendorSell = 0;
-    op.VendorSell = 0;
-    op.VendorBuy = 0;
-    op.vendorbuy = 0;
     op.vendorBuy = 0;
     op.quality = 1;
     op.dbmarket = 0;
@@ -83,6 +80,7 @@ local ParseTemplate = [[
         local ilevel, itemLevel, ItemLevel, itemlevel, Itemlevel = ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel;
         local quality, itemquality, itemQuality, ItemQuality, Itemquality = ops.quality, ops.quality, ops.quality, ops.quality, ops.quality;
         local vendorsell, vendorSell, Vendorsell, VendorSell = ops.vendorsell, ops.vendorsell, ops.vendorsell, ops.vendorsell;
+        local vendorbuy, vendorBuy, VendorBuy, Vendorbuy = ops.vendorbuy, ops.vendorbuy, ops.vendorbuy, ops.vendorbuy;
         local tsmId = ops.tsmId;
         local id = ops.id;
 
@@ -359,6 +357,89 @@ Sources.contains = function(v1, v2)
     return false;
 end
 
+-- This accepts an item id in tsm format, numeric, or an item link
+function Sources:QueryID(q, itemId)
+    if (not itemId) then
+        return nil;
+    end
+    
+    local codes = nil;
+
+    local names = self:GetNamesAsString();
+    if (not names or names:len() == 0 ) then
+        return nil;
+    end
+
+    if (not q or q:len() == 0) then
+        return nil;
+    end
+
+    if (OpValueCache[itemId]) then
+        codes = OpValueCache[itemId];
+    else 
+        codes = OpCodes:New();
+        OpValueCache[itemId] = codes;
+        self:GetValues(itemId, codes);
+    end
+
+    codes.buyout = 0;
+    codes.stacksize = 0;
+    codes.quality = 99;
+    codes.percent = 0;
+    codes.ppu = 0;
+    codes.ilevel = 0;
+    codes.vendorsell = 0;
+    codes.tsmId = Utils:GetTSMID(itemId);
+    codes.vendorbuy = Config.Vendor()[codes.tsmId] or 0;
+
+    local _, id = strsplit(":", codes.tsmId); 
+
+    codes.id = tonumber(id);
+
+    local _, fn = false, nil;
+    local oq = q;
+
+    if (not OperationCache[q]) then
+        q = Utils:ReplaceOpShortHand(q);
+        q = Utils:ReplaceShortHandPercent(q);
+        q = Utils:ReplaceMoneyShorthand(q);    
+
+        --print(q);
+
+        if (not self:IsValidQuery(q)) then
+            print("AnS Invalid Filter / Pricing String: "..q);
+            return nil;
+        end
+
+        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
+
+        fn, error = loadstring(pstr);
+
+        if(not fn or error) then
+            print("AnS Filter / Pricing String Error: "..error);
+            return nil;
+        end
+
+        _, fn = pcall(fn);
+
+        if (not _ or not fn) then
+            print("AnS Invalid Filter / Pricing String: "..q);
+            return nil;
+        end
+
+        OperationCache[oq] = fn;
+    else
+        fn = OperationCache[oq];
+    end
+
+    if (not fn) then
+        return nil;
+    end
+
+    r = fn(self, codes);
+    return r;
+end
+
 function Sources:Query(q, item)
     local itemId = item.link or item.id;
     local buyout = item.buyoutPrice;
@@ -400,6 +481,7 @@ function Sources:Query(q, item)
     codes.vendorsell = item.vendorsell;
     codes.tsmId = item.tsmId;
     codes.id = item.id;
+    codes.vendorbuy = Config.Vendor()[item.tsmId] or 0;
 
     local _, fn = false, nil;
     local oq = q;
