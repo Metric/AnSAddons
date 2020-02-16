@@ -896,19 +896,26 @@ function AuctionSnipe:OnAddonLoaded(...)
 end
 
 function AuctionSnipe:OnAuctionHouseShow()
-    if (self.isInited) then
-        AuctionList:Clear();
-    end
+  
 end   
 
 function AuctionSnipe:OnAuctionHouseClosed()
     if (self.isInited) then
         self:Stop();
+        
+        if (not Utils:IsClassic()) then
+            AuctionList:CancelCommoditiesPurchase();
+        end
+        
         wipe(seenResults);
+        
+        Query.page = 0;
         Query:ClearBlacklist();
         AuctionList:Recycle();
+        
         self.baseTreeView:ReleaseView();
         self.filterTreeView:ReleaseView();
+        
         Sources:ClearCache();
     end
 end
@@ -951,8 +958,6 @@ function AuctionSnipe:Show()
     if (self.frame and self.isInited) then
         RegisterEvents(rootFrame, EVENTS_TO_REGISTER);
     end
-
-    AuctionList:Clear();
 
     self:BuildTreeViewFilters();
     self.filterTreeView.items = opTreeViewItems;
@@ -1040,7 +1045,7 @@ function AuctionSnipe:Start()
     end
 
     scanIndex = 1;
-    Query.index = 0;
+    Query.page = 0;
     Query:AssignDefaults(ilevel, maxBuyout, quality, maxPercent);
     Query:AssignSnipingOps(self.activeOps);
     self.state = STATES.INIT;
@@ -1054,10 +1059,6 @@ function AuctionSnipe:Stop()
 
     wipe(blockList);
     wipe(blocks);
-
-    if (not Utils:IsClassic()) then
-        AuctionList:CancelCommoditiesPurchase();
-    end
 
     self.startButton:Enable();
     self.stopButton:Disable();
