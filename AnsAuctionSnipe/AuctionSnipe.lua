@@ -119,6 +119,18 @@ local blockList = {};
 BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
 BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
 
+local function RegisterEvents(frame, events) 
+    for i,v in ipairs(events) do
+        frame:RegisterEvent(v);
+    end
+end
+
+local function UnregisterEvents(frame, events)
+    for i,v in ipairs(events) do
+        frame:UnregisterEvent(v);
+    end
+end
+
 local function GetOwners(result)
     if (#result.owners == 0) then
         return "";
@@ -365,7 +377,7 @@ function AuctionSnipe:TryAndSearch()
 end
 
 function AuctionSnipe:IsThrottled()
-    return time() - throttleTime < 5;
+    return false;
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
@@ -896,12 +908,18 @@ function AuctionSnipe:OnAddonLoaded(...)
 end
 
 function AuctionSnipe:OnAuctionHouseShow()
-  
 end   
 
 function AuctionSnipe:OnAuctionHouseClosed()
     if (self.isInited) then
+        if(self.frame) then
+            UnregisterEvents(rootFrame, EVENTS_TO_REGISTER);
+        end
+
         self:Stop();
+
+        throttleMessageReceived = true;
+        throttleWaitingForSend = false;
         
         if (not Utils:IsClassic()) then
             AuctionList:CancelCommoditiesPurchase();
@@ -920,18 +938,6 @@ function AuctionSnipe:OnAuctionHouseClosed()
     end
 end
 
-local function RegisterEvents(frame, events) 
-    for i,v in ipairs(events) do
-        frame:RegisterEvent(v);
-    end
-end
-
-local function UnregisterEvents(frame, events)
-    for i,v in ipairs(events) do
-        frame:UnregisterEvent(v);
-    end
-end
-
 ---
 --- Close Handler
 ---
@@ -942,6 +948,9 @@ function AuctionSnipe:Close()
     end
 
     self:Stop();
+
+    throttleMessageReceived = true;
+    throttleWaitingForSend = false;
 
     wipe(opTreeViewItems);
     wipe(baseTreeViewItems);

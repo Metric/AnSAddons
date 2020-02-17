@@ -22,10 +22,20 @@ local EXPIRED_TEXT = gsub(AUCTION_EXPIRED_MAIL_SUBJECT, "%%s", "");
 local CANCELLED_TEXT = gsub(AUCTION_REMOVED_MAIL_SUBJECT, "%%s", "");
 local OUTBID_TEXT = gsub(AUCTION_OUTBID_MAIL_SUBJECT, "%%s", "");
 
+local takeItemQueue = {};
+local autoLootQueue = {};
+local takeMoneyQueue = {};
+
+local oTakeMoney = nil;
+local oTakeItem = nil;
+local oAutoLoot = nil;
+
+
 function MailTracker:OnLoad()
     EventManager:On("MAIL_SHOW", self.OnMailShow);
     EventManager:On("MAIL_CLOSED", self.OnMailClose);
     EventManager:On("MAIL_INBOX_UPDATE", self.OnMailUpdate);
+    EventManager:On("UPDATE", self.onUpdate);
 
     Utils:Hook("TakeInboxItem", MailTracker.TakeItem);
     Utils:Hook("TakeInboxMoney", MailTracker.TakeMoney);
@@ -34,31 +44,100 @@ function MailTracker:OnLoad()
 end
 
 function MailTracker.AutoLoot(ofn, index)
+    oAutoLoot = ofn;
+
     if (MailTracker:ProcessMail(index)) then
+        autoLootQueue[index] = nil;
+
         return ofn(index);
+    else
+        autoLootQueue[index] = time();
     end
 end
 
 function MailTracker.TakeMoney(ofn, index)
+    oTakeMoney = ofn;
+
     if (MailTracker:ProcessMail(index)) then
+        takeMoneyQueue[index] = nil;
+
         return ofn(index);
+    else
+        takeMoneyQueue[index] = time();
     end
 end
 
 function MailTracker.TakeItem(ofn, index, itemIndex)
+    oTakeItem = ofn;
+
     if (MailTracker:ProcessMail(index, itemIndex)) then
+        takeItemQueue[index.."."..itemIndex] = nil;
+
         return ofn(index, itemIndex);
+    else
+        if (not takeItemQueue[index.."."..itemIndex]) then
+            takeItemQueue[index.."."..itemIndex] = {index, itemIndex, time()};
+        else
+            takeItemQueue[index.."."..itemIndex][3] = time();
+        end
     end
 end
 
-function MailTracker.OnMailShow()
+function MailTracker.OnUpdate()
+    if (mailShown) then
+        for k,v in pairs(takeItemQueue) do
+            if (v and time() - v[3] >= 0.2) then
+                MailTracker.TakeItem(oTakeItem, v[1], v[2]);
+            end
+        end
+        for k,v in pairs(autoLootQueue) do
+            if (v and time() - v >= 0.2) then
+                MailTracker.AutoLoot(oAutoLoot, k);
+            end
+        end
+        for k,v in pairs(takeMoneyQueue) do
+            if (v and time() - v >= 0.2) then
+                MailTracker.TakeMoney(oTakeMoney, k);
+            end
+        end
+    end
+end
+
+function MailTracker.Prepare()
+    -- so data will be availble by the time
+    -- the mail is actually opened for looting
+    -- in most cases, otherwise the queues will 
+    -- handle the rest
+
+    local num = GetInboxNumItems();
+    if (readyToProcessMail < num + 1) then
+        for i = 1, num do
+            local j = GetInboxHeaderInfo(i);
+            local k = GetInboxInvoiceInfo(i);
+            readyToProcessMail = readyToProcessMail + 1;
+        end
+    end
+end
+
+function MailTracker.OnMailShow()   
+    -- clear queues
+    wipe(takeMoneyQueue);
+    wipe(takeItemQueue);
+    wipe(autoLootQueue);
+
     mailShown = true;
     mailCheckTime = time();
+    MailTracker.Prepare();
 end
 
 function MailTracker.OnMailClose()
     mailShown = false;
     readyToProcessMail = 0;
+    
+    -- clear queues
+    wipe(takeMoneyQueue);
+    wipe(takeItemQueue);
+    wipe(autoLootQueue);
 end
 
 function MailTracker.OnMailUpdate()
@@ -66,16 +145,8 @@ function MailTracker.OnMailUpdate()
         if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
             return;
         end
-        -- so data will be availble by the time
-        -- the mail is actually opened for looting
-        local num = GetInboxNumItems();
-        if (readyToProcessMail < num + 1) then
-            for i = 1, num do
-                local j = GetInboxHeaderInfo(i);
-                local k = GetInboxInvoiceInfo(i);
-            end
-            readyToProcessMail = readyToProcessMail + 1;
-        end
+ 
+        MailTracker.Prepare();
     end
 end
 
@@ -98,11 +169,10 @@ function MailTracker:ProcessMail(idx, itemIndex)
         return true;
     end
 
-
-    local sender, subject, money, codAmount, daysLeft, itemCount, wasRead = select(3, GetInboxHeaderInfo(idx));
+    local _, stationaryIcon, sender, subject, money, codAmount, daysLeft, itemCount, wasRead = GetInboxHeaderInfo(idx);
     local invoiceType, itemName, buyer, bid, _, deposit, ahcut, _, _, _, quantity = GetInboxInvoiceInfo(idx);
 
-    if (idx > readyToProcessMail) then
+    if (not subject) then
         return false;
     end
 

@@ -157,6 +157,10 @@ function AnsCore:EventHandler(frame, event, ...)
     end
 end
 
+function AnsCore:OnUpdate()
+    EventManager:Emit("UPDATE");
+end
+
 function AnsCore.SaveMiniButton(angle)
     Config.MiniButton(angle);
 end

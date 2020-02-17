@@ -313,6 +313,7 @@ function AuctionList:Recycle()
     end
 
     wipe(self.items);
+    self:Refresh();
 end
 
 function AuctionList:RemoveAuctionAmount(block, count)

@@ -12,6 +12,9 @@
             <OnHide>
                 AnsCore.Window:OnHide();
             </OnHide>
+            <OnUpdate>
+                AnsCore:OnUpdate();
+            </OnUpdate>
             <OnDragStart>
                 self:StartMoving();
             </OnDragStart>
