@@ -86,17 +86,17 @@ end
 function MailTracker.OnUpdate()
     if (mailShown) then
         for k,v in pairs(takeItemQueue) do
-            if (v and time() - v[3] >= 0.2) then
+            if (v and time() - v[3] >= 2) then
                 MailTracker.TakeItem(oTakeItem, v[1], v[2]);
             end
         end
         for k,v in pairs(autoLootQueue) do
-            if (v and time() - v >= 0.2) then
+            if (v and time() - v >= 2) then
                 MailTracker.AutoLoot(oAutoLoot, k);
             end
         end
         for k,v in pairs(takeMoneyQueue) do
-            if (v and time() - v >= 0.2) then
+            if (v and time() - v >= 2) then
                 MailTracker.TakeMoney(oTakeMoney, k);
             end
         end
