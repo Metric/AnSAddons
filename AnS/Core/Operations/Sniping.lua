@@ -240,7 +240,7 @@ function Sniping:IsValid(item, exact)
     local presult = nil;
     if (price ~= nil and #price > 0) then
         presult = Sources:Query(price, item);
-        if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and presult > item.ppu)) then
+        if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and item.ppu > presult)) then
             return false;
         end
     end
