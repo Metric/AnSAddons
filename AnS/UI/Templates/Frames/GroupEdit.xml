@@ -64,12 +64,6 @@
                     <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parentIds" x="0" y="-5" />
                 </Anchors>
             </Button>
-            <Button parentKey="MoveGroup" name="$parentMoveGroup" text="Move Group" inherits="AnsStandardButtonTemplate">
-                <Size x="100" y="20" />
-                <Anchors>
-                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentInventoryList" x="0" y="-5" />
-                </Anchors>
-            </Button>
             <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="-182" y="32" />

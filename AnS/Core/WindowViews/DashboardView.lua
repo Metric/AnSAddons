@@ -47,6 +47,7 @@ function Dashboard:OnLoad(f)
 end
 
 function Dashboard:Init()
+    local this = self;
     local tab = self.tab;
 
     -- register for event updates to gold log

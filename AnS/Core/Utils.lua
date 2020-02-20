@@ -86,6 +86,125 @@ function Utils:GetNameFromLink(link)
     return tbl[4];
 end
 
+function Utils:ParseGroups(groups, result)
+    local tempTbl = self:GetTable();
+    local queueTbl = self:GetTable();
+    local count = 0;
+
+    for i,v in ipairs(groups) do
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        if (not tempTbl[g.id]) then
+            tempTbl[g.id] = 1;
+            count = count + self:ParseIds(g.ids, result);
+
+            for i,v in ipairs(g.children) do
+                if (not tempTbl[v.id]) then
+                    tinsert(queueTbl, v);
+                end
+            end
+        end
+    end
+
+    self:ReleaseTable(queueTbl);
+    self:ReleaseTable(tempTbl);
+
+    return count;
+end
+
+function Utils:ParseIds(ids, result)
+    local tmp = "";
+    local count = 0;
+    for i = 1, #ids do
+        local c = ids:sub(i,i);
+        if (c == ",") then
+            if (self:ParseItem(tmp, result)) then
+                count = count + 1;
+            end
+            tmp = "";
+        else
+            tmp = tmp..c;
+        end
+    end
+
+    if (#tmp > 0) then
+        if (self:ParseItem(tmp, result)) then
+            count = count + 1;
+        end
+    end
+
+    return count;
+end
+
+function Utils:ParseItem(item, result)
+    local _, id = strsplit(":", item);
+    if (id) then
+        result[_..":"..id] = 1;
+        result[item] = 1;
+        return true;
+    else
+
+        local tn = tonumber(_);
+        if (tn) then
+            result["i:"..tn] = 1;
+            return true;
+        end
+    end
+
+    return false;
+end
+
+function Utils:ContainsGroup(tbl, id)
+    for i,v in ipairs(tbl) do
+        if(v.id == id) then
+            return true;
+        end
+    end
+
+    return false;
+end
+
+function Utils:GetGroupFromId(id)
+    local tempTbl = self:GetTable();
+    local queueTbl = self:GetTable();
+
+    for i,v in ipairs(Config.Groups()) do
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        if (not tempTbl[g.id]) then
+            tempTbl[g.id] = 1;
+            if (g.id == id) then
+                self:ReleaseTable(queueTbl);
+                self:ReleaseTable(tempTbl);
+                return g;
+            end
+
+            for i,v in ipairs(g.children) do
+                if (not tempTbl[v.id]) then
+                    tinsert(queueTbl, v);
+                end
+            end
+        end
+    end
+
+    self:ReleaseTable(queueTbl);
+    self:ReleaseTable(tempTbl);
+
+    return nil;
+end
+
+function Utils:CollectGarbage()
+    local preGC = collectgarbage("count")
+    collectgarbage("collect")
+    print("AnS - Collected " .. math.ceil((preGC-collectgarbage("count")) / 1024) .. " MB of garbage");
+end
+
 function Utils:FormatNumber(amount)
     local formatted = amount
     while true do  
@@ -96,7 +215,6 @@ function Utils:FormatNumber(amount)
     end
     return formatted
 end
-
 
 function Utils:PriceToFormatted(prefix, val, negative)
     local color = "|cFFFFFFFF";

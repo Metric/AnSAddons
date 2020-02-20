@@ -1,4 +1,11 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsCoreUpdater">
+        <Scripts>
+            <OnUpdate>
+                AnsCore:OnUpdate(elapsed);
+            </OnUpdate>
+        </Scripts>
+    </Frame>
     <Frame name="AnsCore" hidden="true" enableMouse="true" movable="true" frameStrata="HIGH">
         <Scripts>
             <OnLoad>
@@ -12,9 +19,6 @@
             <OnHide>
                 AnsCore.Window:OnHide();
             </OnHide>
-            <OnUpdate>
-                AnsCore:OnUpdate();
-            </OnUpdate>
             <OnDragStart>
                 self:StartMoving();
             </OnDragStart>

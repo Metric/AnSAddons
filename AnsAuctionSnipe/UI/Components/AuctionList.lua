@@ -156,7 +156,7 @@ function AuctionList:SetItems(items)
     wipe(self.items);
     for i,v in ipairs(items) do
         if (not Query:IsBlacklisted(v)) then
-            tinsert(self.items, v:Clone());
+            tinsert(self.items, v);
         end
     end 
     self:Sort(self.lastSortMode, true);
@@ -307,9 +307,9 @@ function AuctionList:Recycle()
             for k,c in ipairs(v.auctions) do
                 Recycler:Recycle(c);
             end
+        else
+            Recycler:Recycle(v);
         end
-
-        Recycler:Recycle(v);
     end
 
     wipe(self.items);

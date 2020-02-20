@@ -56,7 +56,6 @@ function GroupEdit:OnLoad(f)
 
     self.addItem:SetScript("OnClick", function() this:AddItems(); end);
 
-    self.moveGroup = self.frame.MoveGroup;
     self.removeGroup = self.frame.RemoveGroup;
     self.confirmDelete = self.frame.ConfirmDelete;
 
@@ -75,19 +74,6 @@ function GroupEdit:OnLoad(f)
                     this.selected
                 );
             end 
-        );
-    end
-
-    if (self.moveGroup) then
-        self.moveGroup:SetScript("OnClick", 
-            function()
-                if (not this.selected) then
-                    return;
-                end
-                if (this.onMove) then
-                    this.onMove(this.moveGroup);
-                end
-            end
         );
     end
 
@@ -217,7 +203,15 @@ function Groups:OnLoad(f)
     self.moveGroup = tab.MoveGroup;
 
     self.groupsTree = TreeView:New(self.groups,
-        nil,
+    {
+        rowHeight = 20,
+        childIndent = 16,
+        template = "AnsTreeRowTemplate",
+        multiselect = false,
+        useNormalTexture = false,
+        dragAndDrop = function(item, target) this:MoveGroupToTarget(item, target); end,
+        dragTemplate = "AnsTreeRowDragTemplate"
+    },
         this.Select,
         this.MoveGroupUp,
         this.MoveGroupDown,
@@ -248,6 +242,44 @@ end
 
 function Groups.OnEdit()
     Groups:Refresh();
+end
+
+function Groups:MoveGroupToTarget(selected, item)
+    if (selected and selected.filter) then
+        -- can't move it into ourself
+        if (item.filter == selected.filter) then
+            return;
+        end
+
+        local f = selected.filter;
+        local parent = selected.parent;
+
+        if (parent) then
+            for i,v in ipairs(parent.children) do
+                if (v == f) then
+                    tremove(parent.children, i);
+                    break;
+                end
+            end
+        else
+            for i,v in ipairs(Config.Groups()) do
+                if (v == f) then
+                    tremove(Config.Groups(), i);
+                    break;
+                end
+            end
+        end
+
+        if (item.filter) then
+            tinsert(item.filter.children, f);
+            selected.parent = item.filter;
+        else
+            tinsert(Config.Groups(), f);
+            selected.parent = nil;
+        end
+
+        self:Refresh();
+    end
 end
 
 function Groups:MoveGroupTo(item)
@@ -453,6 +485,11 @@ function Groups:UpdateTree(children, parent, filter, selectedComparer, showAdd)
                     self:UpdateTree(v.children, child.children, v, selectedComparer, showAdd);
                 end
             else
+                -- forgot to update the name
+                -- if it still the same id doh!
+                -- thus it appeared the group name
+                -- was not saving properly when editing!
+                child.name = v.name;
                 if (#v.children > 0) then
                     if (#v.children < #child.children) then
                         for i = #v.children + 1, #child.children do

@@ -251,7 +251,10 @@
             <Color r="1" g="1" b="1" a="0.25" />
         </HighlightTexture>
      </Button>
-     <Button name="AnsTreeRowTemplate" inherits="AnsTab2Template" virtual="true">
+     <Button name="AnsTreeRowDragTemplate" enableMouse="true" movable="true" inherits="AnsTab2Template" virtual="true">
+        <Size x="200" y="20" />
+     </Button>
+     <Button name="AnsTreeRowTemplate" enableMouse="true" movable="true" inherits="AnsTab2Template" virtual="true">
         <Size x="200" y="20"/>
 		<Frames>
 			<Button name="$parentExpander" text="+" inherits="AnsStandardButtonTemplate">

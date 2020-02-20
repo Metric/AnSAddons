@@ -13,7 +13,7 @@ local stackTracker = {};
 
 local function Sort(a,b)
     if (a.name == b.name) then
-        return a.count < b.count;
+        return a.total < b.total;
     end
 
     return a.name < b.name;
@@ -31,15 +31,19 @@ function BagScanner:GetAuctionable()
 
     for i,v in ipairs(self.items) do
         if (v and v.link and v.bound ~= nil and v.bound == false and v.count > 0 and not v.hidden and v.name) then
-            if (not stackTracker[v.name..v.count]) then
-                stackTracker[v.name..v.count] = v;
+            if (not stackTracker[v.link]) then
+                stackTracker[v.link] = v;
+                if (v.stacks) then
+                    wipe(v.stacks);
+                else
+                    v.stacks = {};
+                end
                 v.total = v.count;
-                v.stacks = 1;
                 tinsert(auctionItemCache, v);
             else
-                local c = stackTracker[v.name..v.count];
+                local c = stackTracker[v.link]
                 c.total = c.total + v.count;
-                c.stacks = c.stacks + 1;
+                tinsert(c.stacks, v);
             end
         end
     end

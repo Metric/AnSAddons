@@ -9,6 +9,8 @@ local Utils = Ans.Utils;
 
 local DefaultGroups = Ans.Data;
 
+local AuctionQuery = Ans.Auctions.Query;
+
 local AHFrame = nil;
 local AH_TAB_CLICK = nil;
 
@@ -135,7 +137,9 @@ function AnsCore:RegisterEvents(frame)
     -- move trade skill to Crafting:RegisterEvents()
     frame:RegisterEvent("TRADE_SKILL_SHOW");
     frame:RegisterEvent("TRADE_SKILL_CLOSE");
+
     Analytics:RegisterEvents(frame);
+    AuctionQuery:RegisterEvents(frame);
 end
 
 function AnsCore:AddOnLoaded(...)
@@ -157,8 +161,8 @@ function AnsCore:EventHandler(frame, event, ...)
     end
 end
 
-function AnsCore:OnUpdate()
-    EventManager:Emit("UPDATE");
+function AnsCore:OnUpdate(elapsed)
+    EventManager:Emit("UPDATE", elapsed);
 end
 
 function AnsCore.SaveMiniButton(angle)

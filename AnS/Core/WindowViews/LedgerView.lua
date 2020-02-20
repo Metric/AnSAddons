@@ -12,7 +12,7 @@ Ledger.sortMode = {
     ["quantity"] = false,
     ["type"] = false,
     ["item"] = false,
-    ["time"] = false
+    ["time"] = true
 };
 
 Ledger.lastSortMode = "time";
@@ -62,6 +62,7 @@ function Ledger:OnLoad(f)
 end
 
 function Ledger:Init()
+    local this = self;
     local tab = self.tab;
 
     EventManager:On("LOG_UPDATE", function() this:Refresh(); end);

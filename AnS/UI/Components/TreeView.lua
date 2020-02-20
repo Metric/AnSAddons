@@ -27,7 +27,9 @@ function TreeView:New(parent, style, selectFn, upFn, downFn, addFn, renderFn)
         childIndent = 16,
         template = "AnsTreeRowTemplate",
         multiselect = true,
-        useNormalTexture = false
+        useNormalTexture = false,
+        dragAndDrop = nil,
+        dragTemplate = "AnsTreeRowDragTemplate"
     };
     
     fv.style.totalRows = math.floor(fv.frame:GetHeight() / fv.style.rowHeight);
@@ -94,6 +96,13 @@ function TreeView:CreateRows()
         end
 
         f:SetScript("OnClick", function() fv:OnSelect(f) end);
+    end
+end
+
+function TreeView:RestorePositions()
+    for i,v in ipairs(self.rows) do
+        v:ClearAllPoints();
+        v:SetPoint("TOPLEFT", self.scrollFrame, "TOPLEFT", 0, (i - 1) * -self.style.rowHeight);
     end
 end
 
@@ -165,7 +174,55 @@ function TreeView:UpdateByData(data)
     end
 end
 
+function TreeView:GetRowFromMouse()
+    for i,v in ipairs(self.rows) do
+        if (v:IsMouseOver()) then
+            return v;
+        end
+    end
+
+    return nil;
+end
+
+function TreeView:ShowDrag(row)
+    local this = self;
+    if (not self.ghost and self.style.dragTemplate) then
+        self.ghost = CreateFrame("BUTTON", self.frame:GetName().."Ghost", self.scrollFrame:GetParent(), self.style.dragTemplate);
+    end
+
+    if (self.ghost) then
+        local ghost = self.ghost;
+        local cx, cy = GetCursorPosition();
+        cx = cx / ghost:GetEffectiveScale();
+        cy = cy / ghost:GetEffectiveScale();
+
+        self.ghost:SetID(row:GetID());
+        self.ghost.item = row.item;
+
+        ghost:SetHeight(self.style.rowHeight);
+        ghost:SetWidth(self.scrollFrame:GetWidth());
+        ghost:ClearAllPoints();
+        ghost:SetPoint("CENTER", nil, "BOTTOMLEFT", cx, cy);
+        ghost:SetFrameLevel(9000);
+        ghost:LockHighlight();
+
+        if (_G[ghost:GetName().."Text"]) then
+            _G[ghost:GetName().."Text"]:SetPoint("TOPLEFT", row.item.offset, 0);
+            _G[ghost:GetName().."Text"]:SetWidth(row.origTextWidth - row.item.offset);
+            _G[ghost:GetName().."Text"]:SetText(row.item.name);
+        end
+
+        if (self.renderFn) then
+            self.renderFn(self.ghost, self.ghost.item);
+        end
+
+        self.ghost:Show();
+        self.ghost:StartMoving();
+    end
+end
+
 function TreeView:UpdateRow(offset, row)
+    local this = self;
     if (offset <= #self.view) then
         row.item = self.view[offset];
 
@@ -223,10 +280,42 @@ function TreeView:UpdateRow(offset, row)
             self.renderFn(row, row.item);
         end
 
+        if (self.style.dragAndDrop) then
+            row:RegisterForDrag("LeftButton");
+            row:SetScript("OnDragStart", 
+                function(self)
+                    this:ShowDrag(self);
+                end);
+            row:SetScript("OnDragStop", 
+                function(self) 
+                    if (not this.ghost) then
+                        return;
+                    end
+                    this.ghost:StopMovingOrSizing() 
+                    this.ghost:Hide();
+
+                    local target = this:GetRowFromMouse();
+
+                    if (target and target.item) then
+                        this:OnDrop(target.item);
+                    end
+                end);
+        end
+
         row:Show();
     else
         row:Hide();
     end
+end
+
+function TreeView:OnDrop(target)
+    local fn = self.style.dragAndDrop;
+
+    if (fn and self.ghost.item and target) then
+        fn(self.ghost.item, target);
+    end
+
+    self.ghost.item = nil;
 end
 
 function TreeView:InsertChildren(children, offset)

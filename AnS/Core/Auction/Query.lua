@@ -2,6 +2,7 @@ local Ans = select(2, ...);
 local Config = Ans.Config;
 local Utils = Ans.Utils;
 local Sources = Ans.Sources;
+local EventManager = Ans.EventManager;
 
 local Query = {};
 Query.__index = Query;
@@ -17,7 +18,35 @@ Ans.Auctions.Recycler = Recycler;
 local Auction = {};
 Auction.__index = Auction;
 
-local SnipingOp = Ans.Operations.Sniping;
+local throttledMessageReceived = true;
+local throttleWaitingForSend = true;
+local throttleTime = time();
+
+local EVENTS_TO_REGISTER = {};
+
+local DEFAULT_ITEM_SORT = { sortOrder = 0, reverseSort = false };
+
+local ownedAuctions = {};
+
+if (not Utils:IsClassic()) then
+    EVENTS_TO_REGISTER = {
+        "AUCTION_HOUSE_BROWSE_RESULTS_ADDED",
+        "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED",
+        "ITEM_SEARCH_RESULTS_ADDED",
+        "ITEM_SEARCH_RESULTS_UPDATED",
+        "COMMODITY_SEARCH_RESULTS_ADDED",
+        "COMMODITY_SEARCH_RESULTS_UPDATED",
+        "AUCTION_HOUSE_THROTTLED_MESSAGE_RESPONSE_RECEIVED",
+        "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED",
+        "AUCTION_HOUSE_THROTTLED_MESSAGE_SENT",
+        "AUCTION_HOUSE_THROTTLED_MESSAGE_QUEUED",
+        "OWNED_AUCTIONS_UPDATED"
+    };
+else
+    EVENTS_TO_REGISTER = {
+        "AUCTION_ITEM_LIST_UPDATE"
+    };
+end
 
 function Auction:New()
     local a = {};
@@ -64,10 +93,13 @@ function Auction:Clone()
     a.iLevel = self.iLevel;
     a.vendorsell = self.vendorsell;
     a.isCommodity = self.isCommodity;
+    a.isPet = self.isPet;
     a.auctionId = self.auctionId;
     a.itemIndex = self.itemIndex;
     a.avg = self.avg;
     a.auctions = self.auctions;
+    a.op = self.op;
+    a.isEquipment = self.isEquipment;
     return a;
 end
 
@@ -100,10 +132,52 @@ local function ItemHash(item, owner)
     return item.link..item.count..item.ppu..owner;
 end
 
+local function ItemKeyHash(itemKey)
+    if (not itemKey) then
+        return nil;
+    end
+
+    return ""..itemKey.itemID..itemKey.itemLevel..itemKey.itemSuffix..itemKey.battlePetSpeciesID;
+end
+
+local function GetOwners(result)
+    if (#result.owners == 0) then
+        return "";
+    elseif (#result.owners == 1) then
+        return result.owners[1];
+    else
+        return result.owners;
+    end
+end
+
+local STATES = {};
+STATES.NONE = 0;
+STATES.BROWSE = 1;
+STATES.SEARCH = 2;
+STATES.CLASSIC_SEARCH = 3;
+STATES.BROWSE_MORE = 4;
+STATES.SEARCH_MORE = 5;
+
+Query.ItemKeyHash = ItemKeyHash;
+
 Query.ops = {};
 Query.page = 0;
 Query.itemIndex = 1;
 Query.blacklist = {};
+Query.groupResults = {};
+Query.queuedSearches = {};
+
+Query.BrowseFilterFunc = nil;
+Query.fullBrowseResults = false;
+Query.state = STATES.NONE;
+
+function Query:RegisterEvents(frame)
+    for i,v in ipairs(EVENTS_TO_REGISTER) do
+        frame:RegisterEvent(v);
+    end
+    frame:RegisterEvent("AUCTION_HOUSE_SHOW");
+    frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
+end
 
 function Query:Blacklist(auction)
     self.blacklist[ItemHash(auction)] = true;
@@ -128,9 +202,7 @@ function Query:AssignSnipingOps(ops)
     wipe(self.ops);
 
     for i,v in ipairs(ops) do
-        local op = SnipingOp:FromConfig(v);
-        op:ParseGroups();
-        tinsert(self.ops, op);
+        tinsert(self.ops, v);
     end
 end
 
@@ -347,6 +419,8 @@ function Query:IsFilteredGroup(group)
     return nil, false;
 end
 
+-- classic
+
 function Query:IsReady()
     local query, queryAll = CanSendAuctionQuery();
     return query;
@@ -357,10 +431,15 @@ function Query:IsAllReady()
     return queryAll;
 end
 
-function Query:Search(filter)
+function Query:Search(filter, autoPage, op)
     local ready = self:IsReady();
     if (ready) then
+        self.state = STATES.CLASSIC_SEARCH;
         self.itemIndex = 1;
+        self.op = op;
+        self.filter = filter;
+        self.autoPage = autoPage;
+        EventManager:On("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
         QueryAuctionItems(filter.searchString or "", filter.minLevel, filter.maxLevel, self.page, false, filter.quality, false, false);
     end
     return ready;
@@ -370,6 +449,8 @@ function Query:All()
     local ready = self:IsAllReady();
     if (ready) then
         self.itemIndex = 1;
+        self.filter = nil;
+        self.autoPage = false;
         QueryAuctionItems(nil, nil, nil, 0, false, 1, true);
     end
     return ready;
@@ -378,6 +459,54 @@ end
 function Query:HasNext()
     local count, total = GetNumAuctionItems("list");
     return self.itemIndex <= count;
+end
+
+-- helper function for Owned Auctions for Classic
+function Query:GetOwnedAuctionClassic(index)
+    local auction = Recycler:Get();
+
+    auction.name,
+    auction.texture,
+    auction.count,
+    auction.quality,
+    auction.canUse,
+    auction.level,
+    auction.huh,
+    auction.minBid,
+    auction.minIncrement,
+    auction.buyoutPrice,
+    auction.bid,
+    auction.highBidder,
+    auction.bidderFullName,
+    auction.owner,
+    auction.ownerFullName,
+    auction.saleStatus,
+    auction.id,
+    auction.hasAll = GetAuctionItemInfo("owner", index);
+    auction.link = GetAuctionItemLink("owner", index);
+    auction.time = GetAuctionItemTimeLeft("owner", index);
+    auction.isPet = false;
+    auction.isCommodity = false;
+    auction.iLevel = 0;
+    auction.vendorsell = 0;
+    auction.itemIndex = index;
+
+    if (not auction.link) then
+        Recycler:Recycle(auction);
+        return nil;
+    end
+
+    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0 or not auction.hasAll) then
+        Recycler:Recycle(auction);
+        return nil;
+    end
+
+    auction.tsmId = Utils:GetTSMID(auction.link);
+
+    auction.ppu = math.floor(auction.buyoutPrice / auction.count);
+    auction.hash = ItemHash(auction);
+
+    return auction;
 end
 
 function Query:Next(auction)
@@ -418,8 +547,6 @@ function Query:Next(auction)
         return nil;
     end
 
-    auction.tsmId = Utils:GetTSMID(auction.link);
-
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
     if (itemName) then
         auction.iLevel = itemLevel;
@@ -431,8 +558,14 @@ function Query:Next(auction)
         return nil;
     end
 
+    auction.tsmId = Utils:GetTSMID(auction.link);
+
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
     auction.hash = ItemHash(auction);
+
+    if (self.op) then
+        auction.op = self.op;
+    end
 
     return auction;
 end
@@ -440,6 +573,10 @@ end
 function Query:Count()
     local count, total = GetNumAuctionItems("list");
     return count;
+end
+
+function Query:NextPage()
+    self.page = self.page + 1;
 end
 
 function Query:IsFirst()
@@ -459,3 +596,475 @@ function Query:Last()
     end
     self.page = last;
 end
+
+function Query:OwnedCount()
+    local count, total = GetNumAuctionItems("owner");
+    return total;
+end
+
+function Query.OnListUpdate()
+    -- we remove it as we only want the first update initiated by a search
+    EventManager:RemoveListener("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
+
+    while (Query:HasNext()) do
+        local item = Query:Next();
+        if (item) then
+            EventManager:Emit("QUERY_CLASSIC_RESULT", item);
+        end
+    end
+
+    if (not Query:IsLast() and Query.autoPage) then
+        Query:NextPage();
+        if (not Query:Search(Query.filter, Query.autoPage, Query.op)) then
+            Query.delay = time();
+        end
+    else
+        EventManager:Emit("QUERY_CLASSIC_COMPLETE");
+        self.filter = nil;
+        self.op = nil;
+    end
+end
+
+local browseResults = {};
+local browseIndex = 1;
+
+-- retail and classic specific updates
+
+function Query.OnUpdate()
+    -- this is for when classic search fails on auto page
+    if (Query.state == STATES.CLASSIC_SEARCH) then
+        if (Query.delay and time() - Query.delay > 1 and Query.filter) then
+            if (not Query:Search(Query.filter, Query.autoPage, Query.op)) then
+                if (Query.autoPage) then
+                    Query.delay = time();
+                else
+                    Query.delay = nil;
+                end
+            else
+                Query.delay = nil;
+            end
+        end
+    -- these ar for retail for when it is in the specified state
+    -- but we received a ThrottleDropped message
+    -- thus we try and try again
+    elseif (Query.state == STATES.BROWSE) then
+        if (Query.delay and time() - Query.delay > 1 and Query.filter) then
+            if (not Query.Browse(Query.filter)) then
+                Query.delay = time();
+            else
+                Query.delay = nil;
+            end
+        end
+    elseif (Query.state == STATES.SEARCH) then
+        if (Query.delay and time() - Query.delay > 1 and Query.filter and Query.filter.item) then
+            if (not Query.SearchForItem(Query.filter.item, Query.filter.byItemID)) then
+                Query.delay = time();
+            else
+                Query.delay = nil;
+            end
+        end
+    elseif (Query.state == STATES.BROWSE_MORE) then
+        if (Query.delay and time() - Query.delay > 1) then
+            Query.delay = nil;
+            Query.BrowseMore();
+        end
+    elseif (Query.state == STATES.SEARCH_MORE) then
+        if (Query.delay and time() - Query.delay > 1 and Query.moreItem) then
+            Query.delay = nil;
+            if (Query.moreItem.isCommodity) then
+                C_AuctionHouse.RequestMoreItemSearchResults(Query.moreItem.key);
+            else
+                C_AuctionHouse.RequestMoreCommoditySearchResults(Query.moreItem.key);
+            end
+        end
+    end
+
+    if (#browseResults > 0 and browseIndex <= #browseResults and Query.BrowseFilterFunc) then
+        local count = 0;
+        while (browseIndex <= #browseResults and count < Config.Sniper().itemsPerUpdate) do
+
+            local group = browseResults[browseIndex];
+
+            if (group) then
+                local filtered = Query.BrowseFilterFunc(group);
+                if (filtered) then
+                    tinsert(Query.groupResults, filtered);
+                end
+            end
+
+            browseIndex = browseIndex + 1;
+            count = count + 1;
+        end
+        
+        if (browseIndex > #browseResults) then
+            if (Query.state == STATES.BROWSE or Query.state == STATES.BROWSE_MORE) then
+                Query.state = STATES.NONE;
+                Query.filter = nil;
+            end
+
+            wipe(browseResults);
+            browseIndex = 1;
+
+            EventManager:Emit("QUERY_BROWSE_RESULTS");
+        end
+    end
+end
+
+-- retail
+
+-- helper function for Owned Auctions for Retail
+function Query:GetOwnedAuctionRetail(index)
+    local auction = Recycler:Get();
+    local info = C_AuctionHouse.GetOwnedAuctionInfo(index);
+
+    if (not info) then
+        Recycler:Recycle(auction);
+        return nil;
+    end
+
+    auction.link = info.itemLink;
+
+    local keyInfo = C_AuctionHouse.GetItemKeyInfo(info.itemKey);
+
+    if (not keyInfo) then
+        Recycler:Recycle(auction);
+        return nil;
+    end
+
+    auction.isEquipment = keyInfo.isEquipment;
+    auction.id = info.itemKey.itemID;
+    auction.auctionId = info.auctionID;
+    auction.itemKey = info.itemKey;
+    auction.status = info.status;
+    auction.count = info.quantity;
+    auction.ppu = info.buyoutAmount;
+    auction.bidder = info.bidder;
+
+    if (auction.status > 0) then
+        Recycler:Recycle(auction);
+        return nil;
+    end
+
+    if (not auction.ppu) then
+        Recycler:Recycle(auction);
+        return nil;
+    end
+
+    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
+    if (itemName) then
+        auction.quality = itemRarity;
+    end
+
+    auction.tsmId = Utils:GetTSMID(auction.link);
+
+    return auction;
+end
+
+function Query.OnOwnedUpdate()
+    for i,v in ipairs(ownedAuctions) do
+        Recycler:Recycle(v);
+    end
+
+    wipe(ownedAuctions);
+
+    local num = C_AuctionHouse.GetNumOwnedAuctions();
+
+    for i = 1, num do
+        local auction = Query:GetOwnedAuctionRetail(i);
+        if (auction) then
+            tinsert(ownedAuctions, auction);
+        end
+    end
+
+    EventManager:Emit("QUERY_OWNED_AUCTIONS", ownedAuctions);
+end
+
+-- throttle related for retail
+function Query.ThrottleReceived()
+    throttleTime = time();
+    throttleMessageReceived = true;
+end
+
+function Query.ThrottleQueued()
+    throttleMessageReceived = false;
+    throttleWaitingForSend = true;
+end
+
+function Query.ThrottleDropped()
+    throttleWaitingForSend = false;
+    throttleMessageReceived = true;
+
+    if (Query.state ~= STATES.NONE) then
+        Query.delay = time();
+    end
+end
+
+function Query.ThrottleSent()
+    throttleTime = time();
+    throttleWaitingForSend = false;
+end
+
+function Query.ClearThrottle()
+    throttleTime = 0;
+    throttleMessageReceived = true;
+    throttleWaitingForSend = false;
+end
+
+function Query.IsThrottled()
+    return throttleMessageReceived == false or throttleWaitingForSend == true;
+end
+
+function Query.Browse(filter)
+    if (Query.IsThrottled()) then
+        return false;
+    end
+
+    Query.fullBrowseResults = false;
+    wipe(Query.groupResults);
+
+    Query.state = STATES.BROWSE;
+
+    Query.filter = filter;
+    C_AuctionHouse.SendBrowseQuery(filter);
+    
+    return true;
+end
+
+function Query.BrowseMore()
+    Query.state = STATES.BROWSE_MORE;
+    C_AuctionHouse.RequestMoreBrowseResults();
+end
+
+function Query.SearchForItem(item, byItemID)
+    if (Query.IsThrottled()) then
+        return false;
+    end
+
+    local _ = GetItemInfo(item.id);
+    if (_) then
+        local info = C_AuctionHouse.GetItemKeyInfo(item.itemKey);
+        local hash = ItemKeyHash(item.itemKey);
+        if (info and hash) then
+            Query.state = STATES.SEARCH;
+
+            Query.queuedSearches[hash] = item;
+            Query.queuedSearches[item.id] = item;
+
+            Query.filter = {
+                item = item,
+                byItemID = byItemID
+            };
+
+            if (byItemID) then
+                C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+            else
+                C_AuctionHouse.SendSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+            end
+
+            return true;
+        end
+    end
+
+    -- if neither item info or item key info
+    -- then we must wait for the events for item info or item key info
+    -- then try again
+    -- otherwise, the SendSearchQuery may fail for some unknown reason
+    -- and will never trigger an event properly.
+    return false;
+end
+
+function Query.Owned()
+    if (Query.IsThrottled()) then
+        return false;
+    end
+
+    C_AuctionHouse.QueryOwnedAuctions(DEFAULT_ITEM_SORT);
+    return true;
+end
+
+-- override with your own is exiting
+function Query.IsExiting()
+    return false;
+end
+
+function Query.OnBrowseResults(added)
+    if (Query.IsExiting()) then
+        return;
+    end
+
+    if (added) then
+        for i,v in ipairs(added) do
+            if (Query.BrowseFilterFunc) then
+                tinsert(browseResults, v);
+            else
+                tinsert(Query.groupResults, v);
+            end
+        end
+    else
+        local results = C_AuctionHouse.GetBrowseResults();
+        wipe(Query.groupResults);
+        wipe(browseResults);
+        browseIndex = 1;
+
+        for i,v in ipairs(results) do
+            if (Query.BrowseFilterFunc) then
+                tinsert(browseResults, v);
+            else
+                tinsert(Query.groupResults, v);
+            end
+        end
+    end
+
+    Query.fullBrowseResults = C_AuctionHouse.HasFullBrowseResults();
+
+    if (not Query.BrowseFilterFunc or #browseResults == 0) then
+        if (Query.state == STATES.BROWSE or Query.state == STATES.BROWSE_MORE) then
+            Query.state = STATES.NONE;
+            Query.filter = nil;
+        end
+        EventManager:Emit("QUERY_BROWSE_RESULTS");
+    end
+end
+
+function Query.OnItemResults(itemKey)
+    local hash = ItemKeyHash(itemKey);
+
+    if (not hash) then
+        return;
+    end
+
+    if (not Query.queuedSearches[hash] or Query.IsExiting()) then
+        return;
+    end
+
+    if (not C_AuctionHouse.HasFullItemSearchResults(itemKey)) then
+        Query.state = STATES.SEARCH_MORE;
+        Query.moreItem = {key = itemKey, isCommodity = false};
+
+        C_AuctionHouse.RequestMoreItemSearchResults(itemKey);
+        return;
+    end
+
+    local item = Query.queuedSearches[hash];
+    item.isCommodity = false;
+    Query.queuedSearches[hash] = nil;
+    Query.queuedSearches[item.id] = nil;
+
+    for searchIndex = 1, C_AuctionHouse.GetNumItemSearchResults(itemKey) do
+        local result = C_AuctionHouse.GetItemSearchResultInfo(itemKey, searchIndex);
+        if (result.buyoutAmount) then
+            item.count = result.quantity;
+            item.ppu = result.buyoutAmount;
+            item.buyoutPrice = result.buyoutAmount;
+            item.owner = GetOwners(result);
+            item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
+
+            if (result.itemLink) then
+                item.link = result.itemLink;
+
+                if (item.link) then
+                    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.link); 
+
+                    item.quality = itemRarity;
+                    item.name = itemName;
+                    item.texture = itemIcon;
+                    item.vendorsell = itemSellPrice;
+                end
+
+                if (Utils:IsBattlePetLink(item.link)) then
+                    local info = Utils:ParseBattlePetLink(item.link);
+                    item.name = info.name;
+                    item.iLevel = info.level;
+                    item.quality = info.breedQuality;
+                    item.texture = info.icon;
+                end
+
+                item.tsmId = Utils:GetTSMID(item.link);
+            end
+
+            item.auctionId = result.auctionID;
+
+            EventManager:Emit("QUERY_SEARCH_RESULT", item);
+        end
+    end
+
+    if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
+        Query.state = STATES.NONE;
+        Query.moreItem = nil;
+        Query.filter = nil;
+    end
+    EventManager:Emit("QUERY_SEARCH_COMPLETE", item);
+end
+
+function Query.OnCommodityResults(itemID)
+    if (not Query.queuedSearches[itemID] or Query.IsExiting()) then
+        return;
+    end
+
+    if (not C_AuctionHouse.HasFullCommoditySearchResults(itemID)) then
+        Query.state = STATES.SEARCH_MORE;
+        Query.moreItem = {key = itemID, isCommodity = true};
+
+        C_AuctionHouse.RequestMoreCommoditySearchResults(itemID);
+        return;
+    end
+
+    local item = Query.queuedSearches[itemID];
+    item.isCommodity = true;
+    Query.queuedSearches[itemID] = nil;
+
+    local hash = ItemKeyHash(item.itemKey);
+
+    if (hash) then
+        Query.queuedSearches[hash] = nil;
+    end
+
+    for searchIndex = 1, C_AuctionHouse.GetNumCommoditySearchResults(itemID) do
+        local result = C_AuctionHouse.GetCommoditySearchResultInfo(itemID, searchIndex);
+        item.count = result.quantity;
+        item.ppu = result.unitPrice;
+        item.buyoutPrice = result.unitPrice * result.quantity;
+        item.owner = GetOwners(result);
+        item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
+
+        if (item.id) then
+            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
+
+            if (itemName and itemLink) then
+                item.link = itemLink;
+
+                item.quality = itemRarity;
+                item.name = itemName;
+                item.texture = itemIcon;
+                item.vendorsell = itemSellPrice;
+            end
+        end
+
+        EventManager:Emit("QUERY_SEARCH_RESULT", item);
+    end
+
+    if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
+        Query.state = STATES.NONE;
+        Query.moreItem = nil;
+        Query.filter = nil;
+    end
+    EventManager:Emit("QUERY_SEARCH_COMPLETE", item);
+end
+
+EventManager:On("AUCTION_HOUSE_THROTTLED_MESSAGE_RESPONSE_RECEIVED", Query.ThrottleReceived);
+EventManager:On("AUCTION_HOUSE_THROTTLED_MESSAGE_QUEUED", Query.ThrottleQueued);
+EventManager:On("AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED", Query.ThrottleDropped);
+EventManager:On("AUCTION_HOUSE_THROTTLED_MESSAGE_SENT", Query.ThrottleSent);
+
+EventManager:On("AUCTION_HOUSE_BROWSE_RESULTS_UPDATED", Query.OnBrowseResults);
+EventManager:On("AUCTION_HOUSE_BROWSE_RESULTS_ADDED", Query.OnBrowseResults);
+
+EventManager:On("ITEM_SEARCH_RESULTS_UPDATED", Query.OnItemResults);
+EventManager:On("ITEM_SEARCH_RESULTS_ADDED", Query.OnItemResults);
+
+EventManager:On("COMMODITY_SEARCH_RESULTS_UPDATED", Query.OnCommodityResults);
+EventManager:On("COMMODITY_SEARCH_RESULTS_ADDED", Query.OnCommodityResults);
+
+EventManager:On("OWNED_AUCTIONS_UPDATED", Query.OnOwnedUpdate);
+
+EventManager:On("UPDATE", Query.OnUpdate);

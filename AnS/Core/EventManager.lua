@@ -16,7 +16,7 @@ function EventManager:Emit(event, ...)
 
     if (listeners) then
         for _, v in ipairs(listeners) do
-            suc, result = pcall(v, ...);
+            v(...);
         end
     end
 end

@@ -31,6 +31,7 @@ UI\Templates\Frames\ConfirmDialog.xml
 UI\Templates\Frames\GroupEdit.xml
 UI\Templates\Frames\OperationViews.xml
 UI\Templates\Frames\SettingsViews.xml
+UI\Templates\Frames\Auctioning.xml
 
 ## General Components
 UI\Components\Core.lua
@@ -59,6 +60,7 @@ Data\Fish.lua
 Data\Mounts.lua
 Data\Pets.lua
 
+
 ## Special Crafting Data for Recipe
 ## Lookup for Enchanting and Mass Milling
 Core\Crafting\Data.lua
@@ -68,9 +70,12 @@ Core\Auction\Database\Core.lua
 Core\Auction\Database\TSM.lua
 Core\Auction\Database\TUJ.lua
 
-## Filters & Price Sources
+## Price Sources
 Core\PriceSource.lua
 Core\Sources.lua
+
+## Auction Queries
+Core\Auction\Query.lua
 
 ## BagScanner
 Core\BagScanner.lua
@@ -95,14 +100,12 @@ Core\Analytics\Modules\MailTracker.lua
 Core\Analytics\Modules\TradeTracker.lua
 Core\Analytics\Query.lua
 
-## Auction Queries
-Core\Auction\Query.lua
-
 ## AnS Core Window
 Core\WindowViews\DashboardView.lua
 Core\WindowViews\LedgerView.lua
 Core\WindowViews\GroupsView.lua
 Core\WindowViews\Subviews\SnipingOpView.lua
+Core\WindowViews\Subviews\AuctionOpView.lua
 Core\WindowViews\OperationsView.lua
 Core\WindowViews\Subviews\SniperSettingsView.lua
 Core\WindowViews\Subviews\GeneralSettingsView.lua
@@ -113,6 +116,8 @@ Core\WindowViews\ImportExportView.lua
 Core\Window.lua
 
 ## Special UI Hooks
+UI\Auctioning\Posting.lua
+UI\Auctioning\AuctionHook.lua
 UI\Crafting\CraftingHook.lua
 
 ## Core Base

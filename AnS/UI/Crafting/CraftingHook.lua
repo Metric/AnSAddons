@@ -254,7 +254,7 @@ local didHook = false;
 
 EventManager:On("TRADE_SKILL_SHOW", 
     function()
-        CraftingHook.TradeSkillShown = true;
+        CraftingHook.shown = true;
 
         TSFrame = TradeSkillFrame;
 
@@ -271,6 +271,6 @@ EventManager:On("TRADE_SKILL_SHOW",
 
 EventManager:On("TRADE_SKILL_CLOSE",
     function()
-        CraftingHook.TradeSkillShown = false;
+        CraftingHook.shown = false;
     end
 );

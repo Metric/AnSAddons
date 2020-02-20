@@ -2,7 +2,6 @@ local Ans = select(2, ...);
 local GroupsView = Ans.GroupsView;
 local ConfirmDialog = Ans.UI.ConfirmDialog;
 local TextInput = Ans.UI.TextInput;
-local ConfirmDialog = Ans.UI.ConfirmDialog;
 local Dropdown = Ans.UI.Dropdown;
 local TreeView = Ans.UI.TreeView;
 local ListView = Ans.UI.ListView;
@@ -22,6 +21,9 @@ Operations.selectedOp = nil;
 
 local SnipingOp = Ans.Operations.Sniping;
 local SnipingOpView = Ans.SnipingOpView;
+
+local AuctioningOp = Ans.Operations.Auctioning;
+local AuctionOpView = Ans.AuctionOpView;
 
 local selectedGroups = {};
 
@@ -55,6 +57,13 @@ function Operations:OnLoad(f)
     self.confirmDelete = self.tab.ConfirmDelete;
 
     SnipingOpView:OnLoad(self.tab);
+    SnipingOpView:Hide();
+    SnipingOpView.onEdit = function() this:Refresh(); end;
+
+    AuctionOpView:OnLoad(self.tab);
+    AuctionOpView:Hide();
+    AuctionOpView.onEdit = function() this:Refresh(); end;
+
     self.opTree = TreeView:New(self.tab.Ops,
         {rowHeight = 20, childIndent = 20, template = "AnsTreeRowAddTemplate", multiselect = false, useNormalTexture = false},
         Operations.Select,
@@ -62,8 +71,6 @@ function Operations:OnLoad(f)
         Operations.Add,
         Operations.RenderRow
     );
-    SnipingOpView:Hide();
-    SnipingOpView.onEdit = function() this:Refresh(); end;
 
     self.groupTree = TreeView:New(self.tab.Groups,
         {rowHeight = 20, childIndent = 20, template ="AnsTreeRowTemplate", multiselect = true, useNormalTexture = false},
@@ -105,7 +112,7 @@ end
 function Operations.RenderRow(row, item)
     -- item.name == "Sniping" is temporary until all ops
     -- are implemented
-    if (item.showAddButton and item.name == "Sniping") then
+    if (item.showAddButton and (item.name == "Sniping" or item.name == "Auctioning")) then
         local addButton = _G[row:GetName().."Add"];
         if (addButton) then
             addButton:GetNormalTexture():SetRotation(45 * Deg2Rad);
@@ -161,9 +168,15 @@ function Operations.Add(item)
         if (tbl) then
             tinsert(tbl, opConfig);
         end
-
-        Operations:Refresh();
+    elseif (item.name == "Auctioning") then
+        local opConfig = AuctioningOp:NewConfig("Auctioning "..(#item.children + 1));
+        local tbl = Config.Operations()[item.name];
+        if (tbl) then
+            tinsert(tbl, opConfig);
+        end
     end
+
+    Operations:Refresh();
 end
 
 function Operations:Delete(data)
@@ -182,6 +195,9 @@ function Operations:Delete(data)
             if (data.op == SnipingOpView.selected) then
                 SnipingOpView:Hide();
                 Operations.groupTree:Hide();
+            elseif (data.op == AuctionOpView.selected) then
+                AuctionOpView:Hide();
+                Operations.groupTree:Hide();
             end
             tremove(tbl, i);
             self:Refresh();
@@ -193,6 +209,7 @@ end
 function Operations.Select(item)
     --- hide all views
     SnipingOpView:Hide();
+    AuctionOpView:Hide();
     selectedGroups = {};
     Operations.groupTree:Hide();
 
@@ -202,6 +219,11 @@ function Operations.Select(item)
         Operations.selectedOp = item.op;
         if (item.parent == "Sniping") then
             SnipingOpView:Set(item.op);
+            selectedGroups = item.op.groups;
+            Operations.groupTree:Show();
+            Operations:RefreshGroups();
+        elseif (item.parent == "Auctioning") then
+            AuctionOpView:Set(item.op);
             selectedGroups = item.op.groups;
             Operations.groupTree:Show();
             Operations:RefreshGroups();
