@@ -379,6 +379,14 @@ end
 
 function AuctionSnipe.BrowseFilter(item)
     local self = AuctionSnipe;
+
+    -- if we are not even in the proper state
+    -- don't bother to try and filter
+    -- just return nil
+    if (self.state ~= STATES.WAITING) then
+        return nil;
+    end
+
     browseItem = browseItem + 1;
 
     if (self.snipeStatusText) then

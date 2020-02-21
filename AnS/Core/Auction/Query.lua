@@ -842,29 +842,37 @@ function Query.SearchForItem(item, byItemID)
         return false;
     end
 
-    local _ = GetItemInfo(item.id);
-    if (_) then
-        local info = C_AuctionHouse.GetItemKeyInfo(item.itemKey);
-        local hash = ItemKeyHash(item.itemKey);
-        if (info and hash) then
-            Query.state = STATES.SEARCH;
+    if (item and item.id) then
+        local _ = GetItemInfo(item.id);
+        if (_ and item and item.itemKey) then
+            local info = C_AuctionHouse.GetItemKeyInfo(item.itemKey);
+            local hash = ItemKeyHash(item.itemKey);
+            if (info and hash) then
+                Query.state = STATES.SEARCH;
 
-            Query.queuedSearches[hash] = item;
-            Query.queuedSearches[item.id] = item;
+                Query.queuedSearches[hash] = item;
+                Query.queuedSearches[item.id] = item;
 
-            Query.filter = {
-                item = item,
-                byItemID = byItemID
-            };
+                Query.filter = {
+                    item = item,
+                    byItemID = byItemID
+                };
 
-            if (byItemID) then
-                C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
-            else
-                C_AuctionHouse.SendSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+                if (byItemID) then
+                    C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+                else
+                    C_AuctionHouse.SendSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+                end
+
+                return true;
             end
-
+        elseif (not item or not item.itemKey) then
+            Query.delay = nil;
             return true;
         end
+    elseif (not item or not item.id) then
+        Query.delay = nil;
+        return true;
     end
 
     -- if neither item info or item key info
@@ -890,7 +898,7 @@ function Query.IsExiting()
 end
 
 function Query.OnBrowseResults(added)
-    if (Query.IsExiting()) then
+    if (Query.IsExiting() or (Query.state ~= STATES.BROWSE and Query.state ~= STATES.BROWSE_MORE)) then
         return;
     end
 
@@ -948,6 +956,17 @@ function Query.OnItemResults(itemKey)
     end
 
     local item = Query.queuedSearches[hash];
+
+    if (not item or not item.id or not item.itemKey) then
+        if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
+            Query.state = STATES.NONE;
+            Query.moreItem = nil;
+            Query.filter = nil;
+        end
+
+        return;
+    end
+
     item.isCommodity = false;
     Query.queuedSearches[hash] = nil;
     Query.queuedSearches[item.id] = nil;
@@ -1012,6 +1031,17 @@ function Query.OnCommodityResults(itemID)
     end
 
     local item = Query.queuedSearches[itemID];
+
+    if (not item or not item.id or not item.itemKey) then
+        if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
+            Query.state = STATES.NONE;
+            Query.moreItem = nil;
+            Query.filter = nil;
+        end
+
+        return;
+    end
+
     item.isCommodity = true;
     Query.queuedSearches[itemID] = nil;
 
