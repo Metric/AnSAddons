@@ -15,12 +15,40 @@ local DEFAULT_MAX_PRICE = "max(200% avg(ansmarket, ansrecent, ansmin, ans3day), 
 
 local tempTbl = {};
 local queue = {};
+local waitingForConfirm = false;
 
 function Auctioning:New(name)
     local a = {};
     setmetatable(a, Auctioning);
     a:Init(name);
     return a;
+end
+
+function Auctioning.IsWaitingForConfirm()
+    return waitingForConfirm;
+end
+
+function Auctioning.CancelConfirm(post)
+    if (#queue > 0) then
+        local v = queue[1];
+        if (not post) then
+            print("AnS - failed to cancel "..v.link);
+        end
+    end
+    waitingForConfirm = false;
+end
+
+function Auctioning.Confirm(post)
+    if (#queue > 0) then
+        local v = tremove(queue, 1);
+        if (post) then
+            local total = v.toSell;
+            print("AnS - "..v.link.. " posted "..total.." for "..Utils:PriceToString(v.ppu).."|cFFFFFFFF per unit");
+        else
+            print("AnS - canceled "..v.link);
+        end
+    end
+    waitingForConfirm = false;
 end
 
 function Auctioning.QueueCount()
@@ -48,8 +76,8 @@ function Auctioning:CancelNext()
 end
 
 function Auctioning:CancelNextClassic()
-    if (#queue > 0) then
-        local v = tremove(queue, 1);
+    if (#queue > 0 and not waitingForConfirm) then
+        local v = queue[1];
         local num = Query:OwnedCount();
 
         -- we need to find the classic index to cancel
@@ -59,8 +87,10 @@ function Auctioning:CancelNextClassic()
             if (a) then
                 if (a.hash == v.hash) then
                     if (CanCancelAuction(a.itemIndex)) then
+                        waitingForConfirm = true;
                         CancelAuction(a.itemIndex);
                         Recycler:Recycle(a);
+                        Auctioning.Confirm(false);
                         return true;
                     end
                 end
@@ -74,10 +104,12 @@ function Auctioning:CancelNextClassic()
 end
 
 function Auctioning:CancelNextRetail()
-    if (#queue > 0) then
-        local v = tremove(queue, 1);
+    if (#queue > 0 and not waitingForConfirm) then
+        local v = queue[1];
         if (C_AuctionHouse.CanCancelAuction(v.auctionId)) then
+            waitingForConfirm = true;
             C_AuctionHouse.CancelAuction(v.auctionId);
+            Auctioning.Confirm(false)
             return true;
         end
     end
@@ -86,20 +118,22 @@ function Auctioning:CancelNextRetail()
 end
 
 function Auctioning:PostNextRetail()
-    if (#queue > 0) then
-        local v = tremove(queue, 1);
+    if (#queue > 0 and not waitingForConfirm) then
+        local v = queue[1];
         local total = v.toSell;
         local op = v.op;
         local location = ItemLocation:CreateFromBagAndSlot(v.bag, v.slot);
         if (total > 0) then
             local type = C_AuctionHouse.GetItemCommodityStatus(location);
             if (type == 2) then
+                waitingForConfirm = true;
                 C_AuctionHouse.PostCommodity(location, op.duration, total, v.ppu);
-                print(v.link.. " posted "..total.." for "..Utils:PriceToString(v.ppu).." per unit");
+                Auctioning.Confirm(true);
                 return true;
             elseif (type == 1) then
+                waitingForConfirm = true;
                 C_AuctionHouse.PostItem(location, op.duration, total, nil, v.ppu);
-                print(v.link.. " posted "..total.." for "..Utils:PriceToString(v.ppu).." per unit");
+                Auctioning.Confirm(true);
                 return true;
             end
         end
@@ -110,7 +144,7 @@ end
 
 function Auctioning:PostNextClassic()
     if(#queue > 0) then
-        local v = tremove(queue, 1);
+        local v = queue[1];
         local op = v.op;
         local ppu = v.ppu;
         local bidPPU = v.ppu * op.bidPercent;
@@ -118,7 +152,10 @@ function Auctioning:PostNextClassic()
         PickupContainerItem(v.bag, v.slot);
         ClickAuctionSellItemButton();
 
-        StartAuction(v.count * bidPPU, v.count * ppu, op.duration, v.count, 1);
+        PostAuction(v.count * bidPPU, v.count * ppu, op.duration, v.count, 1);
+
+        local total = v.count;
+        print("AnS - "..v.link.. " posted "..total.." for "..Utils:PriceToString(v.ppu).."|cFFFFFFFF per unit");
 
         return true;
     end
@@ -278,7 +315,7 @@ function Auctioning:ApplyPostRetail(v)
     end
 end
 
-function Auctioning:ApplyPostClassic(items)
+function Auctioning:ApplyPostClassic(v)
     local total = v.total;
 
     total = total - self.keepInBags;

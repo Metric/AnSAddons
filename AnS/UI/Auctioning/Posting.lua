@@ -79,6 +79,13 @@ function PostingView:OnLoad(f)
         tinsert(AHDisplayMode.Auctions, "AnsPosting");
     end
 
+    if (Utils:IsClassic()) then
+        -- assign a tab display mode
+        -- to the classic AHTabs
+        -- required to show this
+        AuctionFrameTab3.displayMode = {"AnsPosting"};
+    end
+
     self.cancel = self.frame.Cancel;
     self.post = self.frame.Post;
     self.reset = self.frame.Reset;
@@ -353,6 +360,50 @@ function PostingView.OnOwned(owned)
     end
 end
 
+function PostingView.OnFailure()
+    local self = PostingView;
+
+    if (AuctionOp.IsWaitingForConfirm()) then
+        AuctionOp.CancelConfirm(self.type == STATES.POST);
+    end
+end
+
+function PostingView.OnAuctionCreated()
+    local self = PostingView;
+    
+    if (self.state == STATES.READY) then
+        if (AuctionOp.IsWaitingForConfirm()) then
+            AuctionOp.Confirm(self.type == STATES.POST);
+            
+            if (self.type == STATES.POST) then
+                self.post:SetText("Post ("..AuctionOp.QueueCount()..")");
+
+                if (AuctionOp.QueueCount() == 0) then
+                    self:Stop();
+                end
+            end
+        end
+    end
+end
+
+function PostingView.OnAuctionCanceled()
+    local self = PostingView;
+
+    if (self.state == STATES.READY) then
+        if (AuctionOp.IsWaitingForConfirm()) then
+            AuctionOp.Confirm(self.type == STATES.POST);
+            
+            if (self.type == STATES.CANCEL) then
+                self.cancel:SetText("Cancel ("..AuctionOp.QueueCount()..")");
+
+                if (AuctionOp.QueueCount() == 0) then
+                    self:Stop();
+                end
+            end
+        end
+    end
+end
+
 function PostingView:Ready()
     if (self.state == STATES.SCANNING) then
         self.state = STATES.READY;
@@ -430,15 +481,12 @@ function PostingView:CancelScanClassic()
     DEFAULT_BROWSE_QUERY.quality = 0;
     Query.page = 0;
 
-    if (Query:Search(DEFAULT_BROWSE_QUERY, true, inventory[1].op)) then
-        self.post:Disable();
-        self.cancel:Disable();
-        self.cancel:SetText("Scanning 1 of "..#inventory);
+    Query:Search(DEFAULT_BROWSE_QUERY, true, inventory[1].op)
+    self.post:Disable();
+    self.cancel:Disable();
+    self.cancel:SetText("Scanning 1 of "..#inventory);
 
-        self.state = STATES.SCANNING;
-    else
-        print("Ans - Failed to start cancel scan");
-    end
+    self.state = STATES.SCANNING;
 end
 
 function PostingView:CancelScanRetail()
@@ -511,15 +559,12 @@ function PostingView:PostScanClassic()
     DEFAULT_BROWSE_QUERY.quality = 0;
     Query.page = 0;
 
-    if (Query:Search(DEFAULT_BROWSE_QUERY, true, inventory[1].op)) then
-        self.post:SetText("Scanning 1 of "..#inventory);
-        self.post:Disable();
-        self.cancel:Disable();
+    Query:Search(DEFAULT_BROWSE_QUERY, true, inventory[1].op)
+    self.post:SetText("Scanning 1 of "..#inventory);
+    self.post:Disable();
+    self.cancel:Disable();
 
-        self.state = STATES.SCANNING;
-    else
-        print("Ans - Failed to start post scan");
-    end
+    self.state = STATES.SCANNING;
 end
 
 function PostingView:PostScanRetail()

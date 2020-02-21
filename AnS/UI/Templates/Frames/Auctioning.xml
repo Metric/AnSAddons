@@ -86,7 +86,7 @@
     <Frame name="AnsPostingClassicTemplate" virtual="true">
         <Size x="168" y="394" />
         <Anchors>
-            <Anchor point="TOPRIGHT" x="168" y="-120" />
+            <Anchor point="TOPRIGHT" x="168" y="-50" />
         </Anchors>
         <Frames>
             <ScrollFrame parentKey="TreeView" name="$parentTreeView" inherits="FauxScrollFrameTemplate">
@@ -156,7 +156,8 @@
         </Frames>
         <Layers>
             <Layer level="BACKGROUND">
-                <Texture parentKey="Background" file="Interface\AddOns\AnS\Images\BGForClassic">
+                <Texture parentKey="Background" file="Interface\AddOns\AnS\Images\bgforclassic">
+                    <TexCoords left="0" right="0.546875" top="0" bottom="0.849609375" />
                     <Anchors>
                         <Anchor point="TOPLEFT" x="3" y="-3"/>
                         <Anchor point="BOTTOMRIGHT" x="-3" y="3" />

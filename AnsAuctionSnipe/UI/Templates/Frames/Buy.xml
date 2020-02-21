@@ -945,7 +945,8 @@
                                     </Anchors>
                                     <Color r="0" g="0" b="0" a="0.75" />
                                 </Texture>
-                                <Texture parentKey="LoadingSpinner" file="Interface\AddOns\AnS\Images\SpinnerForClassic">
+                                <Texture parentKey="LoadingSpinner" file="Interface\AddOns\AnS\Images\spinnerforclassic">
+                                    <TexCoords left="0" right="0.572265625" top="0" bottom="0.572265625" />
                                     <Size x="146" y="146"/>
                                     <Anchors>
                                         <Anchor point="CENTER" x="0" y="0"/>

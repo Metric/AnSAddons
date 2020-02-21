@@ -389,6 +389,8 @@ function AuctionSnipe.BrowseFilter(item)
 end
 
 function AuctionSnipe.OnQueryClassicResult(item)
+    local self = AuctionSnipe;
+    
     if (AuctionSnipe.state ~= STATES.WAITING) then
         return;
     end
@@ -516,11 +518,10 @@ function AuctionSnipe:OnClassicUpdate()
             self.state = STATES.SEARCH;
         end
     elseif (self.state == STATES.SEARCH) then
-        if (Query:Search(DEFAULT_BROWSE_QUERY)) then
-            self.state = STATES.WAITING;
-            if (self.snipeStatusText) then
-                self.snipeStatusText:SetText("Page: "..Query.page.." - Query Sent...");
-            end
+        Query:Search(DEFAULT_BROWSE_QUERY);
+        self.state = STATES.WAITING;
+        if (self.snipeStatusText) then
+            self.snipeStatusText:SetText("Page: "..Query.page.." - Query Sent...");
         end
     elseif (self.state == STATES.ITEMS) then
         if (not Query:IsLast()) then

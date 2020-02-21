@@ -18,8 +18,8 @@ Ans.Auctions.Recycler = Recycler;
 local Auction = {};
 Auction.__index = Auction;
 
-local throttledMessageReceived = true;
-local throttleWaitingForSend = true;
+local throttleMessageReceived = true;
+local throttleWaitingForSend = false;
 local throttleTime = time();
 
 local EVENTS_TO_REGISTER = {};
@@ -40,7 +40,10 @@ if (not Utils:IsClassic()) then
         "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED",
         "AUCTION_HOUSE_THROTTLED_MESSAGE_SENT",
         "AUCTION_HOUSE_THROTTLED_MESSAGE_QUEUED",
-        "OWNED_AUCTIONS_UPDATED"
+        "OWNED_AUCTIONS_UPDATED",
+        "AUCTION_CANCELED",
+        "AUCTION_HOUSE_AUCTION_CREATED",
+        "AUCTION_MULTISELL_FAILURE"
     };
 else
     EVENTS_TO_REGISTER = {
@@ -433,14 +436,19 @@ end
 
 function Query:Search(filter, autoPage, op)
     local ready = self:IsReady();
+    
+    self.state = STATES.CLASSIC_SEARCH;
+    self.itemIndex = 1;
+    self.op = op;
+    self.filter = filter;
+    self.autoPage = autoPage;
+
     if (ready) then
-        self.state = STATES.CLASSIC_SEARCH;
-        self.itemIndex = 1;
-        self.op = op;
-        self.filter = filter;
-        self.autoPage = autoPage;
+        self.delay = nil;
         EventManager:On("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
         QueryAuctionItems(filter.searchString or "", filter.minLevel, filter.maxLevel, self.page, false, filter.quality, false, false);
+    else
+        self.delay = time();
     end
     return ready;
 end
@@ -603,6 +611,7 @@ function Query:OwnedCount()
 end
 
 function Query.OnListUpdate()
+    local self = Query;
     -- we remove it as we only want the first update initiated by a search
     EventManager:RemoveListener("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
 
@@ -615,13 +624,13 @@ function Query.OnListUpdate()
 
     if (not Query:IsLast() and Query.autoPage) then
         Query:NextPage();
-        if (not Query:Search(Query.filter, Query.autoPage, Query.op)) then
-            Query.delay = time();
-        end
+        Query:Search(Query.filter, Query.autoPage, Query.op);
     else
-        EventManager:Emit("QUERY_CLASSIC_COMPLETE");
+        self.state = STATES.NONE;
         self.filter = nil;
         self.op = nil;
+
+        EventManager:Emit("QUERY_CLASSIC_COMPLETE");
     end
 end
 
@@ -631,18 +640,11 @@ local browseIndex = 1;
 -- retail and classic specific updates
 
 function Query.OnUpdate()
-    -- this is for when classic search fails on auto page
+    -- this is for when classic search fails we keep trying
+    -- until it goes through
     if (Query.state == STATES.CLASSIC_SEARCH) then
         if (Query.delay and time() - Query.delay > 1 and Query.filter) then
-            if (not Query:Search(Query.filter, Query.autoPage, Query.op)) then
-                if (Query.autoPage) then
-                    Query.delay = time();
-                else
-                    Query.delay = nil;
-                end
-            else
-                Query.delay = nil;
-            end
+            Query:Search(Query.filter, Query.autoPage, Query.op);
         end
     -- these ar for retail for when it is in the specified state
     -- but we received a ThrottleDropped message
