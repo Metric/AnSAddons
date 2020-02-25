@@ -674,9 +674,9 @@ function Query.OnUpdate()
         if (Query.delay and time() - Query.delay > 1 and Query.moreItem) then
             Query.delay = nil;
             if (Query.moreItem.isCommodity) then
-                C_AuctionHouse.RequestMoreItemSearchResults(Query.moreItem.key);
-            else
                 C_AuctionHouse.RequestMoreCommoditySearchResults(Query.moreItem.key);
+            else
+                C_AuctionHouse.RequestMoreItemSearchResults(Query.moreItem.key);
             end
         end
     end

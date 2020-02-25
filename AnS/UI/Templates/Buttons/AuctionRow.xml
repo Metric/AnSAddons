@@ -63,7 +63,7 @@
       </Frame>
 
       <Frame>
-        <Size x="32" y="16" />
+        <Size x="50" y="16" />
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parentPercent" relativePoint="RIGHT" x="40" y="0"/>
         </Anchors>
@@ -77,13 +77,13 @@
       </Frame>
 
       <Frame>
-        <Size x="120" y="16" />
+        <Size x="100" y="16" />
         <Anchors>
-          <Anchor point="LEFT" relativeTo="$parentILevel" relativePoint="RIGHT" x="-20" y="0"/>
+          <Anchor point="LEFT" relativeTo="$parentILevel" relativePoint="RIGHT" x="10" y="0"/>
         </Anchors>
         <Layers>
           <Layer level="BACKGROUND">
-            <FontString name="$parentStackPrice" inherits="AnsAuctionFont" justifyH="RIGHT"/>
+            <FontString name="$parentOwner" inherits="AnsAuctionFont" justifyH="LEFT"/>
           </Layer>
         </Layers>
       </Frame>

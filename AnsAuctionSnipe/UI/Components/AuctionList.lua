@@ -10,6 +10,7 @@ local Query = AnsCore.API.Auctions.Query;
 local Utils = AnsCore.API.Utils;
 
 AuctionList.selectedEntry = -1;
+AuctionList.selectedItem = nil;
 AuctionList.items = {};
 
 AuctionList.rows = {};
@@ -24,20 +25,16 @@ AuctionList.sortMode = {
     ["ppu"] = false,
     ["stack"] = false,
     ["percent"] = false,
-    ["iLevel"] = false
+    ["iLevel"] = false,
+    ["owner"] = false
 };
 
 AuctionList.lastSortMode = "percent";
 AuctionList.lastBuyTry = time();
 
-local stepTime = 1;
-local clickTime = time();
-local clickCount = 0;
-
-local purchaseQueue = {};
-
 function AuctionList:OnLoad(parent)
     self.parent = parent;
+    self.buyNowFrame = _G[parent:GetName().."BuyNow"];
     self.frame = _G[parent:GetName().."ResultsItems"];
     self.commodityConfirm = _G[parent:GetName().."ResultsCommodityConfirm"];
 
@@ -110,12 +107,9 @@ function AuctionList:ClassicPurchase(block)
     return false;
 end
 
-function AuctionList:Buy(index) 
-    if (self.frame and #self.items > 0 and index > 0 and index <= #self.items) then
-        local block = self.items[index];
-        if (block and not self.isBuying 
-            and self.commodity == nil and self.auction == nil) then
-
+function AuctionList:Buy(block) 
+    if (self.frame and block) then
+        if (not self.isBuying and self.commodity == nil and self.auction == nil) then
             if (Utils:IsClassic()) then
                 self:ClassicPurchase(block);
             else
@@ -129,13 +123,13 @@ end
 
 function AuctionList:BuyFirst() 
     if (self.frame and #self.items > 0) then
-        self:Buy(1);
+        self:Buy(self.items[1]);
     end
 end
 
 function AuctionList:BuySelected()
-    if (self.frame and #self.items > 0 and self.selectedEntry > 0) then
-        self:Buy(self.selectedEntry);
+    if (self.frame and self.selectedItem) then
+        self:Buy(self.selectedItem);
     end
 end
 
@@ -207,16 +201,42 @@ function AuctionList:PurchaseAuction()
     self:Refresh();
 end
 
-function AuctionList:Sort(type, noFlip)
-    if (self.sortMode[type]) then
-        table.sort(self.items, function(x,y) return x[type] > y[type]; end);
+function AuctionList:Sort(t, noFlip)
+    if (self.sortMode[t]) then
+        table.sort(self.items, 
+            function(x,y) 
+                local xvalue = x[t];
+                local yvalue = y[t];
+
+                if (type(xvalue) == "table") then
+                    xvalue = "Multiple";
+                end
+                if (type(yvalue) == "table") then
+                    yvalue = "Multiple";
+                end
+
+                return xvalue < yvalue; 
+            end);
         if (not noFlip) then
-            self.sortMode[type] = false;
+            self.sortMode[t] = false;
         end
     else
-        table.sort(self.items, function(x,y) return x[type] < y[type]; end);
+        table.sort(self.items, 
+            function(x,y) 
+                local xvalue = x[t];
+                local yvalue = y[t];
+
+                if (type(xvalue) == "table") then
+                    xvalue = "Multiple";
+                end
+                if (type(yvalue) == "table") then
+                    yvalue = "Multiple";
+                end
+
+                return xvalue < yvalue; 
+            end);
         if (not noFlip) then
-            self.sortMode[type] = true;
+            self.sortMode[t] = true;
         end
     end
     self:Refresh();
@@ -312,8 +332,11 @@ function AuctionList:Recycle()
         end
     end
 
+    self.selectedItem = nil;
+
     wipe(self.items);
     self:Refresh();
+    self:ShowSelectedItem();
 end
 
 function AuctionList:RemoveAuctionAmount(block, count)
@@ -335,8 +358,10 @@ function AuctionList:RemoveAuctionAmount(block, count)
             if (item.count <= 0) then
                 Recycler:Recycle(table.remove(self.items, i));
 
-                if (self.selectedEntry == i) then
+                if (self.selectedEntry == i or item == self.selectedItem) then
                     self.selectedEntry = -1;
+                    self.selectedItem = nil;
+                    self:ShowSelectedItem();
                 end
             end
 
@@ -358,8 +383,10 @@ function AuctionList:RemoveAuction(block)
 
             Recycler:Recycle(table.remove(self.items, i));
 
-            if (self.selectedEntry == i) then
+            if (self.selectedEntry == i or item == self.selectedItem) then
                 self.selectedEntry = -1;
+                self.selectedItem = nil;
+                self:ShowSelectedItem();
             end
 
             self:Refresh();
@@ -368,24 +395,35 @@ function AuctionList:RemoveAuction(block)
     end
 end
 
+function AuctionList:ShowSelectedItem()
+    if (not self.selectedItem) then
+        self.buyNowFrame:SetWidth(1);
+        self.buyNowFrame:Hide();
+    else
+        local quality = self.selectedItem.quality;
+        local texture = self.selectedItem.texture;
+        local name = self.selectedItem.name;
+        local count = self.selectedItem.count;
+        local ppu = self.selectedItem.ppu;
+
+        local total = ppu * count;
+
+        local color = ITEM_QUALITY_COLORS[quality];
+        self.buyNowFrame.Icon:SetTexture(texture);
+        self.buyNowFrame.Name:SetText("stack of "..count.." "..color.hex..name);
+        self.buyNowFrame.Price:SetText(Utils:PriceToString(total));
+        self.buyNowFrame:SetWidth(168);
+        self.buyNowFrame:Show();
+    end
+end
+
 function AuctionList:Click(row, button, down) 
     local id = row:GetID();
 
-    if (time() - clickTime > 1) then
-        clickCount = 0;
-    end
+    self.selectedEntry = id;
+    self.selectedItem = self.items[id];
 
-    if (self.selectedEntry ~= id) then
-        clickCount = 0;
-    end
-
-    self.selectedEntry = id; 
-
-    clickCount = clickCount + 1;
-
-    local fps = math.floor(GetFramerate());
-
-    if (clickCount == 1 and IsShiftKeyDown()) then
+    if (IsShiftKeyDown()) then
         local block = self.items[id];
 
         if (block) then
@@ -394,8 +432,8 @@ function AuctionList:Click(row, button, down)
         end
 
         self.selectedEntry = -1;
-        clickCount = 0;
-    elseif (clickCount == 1 and IsControlKeyDown()) then
+        self.selectedItem = nil;
+    elseif (IsControlKeyDown()) then
         local block = self.items[id];
 
         if (block) then
@@ -404,11 +442,11 @@ function AuctionList:Click(row, button, down)
         end
 
         self.selectedEntry = -1;
-        clickCount = 0;
+        self.selectedItem = nil;
     end
 
-    if (clickCount == 1 and Config.General().showDressing) then
-        local block = self.items[id];
+    if (Config.General().showDressing and self.selectedItem) then
+        local block = self.selectedItem;
 
         if (block) then
             local itemLink = block.link;
@@ -418,13 +456,8 @@ function AuctionList:Click(row, button, down)
         end
     end
 
-    if (clickCount == 2) then
-        self:Buy(id);
-        clickCount = 0;
-    end
-
     self:Refresh();
-    clickTime = time();
+    self:ShowSelectedItem();
 end
 
 function AuctionList:ShowTip(item)
@@ -453,6 +486,7 @@ function AuctionList:UpdateRow(offset, row)
         local auction = self.items[offset];
         local itemKey = auction.itemKey;
 
+        local owner = auction.owner;
         local ppu = auction.ppu;
         local itemID = auction.id;
         local ilevel = auction.iLevel;
@@ -465,7 +499,7 @@ function AuctionList:UpdateRow(offset, row)
 
         local itemPrice = _G[row:GetName().."PPU"];
         local itemName = _G[row:GetName().."NameText"];
-        local itemStack = _G[row:GetName().."StackPrice"];
+        local itemOwner = _G[row:GetName().."Owner"];
         local itemPercent = _G[row:GetName().."Percent"];
         local itemIcon = _G[row:GetName().."ItemIcon"];
         local itemLevel = _G[row:GetName().."ILevel"];
@@ -503,6 +537,12 @@ function AuctionList:UpdateRow(offset, row)
             row:SetButtonState("PUSHED", true);
         else
             row:SetButtonState("NORMAL", false);
+        end
+
+        if (type(owner) == "table") then
+            itemOwner:SetText("Multiple");
+        else
+            itemOwner:SetText(owner);
         end
 
         row:Show();

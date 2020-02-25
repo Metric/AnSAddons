@@ -1,4 +1,6 @@
 local Ans = select(2, ...);
+local Data = Ans.Data;
+local VendorData = Data.Vendor;
 local MerchantTracker = {};
 local Config = Ans.Config;
 MerchantTracker.__index = MerchantTracker;
@@ -123,7 +125,7 @@ function MerchantTracker.Scan()
     for i = 1, GetMerchantNumItems() do
         local id = Utils:GetTSMID(GetMerchantItemLink(i));
         if (id) then
-            local currentValue = Config.Vendor()[id];
+            local currentValue = VendorData[id];
             local newValue = nil;
             local _, _, price, quantity, _, _, _, extendedCost = GetMerchantItemInfo(i);
 			if (price > 0 and (not extendedCost or GetMerchantItemCostInfo(i) == 0)) then

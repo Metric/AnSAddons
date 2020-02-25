@@ -96,6 +96,7 @@ local scanIndex = 1;
 local totalResultsFound = 0;
 local totalValidAuctionsFound = 0;
 
+local lastSeenGroupLowest = {};
 local seenResults = {};
 local throttleMessageReceived = true;
 local throttleWaitingForSend = false;
@@ -393,6 +394,21 @@ function AuctionSnipe.BrowseFilter(item)
         self.snipeStatusText:SetText("Filtering Group "..browseItem);
     end
 
+    if (Config.Sniper().skipSeenGroup) then
+        local id = item.itemKey.itemID;
+        local ppu = item.minPrice;
+
+        if (lastSeenGroupLowest[id]) then
+            if (lastSeenGroupLowest[id] <= ppu) then
+                return nil;
+            else
+                lastSeenGroupLowest[id] = ppu;
+            end
+        else
+            lastSeenGroupLowest[id] = ppu;
+        end
+    end
+
     return Query:IsFilteredGroup(item);
 end
 
@@ -537,6 +553,12 @@ function AuctionSnipe:OnClassicUpdate()
             self.state = STATES.INIT;
         else
             AuctionList:SetItems(blockList);
+
+            if (Config.Sniper().chatMessageNew) then
+                for i,v in ipairs(blockList) do
+                    print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils:PriceToString(v.ppu).." ppu from "..v.owner);
+                end
+            end
 
             if (#blockList > 0 and Config.Sniper().dingSound) then
                 PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
@@ -797,6 +819,9 @@ function AuctionSnipe:OnAuctionHouseClosed()
         self.filterTreeView:ReleaseView();
         
         Sources:ClearCache();
+
+        -- clear group lowest
+        wipe(lastSeenGroupLowest);
     end
 end
 

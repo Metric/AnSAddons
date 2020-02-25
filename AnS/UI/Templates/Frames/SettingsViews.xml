@@ -231,6 +231,16 @@
                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentCommodityConfirm" x="0" y="-10" />
                 </Anchors>
             </CheckButton>
+            <CheckButton parentKey="SkipSeenGroup" text="Skip Lowest Seen Group" name="$parentSkipSeenGroup" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentCommodityConfirm" x="150" y="0" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ChatMessageNew" text="Chat Message New (Classic)" name="$parentChatMessageNew" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSkipSeenGroup" x="0" y="-10" />
+                </Anchors>
+            </CheckButton>
             <EditBox parentKey="ItemsUpdate" name="$parentItemsUpdate" text="" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>

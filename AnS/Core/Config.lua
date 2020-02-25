@@ -81,7 +81,9 @@ function Config.Sniper()
         dingSound = true,
         itemsPerUpdate = 20,
         itemBlacklist = {},
-        scanDelay = 10
+        scanDelay = 10,
+        skipSeenGroup = false,
+        chatMessageNew = true
     });
 end
 

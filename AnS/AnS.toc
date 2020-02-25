@@ -59,6 +59,7 @@ Data\Enchanting.lua
 Data\Fish.lua
 Data\Mounts.lua
 Data\Pets.lua
+Data\Vendor.lua
 
 
 ## Special Crafting Data for Recipe

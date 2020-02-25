@@ -320,6 +320,17 @@
                             </OnClick>
                         </Scripts>
                     </Button>
+                    <Button name="$parentOwner" text="Owner" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentLevel" relativePoint="TOPRIGHT" x="10" y="0" />
+                        </Anchors>
+                         <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("owner");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
                 </Frames>
             </Frame>
 
@@ -512,10 +523,65 @@
                 </Layers>
             </Frame>
 
+            <Button name="$parentBuyNow" hidden="true" text="PURCHASE">
+                <Size x="1" y="394" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-120" />
+                </Anchors>
+                <ButtonText name="$parentText" justifyH="CENTER" inherits="AnsGameFontNormalLarge">
+                    <Anchors>
+                        <Anchor point="CENTER" x="0" y="80" />
+                    </Anchors>
+                </ButtonText>
+                <HighlightTexture file="Interface\AddOns\AnS\Images\bgforclassic" mode="ADD">
+                    <Color r="0" g="0.5" b="1" a="0.25" />
+                    <TexCoords left="0" right="0.546875" top="0" bottom="0.849609375" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="3" y="-3"/>
+                        <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                    </Anchors>
+                </HighlightTexture>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="Background" file="Interface\AddOns\AnS\Images\bgforclassic">
+                            <Color r="1" g="0.25" b="0.25" a="1" />
+                            <TexCoords left="0" right="0.546875" top="0" bottom="0.849609375" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="3" y="-3"/>
+                                <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="Icon">
+                            <Size x="50" y="50" />
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="0" />
+                            </Anchors>
+                        </Texture>
+                        <FontString parentKey="Name" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="-60" />
+                            </Anchors>
+                        </FontString>
+                        <FontString parentKey="Price" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="-80" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:BuySelected();
+                    </OnClick>
+                </Scripts>
+            </Button>
+
             <Frame name="$parentFilterList">
                 <Size x="168" y="394" />
                 <Anchors>
-                    <Anchor point="TOPRIGHT" x="168" y="-120" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentBuyNow" relativePoint="TOPRIGHT" x="0" y="0" />
                 </Anchors>
                 <Frames>
                     <Frame parentKey="NineSlice" useParentLevel="true" inherits="NineSlicePanelTemplate"/>
@@ -822,7 +888,7 @@
             <Frame name="$parentHeader">
                 <size y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="250" y="-100" />
+                    <Anchor point="TOPLEFT" x="150" y="-100" />
                     <Anchor point="RIGHT" x="-4" />
                 </Anchors>
                 <Frames>
@@ -867,6 +933,17 @@
                         <Scripts>
                             <OnClick>
                                 AuctionSnipe:Sort("iLevel");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parenOwner" text="Owner" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentLevel" relativePoint="TOPRIGHT" x="10" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("owner");
                             </OnClick>
                         </Scripts>
                     </Button>
@@ -1028,6 +1105,59 @@
                     </Button>
                 </Frames>
             </Frame>
+
+          <Button name="$parentBuyNow" hidden="true" text="PURCHASE">
+                <Size x="1" y="394" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-120" />
+                </Anchors>
+                <ButtonText name="$parentText" justifyH="CENTER" inherits="AnsGameFontNormalLarge">
+                    <Anchors>
+                        <Anchor point="CENTER" x="0" y="80" />
+                    </Anchors>
+                </ButtonText>
+                <HighlightTexture atlas="auctionhouse-background-categories" mode="ADD" useAtlasSize="true">
+                    <Color r="0" g="0.5" b="1" a="0.25" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="3" y="-3"/>
+                        <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                    </Anchors>
+                </HighlightTexture>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="Background" atlas="auctionhouse-background-categories" useAtlasSize="true">
+                            <Color r="1" g="0.25" b="0.25" a="1" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="3" y="-3"/>
+                                <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <Texture parentKey="Icon">
+                            <Size x="50" y="50" />
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="0" />
+                            </Anchors>
+                        </Texture>
+                        <FontString parentKey="Name" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="-60" />
+                            </Anchors>
+                        </FontString>
+                        <FontString parentKey="Price" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Anchors>
+                                <Anchor point="CENTER" x="0" y="-80" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:BuySelected();
+                    </OnClick>
+                </Scripts>
+            </Button>
 
             <Frame name="$parentFilterList">
                 <Size x="168" y="394" />

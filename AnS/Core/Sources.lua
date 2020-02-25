@@ -1,4 +1,6 @@
 local Ans = select(2, ...);
+local Data = Ans.Data;
+local VendorData = Data.Vendor;
 local Config = Ans.Config;
 local Sources = { items = {}};
 Sources.__index = Sources;
@@ -390,7 +392,7 @@ function Sources:QueryID(q, itemId)
     codes.ilevel = 0;
     codes.vendorsell = 0;
     codes.tsmId = Utils:GetTSMID(itemId);
-    codes.vendorbuy = Config.Vendor()[codes.tsmId] or 0;
+    codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
 
     local _, id = strsplit(":", codes.tsmId); 
 
@@ -481,7 +483,7 @@ function Sources:Query(q, item)
     codes.vendorsell = item.vendorsell;
     codes.tsmId = item.tsmId;
     codes.id = item.id;
-    codes.vendorbuy = Config.Vendor()[item.tsmId] or 0;
+    codes.vendorbuy = Config.Vendor()[item.tsmId] or VendorData[item.tsmId] or 0;
 
     local _, fn = false, nil;
     local oq = q;

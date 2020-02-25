@@ -29,6 +29,12 @@ function SniperSettings:OnLoad(f)
     self.ding = self.frame.Ding;
     self.ding:SetScript("OnClick", self.SaveDing);
 
+    self.skipSeenGroup = self.frame.SkipSeenGroup;
+    self.skipSeenGroup:SetScript("OnClick", self.SaveSkipSeen);
+
+    self.chatMessageNew = self.frame.ChatMessageNew;
+    self.chatMessageNew:SetScript("OnClick", self.SavChatMessageNew);
+
     self.itemsUpdate = TextInput:NewFrom(self.frame.ItemsUpdate);
     self.itemsUpdate.onTextChanged = self.SaveItemsUpdate;
     self.frame:Hide();
@@ -48,6 +54,8 @@ function SniperSettings:Hide()
 end
 
 function SniperSettings:Load()
+    self.skipSeenGroup:SetChecked(Config.Sniper().skipSeenGroup);
+    self.chatMessageNew:SetChecked(Config.Sniper().chatMessageNew);
     self.scanDelay:Set(Config.Sniper().scanDelay or "10");
     self.source:Set(Config.Sniper().source or "");
     self.price:Set(Config.Sniper().pricing or "");
@@ -60,6 +68,14 @@ function SniperSettings:Load()
     self.commodityConfirm:SetChecked(Config.Sniper().useCommodityConfirm);
     self.ding:SetChecked(Config.Sniper().dingSound);
     self.itemsUpdate:Set(Config.Sniper().itemsPerUpdate.."");
+end
+
+function SniperSettings.SaveSkipSeen()
+    Config.Sniper().skipSeenGroup = SniperSettings.skipSeenGroup:GetChecked();
+end
+
+function SniperSettings.SaveChatMessageNew()
+    Config.Sniper().chatMessageNew = SniperSettings.chatMessageNew:GetChecked();
 end
 
 function SniperSettings.SaveSource()
