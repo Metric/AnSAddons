@@ -33,6 +33,9 @@ AuctionList.sortMode = {
 AuctionList.lastSortMode = "percent";
 AuctionList.lastBuyTry = time();
 
+local clickCount = 0;
+local clickTime = time();
+
 function AuctionList:OnLoad(parent)
     self.parent = parent;
     self.buyNowFrame = _G[parent:GetName().."BuyNow"];
@@ -209,6 +212,10 @@ function AuctionList:Sort(t, noFlip)
                 local xvalue = x[t];
                 local yvalue = y[t];
 
+                if (not xvalue or not yvalue) then
+                    return true;
+                end
+
                 if (type(xvalue) == "table") then
                     xvalue = "Multiple";
                 end
@@ -226,6 +233,10 @@ function AuctionList:Sort(t, noFlip)
             function(x,y) 
                 local xvalue = x[t];
                 local yvalue = y[t];
+
+                if (not xvalue or not yvalue) then
+                    return true;
+                end
 
                 if (type(xvalue) == "table") then
                     xvalue = "Multiple";
@@ -413,7 +424,9 @@ function AuctionList:ShowSelectedItem()
         self.buyNowFrame.Icon:SetTexture(texture);
         self.buyNowFrame.Name:SetText("stack of "..count.." "..color.hex..name);
         self.buyNowFrame.Price:SetText(Utils:PriceToString(total));
+
         self.buyNowFrame:SetWidth(168);
+
         self.buyNowFrame:Show();
     end
 end
@@ -421,8 +434,16 @@ end
 function AuctionList:Click(row, button, down) 
     local id = row:GetID();
 
+    if(id ~= self.selectedEntry) then
+        clickCount = 0;
+    end
+
     self.selectedEntry = id;
     self.selectedItem = self.items[id];
+
+    if (time() - clickTime > 2) then
+        clickCount = 0;
+    end
 
     if (IsShiftKeyDown()) then
         local block = self.items[id];
@@ -434,6 +455,7 @@ function AuctionList:Click(row, button, down)
 
         self.selectedEntry = -1;
         self.selectedItem = nil;
+        clickCount = 0;
     elseif (IsControlKeyDown()) then
         local block = self.items[id];
 
@@ -444,6 +466,7 @@ function AuctionList:Click(row, button, down)
 
         self.selectedEntry = -1;
         self.selectedItem = nil;
+        clickCount = 0;
     end
 
     if (Config.General().showDressing and self.selectedItem) then
@@ -454,6 +477,16 @@ function AuctionList:Click(row, button, down)
             if (not block.isCommodity and not block.isPet) then
                 DressUpItemLink(itemLink)
             end
+        end
+    end
+
+    clickCount = clickCount + 1;
+    clickTime = time();
+
+    if (Utils:IsClassic()) then
+        if (clickCount > 1) then
+            self:BuySelected();
+            clickCount = 0;
         end
     end
 
@@ -483,6 +516,7 @@ function AuctionList:UpdateRow(offset, row)
         end
 
         row:SetID(offset);
+        row.item = self.items[offset];
 
         local auction = self.items[offset];
         local itemKey = auction.itemKey;

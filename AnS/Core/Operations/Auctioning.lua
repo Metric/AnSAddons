@@ -157,6 +157,8 @@ function Auctioning:PostNextClassic()
         local total = v.count;
         print("AnS - "..v.link.. " posted "..total.." for "..Utils:PriceToString(v.ppu).."|cFFFFFFFF per unit");
 
+        tremove(queue, 1);
+
         return true;
     end
 

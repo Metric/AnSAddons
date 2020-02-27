@@ -437,7 +437,7 @@ function AuctionSnipe.OnQueryClassicResult(item)
     local itemCount = item.count;
 
     if (not blocks[item.hash]) then
-        blocks[item.hash] = item;
+        blocks[item.hash] = item:Clone();
         blocks[item.hash].count = 0;
         tinsert(blockList, blocks[item.hash]);
     end
@@ -556,7 +556,7 @@ function AuctionSnipe:OnClassicUpdate()
 
             if (Config.Sniper().chatMessageNew) then
                 for i,v in ipairs(blockList) do
-                    print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils:PriceToString(v.ppu).." ppu from "..v.owner);
+                    print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils:PriceToString(v.ppu).." ppu from "..(v.owner or "?"));
                 end
             end
 
@@ -844,6 +844,10 @@ function AuctionSnipe:Close()
 
     self.baseTreeView:ReleaseView();
     self.filterTreeView:ReleaseView();
+
+    if (Utils:IsClassic()) then
+        AuctionList:SetItems({});
+    end 
 
     Recycler:Reset();
 end

@@ -560,11 +560,13 @@
                             </Anchors>
                         </Texture>
                         <FontString parentKey="Name" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Size x="145" y="20" />
                             <Anchors>
                                 <Anchor point="CENTER" x="0" y="-60" />
                             </Anchors>
                         </FontString>
                         <FontString parentKey="Price" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Size x="145" y="20" />
                             <Anchors>
                                 <Anchor point="CENTER" x="0" y="-80" />
                             </Anchors>
@@ -888,7 +890,7 @@
             <Frame name="$parentHeader">
                 <size y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="150" y="-100" />
+                    <Anchor point="TOPLEFT" x="200" y="-100" />
                     <Anchor point="RIGHT" x="-4" />
                 </Anchors>
                 <Frames>
@@ -1109,27 +1111,27 @@
           <Button name="$parentBuyNow" hidden="true" text="PURCHASE">
                 <Size x="1" y="394" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-120" />
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-20" />
                 </Anchors>
                 <ButtonText name="$parentText" justifyH="CENTER" inherits="AnsGameFontNormalLarge">
                     <Anchors>
                         <Anchor point="CENTER" x="0" y="80" />
                     </Anchors>
                 </ButtonText>
-                <HighlightTexture atlas="auctionhouse-background-categories" mode="ADD" useAtlasSize="true">
+                <HighlightTexture file="Interface\AddOns\AnS\Images\bgforclassic"  mode="ADD">
                     <Color r="0" g="0.5" b="1" a="0.25" />
+                    <Size x="308" y="468" />
                     <Anchors>
-                        <Anchor point="TOPLEFT" x="3" y="-3"/>
-                        <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                        <Anchor point="TOPLEFT" x="0" y="0"/>
                     </Anchors>
                 </HighlightTexture>
                 <Layers>
                     <Layer level="BACKGROUND">
-                        <Texture parentKey="Background" atlas="auctionhouse-background-categories" useAtlasSize="true">
+                        <Texture parentKey="Background" file="Interface\AddOns\AnS\Images\bgforclassic">
                             <Color r="1" g="0.25" b="0.25" a="1" />
+                            <Size x="308" y="468" />
                             <Anchors>
-                                <Anchor point="TOPLEFT" x="3" y="-3"/>
-                                <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                                <Anchor point="TOPLEFT" x="0" y="0"/>
                             </Anchors>
                         </Texture>
                     </Layer>
@@ -1141,11 +1143,13 @@
                             </Anchors>
                         </Texture>
                         <FontString parentKey="Name" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Size x="145" y="20" />
                             <Anchors>
                                 <Anchor point="CENTER" x="0" y="-60" />
                             </Anchors>
                         </FontString>
                         <FontString parentKey="Price" text="" justifyH="CENTER" inherits="GameFontHighlightSmall">
+                            <Size x="145" y="20" />
                             <Anchors>
                                 <Anchor point="CENTER" x="0" y="-80" />
                             </Anchors>
