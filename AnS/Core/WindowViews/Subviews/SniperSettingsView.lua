@@ -33,7 +33,7 @@ function SniperSettings:OnLoad(f)
     self.skipSeenGroup:SetScript("OnClick", self.SaveSkipSeen);
 
     self.chatMessageNew = self.frame.ChatMessageNew;
-    self.chatMessageNew:SetScript("OnClick", self.SavChatMessageNew);
+    self.chatMessageNew:SetScript("OnClick", self.SaveChatMessageNew);
 
     self.itemsUpdate = TextInput:NewFrom(self.frame.ItemsUpdate);
     self.itemsUpdate.onTextChanged = self.SaveItemsUpdate;

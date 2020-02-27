@@ -617,6 +617,8 @@ function AuctionSnipe:OnRetailUpdate()
             end
         end
         return;
+    elseif (AuctionList.auction or AuctionList.isBuying) then
+        return;
     end
 
     if (self.state == STATES.SEARCH) then

@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local Config = AnsCore.API.Config;
+local Query = AnsCore.API.Auctions.Query;
 local AuctionList = {};
 AuctionList.__index = AuctionList;
 
@@ -191,7 +192,7 @@ end
 function AuctionList:PurchaseAuction()
     local block = self.auction;
     
-    if (GetMoney() >= block.buyoutPrice) then
+    if (GetMoney() >= block.buyoutPrice and not Query.IsThrottled()) then
         C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);         
         self:RemoveAuctionAmount(block, 1);
     end
@@ -533,7 +534,7 @@ function AuctionList:UpdateRow(offset, row)
             itemIcon:Hide();
         end
 
-        if (offset == self.selectedEntry) then
+        if (row.item == self.selectedItem) then
             row:SetButtonState("PUSHED", true);
         else
             row:SetButtonState("NORMAL", false);
