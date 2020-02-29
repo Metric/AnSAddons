@@ -195,7 +195,11 @@ end
 function AuctionList:PurchaseAuction()
     local block = self.auction;
     
-    if (GetMoney() >= block.buyoutPrice and not Query.IsThrottled()) then
+    if (Query.previousState == Query.STATES.BROWSE) then
+        return;
+    end
+
+    if (GetMoney() >= block.buyoutPrice) then
         C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);         
         self:RemoveAuctionAmount(block, 1);
     end

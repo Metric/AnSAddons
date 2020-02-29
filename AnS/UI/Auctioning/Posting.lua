@@ -309,14 +309,12 @@ function PostingView.OnSearchComplete(item)
                 end
             end
         else
-            if (not Query.SearchForItem(inventory[searchesComplete + 1], inventory[searchesComplete + 1].isEquipment)) then
-                print("AnS - Failed to search for item");
-            else
-                if (self.type == STATES.POST) then
-                    self.post:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
-                elseif (self.type == STATES.CANCEL) then
-                    self.cancel:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
-                end
+            Query.SearchForItem(inventory[searchesComplete + 1], inventory[searchesComplete + 1].isEquipment, true);
+
+            if (self.type == STATES.POST) then
+                self.post:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
+            elseif (self.type == STATES.CANCEL) then
+                self.cancel:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
             end
         end
     end
@@ -351,7 +349,7 @@ function PostingView.OnOwned(owned)
         if (#inventory > 0) then
             searchesComplete = 0;
             self.cancel:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
-            Query.SearchForItem(inventory[searchesComplete + 1], inventory[searchesComplete + 1].isEquipment);
+            Query.SearchForItem(inventory[searchesComplete + 1], inventory[searchesComplete + 1].isEquipment, true);
             self.state = STATES.SCANNING;
         else
             print("AnS - Nothing to Cancel");
@@ -364,7 +362,7 @@ function PostingView.OnFailure()
     local self = PostingView;
 
     if (AuctionOp.IsWaitingForConfirm()) then
-        AuctionOp.CancelConfirm(self.type == STATES.POST);
+        
     end
 end
 
@@ -373,15 +371,7 @@ function PostingView.OnAuctionCreated()
     
     if (self.state == STATES.READY) then
         if (AuctionOp.IsWaitingForConfirm()) then
-            AuctionOp.Confirm(self.type == STATES.POST);
-            
-            if (self.type == STATES.POST) then
-                self.post:SetText("Post ("..AuctionOp.QueueCount()..")");
 
-                if (AuctionOp.QueueCount() == 0) then
-                    self:Stop();
-                end
-            end
         end
     end
 end
@@ -391,15 +381,7 @@ function PostingView.OnAuctionCanceled()
 
     if (self.state == STATES.READY) then
         if (AuctionOp.IsWaitingForConfirm()) then
-            AuctionOp.Confirm(self.type == STATES.POST);
-            
-            if (self.type == STATES.CANCEL) then
-                self.cancel:SetText("Cancel ("..AuctionOp.QueueCount()..")");
 
-                if (AuctionOp.QueueCount() == 0) then
-                    self:Stop();
-                end
-            end
         end
     end
 end
@@ -501,14 +483,11 @@ function PostingView:CancelScanRetail()
         tinsert(ops, op);
     end
 
-    if (Query.Owned()) then
-        self.state = STATES.OWNED;
-        self.post:Disable();
-        self.cancel:Disable();
-        self.cancel:SetText("Getting Owned Auctions");
-    else
-        print("Ans - Failed to start cancel scan");
-    end
+    Query.Owned()
+    self.state = STATES.OWNED;
+    self.post:Disable();
+    self.cancel:Disable();
+    self.cancel:SetText("Getting Owned Auctions");
 end
 
 function PostingView:Post()
@@ -596,15 +575,12 @@ function PostingView:PostScanRetail()
         return;
     end
 
-    if (Query.SearchForItem(inventory[1], inventory[1].isEquipment)) then
-        self.post:SetText("Scanning 1 of "..#inventory);
-        self.post:Disable();
-        self.cancel:Disable();
+    Query.SearchForItem(inventory[1], inventory[1].isEquipment, true)
+    self.post:SetText("Scanning 1 of "..#inventory);
+    self.post:Disable();
+    self.cancel:Disable();
 
-        self.state = STATES.SCANNING;
-    else
-        print("Ans - Failed to start post scan");
-    end
+    self.state = STATES.SCANNING;
 end
 
 function PostingView:Stop()

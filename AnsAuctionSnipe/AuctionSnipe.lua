@@ -57,6 +57,7 @@ STATES.CONFIRM_COMMODITY = 10;
 STATES.CANCEL_COMMODITY = 11;
 STATES.UPDATING_COMMODITY = 12;
 STATES.WAITING_COMMODITY_PURCHASE = 13;
+STATES.CONFIRM_AUCTION = 14;
 
 AuctionSnipe = {};
 AuctionSnipe.__index = AuctionSnipe;
@@ -64,6 +65,7 @@ AuctionSnipe.isInited = false;
 AuctionSnipe.quality = 1;
 AuctionSnipe.activeOps = {};
 AuctionSnipe.baseFilters = {};
+AuctionSnipe.auctionState = STATES.NONE;
 AuctionSnipe.state = STATES.NONE;
 
 local opTreeViewItems = {};
@@ -109,6 +111,28 @@ local browseItem = 0;
 
 BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
 BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
+
+-- this dialog is used when in browse query
+-- and you try to buy and auction
+-- when this is displayed we are out of 
+-- then browse state and have entered
+-- a viable search state to purchase
+StaticPopupDialogs["ANSCONFIRMAUCTION"] = {
+    text = "Purchase %s?",
+    button1 = "Yes",
+    button2 = "No",
+    OnAccept = function()
+        AuctionList:PurchaseAuction();
+    end,
+    OnCancel = function()
+        AuctionList.auction = nil;
+        AuctionList.isBuying = false;
+    end,
+    timeout = 0,
+    whileDead = false,
+    hideOnEscape = true,
+    preferredIndex = 3
+  };
 
 local function RegisterEvents(frame, events) 
     for i,v in ipairs(events) do
@@ -367,7 +391,9 @@ function AuctionSnipe.OnQuerySearchResult(item)
 end
 
 function AuctionSnipe.OnQuerySearchComplete()
-    if (AuctionSnipe.state == STATES.ITEMS_WAITING) then
+    if (AuctionSnipe.auctionState == STATES.CONFIRM_AUCTION) then
+        StaticPopup_Show ("ANSCONFIRMAUCTION", AuctionList.auction.link);
+    elseif (AuctionSnipe.state == STATES.ITEMS_WAITING) then
         AuctionSnipe.state = STATES.ITEMS;
     end
 end
@@ -599,14 +625,14 @@ function AuctionSnipe:OnRetailUpdate()
     end
 
     if (AuctionList.auction and AuctionList.commodity) then
-        if (self.commodityState == STATES.CONFIRM_COMMODITY) then         
+        if (self.auctionState == STATES.CONFIRM_COMMODITY) then         
             if (AuctionList:ConfirmCommoditiesPurchase()) then
-                self.commodityState = STATES.WAITING_COMMODITY_PURCHASE;
+                self.auctionState = STATES.WAITING_COMMODITY_PURCHASE;
             else
-                self.commodityState = STATES.CANCEL_COMMODITY;
+                self.auctionState = STATES.CANCEL_COMMODITY;
             end
-        elseif (self.commodityState == STATES.CANCEL_COMMODITY) then
-            self.commodityState = STATES.NONE;
+        elseif (self.auctionState == STATES.CANCEL_COMMODITY) then
+            self.auctionState = STATES.NONE;
 
             AuctionList:CancelCommoditiesPurchase();
 
@@ -618,8 +644,14 @@ function AuctionSnipe:OnRetailUpdate()
             end
         end
         return;
-    elseif (AuctionList.auction or AuctionList.isBuying) then
+    elseif (AuctionList.auction and AuctionList.isBuying and not AuctionList.commodity) then
+        if (Query.previousState == Query.STATES.BROWSE and self.auctionState == STATES.NONE) then
+            self.auctionState = STATES.CONFIRM_AUCTION;
+            Query.SearchForItem(AuctionList.auction, false, true);
+        end
         return;
+    else
+        self.auctionState = STATES.NONE;
     end
 
     if (self.state == STATES.SEARCH) then
@@ -675,7 +707,7 @@ function AuctionSnipe:OnRetailUpdate()
         self.state = STATES.ITEMS;
         totalResultsFound = totalResultsFound + #browseResults;
         wipe(browseResults);
-    elseif (self.state == STATES.ITEMS and not AuctionList.isBuying and not AuctionList.auction and not AuctionList.commodity) then
+    elseif (self.state == STATES.ITEMS) then
         if (scanIndex <= #itemsFound) then
             if (validAuctions and #validAuctions > 0) then
                 totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
@@ -750,14 +782,14 @@ function AuctionSnipe:EventHandler(frame, event, ...)
     if(event == "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED") then
         -- cancel purchase screen if the throttle message is dropped
         if (AuctionList.auction and AuctionList.commodity) then
-            self.commodityState = STATES.CANCEL_COMMODITY;
+            self.auctionState = STATES.CANCEL_COMMODITY;
         end
     end
 
     if (event == "COMMODITY_PURCHASE_FAILED" or event == "COMMODITY_PURCHASED" or event == "COMMODITY_PURCHASE_SUCCEEDED") then
         AuctionList:OnCommondityPurchased(event == "COMMODITY_PURCHASE_FAILED");
-        if (self.commodityState == STATES.WAITING_COMMODITY_PURCHASE) then
-            self.commodityState = STATES.NONE;
+        if (self.auctionState == STATES.WAITING_COMMODITY_PURCHASE) then
+            self.auctionState = STATES.NONE;
 
             -- continue on if we got caught in a weird state
             if (self.state == STATES.ITEMS_WAITING) then
@@ -772,13 +804,13 @@ function AuctionSnipe:EventHandler(frame, event, ...)
         if (AuctionList.isBuying and AuctionList.commodity) then
             AuctionList.commodityTotal = total;
             AuctionList.commodityPPU = unit;
-            self.commodityState = STATES.CONFIRM_COMMODITY;
+            self.auctionState = STATES.CONFIRM_COMMODITY;
         end
     end
     if (event == "COMMODITY_PRICE_UNAVAILABLE") then
         if (AuctionList.isBuying and AuctionList.commodity) then
             AuctionList.removeListing = false;
-            self.commodityState = STATES.CANCEL_COMMODITY;
+            self.auctionState = STATES.CANCEL_COMMODITY;
         end
     end
 
@@ -837,6 +869,10 @@ function AuctionSnipe:Close()
         UnregisterEvents(rootFrame, EVENTS_TO_REGISTER);
         self:UnregisterQueryEvents();
     end
+
+    StaticPopup_Hide("ANSCONFIRMAUCTION");
+    AuctionList.auction = nil;
+    AuctionList.isBuying = nil;
 
     self:Stop();
 
