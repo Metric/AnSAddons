@@ -1002,10 +1002,13 @@ function AuctionSnipe:Stop()
     ClearValidAuctions(); 
     ClearItemsFound();
     
+    wipe(lastSeenGroupLowest);
     wipe(browseResults);
 
     wipe(blockList);
     wipe(blocks);
+
+    Query.Clear();
 
     self.startButton:Enable();
     self.stopButton:Disable();

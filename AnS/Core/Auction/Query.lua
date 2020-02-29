@@ -843,6 +843,12 @@ function Query.ClearThrottle()
     throttleWaitingForSend = false;
 end
 
+function Query.Clear()
+    wipe(Query.queuedStates);
+    Query.state = STATES.NONE;
+    Query.delay = nil;
+end
+
 function Query.IsThrottled()
     return throttleMessageReceived == false or throttleWaitingForSend == true;
 end
@@ -1171,6 +1177,4 @@ EventManager:On("OWNED_AUCTIONS_UPDATED", Query.OnOwnedUpdate);
 
 EventManager:On("UPDATE", Query.OnUpdate);
 
-EventManager:On("AUCTION_HOUSE_CLOSED", function()
-    wipe(Query.queuedStates);
-end);
+EventManager:On("AUCTION_HOUSE_CLOSED", Query.Clear);

@@ -593,6 +593,7 @@ function PostingView:Stop()
     wipe(ops);
     wipe(bestPrices);
     wipe(inventory);
+    Query.Clear();
 end
 
 function PostingView:RegisterQueueEvents()
