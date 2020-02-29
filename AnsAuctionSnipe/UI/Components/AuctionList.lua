@@ -213,7 +213,7 @@ function AuctionList:Sort(t, noFlip)
                 local yvalue = y[t];
 
                 if (not xvalue or not yvalue) then
-                    return true;
+                    return false;
                 end
 
                 if (type(xvalue) == "table") then
@@ -223,7 +223,7 @@ function AuctionList:Sort(t, noFlip)
                     yvalue = "Multiple";
                 end
 
-                return xvalue < yvalue; 
+                return xvalue > yvalue; 
             end);
         if (not noFlip) then
             self.sortMode[t] = false;
@@ -251,6 +251,7 @@ function AuctionList:Sort(t, noFlip)
             self.sortMode[t] = true;
         end
     end
+    self.lastSortMode = t;
     self:Refresh();
 end
 

@@ -1,4 +1,5 @@
 local Ans = select(2, ...);
+local Sources = Ans.Sources;
 local EventManager = Ans.EventManager;
 local PostingView = Ans.Auctions.PostingView;
 local AuctionHook = {};
@@ -53,6 +54,9 @@ EventManager:On("AUCTION_HOUSE_SHOW",
 
         AHFrame = AuctionHouseFrame or AuctionFrame;
 
+        -- clear sources cache on AH show
+        Sources:ClearCache();
+
         if (not didHook) then
             didHook = true;
 
@@ -66,6 +70,9 @@ EventManager:On("AUCTION_HOUSE_SHOW",
 
 EventManager:On("AUCTION_HOUSE_CLOSED",
     function()
+        -- clear sources cache on AH close
+        Sources:ClearCache();
+
         AuctionHook.shown = false;
     end
 );

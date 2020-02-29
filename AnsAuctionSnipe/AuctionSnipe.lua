@@ -396,16 +396,17 @@ function AuctionSnipe.BrowseFilter(item)
 
     if (Config.Sniper().skipSeenGroup) then
         local id = item.itemKey.itemID;
+        local itemLevel = item.itemKey.itemLevel;
         local ppu = item.minPrice;
 
-        if (lastSeenGroupLowest[id]) then
-            if (lastSeenGroupLowest[id] <= ppu) then
+        if (lastSeenGroupLowest[id.."."..itemLevel]) then
+            if (lastSeenGroupLowest[id.."."..itemLevel] <= ppu) then
                 return nil;
             else
-                lastSeenGroupLowest[id] = ppu;
+                lastSeenGroupLowest[id.."."..itemLevel] = ppu;
             end
         else
-            lastSeenGroupLowest[id] = ppu;
+            lastSeenGroupLowest[id.."."..itemLevel] = ppu;
         end
     end
 

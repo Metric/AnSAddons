@@ -118,9 +118,7 @@ end
 
 function Sources:LoadCustomVars()
     wipe(VarCodes);
-    local i;
-    for i = 1, #ANS_CUSTOM_VARS do
-        local v = ANS_CUSTOM_VARS[i];
+    for i,v in ipairs(Config.CustomSources()) do
         local value = v.value;
 
         if (value and value:len() > 0) then
@@ -143,7 +141,7 @@ function Sources:GetNamesAsString()
     local sep = "";
     local i;
 
-    if (NameStringCache:len() > 0) then
+    if (NameStringCache and NameStringCache:len() > 0) then
         return NameStringCache;
     end
 
@@ -164,13 +162,14 @@ end
 function Sources:GetCustomVarsAsString()
     local str = "";
     local i;
-    local total = #VarCodes;
 
-    if (CustomVarStringCache:len() > 0) then
+    if (CustomVarStringCache and CustomVarStringCache:len() > 0) then
         return CustomVarStringCache;
+    else
+        self:LoadCustomVars();
     end
 
-    for i = 1, total do
+    for i = 1, #VarCodes do
         local cvar = VarCodes[i];
 
         local nstr = string.format(ParseVarsTemplate, cvar.name, cvar.value);
@@ -187,7 +186,7 @@ function Sources:GetVarsAsString()
     local i;
     local total = #self.items;
 
-    if (SourceStringCache:len() > 0) then
+    if (SourceStringCache and SourceStringCache:len() > 0) then
         return SourceStringCache;
     end
 
@@ -473,6 +472,7 @@ function Sources:Query(q, item)
         OpValueCache[itemId] = codes;
         self:GetValues(itemId, codes);
     end
+
 
     codes.buyout = buyout;
     codes.stacksize = stackSize;
