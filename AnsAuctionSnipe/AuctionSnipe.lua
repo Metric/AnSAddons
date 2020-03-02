@@ -118,7 +118,7 @@ BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
 -- then browse state and have entered
 -- a viable search state to purchase
 StaticPopupDialogs["ANSCONFIRMAUCTION"] = {
-    text = "Purchase %s?",
+    text = "Purchase %s for %s?",
     button1 = "Yes",
     button2 = "No",
     OnAccept = function()
@@ -392,7 +392,7 @@ end
 
 function AuctionSnipe.OnQuerySearchComplete()
     if (AuctionSnipe.auctionState == STATES.CONFIRM_AUCTION) then
-        StaticPopup_Show ("ANSCONFIRMAUCTION", AuctionList.auction.link);
+        StaticPopup_Show ("ANSCONFIRMAUCTION", AuctionList.auction.link, Utils:PriceToString(AuctionList.auction.buyoutPrice));
     elseif (AuctionSnipe.state == STATES.ITEMS_WAITING) then
         AuctionSnipe.state = STATES.ITEMS;
     end
