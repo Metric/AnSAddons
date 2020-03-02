@@ -67,7 +67,7 @@ function Auction:New()
     a.tsmId  = nil;
     a.percent = -1;
     a.quality = 0;
-    
+    a.buyoutPrice = 0;
     a.iLevel = 0;
     a.vendorsell = 0;
     a.isCommodity = false;
@@ -76,8 +76,8 @@ function Auction:New()
     return a;
 end
 
-function Auction:Clone()
-    local a = Recycler:Get();
+function Auction:Clone(forceNew)
+    local a = Recycler:Get(forceNew);
     setmetatable(a, Auction);
     a.id = self.id;
     a.itemKey = self.itemKey;
@@ -115,8 +115,8 @@ function Recycler:Recycle(auction)
     tinsert(self.auctions, auction);
 end
 
-function Recycler:Get()
-    if (#self.auctions > 0) then
+function Recycler:Get(forceNew)
+    if (#self.auctions > 0 and not forceNew) then
         return tremove(self.auctions);
     end
     return Auction:New();
