@@ -144,7 +144,7 @@ end
 function AuctionList:AddItems(items)
     for i,v in ipairs(items) do
         if (not Query:IsBlacklisted(v)) then
-            tinsert(self.items, v:Clone(true));
+            tinsert(self.items, v:Clone());
         end
     end 
     self:Sort(self.lastSortMode, true);
@@ -154,7 +154,7 @@ function AuctionList:SetItems(items)
     wipe(self.items);
     for i,v in ipairs(items) do
         if (not Query:IsBlacklisted(v)) then
-            tinsert(self.items, v:Clone(true));
+            tinsert(self.items, v:Clone());
         end
     end 
     self:Sort(self.lastSortMode, true);
@@ -168,21 +168,21 @@ function AuctionList:Purchase(block)
     if (block.auctionId ~= nil and not block.isCommodity) then
         if (GetMoney() >= block.buyoutPrice) then
             self.isBuying = true;
-            self.auction = block:Clone(true);
+            self.auction = block;
             self:PurchaseAuction();
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
         if (Config.Sniper().useCommodityConfirm) then
             self.isBuying = true;
-            self.commodity = block:Clone(true);
+            self.commodity = block:Clone();
             self.auction = self.commodity;
             self.commodityConfirm:Show();
             return true, true;
         elseif (GetMoney() >= block.buyoutPrice) then
             self.isBuying = true;
-            self.auction = block:Clone(true);
-            self.commodity = block:Clone(true);
+            self.auction = block;
+            self.commodity = block:Clone();
             self.commodity.toPurchase = self.commodity.count;
             self:PurchaseCommodity();
             return true, true;
@@ -344,6 +344,8 @@ function AuctionList:Recycle()
             for k,c in ipairs(v.auctions) do
                 Recycler:Recycle(c);
             end
+        else
+            Recycler:Recycle(v);
         end
     end
 

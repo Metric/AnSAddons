@@ -647,7 +647,7 @@ function AuctionSnipe:OnRetailUpdate()
     elseif (AuctionList.auction and AuctionList.isBuying and not AuctionList.commodity) then
         if (Query.previousState == Query.STATES.BROWSE and self.auctionState == STATES.NONE) then
             self.auctionState = STATES.CONFIRM_AUCTION;
-            Query.SearchForItem(AuctionList.auction, false, true);
+            Query.SearchForItem(AuctionList.auction:Clone(), false, true);
         end
         return;
     else
