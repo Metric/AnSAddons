@@ -8,7 +8,10 @@ https://discord.gg/DZueXS7
 
 AnS [Auction Snipe] 
 ===========================
-A lightweight addon for WoW auction sniping
+A lightweight addon for WoW auction sniping for retail WoW.
+The classic version is available under the `Classic` branch currently: https://github.com/Metric/AnSAddons/tree/Classic.
+
+After downloading it, place the two extracted folders in your addons folder and restart the game
 
 Dependecies
 =============
@@ -20,6 +23,11 @@ Requires AnS
 
 (Optional) Auctionator addon for percentage calculations.
 
+
+Usage
+==================================================
+AnS adds 3 tabs to your auction interface: Snipe, AnsBuy, and AnsSell.
+If you use TSM, you will need to press the button to go back to the original auction interface.
 
 Note for 2.0 Regarding Max Percent
 ==================================================
