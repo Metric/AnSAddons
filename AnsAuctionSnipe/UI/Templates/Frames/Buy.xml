@@ -336,7 +336,7 @@
 
             <Frame name="$parentResults" inherits="AuctionHouseBackgroundTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT" x="0" y="0" />
+                    <Anchor point="TOPLEFT" relativeTo="$parentHeader" relativePoint="BOTTOMLEFT" x="4" y="0" />
                     <Anchor point="BOTTOMRIGHT" x="-4" y="28" />
                 </Anchors>
                 <KeyValues>         

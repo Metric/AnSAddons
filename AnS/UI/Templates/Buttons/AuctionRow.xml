@@ -1,6 +1,13 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
   <Button name="AnsAuctionRowTemplate" virtual="true" hidden="true">
-    <Size x="584" y="16" />
+    <Size x="594" y="16" />
+    <Layers>
+      <Layer level="BACKGROUND">
+        <Texture hidden="true" parentKey="NewHighlight" name="$parentNewHighlight" alphaMode="ADD" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+          <Color r="1" g="1" b="1" a="0.05" />
+        </Texture>
+      </Layer>
+    </Layers>
     <Frames>
       <Frame>
         <Size x="140" y="16" />

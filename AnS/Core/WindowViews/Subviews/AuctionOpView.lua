@@ -14,8 +14,8 @@ local retailDurations = {
 };
 
 local classicDurations = {
+    "2 Hours",
     "8 Hours",
-    "12 Hours",
     "24 Hours"
 };
 

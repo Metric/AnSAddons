@@ -73,7 +73,9 @@ local ParseTemplate = [[
             log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, math.min, math.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
         local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
-
+        local bonus = function(v1,v2,v3)
+            return sources.bonus(ops.tsmId, v1, v2, v3);
+        end
 
         local percent = ops.percent;
         local ppu = ops.ppu;
@@ -285,25 +287,25 @@ end
 Sources.check = function(v1,v2,v3)
     if (math.floor(v1) > 0) then
         return v2;
-    else
-        return v3;
     end
+    
+    return v3;
 end
 
 Sources.iflte = function(v1, v2, v3, v4)
     if (v1 <= v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.ifgte = function(v1, v2, v3, v4)
     if (v1 >= v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.iflt = function(v1, v2, v3, v4)
@@ -317,45 +319,74 @@ end
 Sources.ifgt = function(v1, v2, v3, v4)
     if (v1 > v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.ifeq = function(v1, v2, v3, v4)
     if (v1 == v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.ifneq = function(v1, v2, v3, v4)
     if (v1 ~= v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
-Sources.neq = function(v1,v2) 
-    return v1 ~= v2;
+Sources.neq = function(v1,v2,v3,v4) 
+    if (v1 ~= v2) then
+        return v3 or true;
+    end
+
+    return v4 or false;
 end
 
-Sources.eq = function(v1,v2)
-    return v1 == v2;
+Sources.eq = function(v1,v2,v3,v4)
+    if (v1 == v2) then
+        return v3 or true;
+    end
+
+    return v4 or false;
 end
 
-Sources.startswith = function(v1, v2)
-    return strsub(v1, 1, #v2) == v2
+Sources.startswith = function(v1, v2, v3, v4)
+    if (strsub(v1, 1, #v2) == v2) then
+        return v3 or true;
+    end
+
+    return v4 or false;
 end
 
-Sources.contains = function(v1, v2)
+Sources.contains = function(v1, v2, v3, v4)
     if (strfind(v1, v2)) then
-        return true;
+        return v3 or true;
     end
 
-    return false;
+    return v4 or false;
+end
+
+Sources.bonus = function(v1,v2,v3,v4)
+    if (not v1) then
+        return v4 or false;
+    end
+    
+    local s,e = strfind(v1, ":"..v2..":");
+    if (not s) then
+        s,e = strfind(v1, ":"..v2.."$");
+    end
+
+    if (s) then
+        return v3 or true; 
+    end
+
+    return v4 or false;
 end
 
 -- This accepts an item id in tsm format, numeric, or an item link

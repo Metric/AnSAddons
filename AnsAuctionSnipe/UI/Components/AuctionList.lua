@@ -67,6 +67,11 @@ end
 function AuctionList:CheckAndPurchase(auction)
     if (auction and not auction.sniped) then
         local index = auction.itemIndex;
+
+        if (not index) then
+            return false;
+        end
+
         local link = GetAuctionItemLink("list", index);
         if (link and auction.link == link) then
             local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
@@ -102,7 +107,7 @@ function AuctionList:ClassicPurchase(block)
     end
 
     if (self:CheckAndPurchase(auction)) then
-        tremove(block.auctions);
+        tremove(block.auctions, 1);
         self:RemoveAuctionAmount(block, auction.count);
         Recycler:Recycle(auction);
         return true;
@@ -111,13 +116,13 @@ function AuctionList:ClassicPurchase(block)
     return false;
 end
 
-function AuctionList:Buy(block) 
+function AuctionList:Buy(block, forcePurchase) 
     if (self.frame and block) then
         if (not self.isBuying and self.commodity == nil and self.auction == nil) then
             if (Utils:IsClassic()) then
                 self:ClassicPurchase(block);
             else
-                self:Purchase(block);
+                self:Purchase(block, forcePurchase);
             end
         end
 
@@ -125,15 +130,15 @@ function AuctionList:Buy(block)
     end
 end
 
-function AuctionList:BuyFirst() 
+function AuctionList:BuyFirst(forcePurchase) 
     if (self.frame and #self.items > 0) then
-        self:Buy(self.items[1]);
+        self:Buy(self.items[1], forcePurchase);
     end
 end
 
-function AuctionList:BuySelected()
+function AuctionList:BuySelected(forcePurchase)
     if (self.frame and self.selectedItem) then
-        self:Buy(self.selectedItem);
+        self:Buy(self.selectedItem, forcePurchase);
     end
 end
 
@@ -141,12 +146,21 @@ function AuctionList:ItemsExist()
     return #self.items > 0;
 end
 
-function AuctionList:AddItems(items)
+function AuctionList:AddItems(items,clearNew)
+    if (clearNew) then
+        for i,v in ipairs(self.items) do
+            v.isNew = false;
+        end
+    end
+
     for i,v in ipairs(items) do
         if (not Query:IsBlacklisted(v)) then
-            tinsert(self.items, v:Clone());
+            local c = v:Clone();
+            c.isNew = true;
+            tinsert(self.items, c);
         end
     end 
+
     self:Sort(self.lastSortMode, true);
 end
 
@@ -160,7 +174,7 @@ function AuctionList:SetItems(items)
     self:Sort(self.lastSortMode, true);
 end
 
-function AuctionList:Purchase(block)
+function AuctionList:Purchase(block, forcePurchaseAuction)
     if (self.commodity ~= nil) then
         return false, false;
     end
@@ -169,7 +183,9 @@ function AuctionList:Purchase(block)
         if (GetMoney() >= block.buyoutPrice) then
             self.isBuying = true;
             self.auction = block;
-            self:PurchaseAuction();
+            if (forcePurchaseAuction) then
+                self:PurchaseAuction();
+            end
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
@@ -194,10 +210,6 @@ end
 
 function AuctionList:PurchaseAuction()
     local block = self.auction;
-    
-    if (Query.previousState == Query.STATES.BROWSE) then
-        return;
-    end
 
     if (GetMoney() >= block.buyoutPrice) then
         C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);         
@@ -450,7 +462,7 @@ function AuctionList:Click(row, button, down)
         clickCount = 0;
     end
 
-    if (IsShiftKeyDown()) then
+    if (IsShiftKeyDown() and not IsControlKeyDown()) then
         local block = self.items[id];
 
         if (block) then
@@ -461,7 +473,7 @@ function AuctionList:Click(row, button, down)
         self.selectedEntry = -1;
         self.selectedItem = nil;
         clickCount = 0;
-    elseif (IsControlKeyDown()) then
+    elseif (IsShiftKeyDown() and IsControlKeyDown()) then
         local block = self.items[id];
 
         if (block) then
@@ -488,11 +500,9 @@ function AuctionList:Click(row, button, down)
     clickCount = clickCount + 1;
     clickTime = time();
 
-    if (Utils:IsClassic()) then
-        if (clickCount > 1) then
-            self:BuySelected();
-            clickCount = 0;
-        end
+    if (clickCount > 1) then
+        AuctionSnipe:BuySelected();
+        clickCount = 0;
     end
 
     self:Refresh();
@@ -571,6 +581,12 @@ function AuctionList:UpdateRow(offset, row)
             itemIcon:Show();
         else
             itemIcon:Hide();
+        end
+
+        if (row.item.isNew) then
+            row.NewHighlight:Show();
+        else
+            row.NewHighlight:Hide();
         end
 
         if (row.item == self.selectedItem) then

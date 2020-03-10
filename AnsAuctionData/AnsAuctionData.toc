@@ -1,4 +1,4 @@
-## Interface: 83000
+## Interface: 80300
 ## Title: AnS [Auction Data]
 ## License: MIT
 ## Version: 1.0.1

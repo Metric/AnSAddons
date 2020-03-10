@@ -1,8 +1,15 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
 local Utils = Ans.Utils;
+local Logger = Ans.Logger;
 local Sources = Ans.Sources;
+local Tasker = Ans.Tasker;
+local FSM = Ans.FSM;
+local FSMState = Ans.FSMState;
 local EventManager = Ans.EventManager;
+
+local QueryFSM = nil;
+
 
 local Query = {};
 Query.__index = Query;
@@ -20,13 +27,16 @@ Auction.__index = Auction;
 
 local throttleMessageReceived = true;
 local throttleWaitingForSend = false;
-local throttleTime = time();
+local throttleTime = GetTime();
 
 local EVENTS_TO_REGISTER = {};
 
 local DEFAULT_ITEM_SORT = { sortOrder = 0, reverseSort = false };
 
 local ownedAuctions = {};
+
+local MAX_THROTTLE_WAIT = 0.25;
+local TASKER_TAG = "QUERY";
 
 if (not Utils:IsClassic()) then
     EVENTS_TO_REGISTER = {
@@ -43,11 +53,14 @@ if (not Utils:IsClassic()) then
         "OWNED_AUCTIONS_UPDATED",
         "AUCTION_CANCELED",
         "AUCTION_HOUSE_AUCTION_CREATED",
-        "AUCTION_MULTISELL_FAILURE"
+        "AUCTION_MULTISELL_FAILURE",
+        "UI_ERROR_MESSAGE"
     };
 else
     EVENTS_TO_REGISTER = {
-        "AUCTION_ITEM_LIST_UPDATE"
+        "AUCTION_ITEM_LIST_UPDATE",
+        "AUCTION_OWNED_LIST_UPDATE",
+        "UI_ERROR_MESSAGE"
     };
 end
 
@@ -67,7 +80,7 @@ function Auction:New()
     a.tsmId  = nil;
     a.percent = -1;
     a.quality = 0;
-    a.buyoutPrice = 0;
+    
     a.iLevel = 0;
     a.vendorsell = 0;
     a.isCommodity = false;
@@ -76,8 +89,8 @@ function Auction:New()
     return a;
 end
 
-function Auction:Clone(forceNew)
-    local a = Recycler:Get(forceNew);
+function Auction:Clone()
+    local a = Recycler:Get();
     setmetatable(a, Auction);
     a.id = self.id;
     a.itemKey = self.itemKey;
@@ -115,8 +128,8 @@ function Recycler:Recycle(auction)
     tinsert(self.auctions, auction);
 end
 
-function Recycler:Get(forceNew)
-    if (#self.auctions > 0 and not forceNew) then
+function Recycler:Get()
+    if (#self.auctions > 0) then
         return tremove(self.auctions);
     end
     return Auction:New();
@@ -140,7 +153,7 @@ local function ItemKeyHash(itemKey)
         return nil;
     end
 
-    return ""..itemKey.itemID..itemKey.itemLevel..itemKey.itemSuffix..itemKey.battlePetSpeciesID;
+    return ""..itemKey.itemID..itemKey.itemLevel..itemKey.battlePetSpeciesID;
 end
 
 local function GetOwners(result)
@@ -154,14 +167,6 @@ local function GetOwners(result)
 end
 
 local STATES = {};
-STATES.NONE = 0;
-STATES.BROWSE = 1;
-STATES.SEARCH = 2;
-STATES.CLASSIC_SEARCH = 3;
-STATES.BROWSE_MORE = 4;
-STATES.SEARCH_MORE = 5;
-STATES.OWNED = 6;
-
 Query.ItemKeyHash = ItemKeyHash;
 
 Query.ops = {};
@@ -169,14 +174,10 @@ Query.page = 0;
 Query.itemIndex = 1;
 Query.blacklist = {};
 Query.groupResults = {};
-Query.queuedSearches = {};
 
 Query.BrowseFilterFunc = nil;
 Query.fullBrowseResults = false;
-Query.state = STATES.NONE;
-Query.previousState = STATES.NONE;
-Query.STATES = STATES;
-Query.queuedStates = {};
+Query.lastQueryType = nil;
 
 function Query:RegisterEvents(frame)
     for i,v in ipairs(EVENTS_TO_REGISTER) do
@@ -438,21 +439,23 @@ function Query:IsAllReady()
     return queryAll;
 end
 
-function Query:Search(filter, autoPage, op)
+function Query:Search(filter, autoPage)
     local ready = self:IsReady();
     
-    self.state = STATES.CLASSIC_SEARCH;
     self.itemIndex = 1;
-    self.op = op;
     self.filter = filter;
     self.autoPage = autoPage;
 
     if (ready) then
-        self.delay = nil;
+        -- ensure we remove the previous listener if there was one still
+        EventManager:RemoveListener("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
         EventManager:On("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
+        self.delay = nil;
         QueryAuctionItems(filter.searchString or "", filter.minLevel, filter.maxLevel, self.page, false, filter.quality, false, false);
     else
-        self.delay = time();
+        Tasker.Delay(GetTime() + 1, function() 
+            Query:Search(filter, autoPage);
+        end, TASKER_TAG);
     end
     return ready;
 end
@@ -575,10 +578,6 @@ function Query:Next(auction)
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
     auction.hash = ItemHash(auction);
 
-    if (self.op) then
-        auction.op = self.op;
-    end
-
     return auction;
 end
 
@@ -616,13 +615,14 @@ end
 
 function Query.OnListUpdate()
     local self = Query;
-    -- we remove it as we only want the first update initiated by a search
+
+    -- remove listener as we only want the first update
     EventManager:RemoveListener("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
 
     while (Query:HasNext()) do
         local item = Query:Next();
         if (item) then
-            EventManager:Emit("QUERY_CLASSIC_RESULT", item);
+            EventManager:Emit("QUERY_SEARCH_RESULT", item);
         end
     end
 
@@ -630,11 +630,9 @@ function Query.OnListUpdate()
         Query:NextPage();
         Query:Search(Query.filter, Query.autoPage, Query.op);
     else
-        self.state = STATES.NONE;
         self.filter = nil;
-        self.op = nil;
 
-        EventManager:Emit("QUERY_CLASSIC_COMPLETE");
+        EventManager:Emit("QUERY_SEARCH_COMPLETE");
     end
 end
 
@@ -644,70 +642,6 @@ local browseIndex = 1;
 -- retail and classic specific updates
 
 function Query.OnUpdate()
-    -- this is for when classic search fails we keep trying
-    -- until it goes through
-    if (Query.state == STATES.CLASSIC_SEARCH) then
-        if (Query.delay and time() - Query.delay > 1 and Query.filter) then
-            Query:Search(Query.filter, Query.autoPage, Query.op);
-        end
-    -- these ar for retail for when it is in the specified state
-    -- but we received a ThrottleDropped message
-    -- thus we try and try again
-    elseif (Query.state == STATES.BROWSE) then
-        if (Query.delay and time() - Query.delay > 1 and Query.filter) then
-            if (not Query.Browse(Query.filter)) then
-                Query.delay = time();
-            else
-                Query.delay = nil;
-            end
-        end
-    elseif (Query.state == STATES.SEARCH) then
-        if (Query.delay and time() - Query.delay > 1 and Query.filter and Query.filter.item) then
-            if (not Query.SearchForItem(Query.filter.item, Query.filter.byItemID, Query.filter.firstOnly)) then
-                Query.delay = time();
-            else
-                Query.delay = nil;
-            end
-        end
-    elseif (Query.state == STATES.BROWSE_MORE) then
-        if (Query.delay and time() - Query.delay > 1) then
-            Query.delay = nil;
-            Query.BrowseMore();
-        end
-    elseif (Query.state == STATES.OWNED) then
-        if (Query.delay and time() - Query.delay > 1) then
-            Query.delay = nil;
-            Query.Owned();
-        end
-    elseif (Query.state == STATES.SEARCH_MORE) then
-        if (Query.delay and time() - Query.delay > 1 and Query.moreItem) then
-            Query.delay = nil;
-            if (Query.moreItem.isCommodity) then
-                C_AuctionHouse.RequestMoreCommoditySearchResults(Query.moreItem.key);
-            else
-                C_AuctionHouse.RequestMoreItemSearchResults(Query.moreItem.key);
-            end
-        end
-    elseif (Query.state == STATES.NONE) then
-        if (#Query.queuedStates > 0) then
-            local next = tremove(Query.queuedStates);
-
-            if (next.state == STATES.BROWSE) then
-                if (not Query.Browse(next.data)) then
-                    Query.delay = time();
-                end
-            elseif (next.state == STATES.SEARCH) then
-                if (not Query.SearchForItem(next.data.item, next.data.byItemID, next.data.firstOnly)) then
-                    Query.delay = time();
-                end
-            elseif (next.state == STATES.OWNED) then
-                if (not Query.Owned()) then
-                    Query.delay = time();
-                end
-            end
-        end
-    end
-
     if (#browseResults > 0 and browseIndex <= #browseResults and Query.BrowseFilterFunc) then
         local count = 0;
         while (browseIndex <= #browseResults and count < Config.Sniper().itemsPerUpdate) do
@@ -726,15 +660,10 @@ function Query.OnUpdate()
         end
         
         if (browseIndex > #browseResults) then
-            if (Query.state == STATES.BROWSE or Query.state == STATES.BROWSE_MORE) then
-                Query.state = STATES.NONE;
-                Query.filter = nil;
-            end
-
             wipe(browseResults);
             browseIndex = 1;
 
-            EventManager:Emit("QUERY_BROWSE_RESULTS");
+            QueryFSM:Process("IDLE");
         end
     end
 end
@@ -752,6 +681,7 @@ function Query:GetOwnedAuctionRetail(index)
     end
 
     auction.link = info.itemLink;
+    auction.tsmId = Utils:GetTSMID(auction.link);
 
     local keyInfo = C_AuctionHouse.GetItemKeyInfo(info.itemKey);
 
@@ -760,6 +690,7 @@ function Query:GetOwnedAuctionRetail(index)
         return nil;
     end
 
+    auction.isCommodity = keyInfo.isCommodity;
     auction.isEquipment = keyInfo.isEquipment;
     auction.id = info.itemKey.itemID;
     auction.auctionId = info.auctionID;
@@ -768,6 +699,7 @@ function Query:GetOwnedAuctionRetail(index)
     auction.count = info.quantity;
     auction.ppu = info.buyoutAmount;
     auction.bidder = info.bidder;
+    auction.iLevel = info.itemKey.itemLevel;
 
     if (auction.status > 0) then
         Recycler:Recycle(auction);
@@ -790,31 +722,12 @@ function Query:GetOwnedAuctionRetail(index)
 end
 
 function Query.OnOwnedUpdate()
-    for i,v in ipairs(ownedAuctions) do
-        Recycler:Recycle(v);
-    end
-
-    wipe(ownedAuctions);
-
-    local num = C_AuctionHouse.GetNumOwnedAuctions();
-
-    for i = 1, num do
-        local auction = Query:GetOwnedAuctionRetail(i);
-        if (auction) then
-            tinsert(ownedAuctions, auction);
-        end
-    end
-
-    if (Query.state == STATES.OWNED) then
-        Query.state = STATES.NONE;
-    end
-
-    EventManager:Emit("QUERY_OWNED_AUCTIONS", ownedAuctions);
+    QueryFSM:Process("OWNED_RESULTS");
 end
 
 -- throttle related for retail
 function Query.ThrottleReceived()
-    throttleTime = time();
+    throttleTime = GetTime();
     throttleMessageReceived = true;
 end
 
@@ -827,13 +740,13 @@ function Query.ThrottleDropped()
     throttleWaitingForSend = false;
     throttleMessageReceived = true;
 
-    if (Query.state ~= STATES.NONE) then
-        Query.delay = time();
-    end
+    throttleTime = GetTime();
+
+    QueryFSM:Process("DROPPED");
 end
 
 function Query.ThrottleSent()
-    throttleTime = time();
+    throttleTime = GetTime();
     throttleWaitingForSend = false;
 end
 
@@ -844,9 +757,8 @@ function Query.ClearThrottle()
 end
 
 function Query.Clear()
-    wipe(Query.queuedStates);
-    Query.state = STATES.NONE;
-    Query.delay = nil;
+    Tasker.Clear(TASKER_TAG);
+    QueryFSM:Interrupt();
 end
 
 function Query.IsThrottled()
@@ -854,194 +766,78 @@ function Query.IsThrottled()
 end
 
 function Query.Browse(filter)
-    if (Query.state ~= STATES.NONE and Query.state ~= STATES.BROWSE) then
-        tinsert(Query.queuedStates, {state = STATES.BROWSE, data = filter});
-        return false;
+    if (not QueryFSM.current) then
+        QueryFSM.current = "IDLE";
     end
-
-    Query.filter = filter;
-    Query.previousState = STATES.BROWSE;
-    Query.state = STATES.BROWSE;
-
-    if (Query.IsThrottled()) then
-        Query.delay = time();
-        return false;
-    end
-
-    Query.fullBrowseResults = false;
-    wipe(Query.groupResults);
-
-    C_AuctionHouse.SendBrowseQuery(filter);
-    
-    return true;
+    QueryFSM:Process("BROWSE", filter);
 end
 
 function Query.BrowseMore()
-    Query.state = STATES.BROWSE_MORE;
-    C_AuctionHouse.RequestMoreBrowseResults();
-    return true;
-end
-
-function Query.SearchForItem(item, byItemID, firstOnly)
-    
-    -- set filter here
-    local filter = {
-        item = item,
-        byItemID = byItemID,
-        firstOnly = firstOnly
-    };
-
-    if (Query.state ~= STATES.NONE and Query.state ~= STATES.SEARCH) then
-        tinsert(Query.queuedStates, {state = STATES.SEARCH, data = filter});
-        return false;
+    if (not QueryFSM.current) then
+        QueryFSM.current = "IDLE";
     end
-
-    Query.state = STATES.SEARCH;
-    Query.previousState = STATES.SEARCH;
-
-    Query.filter = filter;
-
-    if (Query.IsThrottled()) then
-        Query.delay = time();
-        return false;
-    end
-
-    if (item and item.id) then
-        local _ = GetItemInfo(item.id);
-        if (_ and item and item.itemKey) then
-            local info = C_AuctionHouse.GetItemKeyInfo(item.itemKey);
-            local hash = ItemKeyHash(item.itemKey);
-            if (info and hash) then
-                Query.queuedSearches[hash] = item;
-                Query.queuedSearches[item.id] = item;
-
-                if (byItemID) then
-                    C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
-                else
-                    C_AuctionHouse.SendSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
-                end
-
-                return true;
-            end
-        elseif (not item or not item.itemKey) then
-            Query.delay = nil;
-            return true;
-        end
-    elseif (not item or not item.id) then
-        Query.delay = nil;
-        return true;
-    end
-
-    -- if neither item info or item key info
-    -- then we must wait for the events for item info or item key info
-    -- then try again
-    -- otherwise, the SendSearchQuery may fail for some unknown reason
-    -- and will never trigger an event properly.
-    Query.delay = time();
-    return false;
-end
-
-function Query.Owned()
-    if (Query.state ~= STATES.NONE and Query.state ~= STATES.OWNED) then
-        tinsert(Query.queuedStates, {state = STATES.OWNED, data = nil});
-        return false;
-    end
-
-    Query.state = STATES.OWNED;
-    Query.previousState = STATES.OWNED;
-
-    if (Query.IsThrottled()) then
-        Query.delay = time();
-        return false;
-    end
-
-    Query.delay = nil;
-    C_AuctionHouse.QueryOwnedAuctions(DEFAULT_ITEM_SORT);
-    return true;
-end
-
--- override with your own is exiting
-function Query.IsExiting()
-    return false;
+    QueryFSM:Process("BROWSE_MORE");
 end
 
 function Query.OnBrowseResults(added)
-    if (Query.IsExiting() or (Query.state ~= STATES.BROWSE and Query.state ~= STATES.BROWSE_MORE)) then
-        return;
-    end
+    local transitionSuccess = QueryFSM:Process("BROWSE_RESULTS", added);
+end
 
-    if (added) then
-        for i,v in ipairs(added) do
-            if (Query.BrowseFilterFunc) then
-                tinsert(browseResults, v);
-            else
-                tinsert(Query.groupResults, v);
+function Query.SearchForItem(item, byItemID, firstOnly)
+    if (not QueryFSM.current) then
+        QueryFSM.current = "IDLE";
+    end
+    QueryFSM:Process("SEARCH", item, byItemID, firstOnly);
+end
+
+function Query.Owned()
+    if (not QueryFSM.current) then
+        QueryFSM.current = "IDLE";
+    end
+    QueryFSM:Process("OWNED");
+end
+
+function Query.ProcessCommodity(item, itemID)
+    for searchIndex = 1, C_AuctionHouse.GetNumCommoditySearchResults(itemID) do
+        local result = C_AuctionHouse.GetCommoditySearchResultInfo(itemID, searchIndex);
+        item.count = result.quantity;
+        item.ppu = result.unitPrice;
+        item.buyoutPrice = result.unitPrice * result.quantity;
+        item.owner = GetOwners(result);
+        item.isCommodity = true;
+        item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
+
+        if (item.id) then
+            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
+
+            if (itemName and itemLink) then
+                item.link = itemLink;
+
+                item.quality = itemRarity;
+                item.name = itemName;
+                item.texture = itemIcon;
+                item.vendorsell = itemSellPrice;
             end
         end
-    else
-        local results = C_AuctionHouse.GetBrowseResults();
-        wipe(Query.groupResults);
-        wipe(browseResults);
-        browseIndex = 1;
 
-        for i,v in ipairs(results) do
-            if (Query.BrowseFilterFunc) then
-                tinsert(browseResults, v);
-            else
-                tinsert(Query.groupResults, v);
-            end
+        -- set to nil to make sure
+        -- it is cleared if it some
+        -- how got filled in
+        item.auctionId = nil;
+
+        EventManager:Emit("QUERY_SEARCH_RESULT", item);
+
+        if (Query.filter and Query.filter.first) then
+            break;
         end
-    end
-
-    Query.fullBrowseResults = C_AuctionHouse.HasFullBrowseResults();
-
-    if (not Query.BrowseFilterFunc or #browseResults == 0) then
-        if (Query.state == STATES.BROWSE or Query.state == STATES.BROWSE_MORE) then
-            Query.state = STATES.NONE;
-            Query.filter = nil;
-        end
-        EventManager:Emit("QUERY_BROWSE_RESULTS");
     end
 end
 
-function Query.OnItemResults(itemKey)
-    local hash = ItemKeyHash(itemKey);
-
-    if (not hash) then
-        return;
-    end
-
-    if (not Query.queuedSearches[hash] or Query.IsExiting()) then
-        return;
-    end
-
-    if (not C_AuctionHouse.HasFullItemSearchResults(itemKey) and Query.filter and not Query.filter.firstOnly) then
-        Query.state = STATES.SEARCH_MORE;
-        Query.moreItem = {key = itemKey, isCommodity = false};
-
-        C_AuctionHouse.RequestMoreItemSearchResults(itemKey);
-        return;
-    end
-
-    local item = Query.queuedSearches[hash];
-
-    if (not item or not item.id or not item.itemKey) then
-        if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
-            Query.state = STATES.NONE;
-            Query.moreItem = nil;
-            Query.filter = nil;
-        end
-
-        return;
-    end
-
-    item.isCommodity = false;
-    Query.queuedSearches[hash] = nil;
-    Query.queuedSearches[item.id] = nil;
-
+function Query.ProcessItem(item, itemKey)
     for searchIndex = 1, C_AuctionHouse.GetNumItemSearchResults(itemKey) do
         local result = C_AuctionHouse.GetItemSearchResultInfo(itemKey, searchIndex);
         if (result.buyoutAmount) then
+            item.isCommodity = false;
             item.count = result.quantity;
             item.ppu = result.buyoutAmount;
             item.buyoutPrice = result.buyoutAmount;
@@ -1075,88 +871,316 @@ function Query.OnItemResults(itemKey)
 
             EventManager:Emit("QUERY_SEARCH_RESULT", item);
 
-            if (Query.filter and Query.filter.firstOnly) then
+            if (Query.filter and Query.filter.first) then
                 break;
             end
         end
     end
+end
 
-    if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
-        Query.state = STATES.NONE;
-        Query.moreItem = nil;
-        Query.filter = nil;
-    end
-    EventManager:Emit("QUERY_SEARCH_COMPLETE", item);
+-- override with your own is exiting
+function Query.IsExiting()
+    return false;
+end
+
+function Query.OnItemResults(itemKey)
+    Logger.Log("QUERY", "item results");
+    QueryFSM:Process("ITEM_RESULT", itemKey);
+end
+
+function Query.OnItemResultsAdded(itemKey)
+    Logger.Log("QUERY", "item results added");
+    QueryFSM:Process("ITEM_RESULT", itemKey);
 end
 
 function Query.OnCommodityResults(itemID)
-    if (not Query.queuedSearches[itemID] or Query.IsExiting()) then
-        return;
-    end
+    Logger.Log("QUERY", "commodity results");
+    QueryFSM:Process("COMMODITY_RESULT", itemID);
+end
 
-    if (not C_AuctionHouse.HasFullCommoditySearchResults(itemID) and Query.filter and not Query.filter.firstOnly) then
-        Query.state = STATES.SEARCH_MORE;
-        Query.moreItem = {key = itemID, isCommodity = true};
+function Query.OnCommodityResultsAdded(itemID)
+    Logger.Log("QUERY", "commodity results added");
+    QueryFSM:Process("COMMODITY_RESULT", itemID);
+end
 
-        C_AuctionHouse.RequestMoreCommoditySearchResults(itemID);
-        return;
-    end
+-- the state machine is only really used
+-- for retail
+-- since the classic version is simpler
+-- it is not needed
+local function BuildStateMachine()
+    local fsm = FSM:New("QueryFSM");
 
-    local item = Query.queuedSearches[itemID];
+    local idle = FSMState:New("IDLE");
+    idle:AddEvent("BROWSE");
+    idle:AddEvent("BROWSE_MORE");
+    idle:AddEvent("SEARCH");
+    idle:AddEvent("OWNED");
 
-    if (not item or not item.id or not item.itemKey) then
-        if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
-            Query.state = STATES.NONE;
-            Query.moreItem = nil;
-            Query.filter = nil;
-        end
+    fsm:Add(idle);
 
-        return;
-    end
+    local browse = FSMState:New("BROWSE");
+    browse:SetOnEnter(function(self, filter)
+        Query.filter = filter;
+        Query.fullBrowseResults = false;
+        Query.lastQueryType = "BROWSE";
+        wipe(Query.groupResults);
 
-    item.isCommodity = true;
-    Query.queuedSearches[itemID] = nil;
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            C_AuctionHouse.SendBrowseQuery(filter);
+        end, TASKER_TAG);
+        return nil;
+    end);
 
-    local hash = ItemKeyHash(item.itemKey);
+    browse:AddEvent("BROWSE_RESULTS");
+    browse:AddEvent("DROPPED", function(self, event)
+        Logger.Log("QUERY", "browse dropped");
+        return "BROWSE", Query.filter;
+    end);
+    browse:AddEvent("IDLE");
+    browse:AddEvent("SEARCH");
 
-    if (hash) then
-        Query.queuedSearches[hash] = nil;
-    end
+    fsm:Add(browse);
 
-    for searchIndex = 1, C_AuctionHouse.GetNumCommoditySearchResults(itemID) do
-        local result = C_AuctionHouse.GetCommoditySearchResultInfo(itemID, searchIndex);
-        item.count = result.quantity;
-        item.ppu = result.unitPrice;
-        item.buyoutPrice = result.unitPrice * result.quantity;
-        item.owner = GetOwners(result);
-        item.isOwnerItem = result.containsOwnerItem or result.containsAccountItem;
+    local fsmbrowseResults = FSMState:New("BROWSE_RESULTS");
+    fsmbrowseResults:SetOnEnter(function(self, added)
+        Logger.Log("QUERY", "processing browse results");
+        if (added) then
+            for i,v in ipairs(added) do
+                if (Query.BrowseFilterFunc) then
+                    tinsert(browseResults, v);
+                else
+                    tinsert(Query.groupResults, v);
+                end
+            end
+        else
+            local results = C_AuctionHouse.GetBrowseResults();
+            wipe(Query.groupResults);
+            wipe(browseResults);
+            browseIndex = 1;
 
-        if (item.id) then
-            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.id); 
-
-            if (itemName and itemLink) then
-                item.link = itemLink;
-
-                item.quality = itemRarity;
-                item.name = itemName;
-                item.texture = itemIcon;
-                item.vendorsell = itemSellPrice;
+            for i,v in ipairs(results) do
+                if (Query.BrowseFilterFunc) then
+                    tinsert(browseResults, v);
+                else
+                    tinsert(Query.groupResults, v);
+                end
             end
         end
 
-        EventManager:Emit("QUERY_SEARCH_RESULT", item);
+        Query.fullBrowseResults = C_AuctionHouse.HasFullBrowseResults();
 
-        if (Query.filter and Query.filter.firstOnly) then
-            break;
+        if (not Query.BrowseFilterFunc or #browseResults == 0) then
+            return "IDLE";
         end
-    end
 
-    if (Query.state == STATES.SEARCH_MORE or Query.state == STATES.SEARCH) then
-        Query.state = STATES.NONE;
-        Query.moreItem = nil;
-        Query.filter = nil;
-    end
-    EventManager:Emit("QUERY_SEARCH_COMPLETE", item);
+        return nil;
+    end);
+    fsmbrowseResults:SetOnExit(function(self, next)
+        Logger.Log("QUERY", "browse result complete");
+        if (next == "IDLE") then
+            Tasker.Schedule(function()
+                EventManager:Emit("QUERY_BROWSE_RESULTS");
+            end, TASKER_TAG);
+        end
+    end);
+    fsmbrowseResults:AddEvent("IDLE");
+    fsmbrowseResults:AddEvent("SEARCH");
+
+    fsm:Add(fsmbrowseResults);
+
+    local browseMore = FSMState:New("BROWSE_MORE");
+    browseMore:SetOnEnter(function(self)
+        Query.lastQueryType = "BROWSE";
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            C_AuctionHouse.RequestMoreBrowseResults();
+        end, TASKER_TAG);
+        return nil;
+    end);
+    browseMore:AddEvent("BROWSE_RESULTS");
+    browseMore:AddEvent("DROPPED", function(self)
+        return "BROWSE_MORE";
+    end);
+    browseMore:AddEvent("IDLE");
+    browseMore:AddEvent("SEARCH");
+
+    fsm:Add(browseMore);
+
+    local search = FSMState:New("SEARCH");
+    search:SetOnEnter(function(self, item, sell, first)
+        Query.filter = {
+            item = item,
+            sell = sell,
+            first = first
+        };
+
+        Logger.Log("QUERY", "trying to start search");
+
+        Query.lastQueryType = "SEARCH";
+
+        if (item and item.id) then
+            local _ = GetItemInfo(item.id);
+            if (_ and item and item.itemKey) then
+                local info = C_AuctionHouse.GetItemKeyInfo(item.itemKey);
+                if (info) then
+                    Logger.Log("QUERY", "sending search query");
+                    item.isCommodity = info.isCommodity;
+
+                    if (sell) then
+                        C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+                    else
+                        C_AuctionHouse.SendSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+                    end
+    
+                    return "ITEM_RESULTS", item;
+                end
+            elseif (not item or not item.itemKey) then
+                return "IDLE";
+            end
+        elseif (not item or not item.id) then
+            return "IDLE";
+        end
+
+        Logger.Log("QUERY", "search delay");
+        return "SEARCH_DELAY";
+    end);
+    search:AddEvent("DROPPED", function(self)
+        return "SEARCH_DELAY";
+    end);
+    search:AddEvent("ITEM_RESULTS");
+    search:AddEvent("IDLE");
+    search:AddEvent("SEARCH_DELAY");
+
+    fsm:Add(search);
+
+    local searchDelay = FSMState:New("SEARCH_DELAY");
+    searchDelay:SetOnEnter(function(Self)
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            QueryFSM:Process("DELAY_COMPLETE");
+        end, TASKER_TAG);
+    end);
+    searchDelay:AddEvent("DELAY_COMPLETE", function(self)
+        return "SEARCH", Query.filter.item, Query.filter.sell, Query.filter.first;
+    end);
+
+    fsm:Add(searchDelay);
+
+    local itemResults = FSMState:New("ITEM_RESULTS");
+    itemResults:SetOnEnter(function(self, item)
+        Logger.Log("QUERY", "on item results");
+        self.item = item;
+        return nil;
+    end);
+    itemResults:SetOnExit(function(self, next)
+        Logger.Log("QUERY", "item results complete");
+        Tasker.Schedule(function()
+            EventManager:Emit("QUERY_SEARCH_COMPLETE");
+        end, TASKER_TAG);
+    end);
+    itemResults:AddEvent("IDLE");
+    itemResults:AddEvent("MORE_ITEMS", function(self)
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            C_AuctionHouse.RequestMoreItemSearchResults(self.item.itemKey);
+        end, TASKER_TAG);
+    end);
+    itemResults:AddEvent("MORE_COMMODITIES", function(self)
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            C_AuctionHouse.RequestMoreCommoditySearchResults(self.item.id);
+        end);
+    end);
+    itemResults:AddEvent("DROPPED", function(self)
+        Tasker.Schedule(function()
+            QueryFSM:Process("MORE_ITEMS");
+        end, TASKER_TAG);
+    end);
+    itemResults:AddEvent("ITEM_RESULT", function(self, event, itemKey)
+        if (itemKey.itemID ~= self.item.id or self.item.isCommodity) then
+            Logger.Log("QUERY", "item id match: "..tostring(itemKey.itemID == self.item.id));
+            Logger.Log("QUERY", "incoming id: "..itemKey.itemID);
+            Logger.Log("QUERY", "expected id:"..self.item.id);
+            Logger.Log("QUERY", "is commodity: "..tostring(self.item.isCommodity));
+            return nil;
+        end
+
+        if (not C_AuctionHouse.HasFullItemSearchResults(itemKey) and Query.filter and not Query.filter.first) then
+            Logger.Log("QUERY", "Querying more items");
+            Tasker.Schedule(function()
+                QueryFSM:Process("MORE_ITEMS");
+            end, TASKER_TAG);
+            return nil;
+        end
+
+        Query.ProcessItem(self.item, itemKey);
+        return "IDLE";
+    end);
+    itemResults:AddEvent("COMMODITY_RESULT", function(self, event, itemID)
+        if (itemID ~= self.item.id or not self.item.isCommodity) then
+            return nil;
+        end
+
+        if (not C_AuctionHouse.HasFullCommoditySearchResults(itemID) and Query.filter and not Query.filter.first) then
+            Logger.Log("QUERY", "Querying more commodities");
+            Tasker.Schedule(function()
+                QueryFSM:Process("MORE_COMMODITIES");
+            end, TASKER_TAG);
+            return nil;
+        end
+
+        Query.ProcessCommodity(self.item, itemID);
+        return "IDLE";
+    end);
+
+    fsm:Add(itemResults);
+    fsm:Add(FSMState:New("MORE_ITEMS"));
+    fsm:Add(FSMState:New("ITEM_RESULT"));
+    fsm:Add(FSMState:New("MORE_COMMODITIES"));
+    fsm:Add(FSMState:New("COMMODITY_RESULT"));
+
+    local owned = FSMState:New("OWNED");
+    owned:SetOnEnter(function(self)
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            C_AuctionHouse.QueryOwnedAuctions(DEFAULT_ITEM_SORT);
+        end, TASKER_TAG);
+        return nil;
+    end);
+    owned:AddEvent("DROPPED", function(self)
+        return "OWNED";
+    end);
+    owned:AddEvent("OWNED_RESULTS");
+
+    fsm:Add(owned);
+
+    local ownedResults = FSMState:New("OWNED_RESULTS");
+    ownedResults:SetOnEnter(function(self)
+        for i,v in ipairs(ownedAuctions) do
+            Recycler:Recycle(v);
+        end
+    
+        wipe(ownedAuctions);
+    
+        local num = C_AuctionHouse.GetNumOwnedAuctions();
+    
+        for i = 1, num do
+            local auction = Query:GetOwnedAuctionRetail(i);
+            if (auction) then
+                tinsert(ownedAuctions, auction);
+            end
+        end
+
+        Tasker.Schedule(function()
+            EventManager:Emit("QUERY_OWNED_AUCTIONS", ownedAuctions);
+        end, TASKER_TAG);
+        return "IDLE";
+    end);
+    ownedResults:AddEvent("IDLE");
+
+    fsm:Add(ownedResults);
+
+    fsm:Add(FSMState:New("DROPPED"));
+    fsm:Add(FSMState:New("DELAY_COMPLETE"));
+
+    fsm:Start("IDLE");
+
+    return fsm;
 end
 
 EventManager:On("AUCTION_HOUSE_THROTTLED_MESSAGE_RESPONSE_RECEIVED", Query.ThrottleReceived);
@@ -1168,13 +1192,16 @@ EventManager:On("AUCTION_HOUSE_BROWSE_RESULTS_UPDATED", Query.OnBrowseResults);
 EventManager:On("AUCTION_HOUSE_BROWSE_RESULTS_ADDED", Query.OnBrowseResults);
 
 EventManager:On("ITEM_SEARCH_RESULTS_UPDATED", Query.OnItemResults);
-EventManager:On("ITEM_SEARCH_RESULTS_ADDED", Query.OnItemResults);
+EventManager:On("ITEM_SEARCH_RESULTS_ADDED", Query.OnItemResultsAdded);
 
 EventManager:On("COMMODITY_SEARCH_RESULTS_UPDATED", Query.OnCommodityResults);
-EventManager:On("COMMODITY_SEARCH_RESULTS_ADDED", Query.OnCommodityResults);
+EventManager:On("COMMODITY_SEARCH_RESULTS_ADDED", Query.OnCommodityResultsAdded);
 
 EventManager:On("OWNED_AUCTIONS_UPDATED", Query.OnOwnedUpdate);
 
 EventManager:On("UPDATE", Query.OnUpdate);
 
 EventManager:On("AUCTION_HOUSE_CLOSED", Query.Clear);
+EventManager:On("AUCTION_HOUSE_SHOW", function()
+    QueryFSM = BuildStateMachine();
+end);

@@ -46,8 +46,11 @@ UI\Components\ListView.lua
 Core\Minimap.lua
 Core\Utils.lua
 Core\EventManager.lua
+Core\Tasker.lua
+Core\Logger.lua
 Core\Importer.lua
 Core\Exporter.lua
+Core\FSM.lua
 
 ## Data
 Data\Core.lua

@@ -85,7 +85,7 @@
             </CheckButton>
             <CheckButton parentKey="RRTooltip" text="Show Realm Recent Tooltip" name="$parentRRTooltip" inherits="AnsCheckboxTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeTo="$parentDressUp" />
+                    <Anchor point="TOPLEFT" x="0" y="-20"  relativePoint="BOTTOMLEFT" relativeTo="$parentDressUp" />
                 </Anchors>
             </CheckButton>
             <CheckButton parentKey="RMTooltip" text="Show Realm Min Tooltip" name="$parentRMTooltip" inherits="AnsCheckboxTemplate">
@@ -101,6 +101,31 @@
             <CheckButton parentKey="RMMTooltip" text="Show Realm Market Tooltip" name="$parentRMMTooltip" inherits="AnsCheckboxTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeTo="$parentRRTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RRRTooltip" text="Show Region Recent Tooltip" name="$parentRRRTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-20"  relativePoint="BOTTOMLEFT" relativeTo="$parentRMMTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RRMTooltip" text="Show Region Min Tooltip" name="$parentRRMTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0"  relativePoint="TOPRIGHT" relativeTo="$parentRRRTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RRThreeTooltip" text="Show Region 3-Day Tooltip" name="$parentRRThreeTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0"  relativePoint="TOPRIGHT" relativeTo="$parentRRMTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="RRMMTooltip" text="Show Region Market Tooltip" name="$parentRRMMTooltip" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeTo="$parentRRRTooltip" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ShowDebug" text="Show Debug Window" name="$parentShowDebug" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-100" y="10" />
                 </Anchors>
             </CheckButton>
         </Frames>
@@ -264,7 +289,7 @@
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
-                        <FontString justifyH="LEFT" text="Found Scan Delay (Classic)" inherits="AnsGameFontWhiteTrans">
+                        <FontString justifyH="LEFT" text="Found Scan Delay" inherits="AnsGameFontWhiteTrans">
                             <Size x="200" y="20" />
                             <Anchors>
                                 <Anchor point="TOPLEFT" x="0" y="20" />

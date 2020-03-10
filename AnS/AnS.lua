@@ -333,10 +333,10 @@ function AnsCore:RegisterPriceSources()
         Sources:Register("ANSMarket", AnsAuctionData.GetRealmValue, "market");
         Sources:Register("ANSMin", AnsAuctionData.GetRealmValue, "min");
         Sources:Register("ANS3Day", AnsAuctionData.GetRealmValue, "3day");
-        --Sources:Register("ANSRegionRecent", AnsAuctionData.GetRegionValue, "recent");
-        --Sources:Register("ANSRegionMarket", AnsAuctionData.GetRegionValue, "market");
-        --Sources:Register("ANSRegionMin", AnsAuctionData.GetRegionValue, "min");
-        --Sources:Register("ANSRegion3Day", AnsAuctionData.GetRegionValue, "3day");
+        Sources:Register("ANSRegionRecent", AnsAuctionData.GetRegionValue, "recent");
+        Sources:Register("ANSRegionMarket", AnsAuctionData.GetRegionValue, "market");
+        Sources:Register("ANSRegionMin", AnsAuctionData.GetRegionValue, "min");
+        Sources:Register("ANSRegion3Day", AnsAuctionData.GetRegionValue, "3day");
     end
 
     if (auctionatorEnabled) then

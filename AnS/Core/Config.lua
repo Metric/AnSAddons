@@ -6,6 +6,61 @@ ANS_CONFIG = {};
 
 Ans.Config = Config;
 
+-- default config holders
+local GENERAL_DEFAULT = {
+    showDressing = false,
+    useCoinIcons = false,
+    tooltipRealmRecent = true,
+    tooltipRealmMin = true,
+    tooltipRealm3Day = true,
+    tooltipRealmMarket = true,
+    tooltipRegionRecent = false,
+    tooltipRegionMin = false,
+    tooltipRegion3Day = false,
+    tooltipRegionMarket = false,
+    tooltipRegionSeen = false,
+    trackDataAnalytics = true,
+    showDebugWindow = false
+};
+
+local OPERATIONS_DEFAULT = {
+    Auctioning = {},
+    Crafting = {},
+    Mailing = {},
+    Shopping = {},
+    Sniping = {},
+    Vendoring = {},
+    Warehousing = {}
+};
+
+local SNIPER_DEFAULT = {
+    source = "",
+    pricing = "",
+    characterBlacklist = "",
+    useCommodityConfirm = false,
+    dingSound = true,
+    itemsPerUpdate = 20,
+    itemBlacklist = {},
+    scanDelay = 10,
+    skipSeenGroup = false,
+    chatMessageNew = true
+};
+
+local CRAFTING_DEFAULT = {
+    craftValue = "",
+    materialCost = "",
+    excludeCooldowns = false,
+    tradeWindowPosition = nil
+};
+
+local ANALYTICS_DEFAULT = {};
+local VENDOR_DEFAULT = {};
+local GROUPS_DEFAULT = {};
+local SOURCES_DEFAULT = {};
+local SNIPER_SELECTION_DEFAULT = {};
+local SNIPER_SELECTION_BASE_DEFAULT = {};
+-- end default table holders
+
 function Config.Get(name, default)
     ANS_CONFIG = ANS_CONFIG or {};
     local v = ANS_CONFIG[name] or default or {};
@@ -33,35 +88,19 @@ function Config.EnsureDefaults(config, default)
 end
 
 function Config.Analytics()
-    return Config.Get("analytics", {});
+    return Config.Get("analytics", ANALYTICS_DEFAULT);
 end
 
 function Config.Vendor()
-    return Config.Get("vendor", {});
+    return Config.Get("vendor", VENDOR_DEFAULT);
 end
 
 function Config.Operations()
-    return Config.Get("operations", {
-        Auctioning = {},
-        Crafting = {},
-        Mailing = {},
-        Shopping = {},
-        Sniping = {},
-        Vendoring = {},
-        Warehousing = {}
-    });
+    return Config.Get("operations", OPERATIONS_DEFAULT);
 end
 
 function Config.General()
-    return Config.Get("general", {
-        showDressing = false,
-        useCoinIcons = false,
-        tooltipRealmRecent = true,
-        tooltipRealmMin = true,
-        tooltipRealm3Day = true,
-        tooltipRealmMarket = true,
-        trackDataAnalytics = true
-    });
+    return Config.Get("general", GENERAL_DEFAULT);
 end
 
 function Config.MiniButton(v)
@@ -73,47 +112,31 @@ function Config.MiniButton(v)
 end
 
 function Config.Sniper()
-    return Config.Get("sniper", {
-        source = "",
-        pricing = "",
-        characterBlacklist = "",
-        useCommodityConfirm = false,
-        dingSound = true,
-        itemsPerUpdate = 20,
-        itemBlacklist = {},
-        scanDelay = 10,
-        skipSeenGroup = false,
-        chatMessageNew = true
-    });
+    return Config.Get("sniper", SNIPER_DEFAULT);
 end
 
 function Config.CustomSources()
-    return Config.Get("custom.sources", {});
+    return Config.Get("custom.sources", SOURCES_DEFAULT);
 end
 
 function Config.Groups(v)
     if (not v) then
-        return Config.Get("groups", {});
+        return Config.Get("groups", GROUPS_DEFAULT);
     else
         Config.Set("groups", v);
     end
 end
 
 function Config.SelectionSniper()
-    return Config.Get("selection.sniper", {});
+    return Config.Get("selection.sniper", SNIPER_SELECTION_DEFAULT);
 end
 
 function Config.SelectionBase()
-    return Config.Get("selection.base", {});
+    return Config.Get("selection.base", SNIPER_SELECTION_BASE_DEFAULT);
 end
 
 function Config.Crafting()
-    return Config.Get("crafting", {
-        craftValue = "",
-        materialCost = "",
-        excludeCooldowns = false,
-        tradeWindowPosition = nil
-    });
+    return Config.Get("crafting", CRAFTING_DEFAULT);
 end
 
 function Config.MigrateArray(orig, config, clear)

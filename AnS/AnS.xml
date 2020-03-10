@@ -1,11 +1,75 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-    <Frame name="AnsCoreUpdater">
+    <Frame name="AnsCoreUpdater" parent="UIParent">
         <Scripts>
             <OnUpdate>
                 AnsCore:OnUpdate(elapsed);
+                if (AnsCore.API.Logger) then
+                    AnsCore.API.Logger.Update();
+                end
             </OnUpdate>
         </Scripts>
     </Frame>
+
+    <Frame name="AnsCoreLogWindow" enableMouse="true" movable="true" parent="UIParent">
+        <Size x="256" y="128" />
+        <Anchors>
+            <Anchor point="CENTER" x="0" y="-0" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                    <Texture name="$parentBackground" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0.01" g="0.02" b="0.04" />
+                </Texture>
+                <FontString text="AnS Debug Log" inherits="AnsGameFontNormalLight">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="5" y="-8" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <ScrollFrame parentKey="Log" name="$parentLog" inherits="AnsScrollFrameTemplate">
+                <Size x="256" y="98" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-30" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                        <Size x="256" y="98" />
+                    </EditBox>
+                </ScrollChild>
+            </ScrollFrame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                local input = AnsCore.API.UI.TextInput:NewFrom(self.Log.Text);
+                input:EnableMultiLine();
+                self:RegisterForDrag("LeftButton");
+            </OnLoad>
+            <OnDragStart>
+                self:StartMoving();
+            </OnDragStart>
+            <OnDragStop>
+                self:StopMovingOrSizing();
+            </OnDragStop>
+        </Scripts>
+    </Frame>
+
     <Frame name="AnsCore" hidden="true" enableMouse="true" movable="true" frameStrata="HIGH">
         <Scripts>
             <OnLoad>

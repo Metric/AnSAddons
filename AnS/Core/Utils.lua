@@ -39,17 +39,31 @@ function Utils:IsClassic()
     return true;
 end
 
-function Utils:GetTable()
+function Utils:GetTable(...)
+    local t = nil;
     if (#temporaryTables > 0) then
-        return tremove(temporaryTables);
+        t = tremove(temporaryTables);
+        wipe(t);
     else
-        return {};
+       t = {};
     end
+
+    local total = select("#", ...);
+    for i = 1, total do
+        local v = select(i, ...);
+        tinsert(t, v);
+    end
+    return t;
 end
 
 function Utils:ReleaseTable(t)
     wipe(t);
     tinsert(temporaryTables, t);
+end
+
+function Utils:UnpackAndReleaseTable(t)
+    tinsert(temporaryTables, t);
+    return unpack(t);
 end
 
 local BattlePetTempTable = Utils:GetTable();
