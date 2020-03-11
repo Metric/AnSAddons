@@ -52,18 +52,18 @@ function Tasker.Update()
 
             if (next.delay and next.fn) then
                 if (GetTime() - next.delay >= 0) then
-                    tremove(v);
+                    tremove(v, 1);
                     local fn = next.fn;
                     Utils:ReleaseTable(next);
                     fn();
                 end
             elseif (not next.delay and next.fn) then
-                tremove(v);
+                tremove(v, 1);
                 local fn = next.fn;
                 Utils:ReleaseTable(next);
                 fn();
             else
-                tremove(v);
+                tremove(v, 1);
             end
         end
     end
