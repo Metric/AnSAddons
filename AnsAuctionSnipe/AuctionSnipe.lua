@@ -389,7 +389,7 @@ local function BuildStateMachine()
                 return "ITEMS";
             else
                 Logger.Log("SNIPER", "Searching for: "..currentItemScan.id.."."..currentItemScan.iLevel);
-                Query.SearchForItem(currentItemScan);
+                Query.SearchForItem(currentItemScan:Clone());
             end
         end
         return nil;
