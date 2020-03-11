@@ -648,7 +648,7 @@ function AuctionSnipe:BuyFirst()
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
-        or (SniperFSM.current == "IDLE" and Query.lastQueryType ~= "BROWSE")) then
+        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH")) then
             AuctionList:BuyFirst(true);
         else
             AuctionList:BuyFirst();

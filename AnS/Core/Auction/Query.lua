@@ -1089,7 +1089,11 @@ local function BuildStateMachine()
     end);
     itemResults:AddEvent("DROPPED", function(self)
         Tasker.Schedule(function()
-            QueryFSM:Process("MORE_ITEMS");
+            if (self.item.isCommodity) then
+                QueryFSM:Process("MORE_COMMODITIES");
+            else
+                QueryFSM:Process("MORE_ITEMS");
+            end
         end, TASKER_TAG);
     end);
     itemResults:AddEvent("ITEM_RESULT", function(self, event, itemKey)

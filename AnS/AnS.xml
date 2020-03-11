@@ -60,6 +60,14 @@
                 local input = AnsCore.API.UI.TextInput:NewFrom(self.Log.Text);
                 input:EnableMultiLine();
                 self:RegisterForDrag("LeftButton");
+                self.Log.Text:SetEnabled(false);
+                self.Log.Text:SetSecurityDisablePaste(true);
+                self.Log.Text:SetScript("OnMouseDown", function(self)
+                    self:HighlightText(0, -1);
+                end);
+                self.Log.Text:SetScript("OnEditFocusGained", function(self)
+                    self:HighlightText(0, -1);
+                end);
             </OnLoad>
             <OnDragStart>
                 self:StartMoving();
