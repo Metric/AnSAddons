@@ -146,6 +146,7 @@ local function GetOwners(result)
 end
 
 local function ClearItemsFound()
+    Logger.Log("SNIPER", "Clearing previous items found: "..#itemsFound);
     for i,v in ipairs(itemsFound) do
         Recycler:Recycle(v);
     end
@@ -153,6 +154,7 @@ local function ClearItemsFound()
 end
 
 local function ClearValidAuctions()
+    Logger.Log("SNIPER", "Clearing previous valid auctions: "..#validAuctions);
     for i,v in ipairs(validAuctions) do
         Recycler:Recycle(v);
     end
@@ -309,6 +311,8 @@ local function BuildStateMachine()
                     AuctionSnipe.snipeStatusText:SetText("Gathering Auctions "..scanIndex.." of "..#itemsFound..' out of '..totalResultsFound);
                 end
 
+                Logger.Log("SNIPER", "Next Scan Index: "..scanIndex);
+
                 currentItemScan = itemsFound[scanIndex];
                 scanIndex = scanIndex + 1;
 
@@ -384,7 +388,7 @@ local function BuildStateMachine()
                 -- to ensure proper continuation
                 return "ITEMS";
             else
-                Logger.Log("SNIPER", "searching for item");
+                Logger.Log("SNIPER", "Searching for: "..currentItemScan.id.."."..currentItemScan.iLevel);
                 Query.SearchForItem(currentItemScan);
             end
         end
@@ -435,9 +439,9 @@ local function BuildStateMachine()
             else
                 hash = item.auctionId;
             end
-        
+
             local preventResult = seenResults[hash];
-        
+
             if (not preventResult and not item.isOwnerItem) then
                 seenResults[hash] = true;
         

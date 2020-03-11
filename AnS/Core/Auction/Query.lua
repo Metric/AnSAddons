@@ -1071,6 +1071,7 @@ local function BuildStateMachine()
         return nil;
     end);
     itemResults:SetOnExit(function(self, next)
+        self.item = nil;
         Logger.Log("QUERY", "item results complete");
         Tasker.Schedule(function()
             EventManager:Emit("QUERY_SEARCH_COMPLETE");
@@ -1078,16 +1079,28 @@ local function BuildStateMachine()
     end);
     itemResults:AddEvent("IDLE");
     itemResults:AddEvent("MORE_ITEMS", function(self)
+        if (not self.item) then
+            return nil;
+        end
+
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
             C_AuctionHouse.RequestMoreItemSearchResults(self.item.itemKey);
         end, TASKER_TAG);
     end);
     itemResults:AddEvent("MORE_COMMODITIES", function(self)
+        if (not self.item) then
+            return nil;
+        end
+
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
             C_AuctionHouse.RequestMoreCommoditySearchResults(self.item.id);
         end);
     end);
     itemResults:AddEvent("DROPPED", function(self)
+        if (not self.item) then
+            return nil;
+        end
+
         Tasker.Schedule(function()
             if (self.item.isCommodity) then
                 QueryFSM:Process("MORE_COMMODITIES");
@@ -1097,8 +1110,13 @@ local function BuildStateMachine()
         end, TASKER_TAG);
     end);
     itemResults:AddEvent("ITEM_RESULT", function(self, event, itemKey)
-        if (itemKey.itemID ~= self.item.id or self.item.isCommodity) then
+        if (not self.item) then
+            return nil;
+        end
+
+        if (itemKey.itemID ~= self.item.id or itemKey.itemLevel ~= self.item.iLevel or self.item.isCommodity) then
             Logger.Log("QUERY", "item id match: "..tostring(itemKey.itemID == self.item.id));
+            Logger.Log("QUERY", "item level match: "..tostring(itemKey.itemLevel == self.item.iLevel));
             Logger.Log("QUERY", "incoming id: "..itemKey.itemID);
             Logger.Log("QUERY", "expected id:"..self.item.id);
             Logger.Log("QUERY", "is commodity: "..tostring(self.item.isCommodity));
@@ -1117,6 +1135,10 @@ local function BuildStateMachine()
         return "IDLE";
     end);
     itemResults:AddEvent("COMMODITY_RESULT", function(self, event, itemID)
+        if (not self.item) then
+            return nil;
+        end
+
         if (itemID ~= self.item.id or not self.item.isCommodity) then
             return nil;
         end
