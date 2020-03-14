@@ -43,14 +43,15 @@ UI\Components\TreeView.lua
 UI\Components\ListView.lua
 
 ## General Utils
-Core\Minimap.lua
-Core\Utils.lua
-Core\EventManager.lua
-Core\Tasker.lua
-Core\Logger.lua
-Core\Importer.lua
-Core\Exporter.lua
-Core\FSM.lua
+Core\Utils\Core.lua
+Core\Utils\Minimap.lua
+Core\Utils\EventManager.lua
+Core\Utils\Tasker.lua
+Core\Utils\Logger.lua
+Core\Utils\Importer.lua
+Core\Utils\Exporter.lua
+Core\Utils\FSM.lua
+Core\Utils\BagScanner.lua
 
 ## Data
 Data\Core.lua
@@ -64,10 +65,8 @@ Data\Mounts.lua
 Data\Pets.lua
 Data\Vendor.lua
 
-
-## Special Crafting Data for Recipe
-## Lookup for Enchanting and Mass Milling
-Core\Crafting\Data.lua
+## Special Crafting Data for Recipes
+Data\Crafting.lua
 
 ## Auction Database Sources
 Core\Auction\Database\Core.lua
@@ -80,9 +79,6 @@ Core\Sources.lua
 
 ## Auction Queries
 Core\Auction\Query.lua
-
-## BagScanner
-Core\BagScanner.lua
 
 ## Operations
 Core\Operations\Core.lua

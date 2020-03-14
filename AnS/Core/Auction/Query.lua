@@ -84,6 +84,7 @@ function Auction:New()
     a.iLevel = 0;
     a.vendorsell = 0;
     a.isCommodity = false;
+    a.isEquipment = false;
     a.auctionId = nil;
     a.avg = 1;
     return a;
@@ -701,6 +702,15 @@ function Query:GetOwnedAuctionRetail(index)
     auction.bidder = info.bidder;
     auction.iLevel = info.itemKey.itemLevel;
 
+    if (info.itemKey.battlePetSpeciesID > 0 
+        and keyInfo.battlePetLink 
+        and Utils:IsBattlePetLink(keyInfo.battlePetLink)) then
+        
+        local info = Utils:ParseBattlePetLink(keyInfo.battlePetLink);
+        auction.iLevel = info.level;
+        auction.link = keyInfo.battlePetLink;
+    end
+
     if (auction.status > 0) then
         Recycler:Recycle(auction);
         return nil;
@@ -1062,6 +1072,10 @@ local function BuildStateMachine()
         return "SEARCH", Query.filter.item, Query.filter.sell, Query.filter.first;
     end);
 
+    -- woops forgot to add the search event
+    -- so we could properly transition back
+    searchDelay:AddEvent("SEARCH");
+
     fsm:Add(searchDelay);
 
     local itemResults = FSMState:New("ITEM_RESULTS");
@@ -1114,11 +1128,26 @@ local function BuildStateMachine()
             return nil;
         end
 
-        if (itemKey.itemID ~= self.item.id or itemKey.itemLevel ~= self.item.iLevel or self.item.isCommodity) then
+        local iLevel = itemKey.itemLevel;
+
+        if (itemKey.battlePetSpeciesID > 0) then
+            local info = C_AuctionHouse.GetItemKeyInfo(itemKey);
+            if (info and info.battlePetLink and Utils:IsBattlePetLink(info.battlePetLink)) then
+                local info = Utils:ParseBattlePetLink(info.battlePetLink);
+                iLevel = info.level;
+            end
+        end
+
+        if (itemKey.itemID ~= self.item.id 
+            or itemKey.battlePetSpeciesID ~= self.item.itemKey.battlePetSpeciesID 
+            or iLevel ~= self.item.iLevel
+            or self.item.isCommodity) then
+
             Logger.Log("QUERY", "item id match: "..tostring(itemKey.itemID == self.item.id));
             Logger.Log("QUERY", "item level match: "..tostring(itemKey.itemLevel == self.item.iLevel));
             Logger.Log("QUERY", "incoming id: "..itemKey.itemID);
             Logger.Log("QUERY", "expected id:"..self.item.id);
+            Logger.Log("QUERY", "battle pet species match: "..tostring(itemKey.battlePetSpeciesID == self.item.itemKey.battlePetSpeciesID));
             Logger.Log("QUERY", "is commodity: "..tostring(self.item.isCommodity));
             return nil;
         end

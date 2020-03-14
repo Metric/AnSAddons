@@ -8577,4 +8577,11 @@ local Vendor = {
 -- end of BFA as of Patch 8.3
 };
 
+-- note this will need to be broken down into a real time function to populate
+-- the table so we can bypass the lua constant limit by having all items
+-- in a string and then populated on actual UI load
+-- or we separate into multiple lua files
+-- either works
+-- lua files are capped at 50000 constants
+
 Ans.Data.Vendor = Vendor;

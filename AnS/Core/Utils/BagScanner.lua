@@ -31,6 +31,7 @@ end
 function BagItem:Clone()
     local b = {
         link = self.link,
+        iLevel = self.iLevel,
         count = self.count,
         quality = self.quality,
         bound = self.bound,
@@ -43,6 +44,7 @@ function BagItem:Clone()
         total = self.total,
         stack = self.stacks,
         isEquipment = self.isEquipment,
+        isCommodity = self.isCommodity,
         itemKey = self.itemKey,
         tsmId = self.tsmId
     };
@@ -169,9 +171,11 @@ function BagScanner:Scan()
                         if (Utils:IsBattlePetLink(link)) then
                             local pet = Utils:ParseBattlePetLink(link);
                             items[idx].name = pet.name;
+                            items[idx].iLevel = pet.level;
                         else
-                            local name = GetItemInfo(link);
+                            local name, _, _, iLevel = GetItemInfo(link);
                             items[idx].name = name;
+                            items[idx].iLevel = iLevel;
                         end
                     else
                         items[idx].name = nil;
@@ -181,6 +185,8 @@ function BagScanner:Scan()
                 local bound = false;
                 local name = nil;
                 local tsmId = nil;
+                local iLevel = 0;
+                local _ = nil;
 
                 if (id ~= 82800) then
                     bound = Utils:IsSoulbound(bag, slot) or boundType == 1 or boundType == 4;
@@ -192,14 +198,16 @@ function BagScanner:Scan()
                     if (Utils:IsBattlePetLink(link)) then
                         local pet = Utils:ParseBattlePetLink(link);
                         name = pet.name;
+                        iLevel = pet.level;
                     else
-                        name = GetItemInfo(link);
+                        name, _, _, iLevel= GetItemInfo(link);
                     end
                 end
 
                 local item = BagItem:NewFrom({
                     fullDurability = fullDurability,
                     link = link,
+                    iLevel = iLevel,
                     tsmId = tsmId,
                     count = icount,
                     quality = quality,

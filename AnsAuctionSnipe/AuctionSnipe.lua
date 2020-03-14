@@ -854,22 +854,32 @@ function AuctionSnipe.BrowseFilter(item)
         self.snipeStatusText:SetText("Filtering Group "..browseItem);
     end
 
-    if (Config.Sniper().skipSeenGroup) then
-        local id = item.itemKey.itemID;
-        local itemLevel = item.itemKey.itemLevel;
-        local ppu = item.minPrice;
+    local filtered = Query:IsFilteredGroup(item);
 
-        if (lastSeenGroupLowest[id.."."..itemLevel]) then
-            if (lastSeenGroupLowest[id.."."..itemLevel] == ppu) then
+    if (not filtered) then
+        return nil;
+    end
+
+    if (Config.Sniper().skipSeenGroup) then
+        local id = filtered.id;
+        local itemLevel = filtered.iLevel;
+        local battlePetId = item.itemKey.battlePetSpeciesID;
+        local ppu = item.minPrice;
+        local hash = id.."."..itemLevel.."."..battlePetId;
+
+        if (lastSeenGroupLowest[hash]) then
+            if (lastSeenGroupLowest[hash] == ppu) then
+                Recycler:Recycle(filtered);
                 return nil;
             end
 
-            lastSeenGroupLowest[id.."."..itemLevel] = ppu;
+            lastSeenGroupLowest[hash] = ppu;
         else
-            lastSeenGroupLowest[id.."."..itemLevel] = ppu;
+            lastSeenGroupLowest[hash] = ppu;
         end
     end
-    return Query:IsFilteredGroup(item);
+
+    return filtered;
 end
 
 function AuctionSnipe:RegisterQueryEvents()
