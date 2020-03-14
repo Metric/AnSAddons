@@ -16,9 +16,9 @@ local BUTTONS = {
     ["tsmCrafting"] = "/click TSMCraftingBtn",
     ["tsmDestroying"] = "/click TSMDestroyBtn",
     ["tsmVendoring"] = "/click TSMVendoringSellAllButton",
-    ["ansPost"] = "/click AnsPostScanBtn",
-    ["ansCancel"] = "/click AnsCancelScanBtn",
-    ["ansSniper"] = "/click AnsSnipeMainPanelBuyNow",
+    ["ansPost"] = "/click AnsPostScan",
+    ["ansCancel"] = "/click AnsCancelScan",
+    ["ansSniper"] = "/click AnsSnipeBuy",
     ["ansSniperFirst"] = "/script AuctionSnipe:BuyFirst()"
 };
 local MODIFIERS = {
@@ -27,10 +27,13 @@ local MODIFIERS = {
     ["alt"] = "ALT-"
 };
 
+local MAX_MACRO_LENGTH = 255;
+
 local tempTbl = {};
 local CHARACTER_BINDING_SET = 2;
 
 Macro.BUTTON_MAPPING = BUTTONS;
+Macro.MODIFIER_MAPPING = MODIFIERS;
 
 function Macro.ActiveModifiers()
     local up, alt, ctrl, shift = false, false, false, false;
@@ -99,6 +102,10 @@ function Macro.Create(commands, modifiers, up)
         AttemptToSaveBindings(CHARACTER_BINDING_SET);
     else
         SaveBindings(CHARACTER_BINDING_SET);
+    end
+
+    if (#text > MAX_MACRO_LENGTH) then
+        print("AnS - Macro truncated. Not all actions will be available.");
     end
 
     print("AnS - Macro created and bound");

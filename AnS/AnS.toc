@@ -52,6 +52,7 @@ Core\Utils\Importer.lua
 Core\Utils\Exporter.lua
 Core\Utils\FSM.lua
 Core\Utils\BagScanner.lua
+Core\Utils\Macro.lua
 
 ## Data
 Data\Core.lua
@@ -111,6 +112,7 @@ Core\WindowViews\Subviews\SniperSettingsView.lua
 Core\WindowViews\Subviews\GeneralSettingsView.lua
 Core\WindowViews\Subviews\CustomSourcesView.lua
 Core\WindowViews\Subviews\CraftSettingsView.lua
+Core\WindowViews\Subviews\MacroSettingsView.lua
 Core\WindowViews\SettingsView.lua
 Core\WindowViews\ImportExportView.lua
 Core\Window.lua

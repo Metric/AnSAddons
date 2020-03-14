@@ -18,6 +18,8 @@ local SniperFSM = nil;
 local EVENTS_TO_REGISTER = {};
 
 local TASKER_TAG = "SNIPER";
+local TASKER_PURCHASE_TAG = "SNIPER_PURCHASE";
+local PURCHASE_WAIT_TIME = 10;
 
 local AHFrame = nil;
 local AHFrameDisplayMode = nil;
@@ -98,11 +100,10 @@ local blockList = {};
 local browseItem = 0;
 local clearNew = true;
 
-BINDING_NAME_ANSSNIPEBUYSELECT = "Buy Selected Auction";
-BINDING_NAME_ANSSNIPEBUYFIRST = "Buy First Auction";
+local ERR_AUCTION_WON = gsub(ERR_AUCTION_WON_S or "", "%%s", "");
 
 -- this dialog is used when in browse query
--- and you try to buy and auction
+-- and you try to buy an auction
 -- when this is displayed we are out of 
 -- then browse state and have entered
 -- a viable search state to purchase
@@ -112,10 +113,12 @@ StaticPopupDialogs["ANSCONFIRMAUCTION"] = {
     button2 = "No",
     OnAccept = function()
         AuctionList:PurchaseAuction();
-        SniperFSM:Process("CONFIRMED_AUCTION");
+        Tasker.Delay(GetTime() + PURCHASE_WAIT_TIME, function()                    
+            SniperFSM:Process("CANCEL_AUCTION");
+        end, TASKER_PURCHASE_TAG);
     end,
     OnCancel = function()
-        SniperFSM:Process("CONFIRMED_AUCTION");
+        SniperFSM:Process("CANCEL_AUCTION");
     end,
     timeout = 0,
     whileDead = false,
@@ -527,12 +530,29 @@ local function BuildStateMachine()
         return nil;
     end);
     buying:AddEvent("CONFIRMED_AUCTION", function(self)
-        self.innerState = "CONFIRMED_AUCTION";
+        if (not Utils:IsClassic() and (self.innerState == "SEARCH_COMPLETE" or self.innerState == nil)) then
+            self.innerState = "CONFIRMED_AUCTION";
+            Tasker.Clear(TASKER_PURCHASE_TAG);
+            AuctionList:ConfirmAuctionPurchase();
+            Logger.Log("SNIPER", "Item Purchase Successful");
+            return "BUY_FINISH", self.previous;
+        elseif (Utils:IsClassic()) then
+            return "BUY_FINISH", self.previous;
+        end
+        return nil;
+    end);
+    buying:AddEvent("CANCEL_AUCTION", function(self)
+        self.innerState = "CANCEL_AUCTION";
+        Logger.Log("SNIPER", "Purchase Canceled");
         return "BUY_FINISH", self.previous;
     end);
     buying:AddEvent("CANCEL_COMMODITY", function(self)
         self.innerState = "CANCEL_COMMODITY";
         AuctionList:CancelCommoditiesPurchase();
+        return "BUY_FINISH", self.previous;
+    end);
+    buying:AddEvent("CONFIRMED_COMMODITY", function(self)
+        self.innerState = "CONFIRMED_COMMODITY";
         return "BUY_FINISH", self.previous;
     end);
     buying:AddEvent("DROPPED", function(self)
@@ -564,6 +584,8 @@ local function BuildStateMachine()
     fsm:Add(FSMState:New("CONFIRM_AUCTION"));
     fsm:Add(FSMState:New("CONFIRMED_AUCTION"));
     fsm:Add(FSMState:New("CANCEL_COMMODITY"));
+    fsm:Add(FSMState:New("CANCEL_AUCTION"));
+    fsm:Add(FSMState:New("CONFIRMED_COMMODITY"));
 
     local buyFinish = FSMState:New("BUY_FINISH");
     buyFinish:SetOnEnter(function(self, previous)
@@ -572,7 +594,6 @@ local function BuildStateMachine()
             self:AddEvent(previous);
         end
 
-        
         return previous;
     end);
 
@@ -621,20 +642,26 @@ function AuctionSnipe:StartBuyState()
         SniperFSM:Process("START_BUYING", previous);
 
         -- it is just an item auction with a search needed
-        if (AuctionList.auction and not AuctionList.commodity and AuctionList.isBuying) then
+        if (AuctionList.waitingForSearch and not AuctionList.commodity) then
             Logger.Log("SNIPER", "confirming auction with search");
             SniperFSM:Process("CONFIRM_AUCTION");
         -- we purchased the auction without a search required
-        -- go ahead and end the buying state by confirming
-        elseif (not AuctionList.auction and not AuctionList.isBuying and not AuctionList.commodity) then
+        -- go ahead wait for success or timeout
+        elseif (not AuctionList.waitingForSearch and not AuctionList.commodity) then
             Logger.Log("SNIPER", "confirming auction");
-            SniperFSM:Process("CONFIRMED_AUCTION");
+            if (not Utils:IsClassic()) then
+                Tasker.Delay(GetTime() + PURCHASE_WAIT_TIME, function()                    
+                    SniperFSM:Process("CANCEL_AUCTION");
+                end, TASKER_PURCHASE_TAG);
+            else
+                SniperFSM:Process("CONFIRMED_AUCTION");
+            end
         end
     end
 end
 
 function AuctionSnipe:BuySelected()
-    if (AuctionList) then
+    if (AuctionList and SniperFSM) then
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
@@ -648,7 +675,7 @@ function AuctionSnipe:BuySelected()
 end
 
 function AuctionSnipe:BuyFirst()
-    if (AuctionList) then
+    if (AuctionList and SniperFSM) then
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
@@ -838,6 +865,17 @@ function AuctionSnipe.OnQueryBrowseResults()
     SniperFSM:Process("FINDING");
 end
 
+function AuctionSnipe.OnChatMessage(msg)
+    if (not SniperFSM or not AuctionSnipe.frame or not AuctionSnipe.frame:IsShown()) then
+        return;
+    end
+
+    if (strfind(msg, ERR_AUCTION_BID_PLACED) or strfind(msg, ERR_AUCTION_WON))) then
+        Logger.Log("SNIPER", "Received BID PLACED Message");
+        SniperFSM:Process("CONFIRMED_AUCTION");
+    end
+end
+
 function AuctionSnipe.BrowseFilter(item)
     local self = AuctionSnipe;
 
@@ -887,6 +925,7 @@ function AuctionSnipe:RegisterQueryEvents()
     EventManager:On("QUERY_SEARCH_COMPLETE", AuctionSnipe.OnQuerySearchComplete);
     EventManager:On("QUERY_BROWSE_RESULTS", AuctionSnipe.OnQueryBrowseResults);
     EventManager:On("COMMODITY_DIALOG_CANCEL", AuctionSnipe.OnCommodityDialogCancel);
+    EventManager:On("CHAT_MSG_SYSTEM", AuctionSnipe.OnChatMessage);
 end
 
 function AuctionSnipe:UnregisterQueryEvents()
@@ -894,6 +933,7 @@ function AuctionSnipe:UnregisterQueryEvents()
     EventManager:RemoveListener("QUERY_SEARCH_COMPLETE", AuctionSnipe.OnQuerySearchComplete);
     EventManager:RemoveListener("QUERY_BROWSE_RESULTS", AuctionSnipe.OnQueryBrowseResults);
     EventManager:RemoveListener("COMMODITY_DIALOG_CANCEL", AuctionSnipe.OnCommodityDialogCancel);
+    EventManager:RemoveListener("CHAT_MSG_SYSTEM", AuctionSnipe.OnChatMessage);
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)  
@@ -922,7 +962,7 @@ function AuctionSnipe:EventHandler(frame, event, ...)
 
     if (event == "COMMODITY_PURCHASE_FAILED" or event == "COMMODITY_PURCHASED" or event == "COMMODITY_PURCHASE_SUCCEEDED") then
         AuctionList:OnCommondityPurchased(event == "COMMODITY_PURCHASE_FAILED");
-        SniperFSM:Process("CONFIRMED_AUCTION");
+        SniperFSM:Process("CONFIRMED_COMMODITY");
     end 
     if (event == "COMMODITY_PRICE_UPDATED") then
         local unit, total = ...;

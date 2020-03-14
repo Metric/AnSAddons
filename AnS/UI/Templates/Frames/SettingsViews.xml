@@ -62,13 +62,114 @@
         </Frames>
     </Frame>
 
+    <Frame name="AnsMacroSettingsTemplate" virtual="true">
+        <Size x="525" y="345" />
+         <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="-32" />
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Create a macro bound to the scroll wheel to activate actions">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0"/>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <CheckButton parentKey="tsmCancel" text="TSM Cancel Auction" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-25" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="tsmPost" text="TSM Post Auction" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.tsmCancel" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="tsmBuy" text="TSM Buy Auction" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmPost" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="tsmSniper" text="TSM Sniper Buy" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmBuy" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="tsmCrafting" text="TSM Crafting" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeKey="$parent.tsmCancel" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="tsmDestroying" text="TSM Destroy" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmCrafting" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="tsmVendoring" text="TSM Vendor All" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmDestroying" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ansPost" text="AnS Post Auction" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-25" relativePoint="BOTTOMLEFT" relativeKey="$parent.tsmCrafting" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ansCancel" text="AnS Cancel Auction" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansPost" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ansSniper" text="AnS Sniper Buy" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansCancel" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ansSniperFirst" text="AnS Sniper Buy First" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansSniper" />
+                </Anchors>
+            </CheckButton>
+
+            <CheckButton parentKey="up" text="Mouse Wheel Up" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-25"  relativePoint="BOTTOMLEFT" relativeKey="$parent.ansPost" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ctrl" text="CTRL Modifier" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.up" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="shift" text="SHIFT Modifier" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ctrl" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="alt" text="ALT Modifier" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.shift" />
+                </Anchors>
+            </CheckButton>
+
+            <Button parentKey="CreateMacroBtn" text="Create Macro" inherits="AnsStandardButtonTemplate">
+                <Size x="525" y="32" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.up" relativePoint="BOTTOMLEFT" x="0" y="-25" />
+                </Anchors>
+            </Button>
+        </Frames>
+    </Frame>
+
     <Frame name="AnsGeneralSettingsTemplate" virtual="true">
          <Size x="525" y="345" />
         <Anchors>
             <Anchor point="TOPLEFT" x="168" y="-32" />
         </Anchors>
         <Frames>
-             <CheckButton parentKey="DressUp" text="Show Dressup" name="$parentDressUp" inherits="AnsCheckboxTemplate">
+            <CheckButton parentKey="DressUp" text="Show Dressup" name="$parentDressUp" inherits="AnsCheckboxTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>

@@ -9,9 +9,13 @@ local Auctioning = {};
 Auctioning.__index = Auctioning;
 Ans.Operations.Auctioning = Auctioning;
 
-local DEFAULT_MIN_PRICE = "max(25% avg(ansmarket, ansrecent, ansmin, ans3day), 150% vendorsell)";
-local DEFAULT_NORMAL_PRICE = "max(avg(ansmarket, ansrecent, ansmin, ans3day), 250% vendorsell)";
-local DEFAULT_MAX_PRICE = "max(200% avg(ansmarket, ansrecent, ansmin, ans3day), 400% vendorsell)";
+local DEFAULT_MIN_PRICE_ANS = "max(25% avg(ansmarket, ansrecent, ansmin, ans3day), 150% vendorsell)";
+local DEFAULT_NORMAL_PRICE_ANS = "max(avg(ansmarket, ansrecent, ansmin, ans3day), 250% vendorsell)";
+local DEFAULT_MAX_PRICE_ANS = "max(200% avg(ansmarket, ansrecent, ansmin, ans3day), 400% vendorsell)";
+
+local DEFAULT_MIN_PRICE_TSM = "max(25% avg(dbmarket, dbminbuyout), 150% vendorsell)";
+local DEFAULT_NORMAL_PRICE_TSM = "max(avg(dbmarket, dbminbuyout), 250% vendorsell)";
+local DEFAULT_MAX_PRICE_TSM = "max(200% avg(dbmarket, dbminbuyout), 400% vendorsell)";
 
 local tempTbl = {};
 
@@ -44,6 +48,7 @@ function Auctioning:Init(name)
 end
 
 function Auctioning:NewConfig(name)
+    local isTSMActive = TSM_API or TSMAPI;
     local t = {
         id = Utils:Guid(),
         name = name,
@@ -53,9 +58,9 @@ function Auctioning:NewConfig(name)
         stackSize = 0,
         bidPercent = 1,
         undercut = "0c",
-        minPrice = DEFAULT_MIN_PRICE,
-        maxPrice = DEFAULT_MAX_PRICE,
-        normalPrice = DEFAULT_NORMAL_PRICE,
+        minPrice = isTSMActive and DEFAULT_MIN_PRICE_TSM or DEFAULT_MIN_PRICE_ANS,
+        maxPrice = isTSMActive and DEFAULT_MAX_PRICE_TSM or DEFAULT_MAX_PRICE_ANS,
+        normalPrice = isTSMActive and DEFAULT_NORMAL_PRICE_TSM or DEFAULT_NORMAL_PRICE_ANS,
         commodityLow = true,
         applyAll = false,
         groups = {}

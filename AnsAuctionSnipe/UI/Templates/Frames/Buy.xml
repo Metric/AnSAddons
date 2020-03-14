@@ -523,7 +523,7 @@
                 </Layers>
             </Frame>
 
-            <Button name="$parentBuyNow" hidden="true" text="PURCHASE">
+            <Button name="AnsSnipeBuy" hidden="true" text="PURCHASE">
                 <Size x="1" y="394" />
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-120" />
@@ -583,7 +583,7 @@
             <Frame name="$parentFilterList">
                 <Size x="168" y="394" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeTo="$parentBuyNow" relativePoint="TOPRIGHT" x="0" y="0" />
+                    <Anchor point="TOPLEFT" relativeTo="AnsSnipeBuy" relativePoint="TOPRIGHT" x="0" y="0" />
                 </Anchors>
                 <Frames>
                     <Frame parentKey="NineSlice" useParentLevel="true" inherits="NineSlicePanelTemplate"/>
@@ -1108,7 +1108,7 @@
                 </Frames>
             </Frame>
 
-          <Button name="$parentBuyNow" hidden="true" text="PURCHASE">
+          <Button name="AnsSnipeBuy" hidden="true" text="PURCHASE">
                 <Size x="1" y="394" />
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-20" />

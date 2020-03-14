@@ -21,6 +21,7 @@ AuctionList.style = {
 AuctionList.isBuying = false;
 AuctionList.commodity = nil;
 AuctionList.auction = nil;
+AuctionList.waitingForSearch = false;
 
 AuctionList.sortMode = {
     ["ppu"] = false,
@@ -38,7 +39,7 @@ local clickTime = time();
 
 function AuctionList:OnLoad(parent)
     self.parent = parent;
-    self.buyNowFrame = _G[parent:GetName().."BuyNow"];
+    self.buyNowFrame = _G["AnsSnipeBuy"];
     self.frame = _G[parent:GetName().."ResultsItems"];
     self.commodityConfirm = _G[parent:GetName().."ResultsCommodityConfirm"];
 
@@ -184,11 +185,18 @@ function AuctionList:Purchase(block, forcePurchaseAuction)
             self.isBuying = true;
             self.auction = block;
             if (forcePurchaseAuction) then
+                self.waitingForSearch = false;
                 self:PurchaseAuction();
+            else
+                self.waitingForSearch = true;
             end
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
+        -- waiting for confirm is for item auctions only on retail
+        -- commodities have their own states already for this
+        self.waitingForSearch = false;
+
         if (Config.Sniper().useCommodityConfirm) then
             self.isBuying = true;
             self.commodity = block:Clone();
@@ -208,14 +216,25 @@ function AuctionList:Purchase(block, forcePurchaseAuction)
     return false, false;
 end
 
+-- retail only
 function AuctionList:PurchaseAuction()
     local block = self.auction;
 
     if (GetMoney() >= block.buyoutPrice) then
-        C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);         
-        self:RemoveAuctionAmount(block, 1);
+        C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);
+    else
+        print("AnS - Not enough money to purchase auction");
     end
-    
+end
+
+-- retail only
+function AuctionList:ConfirmAuctionPurchase()
+    local block = self.auction;
+    if (not block) then
+        return;
+    end
+
+    self:RemoveAuctionAmount(block, 1);
     self.auction = nil;
     self.isBuying = false;
     self:Refresh();

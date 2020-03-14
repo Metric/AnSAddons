@@ -5,6 +5,7 @@ local GeneralSettings = Ans.GeneralSettingsView;
 local SniperSettings = Ans.SnipeSettingsView;
 local CustomSources = Ans.CustomSourcesView;
 local CraftingSettings = Ans.CraftSettingsView;
+local MacroSettings = Ans.MacroSettingsView;
 
 local Settings = {};
 local selectedItem = GeneralSettings;
@@ -12,7 +13,8 @@ local listItems = {
     { name = "General", view = GeneralSettings, selected = true},
     { name = "Crafting", view = CraftingSettings, selected = false},
     { name = "Sniper", view = SniperSettings, selected = false},
-    { name = "Custom Sources", view = CustomSources, selected = false}
+    { name = "Custom Sources", view = CustomSources, selected = false},
+    { name = "Macro", view = MacroSettings, selected = false}
 };
 
 Settings.__index = Settings;
@@ -32,6 +34,7 @@ function Settings:OnLoad(f)
     SniperSettings:OnLoad(self.tab);
     CustomSources:OnLoad(self.tab);
     CraftingSettings:OnLoad(self.tab);
+    MacroSettings:OnLoad(self.tab);
 
     self.listView = ListView:New(self.tab.Items,
         {rowHeight = 24, childIndent = 0, template="AnsTab2Template", multiselect = false, usePushTexture = true},

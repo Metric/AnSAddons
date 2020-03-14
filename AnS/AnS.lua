@@ -55,7 +55,7 @@ local TSMMaterialCost = "min(dbmarket, first(vendorbuy, dbminbuyout))";
 local TSMCraftingValue = "first(dbminbuyout, dbmarket)";
 local AnsMaterialCost = "min(ansmarket, first(vendorbuy, ansrecent))";
 local AnsCraftingValue = "first(ansmin, ansmarket)";
-local TujMatCraftValue = "min(tujmarket, firsT(vendorbuy, tujmarket))";
+local TujMatCraftValue = "min(tujmarket, first(vendorbuy, tujmarket))";
 
 local function AuctionTab_OnClick(self, button, down, index)
     AH_TAB_CLICK(self, button, down, index);

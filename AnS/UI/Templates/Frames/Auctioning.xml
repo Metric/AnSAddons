@@ -58,13 +58,13 @@
                     <Anchor point="TOPLEFT" x="5" y="0" relativeKey="$parent.Reset" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
-            <Button parentKey="Post" name="AnsPostScanBtn" text="Post Scan" inherits="UIPanelButtonTemplate">
+            <Button parentKey="Post" name="AnsPostScan" text="Post Scan" inherits="UIPanelButtonTemplate">
                 <Size x="168" y="22" />
                 <Anchors>
                     <Anchor point="BOTTOMLEFT" x="0" y="22" />
                 </Anchors> 
             </Button>
-            <Button parentKey="Cancel" name="AnsCancelScanBtn" text="Cancel Scan" inherits="UIPanelButtonTemplate">
+            <Button parentKey="Cancel" name="AnsCancelScan" text="Cancel Scan" inherits="UIPanelButtonTemplate">
                 <Size x="168" y="22" />
                 <Anchors>
                     <Anchor point="BOTTOMLEFT" x="0" y="0" />
@@ -141,13 +141,13 @@
                     <Anchor point="TOPLEFT" x="5" y="0" relativeKey="$parent.Reset" relativePoint="TOPRIGHT" />
                 </Anchors>
             </Button>
-            <Button parentKey="Post" text="Post Scan" inherits="UIPanelButtonTemplate">
+            <Button parentKey="Post" name="AnsPostScan" text="Post Scan" inherits="UIPanelButtonTemplate">
                 <Size x="168" y="22" />
                 <Anchors>
                     <Anchor point="BOTTOMLEFT" x="0" y="22" />
                 </Anchors> 
             </Button>
-            <Button parentKey="Cancel" text="Cancel Scan" inherits="UIPanelButtonTemplate">
+            <Button parentKey="Cancel" name="AnsCancelScan" text="Cancel Scan" inherits="UIPanelButtonTemplate">
                 <Size x="168" y="22" />
                 <Anchors>
                     <Anchor point="BOTTOMLEFT" x="0" y="0" />

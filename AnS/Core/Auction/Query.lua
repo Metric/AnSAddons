@@ -54,7 +54,8 @@ if (not Utils:IsClassic()) then
         "AUCTION_CANCELED",
         "AUCTION_HOUSE_AUCTION_CREATED",
         "AUCTION_MULTISELL_FAILURE",
-        "UI_ERROR_MESSAGE"
+        "UI_ERROR_MESSAGE",
+        "CHAT_MSG_SYSTEM"
     };
 else
     EVENTS_TO_REGISTER = {
