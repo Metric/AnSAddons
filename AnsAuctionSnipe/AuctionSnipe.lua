@@ -870,7 +870,7 @@ function AuctionSnipe.OnChatMessage(msg)
         return;
     end
 
-    if (strfind(msg, ERR_AUCTION_BID_PLACED) or strfind(msg, ERR_AUCTION_WON))) then
+    if (strfind(msg, ERR_AUCTION_BID_PLACED) or strfind(msg, ERR_AUCTION_WON)) then
         Logger.Log("SNIPER", "Received BID PLACED Message");
         SniperFSM:Process("CONFIRMED_AUCTION");
     end
