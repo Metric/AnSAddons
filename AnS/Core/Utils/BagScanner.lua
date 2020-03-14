@@ -152,7 +152,7 @@ function BagScanner:Scan()
                     items[idx].count = icount;
                     items[idx].quality = quality;
                     items[idx].hidden = false;
-                    items[idx].vendorsell = itemSellPrice;
+                    items[idx].vendorsell = itemSellPrice or 0;
 
                     -- if not pet cage then use tooltip soulbound check
                     -- otherwise cages are never soulbound
@@ -217,7 +217,7 @@ function BagScanner:Scan()
                     tex = _,
                     id = id,
                     name = name,
-                    vendorsell = itemSellPrice,
+                    vendorsell = itemSellPrice or 0,
                     expanded = false,
                     selected = false,
                     hidden = false,

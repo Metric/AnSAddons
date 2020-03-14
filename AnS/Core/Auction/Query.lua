@@ -517,6 +517,12 @@ function Query:GetOwnedAuctionClassic(index)
         return nil;
     end
 
+    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
+    if (itemName) then
+        auction.iLevel = itemLevel;
+        auction.vendorsell = vendorsell or 0;
+    end
+
     auction.tsmId = Utils:GetTSMID(auction.link);
 
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
@@ -566,7 +572,7 @@ function Query:Next(auction)
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
     if (itemName) then
         auction.iLevel = itemLevel;
-        auction.vendorsell = vendorsell;
+        auction.vendorsell = vendorsell or 0;
     end
 
     if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0 or not auction.hasAll) then
@@ -723,6 +729,7 @@ function Query:GetOwnedAuctionRetail(index)
 
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
     if (itemName) then
+        auction.vendorsell = vendorsell or 0;
         auction.quality = itemRarity;
     end
 
@@ -826,7 +833,7 @@ function Query.ProcessCommodity(item, itemID)
                 item.quality = itemRarity;
                 item.name = itemName;
                 item.texture = itemIcon;
-                item.vendorsell = itemSellPrice;
+                item.vendorsell = itemSellPrice or 0;
             end
         end
 
@@ -863,7 +870,7 @@ function Query.ProcessItem(item, itemKey)
                     item.quality = itemRarity;
                     item.name = itemName;
                     item.texture = itemIcon;
-                    item.vendorsell = itemSellPrice;
+                    item.vendorsell = itemSellPrice or 0;
                 end
 
                 if (Utils:IsBattlePetLink(item.link)) then
