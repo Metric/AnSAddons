@@ -341,7 +341,13 @@ function AnsCore:RegisterPriceSources()
 
     if (auctionatorEnabled) then
         print("AnS: found Auctionator pricing source");
-        Sources:Register("AtrValue", Atr_GetAuctionBuyout, nil);
+        Sources:Register("AtrValue", function(link, key)
+            if (strfind(link, "[ip]:%d+%(%d+%)")) then
+                return 0;
+            end
+            
+            return Atr_GetAuctionBuyout(link);
+        end, nil);
     end
 end
 
