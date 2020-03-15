@@ -428,7 +428,7 @@ function Sources:QueryID(q, itemId)
 
     codes.id = tonumber(id);
 
-    local _, fn = false, nil;
+    local _, fn, err = false, nil, nil;
     local oq = q;
 
     if (not OperationCache[q]) then
@@ -445,10 +445,10 @@ function Sources:QueryID(q, itemId)
 
         local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
 
-        fn, error = loadstring(pstr);
+        fn, err = loadstring(pstr);
 
-        if(not fn or error) then
-            print("AnS Filter / Pricing String Error: "..error);
+        if(not fn or err) then
+            print("AnS Filter / Pricing String Error: "..err);
             return nil;
         end
 
@@ -516,7 +516,7 @@ function Sources:Query(q, item, groupId)
     codes.id = item.id;
     codes.vendorbuy = Config.Vendor()[item.tsmId] or VendorData[item.tsmId] or 0;
 
-    local _, fn = false, nil;
+    local _, fn, err = false, nil, nil;
     local oq = q;
 
     if (not OperationCache[q]) then
@@ -533,10 +533,10 @@ function Sources:Query(q, item, groupId)
 
         local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
 
-        fn, error = loadstring(pstr);
+        fn, err = loadstring(pstr);
 
-        if(not fn or error) then
-            print("AnS Filter / Pricing String Error: "..error);
+        if(not fn or err) then
+            print("AnS Filter / Pricing String Error: "..err);
             return nil;
         end
 
