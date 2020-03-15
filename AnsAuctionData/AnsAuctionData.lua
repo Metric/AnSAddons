@@ -370,12 +370,15 @@ function AnsAuctionData:GetValidID(tsm)
         -- we don't rely on bonus counts for AnsAuctionData
         -- we only care about the bonuses and proper order
         tremove(tmp, 1);
-        table.sort(tmp, function(x,y) return x < y end);
-        local bonus = table.concat(tmp, ":");
-        Utils:ReleaseTable(tmp);
 
-        ValidIDCache[tsm] = t..":"..id..":"..bonus;
-        return ValidIDCache[tsm];
+        if (#tmp > 0) then
+            table.sort(tmp, function(x,y) return x < y end);
+            local bonus = table.concat(tmp, ":");
+            Utils:ReleaseTable(tmp);
+
+            ValidIDCache[tsm] = t..":"..id..":"..bonus;
+            return ValidIDCache[tsm];
+        end
     end
 
     Utils:ReleaseTable(tmp);
@@ -469,7 +472,8 @@ function AnsAuctionData:UnpackRawEntry(data)
 end
 
 function AnsAuctionData:UnpackRawItem(data, id)
-    return string.match(data, "%[("..id..")%]%((%d+,%d+,%d+,%d+,%d+,%d+,%d+,%d+,%d+)%)");
+    local cid = gsub(gsub(id, "%(", "%%("), "%)", "%%)");
+    return string.match(data, "%[("..cid..")%]%((%d+,%d+,%d+,%d+,%d+,%d+,%d+,%d+,%d+)%)");
 end
 
 function AnsAuctionData:Unpack(r, id)

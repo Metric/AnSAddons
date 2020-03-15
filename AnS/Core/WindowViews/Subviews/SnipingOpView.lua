@@ -39,6 +39,9 @@ function SnipingView:OnLoad(f)
     self.exactMatch = self.frame.ExactMatch;
     self.exactMatch:SetScript("OnClick", function(f) this:ValuesChanged(); end);
 
+    self.recalc = self.frame.Recalc;
+    self.recalc:SetScript("OnClick", function(f) this:ValuesChanged(); end);
+
     self.name.onTextChanged = function() this:ValuesChanged(); end;
     self.maxPercent.onTextChanged = function() this:ValuesChanged(); end;
     self.price.onTextChanged = function() this:ValuesChanged(); end;
@@ -63,6 +66,7 @@ end
 function SnipingView:Set(snipeOp)
     self.selected = snipeOp;
 
+    self.recalc:SetChecked(snipeOp.recalc);
     self.name:Set(snipeOp.name);
     self.price:Set(snipeOp.price);
     self.maxPercent:Set(snipeOp.maxPercent.."");
@@ -96,6 +100,8 @@ function SnipingView:ValuesChanged()
 
     self.selected.search = self.search:Get();
     self.selected.exactMatch = self.exactMatch:GetChecked();
+
+    self.selected.recalc = self.recalc:GetChecked();
 
     self.selected.minQuality = self.minQualityDropdown.selected - 1;
 

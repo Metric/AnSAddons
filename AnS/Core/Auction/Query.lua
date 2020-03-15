@@ -325,7 +325,8 @@ function Query:IsFiltered(auction)
     return false;
 end
 
-function Query:IsFilteredGroup(group)
+-- used for retail auction group data
+function Query:GetAuctionData(group)
     local auction = Recycler:Get();
 
     auction.name = nil;
@@ -342,6 +343,7 @@ function Query:IsFilteredGroup(group)
     auction.buyoutPrice = auction.ppu;
 
     auction.link = nil;
+    auction.groupId = nil;
 
     local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
 
@@ -377,6 +379,14 @@ function Query:IsFilteredGroup(group)
         auction.tsmId = "i:"..auction.id;
     end
 
+    if (auction.iLevel > 0 and not auction.isPet and not auction.isCommodity) then
+        auction.groupId = "i:"..auction.id.."("..auction.iLevel..")";
+    end
+
+    return auction;
+end
+
+function Query:IsFilteredGroup(auction)
     if (auction.buyoutPrice > 0) then
         local avg = Sources:Query(Config.Sniper().source, auction);
         if (not avg or avg <= 0) then 
@@ -395,7 +405,17 @@ function Query:IsFilteredGroup(group)
         local k;
 
         if (#self.ops == 0) then
-            local allowed = Sources:Query(Config.Sniper().pricing, auction);
+            local allowed = 0;
+            
+            if (auction.groupId) then
+                allowed = Sources:Query(Config.Sniper().pricing, auction, auction.groupId);
+
+                if (not allowed or allowed == 0) then
+                    allowed = Sources:Query(Config.Sniper().pricing, auction);
+                end
+            else
+                allowed = Sources:Query(Config.Sniper().pricing, auction);
+            end
 
             if (type(allowed) == "boolean" or type(allowed) == "number") then
                 if (type(allowed) == "number") then
@@ -414,7 +434,7 @@ function Query:IsFilteredGroup(group)
 
         local tf = #self.ops;
         for k = 1, tf do
-            if (self.ops[k]:IsValid(auction, auction.isPet)) then
+            if (self.ops[k]:IsValid(auction, auction.isPet, true)) then
                 filterAccepted = true;
                 break;
             end

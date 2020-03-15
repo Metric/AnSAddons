@@ -43,7 +43,10 @@ local SNIPER_DEFAULT = {
     itemBlacklist = {},
     scanDelay = 10,
     skipSeenGroup = false,
-    chatMessageNew = true
+    chatMessageNew = true,
+    clevel = "0-120",
+    minQuality = 1,
+    ilevel = 0
 };
 
 local CRAFTING_DEFAULT = {

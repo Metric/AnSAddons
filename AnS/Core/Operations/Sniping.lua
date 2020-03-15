@@ -30,6 +30,7 @@ function Sniping:Init(name)
     self.maxCLevel = 120;
     self.exactMatch = false;
     self.search = "";
+    self.recalc = false;
     self.groups = {};
     self.ids = {};
     self.idCount = 0;
@@ -47,6 +48,7 @@ function Sniping:NewConfig(name)
         maxPPU = 0,
         minQuality = 0,
         exactMatch = false,
+        recalc = false,
         search = "",
         groups = {}
     };
@@ -61,6 +63,7 @@ function Sniping:FromConfig(snipe)
     n.price = snipe.price;
     n.maxPercent = snipe.maxPercent;
     n.minILevel = snipe.minILevel;
+    n.recalc = snipe.recalc;
     n.maxPPU = snipe.maxPPU;
     n.minQuality = snipe.minQuality;
     n.exactMatch = snipe.exactMatch;
@@ -96,7 +99,7 @@ function Sniping:UpdatePercent(item, avg)
     item.percent = math.floor(item.ppu / avg * 100);
 end
 
-function Sniping:IsValid(item, exact)
+function Sniping:IsValid(item, exact, isGroup)
     local isExact = false;
     if (exact and self.exactMatch) then
         isExact = true;
@@ -105,13 +108,21 @@ function Sniping:IsValid(item, exact)
     local price = self.price;
     local presult = nil;
     if (price ~= nil and #price > 0) then
-        presult = Sources:Query(price, item);
+        if (isGroup and item.groupId) then
+            presult = Sources:Query(price, item, item.groupId);
+
+            if(not presult or presult == 0) then
+                presult = Sources:Query(price, item);
+            end
+        else
+            presult = Sources:Query(price, item);
+        end
         if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and item.ppu > presult)) then
             return false;
         end
     end
 
-    if (presult and type(presult) == "number" and presult > 0) then
+    if (presult and type(presult) == "number" and presult > 0 and self.recalc) then
         self:UpdatePercent(item, presult);
     end
 
@@ -133,7 +144,7 @@ function Sniping:IsValid(item, exact)
 
     if (self:HasIds()) then
         local t,id = strsplit(":", item.tsmId);
-        return self.ids[item.tsmId] == 1 or (not isExact and self.ids[t..":"..id] == 1);
+        return self.ids[item.tsmId] == 1 or (not isExact and self.ids[t..":"..id] == 1) or (isGroup and item.groupId and self.ids[item.groupId] == 1);
     end
 
     return price ~= nil and #price > 0 and not self:HasIds();

@@ -37,6 +37,57 @@ AuctionList.lastBuyTry = time();
 local clickCount = 0;
 local clickTime = time();
 
+local knownAuctions = {};
+
+local function Hash(item)
+    return item.auctionId and tostring(item.auctionId) or (item.ppu.."."..item.count.."."..item.id);
+end
+
+local function KnownKey(item)
+    return item.id.."."..item.iLevel.."."..item.itemKey.battlePetSpeciesID;
+end
+
+local function AddKnown(item)
+    local hash = KnownKey(item);
+    local auctionId = Hash(item);
+    local known = knownAuctions[hash] or Utils:GetTable();
+    knownAuctions[hash] = known;
+    known[auctionId] = item;
+end
+
+local function GetKnown(item)
+    local hash = KnownKey(item);
+    return knownAuctions[hash];
+end
+
+local function RemoveKnown(item)
+    local hash = KnownKey(item);
+    local known = knownAuctions[hash];
+
+    if (not known) then
+        return;
+    end
+
+    local auctionId = Hash(item);
+    known[auctionId] = nil;
+end
+
+local function IsKnown(item)
+    local hash = KnownKey(item);
+    local auctionId = Hash(item);
+    local known = knownAuctions[hash];
+
+    if (not known) then
+        return false;
+    end
+
+    return known[auctionId];
+end
+
+function AuctionList:Hash(item)
+    return Hash(item);
+end
+
 function AuctionList:OnLoad(parent)
     self.parent = parent;
     self.buyNowFrame = _G["AnsSnipeBuy"];
@@ -134,13 +185,19 @@ end
 function AuctionList:BuyFirst(forcePurchase) 
     if (self.frame and #self.items > 0) then
         self:Buy(self.items[1], forcePurchase);
+        return true;
     end
+
+    return false;
 end
 
 function AuctionList:BuySelected(forcePurchase)
     if (self.frame and self.selectedItem) then
         self:Buy(self.selectedItem, forcePurchase);
+        return true;
     end
+
+    return false;
 end
 
 function AuctionList:ItemsExist()
@@ -158,11 +215,29 @@ function AuctionList:AddItems(items,clearNew)
         if (not Query:IsBlacklisted(v)) then
             local c = v:Clone();
             c.isNew = true;
+            AddKnown(c);
             tinsert(self.items, c);
         end
     end 
 
     self:Sort(self.lastSortMode, true);
+end
+
+function AuctionList:IsKnown(item)
+    return IsKnown(item);
+end
+
+function AuctionList:ClearMissing(item, current)
+    local known = GetKnown(item);
+    if (not known) then
+        return;
+    end
+
+    for k,v in pairs(known) do
+        if (v and not current[k]) then
+            self:RemoveAuction(v);
+        end
+    end
 end
 
 function AuctionList:SetItems(items)
@@ -382,29 +457,36 @@ function AuctionList:Recycle()
 
     self.selectedItem = nil;
 
+    for k,v in pairs(knownAuctions) do
+        Utils:ReleaseTable(v);
+    end
+
+    wipe(knownAuctions);
     wipe(self.items);
     self:Refresh();
     self:ShowSelectedItem();
 end
 
 function AuctionList:RemoveAuctionAmount(block, count)
+    local blockHash = Hash(block);
     for i = 1, #self.items do
         local item = self.items[i];
-        if (item.id == block.id
-            and item.link == block.link
-            and item.name == block.name
-            and item.ppu == block.ppu
-            and item.buyoutPrice == block.buyoutPrice
-            and item.count == block.count) then
 
+        if (Hash(item) == blockHash and item.link == block.link) then
             if (not Utils:IsClassic()) then
+                RemoveKnown(item);
                 block.count = block.count - count;
             end
         
             item.count = item.count - count;
 
+            -- for commodities
+            if (not Utils:IsClassic() and item.count > 0) then
+                AddKnown(item);
+            end
+
             if (item.count <= 0) then
-                Recycler:Recycle(table.remove(self.items, i));
+                Recycler:Recycle(tremove(self.items, i));
 
                 if (self.selectedEntry == i or item == self.selectedItem) then
                     self.selectedEntry = -1;
@@ -420,16 +502,13 @@ function AuctionList:RemoveAuctionAmount(block, count)
 end
 
 function AuctionList:RemoveAuction(block) 
+    local blockHash = Hash(block);
     for i = 1, #self.items do
         local item = self.items[i];
-        if (item.id == block.id
-            and item.link == block.link
-            and item.name == block.name
-            and item.ppu == block.ppu
-            and item.buyoutPrice == block.buyoutPrice
-            and item.count == block.count) then
+        if (Hash(item) == blockHash and item.link == block.link) then
+            RemoveKnown(item);
 
-            Recycler:Recycle(table.remove(self.items, i));
+            Recycler:Recycle(tremove(self.items, i));
 
             if (self.selectedEntry == i or item == self.selectedItem) then
                 self.selectedEntry = -1;

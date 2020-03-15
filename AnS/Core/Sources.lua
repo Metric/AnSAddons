@@ -472,8 +472,8 @@ function Sources:QueryID(q, itemId)
     return r;
 end
 
-function Sources:Query(q, item)
-    local itemId = item.link or item.id;
+function Sources:Query(q, item, groupId)
+    local itemId = groupId or item.link or item.id;
     local buyout = item.buyoutPrice;
     local stackSize = item.count;
     local quality = item.quality;

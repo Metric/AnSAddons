@@ -161,7 +161,7 @@
         </Anchors>
         <Layers>
             <Layer level="ARTWORK">
-                <FontString justifyH="LEFT" text="Min Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                <FontString justifyH="LEFT" text="Max Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
                     <Size x="200" />
                     <Anchors>
                         <Anchor point="TOPLEFT" x="0" y="-25" />
@@ -252,6 +252,12 @@
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPPULabel" />
                 </Anchors>
             </EditBox>
+            <CheckButton parentKey="Recalc" text="Recalc Percentage" name="$parentRecalc" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="145" y="0" relativePoint="TOPRIGHT" relativeTo="$parentSearch" />
+                </Anchors>
+            </CheckButton>
         </Frames>
     </Frame>
 </Ui>

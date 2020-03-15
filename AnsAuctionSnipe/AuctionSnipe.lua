@@ -89,7 +89,6 @@ local totalResultsFound = 0;
 local totalValidAuctionsFound = 0;
 
 local lastSeenGroupLowest = {};
-local seenResults = {};
 local throttleMessageReceived = true;
 local throttleWaitingForSend = false;
 local throttleTime = time();
@@ -99,6 +98,9 @@ local blocks = {};
 local blockList = {};
 local browseItem = 0;
 local clearNew = true;
+
+local currentAuctionIds = {};
+
 
 local ERR_AUCTION_WON = gsub(ERR_AUCTION_WON_S or "", "%%s", "");
 
@@ -173,11 +175,12 @@ local function QualitySelected(self, arg1, arg2, checked)
 end
 
 local function BuildQualityDropDown(frame, level, menuList)
-    local info = UIDropDownMenu_CreateInfo();
-    info.func = QualitySelected;
     local i;
 
     for i = 1, 5 do
+        local info = UIDropDownMenu_CreateInfo();
+        info.func = QualitySelected;
+
         local c = ITEM_QUALITY_COLORS[i];
         local text = c.hex..AnsQualityToText[i];
         info.text, info.arg1 = text, i;
@@ -329,6 +332,7 @@ local function BuildStateMachine()
 
         if (totalValidAuctionsFound > 0) then
             scanDelay = Config.Sniper().scanDelay;
+            FlashClientIcon();
         end
 
         if (totalValidAuctionsFound > 0 and Config.Sniper().dingSound) then
@@ -391,6 +395,7 @@ local function BuildStateMachine()
                 -- to ensure proper continuation
                 return "ITEMS";
             else
+                wipe(currentAuctionIds);
                 Logger.Log("SNIPER", "Searching for: "..currentItemScan.id.."."..currentItemScan.iLevel);
                 Query.SearchForItem(currentItemScan:Clone());
             end
@@ -437,17 +442,16 @@ local function BuildStateMachine()
             block.count = block.count + item.count;
             tinsert(block.auctions, item);
         else
-            if (item.isCommodity) then
-                hash = item.ppu..item.count..item.id;
-            else
-                hash = item.auctionId;
-            end
+            hash = AuctionList:Hash(item);
 
-            local preventResult = seenResults[hash];
+            -- we track all current auction ids for the search
+            -- so we can remove ones that are no longer there
+            -- on search complete
+            currentAuctionIds[hash] = true;
+
+            local preventResult = AuctionList:IsKnown(item);
 
             if (not preventResult and not item.isOwnerItem) then
-                seenResults[hash] = true;
-        
                 if (Query:IsFiltered(item)) then
                     tinsert(validAuctions, item:Clone());
                     return nil;
@@ -459,6 +463,9 @@ local function BuildStateMachine()
     end);
     fsmSearch:AddEvent("SEARCH_COMPLETE", function(self)
         Logger.Log("SNIPER", "search complete");
+        if (not Utils:IsClassic()) then
+            AuctionList:ClearMissing(currentItemScan, currentAuctionIds);
+        end
         return "ITEMS";
     end);
     fsmSearch:SetOnExit(function(self, next)
@@ -661,7 +668,7 @@ function AuctionSnipe:StartBuyState()
 end
 
 function AuctionSnipe:BuySelected()
-    if (AuctionList and SniperFSM) then
+    if (AuctionList and SniperFSM and AuctionList.selectedItem) then
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
@@ -675,7 +682,7 @@ function AuctionSnipe:BuySelected()
 end
 
 function AuctionSnipe:BuyFirst()
-    if (AuctionList and SniperFSM) then
+    if (AuctionList and SniperFSM and #AuctionList.items > 0) then
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
@@ -892,11 +899,7 @@ function AuctionSnipe.BrowseFilter(item)
         self.snipeStatusText:SetText("Filtering Group "..browseItem);
     end
 
-    local filtered = Query:IsFilteredGroup(item);
-
-    if (not filtered) then
-        return nil;
-    end
+    local filtered = Query:GetAuctionData(item);
 
     if (Config.Sniper().skipSeenGroup) then
         local id = filtered.id;
@@ -917,7 +920,7 @@ function AuctionSnipe.BrowseFilter(item)
         end
     end
 
-    return filtered;
+    return Query:IsFilteredGroup(filtered);
 end
 
 function AuctionSnipe:RegisterQueryEvents()
@@ -1006,8 +1009,6 @@ function AuctionSnipe:OnAuctionHouseClosed()
             AuctionList:CancelCommoditiesPurchase();
         end
         
-        wipe(seenResults);
-        
         Query.page = 0;
         Query:ClearBlacklist();
         AuctionList:Recycle();
@@ -1071,6 +1072,13 @@ function AuctionSnipe:Show()
     self:BuildTreeViewBase();
     self.baseTreeView.items = baseTreeViewItems;
     self.baseTreeView:Refresh();
+
+    self.clevelRange:SetText(Config.Sniper().clevel);
+
+    self.minLevelInput:SetText(Config.Sniper().ilevel);
+
+    UIDropDownMenu_SetSelectedID(self.qualityInput, Config.Sniper().minQuality, true); 
+    self.quality = Config.Sniper().minQuality;
 end
 
 ----
@@ -1079,6 +1087,8 @@ end
 
 function AuctionSnipe:LoadCLevelFilter()
     local range = self.clevelRange:GetText();
+
+    Config.Sniper().clevel = range;
 
     if (range) then
         local low, high = strsplit("-", range);
@@ -1100,6 +1110,8 @@ end
 
 function AuctionSnipe:LoadBaseFilters()
     local quality = self.quality;
+
+    Config.Sniper().minQuality = quality;
 
     DEFAULT_BROWSE_QUERY.quality = quality;
 
@@ -1129,6 +1141,8 @@ function AuctionSnipe:Start()
     local maxPercent = tonumber(self.maxPercentInput:GetText()) or 100;
 
     local search = self.searchInput:GetText();
+
+    Config.Sniper().ilevel = ilevel;
 
     self:LoadCLevelFilter();
     self:LoadBaseFilters();
@@ -1167,6 +1181,7 @@ function AuctionSnipe:Stop()
     ClearValidAuctions(); 
     ClearItemsFound();
     
+    wipe(currentAuctionIds);
     wipe(lastSeenGroupLowest);
     wipe(browseResults);
     wipe(blocks);
