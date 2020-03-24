@@ -1076,9 +1076,11 @@ function AuctionSnipe:Show()
     self.clevelRange:SetText(Config.Sniper().clevel);
 
     self.minLevelInput:SetText(Config.Sniper().ilevel);
-
-    UIDropDownMenu_SetSelectedID(self.qualityInput, Config.Sniper().minQuality, true); 
+    
     self.quality = Config.Sniper().minQuality;
+
+    UIDropDownMenu_SetSelectedID(self.qualityInput, self.quality, true); 
+    UIDropDownMenu_SetText(self.qualityInput, ITEM_QUALITY_COLORS[self.quality].hex..AnsQualityToText[self.quality]);
 end
 
 ----

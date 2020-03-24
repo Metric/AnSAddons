@@ -17,28 +17,30 @@ function Logger.Log(tag, msg)
         return;
     end
 
-    local txt = AnsCoreLogWindow.Log.Text:GetText() or "";
-    txt = txt.."("..(msg and tag or "UNKNOWN")..")".." "..(msg or tag or "").."\r\n";
-    local lines = Utils:GetTable(strsplit("\r\n", txt));
+    if (Logger.Input) then
+        local txt = Logger.Input:Get() or "";
+        txt = txt.."("..(msg and tag or "UNKNOWN")..")".." "..(msg or tag or "").."\r\n";
+        local lines = Utils:GetTable(strsplit("\r\n", txt));
 
-    if (#lines >= Logger.maxLines) then
-        AnsCoreLogWindow.Log.Text:SetText(lines[#lines].."\r\n");
-    else
-        AnsCoreLogWindow.Log.Text:SetText(txt);
-    end
-
-    -- always clear the tasker first
-    Tasker.Clear(TASKER_TAG);
-
-    Tasker.Delay(GetTime() + 0.01, function()
-        local max = AnsCoreLogWindow.Log:GetVerticalScrollRange();
-        if (max > 0) then
-            max = max - 0.01;
+        if (#lines >= Logger.maxLines) then
+            AnsCoreLogWindow.Log.Text:SetText(lines[#lines].."\r\n");
+        else
+            AnsCoreLogWindow.Log.Text:SetText(txt);
         end
-        AnsCoreLogWindow.Log:SetVerticalScroll(max);
-    end, TASKER_TAG);
 
-    Utils:ReleaseTable(lines);
+        -- always clear the tasker first
+        Tasker.Clear(TASKER_TAG);
+
+        Tasker.Delay(GetTime() + 0.01, function()
+            local max = AnsCoreLogWindow.Log:GetVerticalScrollRange();
+            if (max > 0) then
+                max = max - 0.01;
+            end
+            AnsCoreLogWindow.Log:SetVerticalScroll(max);
+        end, TASKER_TAG);
+
+        Utils:ReleaseTable(lines);
+    end
 end
 
 function Logger.Update()

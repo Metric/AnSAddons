@@ -32,7 +32,7 @@
             </Layer>
         </Layers>
         <Frames>
-            <ScrollFrame parentKey="Log" name="$parentLog" inherits="AnsScrollFrameTemplate">
+            <ScrollFrame parentKey="Log" name="$parentLogArea" inherits="AnsScrollFrameTemplate">
                 <Size x="256" y="98" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-30" />
@@ -49,7 +49,7 @@
                     </Layer>
                 </Layers>
                 <ScrollChild>
-                    <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="Text" autoFocus="false" name="$parentTextArea" inherits="AnsEditBoxTemplate">
                         <Size x="256" y="98" />
                     </EditBox>
                 </ScrollChild>
@@ -59,8 +59,9 @@
             <OnLoad>
                 local input = AnsCore.API.UI.TextInput:NewFrom(self.Log.Text);
                 input:EnableMultiLine();
+                AnsCore.API.Logger.Input = input;
+
                 self:RegisterForDrag("LeftButton");
-                self.Log.Text:SetSecurityDisablePaste(true);
                 self.Log.Text:SetScript("OnMouseDown", function(self)
                     self:HighlightText(0, -1);
                 end);
