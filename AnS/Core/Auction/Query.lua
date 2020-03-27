@@ -274,7 +274,7 @@ function Query:IsFiltered(auction)
         return false;
     end
 
-    if (Config.Sniper().itemBlacklist[auction.tsmId]) then
+    if (Config.Sniper().itemBlacklist[auction.tsmId] or Query:IsBlacklisted(auction)) then
         return false;
     end
 
