@@ -790,6 +790,7 @@ end
 
 function Query.ClearThrottle()
     throttleTime = 0;
+    MAX_THROTTLE_WAIT = 0.25;
     throttleMessageReceived = true;
     throttleWaitingForSend = false;
 end
@@ -803,6 +804,21 @@ function Query.IsThrottled()
     return throttleMessageReceived == false or throttleWaitingForSend == true;
 end
 
+function Query.Error(type, msg)
+    if (QueryFSM) then
+        if (msg == ERR_AUCTION_DATABASE_ERROR) then
+            MAX_THROTTLE_WAIT = MAX_THROTTLE_WAIT + 0.25;
+
+            if (MAX_THROTTLE_WAIT > 10) then
+                MAX_THROTTLE_WAIT = 0.25;
+                print("AnS - Auction House possibly phased. Please close and reopen");
+            end
+
+            Query.ThrottleDropped();
+        end
+    end
+end
+
 function Query.Browse(filter)
     if (not QueryFSM.current) then
         QueryFSM.current = "IDLE";
@@ -814,10 +830,12 @@ function Query.BrowseMore()
     if (not QueryFSM.current) then
         QueryFSM.current = "IDLE";
     end
+    Logger.Log("QUERY", "Browse More Event");
     QueryFSM:Process("BROWSE_MORE");
 end
 
 function Query.OnBrowseResults(added)
+    Logger.Log("QUERY", "Browse Results Event");
     local transitionSuccess = QueryFSM:Process("BROWSE_RESULTS", added);
 end
 
@@ -963,21 +981,47 @@ local function BuildStateMachine()
         Query.lastQueryType = "BROWSE";
         wipe(Query.groupResults);
 
+        Logger.Log("QUERY", "browse on enter");
+
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            C_AuctionHouse.SendBrowseQuery(filter);
+            QueryFSM:Process("TRY_BROWSE");
         end, TASKER_TAG);
         return nil;
     end);
-
-    browse:AddEvent("BROWSE_RESULTS");
-    browse:AddEvent("DROPPED", function(self, event)
-        Logger.Log("QUERY", "browse dropped");
-        return "BROWSE", Query.filter;
-    end);
+    browse:AddEvent("TRY_BROWSE");
     browse:AddEvent("IDLE");
     browse:AddEvent("SEARCH");
 
     fsm:Add(browse);
+
+    local tryBrowse = FSMState:New("TRY_BROWSE");
+    tryBrowse:SetOnEnter(function(self)
+        if (not Query.filter) then
+            return "IDLE";
+        end
+
+        local filter = Query.filter;
+        Logger.Log("QUERY", "trying to send browse");
+        C_AuctionHouse.SendBrowseQuery(filter);
+        return nil;
+    end);
+    tryBrowse:SetOnExit(function(self, next) 
+        if (next == "IDLE") then
+            Tasker.Schedule(function()
+                EventManager:Emit("QUERY_BROWSE_RESULTS");
+            end, TASKER_TAG);
+        end
+    end);
+    tryBrowse:AddEvent("IDLE");
+    tryBrowse:AddEvent("BROWSE_RESULTS");
+    tryBrowse:AddEvent("BROWSE");
+    tryBrowse:AddEvent("DROPPED", function(self)
+        Logger.Log("QUERY", "browse dropped");
+        return "BROWSE", Query.filter;
+    end);
+    tryBrowse:AddEvent("SEARCH");
+
+    fsm:Add(tryBrowse);
 
     local fsmbrowseResults = FSMState:New("BROWSE_RESULTS");
     fsmbrowseResults:SetOnEnter(function(self, added)
@@ -1030,18 +1074,31 @@ local function BuildStateMachine()
     browseMore:SetOnEnter(function(self)
         Query.lastQueryType = "BROWSE";
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            C_AuctionHouse.RequestMoreBrowseResults();
+            QueryFSM:Process("TRY_BROWSE_MORE");
         end, TASKER_TAG);
         return nil;
     end);
-    browseMore:AddEvent("BROWSE_RESULTS");
-    browseMore:AddEvent("DROPPED", function(self)
-        return "BROWSE_MORE";
-    end);
+    browseMore:AddEvent("TRY_BROWSE_MORE");
     browseMore:AddEvent("IDLE");
     browseMore:AddEvent("SEARCH");
 
     fsm:Add(browseMore);
+
+    local tryBrowseMore = FSMState:New("TRY_BROWSE_MORE");
+    tryBrowseMore:SetOnEnter(function(self)
+        Query.lastQueryType = "BROWSE";
+        C_AuctionHouse.RequestMoreBrowseResults();
+        return nil;
+    end);
+    tryBrowseMore:AddEvent("BROWSE_RESULTS");
+    tryBrowseMore:AddEvent("DROPPED", function(self)
+        return "BROWSE_MORE";
+    end);
+    tryBrowseMore:AddEvent("IDLE");
+    tryBrowseMore:AddEvent("SEARCH");
+    tryBrowseMore:AddEvent("BROWSE_MORE");
+
+    fsm:Add(tryBrowseMore);
 
     local search = FSMState:New("SEARCH");
     search:SetOnEnter(function(self, item, sell, first)
@@ -1051,9 +1108,24 @@ local function BuildStateMachine()
             first = first
         };
 
-        Logger.Log("QUERY", "trying to start search");
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            QueryFSM:Process("TRY_SEARCH");
+        end, TASKER_TAG);    
+    end);
+    search:AddEvent("TRY_SEARCH");
+    search:AddEvent("IDLE");
+    fsm:Add(search);
 
-        Query.lastQueryType = "SEARCH";
+    local trySearch = FSMState:New("TRY_SEARCH");
+    trySearch:SetOnEnter(function(self)
+        if (not Query.filter or not Query.filter.item) then
+            return "IDLE";
+        end
+
+        local item = Query.filter.item;
+        local sell = Query.filter.sell;
+
+        Logger.Log("QUERY", "trying to start search");
 
         if (item and item.id) then
             local _ = GetItemInfo(item.id);
@@ -1062,6 +1134,8 @@ local function BuildStateMachine()
                 if (info) then
                     Logger.Log("QUERY", "sending search query");
                     item.isCommodity = info.isCommodity;
+
+                    Query.lastQueryType = "SEARCH";
 
                     if (sell) then
                         C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
@@ -1078,33 +1152,23 @@ local function BuildStateMachine()
             return "IDLE";
         end
 
-        Logger.Log("QUERY", "search delay");
-        return "SEARCH_DELAY";
+        return "SEARCH", Query.filter.item, Query.filter.sell, Query.filter.first;
     end);
-    search:AddEvent("DROPPED", function(self)
-        return "SEARCH_DELAY";
+    trySearch:SetOnExit(function(self, next)
+        if (next == "IDLE") then
+            Tasker.Schedule(function()
+                EventManager:Emit("QUERY_SEARCH_COMPLETE");
+            end, TASKER_TAG);
+        end
     end);
-    search:AddEvent("ITEM_RESULTS");
-    search:AddEvent("IDLE");
-    search:AddEvent("SEARCH_DELAY");
-
-    fsm:Add(search);
-
-    local searchDelay = FSMState:New("SEARCH_DELAY");
-    searchDelay:SetOnEnter(function(Self)
-        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            QueryFSM:Process("DELAY_COMPLETE");
-        end, TASKER_TAG);
-    end);
-    searchDelay:AddEvent("DELAY_COMPLETE", function(self)
+    trySearch:AddEvent("IDLE");
+    trySearch:AddEvent("ITEM_RESULTS");
+    trySearch:AddEvent("SEARCH");
+    trySearch:AddEvent("DROPPED", function(self)
         return "SEARCH", Query.filter.item, Query.filter.sell, Query.filter.first;
     end);
 
-    -- woops forgot to add the search event
-    -- so we could properly transition back
-    searchDelay:AddEvent("SEARCH");
-
-    fsm:Add(searchDelay);
+    fsm:Add(trySearch);
 
     local itemResults = FSMState:New("ITEM_RESULTS");
     itemResults:SetOnEnter(function(self, item)
@@ -1221,16 +1285,26 @@ local function BuildStateMachine()
     local owned = FSMState:New("OWNED");
     owned:SetOnEnter(function(self)
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            C_AuctionHouse.QueryOwnedAuctions(DEFAULT_ITEM_SORT);
+           QueryFSM:Process("TRY_OWNED");
         end, TASKER_TAG);
         return nil;
     end);
-    owned:AddEvent("DROPPED", function(self)
-        return "OWNED";
-    end);
-    owned:AddEvent("OWNED_RESULTS");
+    owned:AddEvent("TRY_OWNED");
 
     fsm:Add(owned);
+
+    local tryOwned = FSMState:New("TRY_OWNED");
+    tryOwned:SetOnEnter(function(self)
+        C_AuctionHouse.QueryOwnedAuctions(DEFAULT_ITEM_SORT);
+        return nil;
+    end);
+    tryOwned:AddEvent("DROPPED", function(self)
+        return "OWNED";
+    end);
+    tryOwned:AddEvent("OWNED_RESULTS");
+    tryOwned:AddEvent("OWNED");
+
+    fsm:Add(tryOwned);
 
     local ownedResults = FSMState:New("OWNED_RESULTS");
     ownedResults:SetOnEnter(function(self)
@@ -1288,3 +1362,5 @@ EventManager:On("AUCTION_HOUSE_CLOSED", Query.Clear);
 EventManager:On("AUCTION_HOUSE_SHOW", function()
     QueryFSM = BuildStateMachine();
 end);
+
+EventManager:On("UI_ERROR_MESSAGE", Query.Error);
