@@ -138,8 +138,9 @@ function Sniping:IsValid(item, exact, isGroup)
     if (item.percent > self.maxPercent and self.maxPercent > 0) then
         return false;
     end
-    if (item.name and self.search and self.search ~= "" and not strfind(item.name, self.search)) then
-        return false;
+
+    if (item.name and self.search and self.search ~= "" and strfind(item.name, self.search)) then
+        return true;
     end
 
     if (self:HasIds()) then
