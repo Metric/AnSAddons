@@ -524,10 +524,15 @@ local function BuildStateMachine()
     buying:AddEvent("CONFIRM_AUCTION", function(self)
         Logger.Log("SNIPER", "confirm auction");
         self.innerState = "CONFIRM_AUCTION";
-        Logger.Log("SNIPER", "interrupting query and sending search");
-        Query.Clear();
-        Query.SearchForItem(AuctionList.auction:Clone(), false, true);
-        return nil;
+
+        if (AuctionList.auction) then
+            Logger.Log("SNIPER", "interrupting query and sending search");
+            Query.Clear();
+            Query.SearchForItem(AuctionList.auction:Clone(), false, true);
+            return nil;
+        else
+            return "BUY_FINISH", self.previous;
+        end
     end)
     buying:AddEvent("SEARCH_COMPLETE", function(self)
         if (self.innerState == "CONFIRM_AUCTION") then
@@ -619,7 +624,9 @@ local function BuildStateMachine()
 end
 
 function AuctionSnipe:StartBuyState()
-    if (SniperFSM) then
+    if (SniperFSM and AuctionList.auction and SniperFSM.current ~= "NONE" 
+        and SniperFSM.current ~= "START_BUYING" and SniperFSM.current ~= "BUYING") then
+        
         Logger.Log("SNIPER", "interrupting for buying");
         -- have to adjust previous state based
         -- on whether we are buying from items or idle
@@ -668,7 +675,9 @@ function AuctionSnipe:StartBuyState()
 end
 
 function AuctionSnipe:BuySelected()
-    if (AuctionList and SniperFSM and AuctionList.selectedItem) then
+    if (AuctionList and SniperFSM and AuctionList.selectedItem
+        and SniperFSM and SniperFSM.current ~= "NONE" and SniperFSM.current ~= "START_BUYING"
+        and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
@@ -682,7 +691,9 @@ function AuctionSnipe:BuySelected()
 end
 
 function AuctionSnipe:BuyFirst()
-    if (AuctionList and SniperFSM and #AuctionList.items > 0) then
+    if (AuctionList and SniperFSM and #AuctionList.items > 0 
+        and SniperFSM and SniperFSM.current ~= "NONE" and SniperFSM.current ~= "START_BUYING"
+        and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
         -- interrupt current query fsm
         Query.Clear();
         if (SniperFSM.current == "ITEMS" or Utils:IsClassic() 
