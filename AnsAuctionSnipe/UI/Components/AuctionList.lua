@@ -25,7 +25,8 @@ AuctionList.waitingForSearch = false;
 
 AuctionList.sortMode = {
     ["ppu"] = false,
-    ["stack"] = false,
+    ["count"] = false,
+    ["name"] = false,
     ["percent"] = false,
     ["iLevel"] = false,
     ["owner"] = false
@@ -212,12 +213,10 @@ function AuctionList:AddItems(items,clearNew)
     end
 
     for i,v in ipairs(items) do
-        if (not Query:IsBlacklisted(v)) then
-            local c = v:Clone();
-            c.isNew = true;
-            AddKnown(c);
-            tinsert(self.items, c);
-        end
+        local c = v:Clone();
+        c.isNew = true;
+        AddKnown(c);
+        tinsert(self.items, c);
     end 
 
     self:Sort(self.lastSortMode, true);
@@ -243,9 +242,7 @@ end
 function AuctionList:SetItems(items)
     wipe(self.items);
     for i,v in ipairs(items) do
-        if (not Query:IsBlacklisted(v)) then
-            tinsert(self.items, v:Clone());
-        end
+        tinsert(self.items, v:Clone());
     end 
     self:Sort(self.lastSortMode, true);
 end
@@ -319,43 +316,57 @@ function AuctionList:Sort(t, noFlip)
     if (self.sortMode[t]) then
         table.sort(self.items, 
             function(x,y) 
-                local xvalue = x[t];
-                local yvalue = y[t];
+                local xnew = x.isNew and 1 or 0;
+                local ynew = y.isNew and 1 or 0;
 
-                if (not xvalue or not yvalue) then
-                    return false;
-                end
+                if (xnew == ynew) then
+                    local xvalue = x[t];
+                    local yvalue = y[t];
 
-                if (type(xvalue) == "table") then
-                    xvalue = "Multiple";
-                end
-                if (type(yvalue) == "table") then
-                    yvalue = "Multiple";
-                end
+                    if (not xvalue or not yvalue) then
+                        return false;
+                    end
 
-                return xvalue > yvalue; 
+                    if (type(xvalue) == "table") then
+                        xvalue = "Multiple";
+                    end
+                    if (type(yvalue) == "table") then
+                        yvalue = "Multiple";
+                    end
+
+                    return xvalue > yvalue;
+                end
+                
+                return xnew > ynew;
             end);
         if (not noFlip) then
             self.sortMode[t] = false;
         end
     else
         table.sort(self.items, 
-            function(x,y) 
-                local xvalue = x[t];
-                local yvalue = y[t];
+            function(x,y)
+                local xnew = x.isNew and 1 or 0;
+                local ynew = y.isNew and 1 or 0;
 
-                if (not xvalue or not yvalue) then
-                    return true;
-                end
+                if (xnew == ynew) then              
+                    local xvalue = x[t];
+                    local yvalue = y[t];
 
-                if (type(xvalue) == "table") then
-                    xvalue = "Multiple";
-                end
-                if (type(yvalue) == "table") then
-                    yvalue = "Multiple";
-                end
+                    if (not xvalue or not yvalue) then
+                        return true;
+                    end
 
-                return xvalue < yvalue; 
+                    if (type(xvalue) == "table") then
+                        xvalue = "Multiple";
+                    end
+                    if (type(yvalue) == "table") then
+                        yvalue = "Multiple";
+                    end
+
+                    return xvalue < yvalue;
+                end
+                
+                return xnew > ynew;
             end);
         if (not noFlip) then
             self.sortMode[t] = true;

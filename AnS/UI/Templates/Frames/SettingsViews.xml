@@ -282,7 +282,7 @@
                         <Anchor point="TOPLEFT" x="0" y="0" />
                     </Anchors>
                 </FontString>
-                <FontString justifyH="LEFT" text="Default Min Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                <FontString justifyH="LEFT" text="Default Max Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
                     <Size x="200" y="20" />
                     <Anchors>
                         <Anchor point="TOPLEFT" x="0" y="-45" />

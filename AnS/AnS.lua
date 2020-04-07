@@ -307,12 +307,12 @@ function AnsCore:RegisterPriceSources()
         Sources:Register("DBRegionSaleAvg", TSMDB.GetPrice, "regionSale");
         Sources:Register("DBRegionSaleRate", TSMDB.GetSaleInfo, "regionSalePercent");
         Sources:Register("DBRegionSoldPerDay", TSMDB.GetSaleInfo, "regionSoldPerDay");
-        Sources:Register("DBGlobalMinBuyoutAvg", TSMDB.GetPrice, "globalMinBuyout");
-        Sources:Register("DBGlobalMarketAvg", TSMDB.GetPrice, "globalMarketValue");
-        Sources:Register("DBGlobalHistorical", TSMDB.GetPrice, "globalHistorical");
-        Sources:Register("DBGlobalSaleAvg", TSMDB.GetPrice, "globalSale");
-        Sources:Register("DBGlobalSaleRate", TSMDB.GetSaleInfo, "globalSalePercent");
-        Sources:Register("DBGlobalSoldPerDay", TSMDB.GetSaleInfo, "globalSoldPerDay");
+        -- Sources:Register("DBGlobalMinBuyoutAvg", TSMDB.GetPrice, "globalMinBuyout");
+        -- Sources:Register("DBGlobalMarketAvg", TSMDB.GetPrice, "globalMarketValue");
+        -- Sources:Register("DBGlobalHistorical", TSMDB.GetPrice, "globalHistorical");
+        -- Sources:Register("DBGlobalSaleAvg", TSMDB.GetPrice, "globalSale");
+        -- Sources:Register("DBGlobalSaleRate", TSMDB.GetSaleInfo, "globalSalePercent");
+        -- Sources:Register("DBGlobalSoldPerDay", TSMDB.GetSaleInfo, "globalSoldPerDay");
     end
 
     if (tujEnabled) then

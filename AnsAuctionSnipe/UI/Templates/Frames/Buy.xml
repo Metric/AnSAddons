@@ -287,14 +287,25 @@
                             </OnClick>
                         </Scripts>
                     </Button>
-                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="108" y="20"/>
-                        <Anchors>
+                    <Button name="$parentCount" text="Count" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="32" y="20" />
+                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentPrice" relativePoint="TOPRIGHT" x="60" y="0"/>
                         </Anchors>
                         <Scripts>
                             <OnClick>
                                 AuctionSnipe:Sort("count");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="76" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCount" relativePoint="TOPRIGHT" x="5" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("name");
                             </OnClick>
                         </Scripts>
                     </Button>
@@ -905,14 +916,25 @@
                             </OnClick>
                         </Scripts>
                     </Button>
-                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
-                        <Size x="108" y="20"/>
-                        <Anchors>
+                    <Button name="$parentCount" text="Count" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="32" y="20" />
+                         <Anchors>
                             <Anchor point="TOPLEFT" relativeTo="$parentPrice" relativePoint="TOPRIGHT" x="60" y="0"/>
                         </Anchors>
                         <Scripts>
                             <OnClick>
                                 AuctionSnipe:Sort("count");
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+                    <Button name="$parentName" text="Name" inherits="AnsAuctionHeadingTemplate">
+                        <Size x="76" y="20"/>
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeTo="$parentCount" relativePoint="TOPRIGHT" x="5" y="0"/>
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:Sort("name");
                             </OnClick>
                         </Scripts>
                     </Button>
