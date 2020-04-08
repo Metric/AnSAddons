@@ -6,6 +6,7 @@ local Dropdown = Ans.UI.Dropdown;
 local TreeView = Ans.UI.TreeView;
 local ListView = Ans.UI.ListView;
 local Utils = Ans.Utils;
+local AuctionOp = Ans.Operations.Auctioning;
 
 local retailDurations = {
     "12 Hours",
@@ -17,6 +18,13 @@ local classicDurations = {
     "2 Hours",
     "8 Hours",
     "24 Hours"
+};
+
+local Actions = {
+    "Use Min Price",
+    "Use Max Price",
+    "Use Normal Price",
+    "Do Nothing"
 };
 
 local AuctionView = {}
@@ -71,7 +79,7 @@ function AuctionView:Hide()
 end
 
 function AuctionView:Set(op)
-    self.selected = op;
+    self.selected = nil;
 
     self.name:Set(op.name);
     
@@ -89,8 +97,11 @@ function AuctionView:Set(op)
     self.commodityLow:SetChecked(op.commodityLow);
     self.applyAll:SetChecked(op.applyAll);
 
-
     self.duration:SetSelected(op.duration);
+    self.minAction:SetSelected(op.minPriceAction or 4);
+    self.maxAction:SetSelected(op.maxPriceAction or 3);
+
+    self.selected = op;
 
     self.frame:Show();
 end
@@ -118,6 +129,9 @@ function AuctionView:ValuesChanged()
 
     self.selected.duration = self.duration.selected;
 
+    self.selected.minPriceAction = self.minAction.selected;
+    self.selected.maxPriceAction = self.maxAction.selected;
+
     if (self.onEdit) then
         self.onEdit();
     end
@@ -140,5 +154,18 @@ function AuctionView:LoadDropdowns()
 
     for i,v in ipairs(items) do
         self.duration:AddItem(v, function() this:ValuesChanged(); end);
+    end
+
+    self.minAction = Dropdown:New("Min Price Action", self.frame);
+    self.minAction:SetPoint("TOPRIGHT", "TOPRIGHT", -100, -160);
+    self.minAction:SetSize(125, 20);
+
+    self.maxAction = Dropdown:New("Max Price Action", self.frame);
+    self.maxAction:SetPoint("TOPRIGHT", "TOPRIGHT", -100, -230);
+    self.maxAction:SetSize(125, 20);
+
+    for i,v in ipairs(Actions) do
+        self.minAction:AddItem(v, function() this:ValuesChanged(); end);
+        self.maxAction:AddItem(v, function() this:ValuesChanged(); end);
     end
 end

@@ -47,9 +47,6 @@ StaticPopupDialogs["ANS_NO_PRICING"] = {
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
 local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
-local ATRPercentFn = "atrvalue";
-local ATRTSMPercentFn = "min(atrvalue,dbmarket)";
-local ATRTUJPercentFn = "min(atrvalue,tujmarket)";
 local AnsOnlyPercentFn = "min(ansrecent,ansmarket)";
 local TSMMaterialCost = "min(dbmarket, first(vendorbuy, dbminbuyout))";
 local TSMCraftingValue = "first(dbminbuyout, dbmarket)";
@@ -229,11 +226,12 @@ function AnsCore:RegisterPriceSources()
     local tsmEnabled = false;
     local tujEnabled = false;
     local ansEnabled = false;
-    local auctionatorEnabled = false;
+    
+    --local auctionatorEnabled = false;
 
-    if (Utils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
-       auctionatorEnabled = true; 
-    end
+    -- if (Utils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
+    --    auctionatorEnabled = true; 
+    -- end
     
     if (TSM_API or TSMAPI) then
         tsmEnabled = true;
@@ -251,21 +249,12 @@ function AnsCore:RegisterPriceSources()
     if (tujEnabled and tsmEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default tuj and tsm source");
         Config.Sniper().source = TUJAndTSMPercentFn;
-    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+    elseif (tujEnabled and not tsmEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default tuj source");
         Config.Sniper().source = TUJOnlyPercentFn;
-    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+    elseif (tsmEnabled and not tujEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default tsm source");
         Config.Sniper().source = TSMOnlyPercentFn;
-    elseif (auctionatorEnabled and not tsmEnabled and not tujEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
-        print("AnS: setting default auctionator source");
-        Config.Sniper().source = ATRPercentFn;
-    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
-        print("AnS: setting default auctionator and tuj source");
-        Config.Sniper().source = ATRTUJPercentFn;
-    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
-        print("AnS: setting default auctionator and tsm source");
-        Config.Sniper().source = ATRTSMPercentFn;
     elseif (ansEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default AnsAuctionData source");
         Config.Sniper().source = AnsOnlyPercentFn;
@@ -275,16 +264,10 @@ function AnsCore:RegisterPriceSources()
     if (tujEnabled and tsmEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
         Config.Crafting().materialCost = TSMMaterialCost;
         Config.Crafting().craftValue = TSMCraftingValue;
-    elseif (tujEnabled and not tsmEnabled and not auctionatorEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+    elseif (tujEnabled and not tsmEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
         Config.Crafting().materialCost = TujMatCraftValue;
         Config.Crafting().craftValue = TujMatCraftValue;
-    elseif (tsmEnabled and not tujEnabled and not auctionatorEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
-        Config.Crafting().materialCost = TSMMaterialCost;
-        Config.Crafting().craftValue = TSMCraftingValue;
-    elseif (auctionatorEnabled and tujEnabled and not tsmEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
-        Config.Crafting().materialCost = TujMatCraftValue;
-        Config.Crafting().craftValue = TujMatCraftValue;
-    elseif (auctionatorEnabled and tsmEnabled and not tujEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+    elseif (tsmEnabled and not tujEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
         Config.Crafting().materialCost = TSMMaterialCost;
         Config.Crafting().craftValue = TSMCraftingValue;
     elseif (ansEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
@@ -292,7 +275,7 @@ function AnsCore:RegisterPriceSources()
         Config.Crafting().craftValue = AnsCraftingValue;
     end
 
-    if (not tsmEnabled and not tujEnabled and not auctionatorEnabled and not ansEnabled) then
+    if (not tsmEnabled and not tujEnabled and not ansEnabled) then
         StaticPopup_Show("ANS_NO_PRICING");
     end
 
@@ -339,16 +322,16 @@ function AnsCore:RegisterPriceSources()
         Sources:Register("ANSRegion3Day", AnsAuctionData.GetRegionValue, "3day");
     end
 
-    if (auctionatorEnabled) then
-        print("AnS: found Auctionator pricing source");
-        Sources:Register("AtrValue", function(link, key)
-            if (strfind(link, "[ip]:%d+%(%d+%)")) then
-                return 0;
-            end
+    -- if (auctionatorEnabled) then
+    --     print("AnS: found Auctionator pricing source");
+    --     Sources:Register("AtrValue", function(link, key)
+    --         if (strfind(link, "[ip]:%d+%(%d+%)")) then
+    --             return 0;
+    --         end
             
-            return Atr_GetAuctionBuyout(link);
-        end, nil);
-    end
+    --         return Atr_GetAuctionBuyout(link);
+    --     end, nil);
+    -- end
 end
 
 function AnsCore:Migrate()

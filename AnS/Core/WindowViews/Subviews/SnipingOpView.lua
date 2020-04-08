@@ -64,7 +64,7 @@ function SnipingView:Hide()
 end
 
 function SnipingView:Set(snipeOp)
-    self.selected = snipeOp;
+    self.selected = nil;
 
     self.recalc:SetChecked(snipeOp.recalc);
     self.name:Set(snipeOp.name);
@@ -75,6 +75,8 @@ function SnipingView:Set(snipeOp)
     self.search:Set(snipeOp.search);
     self.exactMatch:SetChecked(snipeOp.exactMatch);
     self.minQualityDropdown:SetSelected(snipeOp.minQuality + 1);
+
+    self.selected = snipeOp;
 
     self.frame:Show();
 end

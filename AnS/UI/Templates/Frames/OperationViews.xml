@@ -104,13 +104,19 @@
                                 <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="5" />
                             </Anchors>
                         </FontString>
+                            <FontString justifyH="LEFT" text="If below min price: " justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" />
+                            <Anchors>
+                                <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" x="-35" y="-10" />
+                            </Anchors>
+                        </FontString>
                     </Layer>
                 </Layers>
             </EditBox>
             <EditBox parentKey="MaxPrice" text="0" name="$parentMaxPrice" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-25" relativePoint="BOTTOMLEFT" relativeTo="$parentMinPrice" />
+                    <Anchor point="TOPLEFT" x="0" y="-50" relativePoint="BOTTOMLEFT" relativeTo="$parentMinPrice" />
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">
@@ -120,13 +126,19 @@
                                 <Anchor point="BOTTOMLEFT" relativeTo="$parent" relativePoint="TOPLEFT" x="0" y="5" />
                             </Anchors>
                         </FontString>
+                        <FontString justifyH="LEFT" text="If above max price: " justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" />
+                            <Anchors>
+                                <Anchor point="TOPRIGHT" relativeTo="$parent" relativePoint="BOTTOMRIGHT" x="-35" y="-10" />
+                            </Anchors>
+                        </FontString>
                     </Layer>
                 </Layers>
             </EditBox>
             <EditBox parentKey="NormalPrice" text="0" name="$parentNormalPrice" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-25" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPrice" />
+                    <Anchor point="TOPLEFT" x="0" y="-50" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPrice" />
                 </Anchors>
                 <Layers>
                     <Layer level="ARTWORK">

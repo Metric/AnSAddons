@@ -213,10 +213,6 @@ local function BuildStateMachine()
         else
             ppu = v.op:IsValid(ppu, v.link, v.isCommodity and v.op.commodityLow);
         end
-
-        if (ppu <= 0) then
-            ppu = v.op:GetNormalValue(v);
-        end
         
         if (ppu - undercut > 0) then
             ppu = ppu - undercut;

@@ -17,6 +17,14 @@ local DEFAULT_MIN_PRICE_TSM = "max(25% avg(dbmarket, dbminbuyout), 150% vendorse
 local DEFAULT_NORMAL_PRICE_TSM = "max(avg(dbmarket, dbminbuyout), 250% vendorsell)";
 local DEFAULT_MAX_PRICE_TSM = "max(200% avg(dbmarket, dbminbuyout), 400% vendorsell)";
 
+local ACTIONS = {};
+ACTIONS.MIN_PRICE = 1;
+ACTIONS.MAX_PRICE = 2;
+ACTIONS.NORMAL_PRICE = 3;
+ACTIONS.NONE = 4;
+
+Auctioning.ACTIONS = ACTIONS;
+
 local tempTbl = {};
 
 function Auctioning:New(name)
@@ -27,6 +35,7 @@ function Auctioning:New(name)
 end
 
 function Auctioning:Init(name)
+    local isTSMActive = TSM_API or TSMAPI;
     self.id = Utils:Guid();
     self.name = name;
     self.duration = 2;
@@ -35,14 +44,16 @@ function Auctioning:Init(name)
     self.stackSize = 0; -- automatic
     self.bidPercent = 1;
     self.undercut = "0c";
-    self.minPrice = DEFAULT_MIN_PRICE;
-    self.normalPrice = DEFAULT_NORMAL_PRICE;
-    self.maxPrice = DEFAULT_MAX_PRICE;
+    self.minPrice = isTSMActive and DEFAULT_MIN_PRICE_TSM or DEFAULT_MIN_PRICE_ANS;
+    self.normalPrice = isTSMActive and DEFAULT_NORMAL_PRICE_TSM or DEFAULT_NORMAL_PRICE_ANS;
+    self.maxPrice = isTSMActive and DEFAULT_MAX_PRICE_TSM or DEFAULT_MAX_PRICE_ANS;
     self.commodityLow = true;
     self.applyAll = false;
     self.groups = {};
     self.ids = {};
     self.idCount = 0;
+    self.minPriceAction = 4;
+    self.maxPriceAction = 3;
 
     self.config = Auctioning:NewConfig(name);
 end
@@ -63,6 +74,8 @@ function Auctioning:NewConfig(name)
         normalPrice = isTSMActive and DEFAULT_NORMAL_PRICE_TSM or DEFAULT_NORMAL_PRICE_ANS,
         commodityLow = true,
         applyAll = false,
+        minPriceAction = 4,
+        maxPriceAction = 3,
         groups = {}
     };
 
@@ -82,6 +95,8 @@ function Auctioning:FromConfig(config)
     a.maxPrice = config.maxPrice;
     a.commodityLow = config.commodityLow;
     a.applyAll = config.applyAll;
+    a.minPriceAction = config.minPriceAction or 4;
+    a.maxPriceAction = config.maxPriceAction or 3;
 
     for i,v in ipairs(config.groups) do
         local g = Utils:GetGroupFromId(v);
@@ -104,8 +119,26 @@ function Auctioning:IsValid(ppu, link, ignore, defaultValue)
         return ppu;
     end
 
-    if (ppu < minValue or ppu > maxValue) then
-        return defaultValue or normalValue;
+    if (ppu < minValue) then
+        if (self.minPriceAction == ACTIONS.MIN_PRICE) then
+            return minValue;
+        elseif (self.minPriceAction == ACTIONS.MAX_PRICE) then
+            return maxValue;
+        elseif (self.minPriceAction == ACTIONS.NORMAL_PRICE) then
+            return normalValue;
+        else
+            return 0;
+        end
+    elseif (ppu > maxValue) then
+        if (self.maxPriceAction == ACTIONS.MIN_PRICE) then
+            return minValue;
+        elseif (self.maxPriceAction == ACTIONS.MAX_PRICE) then
+            return maxValue;
+        elseif (self.maxPriceAction == ACTIONS.NORMAL_PRICE) then
+            return normalValue;
+        else
+            return 0;
+        end
     end
 
     return ppu;
