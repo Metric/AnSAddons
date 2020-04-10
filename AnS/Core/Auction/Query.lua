@@ -145,9 +145,8 @@ local function Truncate(str)
     return str:sub(1, 62);
 end
 
-local function ItemHash(item, owner)
-    owner = owner or "";
-    return item.link..item.count..item.ppu..owner;
+local function ItemHash(item)
+    return item.link..item.count..item.ppu;
 end
 
 local function ItemKeyHash(itemKey)

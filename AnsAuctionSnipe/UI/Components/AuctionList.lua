@@ -575,7 +575,15 @@ function AuctionList:Click(row, button, down)
         local block = self.items[id];
 
         if (block) then
-            Query:Blacklist(block);
+
+            if (block.auctions and #block.auctions > 0) then
+                for i,v in ipairs(block.auctions) do
+                    Query:Blacklist(v);
+                end
+            else
+                Query:Blacklist(block);
+            end
+            
             Recycler:Recycle(table.remove(self.items, id));
         end
 
