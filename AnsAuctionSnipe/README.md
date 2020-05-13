@@ -1,3 +1,13 @@
+Discord
+===================
+Need help, have questions, suggestions or just found a bug?
+
+https://discord.gg/DZueXS7
+
+I just updated to 2.1 and stuff is broken
+==============================================
+If you just updated through curse or twitch, then please restart your WoW Client first. As quite a bit has changed.
+
 AnS [Auction Snipe] 
 ===========================
 A lightweight addon for WoW auction sniping
@@ -6,21 +16,29 @@ Dependecies
 =============
 Requires AnS
 
-(Optional) Undermine Journal addon for percentage calculations.
+Must have at least one of the below for retail:
+* Undermine Journal
+* TSM
 
-(Optional) TSM for percentage calculations.
+In 2.1 Settings Have Moved!
+======================
+Settings are no longer under Esc -> Interface -> Addons -> AnS
 
-(Optional) Auctionator addon for percentage calculations.
+Instead use the new Minimap button to access all stuff AnS related.
+
+
+Note for 2.x Regarding Retail Max Percent
+==================================================
+Max percent may need to be adjusted higher than necessary if looking for equipment with the same id and varying levels of iLevels. Since, the initial browse query filtering is based on the base item id in pricing in TSM / TUJ / Auctionator. However, the final filtering is based on the item id + bonus ids, but only if the initial browse group is considered. You can combat cases of this by using a operation that will override the percent check in the final case and filter out the lower ilevels that are not really deals.
+
 
 Features
 ===============
-* To filter out vendor items with unlimited quantities, will require a filter string of: tujdays ~= 252 and using Undermine Journal addon
+* Sniper Operations must be set before starting a sniping session
+* Changes to sniper operations during a running sniping session has no effect.
+* To update sniper operations stop and restart the session.
 
-* Filters must be set before starting a sniping session
-* Changes to filters during a running sniping session has no effect.
-* To update filters stop and restart the session.
-
-* Pre-built filters for:
+* Pre-built Groups for:
     * Herbs
     * Ores
     * Fish
@@ -38,29 +56,28 @@ Features
     * CLevel Range
     * Name filter for further refinement
 
- * Take it to the next level with custom filters, pricing strings, and filter strings
-
 
 How to Buy & Other Controls
 ==============
 Double click an auction list item, and ba da bing, ba da boom. It will purchase it if it can.
 
-Or set a key binding under ESC -> Bindings -> AnS to buy selected auctions via another button.
+Or use the new mouse wheel macro creation under Ans Mini Map Button -> Settings -> Macro
 
-(For Advanced Users) There is now a keybinding option to buy the first listed auction item.
+Settings -> Sniper -> Price Source
+======================
+The sniper price source must return a numerical value and can use Custom Sources as well in it.
 
-CTRL + Left Click allows you to blacklist an item id.
+The sniper price source is used for the default percentage calculations.
 
-* Want to use the key bindings through TSM macros instead? Use the following functions: /run AuctionSnipe:BuySelected() or /run AuctionSnipe:BuyFirst()
+Settings -> Sniper -> Max Price or Boolean Filter
+======================================
+The max price or boolean filter here is the global version. Sniper operations ignore this value and use their own instead.
 
+You can either return a numerical value here and it will work as a max price cut off, or return a boolean value such as: ppu lte 20g
 
-Filter and Percent/Pricing Strings
+Predefined Variables
 =========================
-A percent/pricing string must end up as a single numerical value
-
-A filter string must end up as a boolean value
-
-Lua operators can be used on strings
+Lua operators can be used
 
 ```
  >=, ~=, ==, <=, <, >, not, and, or, -, +, *, \
@@ -69,13 +86,13 @@ Lua operators can be used on strings
 Predefined functions for use in strings:
 
 ```
-first, check, iflte, iflt, ifgte, ifgt, ifeq, ifneq, avg, min, max, mod, abs, ceil, floor, round, random, log, log10, exp, sqrt
+first, check, iflte, iflt, ifgte, ifgt, ifeq, ifneq, avg, min, max, mod, abs, ceil, floor, round, random, log, log10, exp, sqrt, eq, neq, bonus, startswith, contains,
 ```
 
 Predefined Item Variables:
 
 ```
-vendorsell, percent, ppu, stacksize, buyout, ilevel, quality
+vendorsell, vendorbuy, percent, ppu, stacksize, buyout, ilevel, quality, tsmId, id
 ```
 
 Predefined TUJ Variables:
@@ -87,22 +104,44 @@ tujmarket, tujrecent, tujglobalmedian, tujglobalmean, tujage, tujdays, tujstddev
 Predefined TSM Variables:
 
 ```
-dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday, dbglobalminbuyoutavg, dbglobalmarketavg, dbglobalhistorical, dbglobalsaleavg, dbglobalsalerate, dbglobalsoldperday
+dbmarket, dbminbuyout, dbhistorical, dbregionmarketavg, dbregionminbuyoutavg, dbregionhistorical, dbregionsaleavg, dbregionsalerate, dbregionsoldperday
 ```
 
-Predefined Auctionator Variables:
+Most variants on TSM variables are also available such as DBRegionMarketAvg, ItemLevel, etc. in 2.1
+
+
+Predefined AnsAuctionData Variables:
 
 ```
-atrvalue
+ansmin, ansrecent, ansmarket, ans3day
 ```
 
-Custom VARS
-========
-Custom variables can now be defined in ESC -> Interface -> Addons -> AnS -> Custom VARS
+Using Predefined bonus function in 2.1
+=================================
+The bonus function will check to see if an item has a specified bonus id
 
-All the same info regarding filter and percent strings apply to these as well.
+You can pass it the following as an example:
+```
+bonus(100,110g,0)
+```
 
-Percent Shorthand Now Supported
+If the above has the bonus 100 then it will return the first value of 110g, otherwise it will return the secondary value of 0. If only a bonus id is provided and no values are passed, then it will return just true or false.
+
+
+The function parameters:
+```
+bonus(id,value1,value2)
+```
+
+
+Settings -> Custom Sources (Previously called Custom VARS)
+=================================
+Custom sources can be anything you want them to be and are case sensitive.
+
+They can be referenced in any other area of AnS from operations to global settings.
+
+
+Percent Shorthand
 ================================
 You can do the following just like TSM:
 
@@ -116,15 +155,8 @@ You can do the following just like TSM:
 etc..
 
 
-Filter and Percent/Pricing Strings Update:
+Gold Shorthand
 ========================================
-As of version 1.0.4 you can use the following short hand operators: 
-
-lt (less than), gt (greater than), gte (greater than equal), lte (less than equal), eq (equals), neq (not equals).
-
-Quality shorthand: common, uncommon, rare, epic, legendary
-
-As of version 1.0.4 short hand for money is available as such:
 
 ```
 25g5s10c
@@ -146,13 +178,7 @@ As of version 1.0.4 short hand for money is available as such:
 ```
 
 
-Using Percent Strings
-===========================
-
-Percent strings should always return 1 numerical value.
-
-
-Example of Percent Strings
+Example of Price Source
 ================================
 avg of tujmarket and tujrecent
 
@@ -180,27 +206,14 @@ You can use any of the standard lua operators for math such as: * (multiply), \ 
 0.25 * min(tujmarket,tujrecent);
 ```
 
-Using Filter Strings
-====================
-Filter strings should return a boolean value of true or false.
 
-True means the item is valid and will be displayed.
-
-False the item will not display.
-
-Common Filter String Examples
+Boolean Filtering Examples
 =====================================
-(Shorthand operators are only available in 1.0.4 and above)
 
 Only show auctions less than 50%
 ------------------------------------
 ```
 percent lt 50
-```
-
-Without shorthand
-```
-percent < 50
 ```
 
 Only show auctions with a ppu less than equal to 5g
@@ -209,20 +222,11 @@ Only show auctions with a ppu less than equal to 5g
 ppu lte 5g
 ```
 
-Without shorthand
-```
-ppu <= 5 * 10000
-```
 
 Only show items with ilevel greater than 350
 ------------------------------------------
 ```
 ilevel gt 350
-```
-
-Without shorthand
-```
-ilevel > 350
 ```
 
 Only show items with a stacksize of greater than equal to 20
@@ -231,33 +235,18 @@ Only show items with a stacksize of greater than equal to 20
 stacksize gte 20
 ```
 
-Without shorthand
-```
-stacksize >= 20
-```
-
 Only show items that are rare and above
 -----------------------------------------
 ```
-quality gte rare
+quality gte 4
 ```
 
-Without shorthand
-```
-quality >= 4
-```
-
-Combining More Than One Examples
+Combining More Than One Boolean Examples
 ===================================
 quality common or better and ppu less than equal to 10g
 --------------------------------------------
 ```
-quality gte common and ppu lte 10g
-```
-
-Without shorthand
-```
-quality >= 1 and ppu <= 10 * 10000
+quality gte 1 and ppu lte 10g
 ```
 
 iLevel greater than 350 and percent less than 50
@@ -266,22 +255,12 @@ iLevel greater than 350 and percent less than 50
 ilevel gt 350 and percent lt 50
 ```
 
-Without shorthand
-```
-ilevel > 350 and percent < 50
-```
-
-One or the Other Examples
+One or the Other Boolean Examples
 ============================
 Only accept items that are less than 1000g or above 5000g ppu
 ------------------------------------------
 ```
 ppu lt 1000g or ppu gt 5000g
-```
-
-Without shorthand
-```
-ppu < 1000 * 10000 or ppu > 5000 * 10000
 ```
 
 Only accept items with stacksize 200 or ppu gt 200g and ppu lt 250g
@@ -290,7 +269,14 @@ Only accept items with stacksize 200 or ppu gt 200g and ppu lt 250g
 (stacksize eq 200) or (ppu gt 200g and ppu lt 250g)
 ```
 
-Without shorthand
-```
-(stacksize == 200) or (ppu > 200 * 10000 and ppu < 250 * 10000)
-```
+
+AnS
+==============
+
+What is it?
+--------------------------
+It is a core library used for various things. But mainly for AnS [Auction Snipe].
+
+It also handles the configuration of all AnS related addons.
+
+
