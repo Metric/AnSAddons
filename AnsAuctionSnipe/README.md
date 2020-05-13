@@ -26,6 +26,23 @@ Settings are no longer under Esc -> Interface -> Addons -> AnS
 
 Instead use the new Minimap button to access all stuff AnS related.
 
+Billis String in 2.1 for Classic
+========================
+
+Define a custom source named minprice with value: 
+```
+max(dbmarket, vendorsell)
+```
+or 
+
+```
+max(ansmarket, vendorsell)
+```
+
+In the global Max Price / Boolean Filter or in a Sniper Operation Max Price / Boolean Filter:
+```
+max(ifgte(ItemQuality, 1, minprice * ifgte(minprice, 250g, 80, ifgte(minprice, 100g, (minprice - 100g) * (80 - 70) / (250g - 100g) + 70, ifgte(minprice, 50g, (minprice - 50g) * (70 - 60) / (100g - 50g) + 60, ifgte(minprice, 10g, (minprice - 10g) * (60 - 40) / (50g - 10g) + 50, ifgte(minprice, 5g, (minprice - 5g) * (40 - 30) / (10g - 5g) + 30, ifgte(minprice, 1g, (minprice - 1g) * (30 - 10) / (5g - 1g) + 10, 0)))))) / 100, 0), VendorSell - 1c)
+```
 
 Note for 2.x Regarding Retail Max Percent
 ==================================================
@@ -61,7 +78,7 @@ How to Buy & Other Controls
 ==============
 Double click an auction list item, and ba da bing, ba da boom. It will purchase it if it can.
 
-Or use the new mouse wheel macro creation under Ans Mini Map Button -> Settings -> Macro
+Or use the new mouse wheel macro creation under Ans Minimap Button -> Settings -> Macro
 
 Settings -> Sniper -> Price Source
 ======================
