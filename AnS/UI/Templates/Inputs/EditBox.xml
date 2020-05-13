@@ -1,18 +1,44 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-    <EditBox name="AnsEditBoxTemplate" inherits="InputBoxScriptTemplate" virtual="true">
-        <FontString name="$parentText" inherits="GameFontNormalDark" />
+    <EditBox name="AnsEditBoxTemplate" virtual="true" autoFocus="false">
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0" />
+        </Anchors>
+        <FontString inherits="AnsGameFontNormalLight" justifyH="LEFT" />
         <Layers>
-            <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
-                <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="0" />
-                    <Anchor point="BOTTOMRIGHT" x="0" y="0" />
-                </Anchors>
-            </Texture>
-            <FontString name="$parentLabel" inherits="GameFontNormal">
-                <Anchors>
-                    <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="16" />
-                </Anchors>
-            </FontString>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="1" g="1" b="1" a="0.05" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentLabel" inherits="AnsGameFontWhiteTrans">
+                    <Anchors>
+                        <Anchor point="LEFT" x="5" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
         </Layers>
+        <Frames>
+            <Button parentKey="Clear" name="$parentClear">
+                <Size x="18" y="18" />
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-5" y="-2" />
+                </Anchors>
+                <NormalTexture file="Interface\AddOns\AnS\Images\icons">
+                    <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+                    <Size x="18" y="18" />
+                    <Color r="1" g="1" b="1" a="0.75" />
+                </NormalTexture>
+                <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
+                    <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+                    <Size x="18" y="18" />
+                    <Color r="1" g="1" b="1" a="1" />
+                </HighlightTexture>
+            </Button>
+        </Frames>
     </EditBox>
 </Ui>

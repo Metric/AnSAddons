@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local AuctionList = Ans.AuctionList;
+local EventManager = AnsCore.API.EventManager;
 
 CommodityInputMixin = {};
 CommodityInputMixin.__index = CommodityInputMixin;
@@ -41,13 +42,15 @@ function CommodityInputMixin:Cancel()
     if (not self.confirmed) then
         AuctionList.commodity = nil;
         AuctionList.isBuying = false;
+        EventManager:Emit("COMMODITY_DIALOG_CANCEL");
     end
 end
 
 function CommodityInputMixin:Purchase()
-    if (AuctionList:PurchaseCommodity(self.Total:GetNumber())) then
-        self.confirmed = true;
-        self.commodity = nil;
-        self:Hide();
-    end
+    AuctionList.commodity.toPurchase = self.Total:GetNumber();
+    AuctionList:PurchaseCommodity();
+
+    self.confirmed = true;
+    self.commodity = nil;
+    self:Hide();
 end

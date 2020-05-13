@@ -30,7 +30,34 @@
     </Shadow>
   </Font>
   <Font name="AnsGameFontNormalDark" font="Fonts\FRIZQT__.TTF"  virtual="true">
-    <Color r="0" g="0" b="0" />
+    <Color r="0" g="0" b="0" a="1" />
+    <FontHeight>
+      <AbsValue val="10" />
+    </FontHeight>
+    <Shadow>
+      <Color r="0" g="0" b="0" a="0" />
+    </Shadow>
+  </Font>
+  <Font name="AnsGameFontNormalLight" font="Fonts\FRIZQT__.TTF"  virtual="true">
+    <Color r="1" g="1" b="1" a="1" />
+    <FontHeight>
+      <AbsValue val="10" />
+    </FontHeight>
+    <Shadow>
+      <Color r="0" g="0" b="0" a="0.25" />
+    </Shadow>
+  </Font>
+  <Font name="AnsGameFontNormalLarge" font="Fonts\FRIZQT__.TTF"  virtual="true">
+    <Color r="1" g="1" b="1" a="1" />
+    <FontHeight>
+      <AbsValue val="24" />
+    </FontHeight>
+    <Shadow>
+      <Color r="0" g="0" b="0" a="0.25" />
+    </Shadow>
+  </Font>
+  <Font name="AnsGameFontNormalBlue" font="Fonts\FRIZQT__.TTF" virtual="true">
+    <Color r="0.01" g="0.2" b="0.8" />
     <FontHeight>
       <AbsValue val="10" />
     </FontHeight>

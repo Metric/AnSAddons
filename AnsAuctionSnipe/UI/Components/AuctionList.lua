@@ -1,13 +1,17 @@
 local Ans = select(2, ...);
+local Config = AnsCore.API.Config;
+local Query = AnsCore.API.Auctions.Query;
 local AuctionList = {};
 AuctionList.__index = AuctionList;
 
 Ans.AuctionList = AuctionList;
 
-local Recycler = AnsCore.API.GroupRecycler;
+local Recycler = AnsCore.API.Auctions.Recycler;
+local Query = AnsCore.API.Auctions.Query;
 local Utils = AnsCore.API.Utils;
 
 AuctionList.selectedEntry = -1;
+AuctionList.selectedItem = nil;
 AuctionList.items = {};
 
 AuctionList.rows = {};
@@ -15,17 +19,79 @@ AuctionList.style = {
     rowHeight = 16
 };
 AuctionList.isBuying = false;
-AuctionList.isPurchaseReady = false;
 AuctionList.commodity = nil;
+AuctionList.auction = nil;
+AuctionList.waitingForSearch = false;
 
-local stepTime = 1;
-local clickTime = time();
+AuctionList.sortMode = {
+    ["ppu"] = false,
+    ["count"] = false,
+    ["name"] = false,
+    ["percent"] = false,
+    ["iLevel"] = false,
+    ["owner"] = false
+};
+
+AuctionList.lastSortMode = "percent";
+AuctionList.lastBuyTry = time();
+
 local clickCount = 0;
+local clickTime = time();
 
-local purchaseQueue = {};
+local knownAuctions = {};
+
+local function Hash(item)
+    return item.auctionId and tostring(item.auctionId) or (item.ppu.."."..item.count.."."..item.id);
+end
+
+local function KnownKey(item)
+    return item.id.."."..item.iLevel.."."..item.itemKey.battlePetSpeciesID;
+end
+
+local function AddKnown(item)
+    local hash = KnownKey(item);
+    local auctionId = Hash(item);
+    local known = knownAuctions[hash] or Utils:GetTable();
+    knownAuctions[hash] = known;
+    known[auctionId] = item;
+end
+
+local function GetKnown(item)
+    local hash = KnownKey(item);
+    return knownAuctions[hash];
+end
+
+local function RemoveKnown(item)
+    local hash = KnownKey(item);
+    local known = knownAuctions[hash];
+
+    if (not known) then
+        return;
+    end
+
+    local auctionId = Hash(item);
+    known[auctionId] = nil;
+end
+
+local function IsKnown(item)
+    local hash = KnownKey(item);
+    local auctionId = Hash(item);
+    local known = knownAuctions[hash];
+
+    if (not known) then
+        return false;
+    end
+
+    return known[auctionId];
+end
+
+function AuctionList:Hash(item)
+    return Hash(item);
+end
 
 function AuctionList:OnLoad(parent)
     self.parent = parent;
+    self.buyNowFrame = _G["AnsSnipeBuy"];
     self.frame = _G[parent:GetName().."ResultsItems"];
     self.commodityConfirm = _G[parent:GetName().."ResultsCommodityConfirm"];
 
@@ -51,52 +117,126 @@ function AuctionList:RegisterEvents()
     end
 end
 
-function AuctionList:Buy(index)
-    if (self.frame and #self.items > 0 and index > 0 and index <= #self.items) then
-        local block = self.items[index];
-        if (block and not self.isBuying and self.commodity == nil) then
-            if (self.isPurchaseReady) then
-                self.isBuying = true;
-                local success, isCommodity = self:Purchase(block);
-                if (not isCommodity and success and block.count <= 0) then
-                    Recycler:Recycle(table.remove(self.items, index));
-                    if (self.selectedEntry == index) then
-                        self.selectedEntry = -1;
-                    end
-                end
-                if (not isCommodity or not success) then
-                    self.isBuying = false;
-                end
-                self:Refresh();
+function AuctionList:CheckAndPurchase(auction)
+    if (auction and not auction.sniped) then
+        local index = auction.itemIndex;
+
+        if (not index) then
+            return false;
+        end
+
+        local link = GetAuctionItemLink("list", index);
+        if (link and auction.link == link) then
+            local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
+            _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
+            if (hasAllInfo and count == auction.count and buyoutPrice and
+                buyoutPrice <= auction.buyoutPrice and GetMoney() >= buyoutPrice) then
+                PlaceAuctionBid("list", index, buyoutPrice);
+                auction.sniped = true;
+                return true;
             end
         end
     end
+
+    return false;
 end
 
-function AuctionList:BuyFirst() 
+function AuctionList:ClassicPurchase(block)
+    if (not block) then
+        return false;
+    end
+
+    if (block.count <= 0) then
+        return false;
+    end
+
+    if (#block.auctions <= 0) then
+        return false;
+    end
+
+    local auction = block.auctions[1];
+    if (not auction) then
+        return false;
+    end
+
+    if (self:CheckAndPurchase(auction)) then
+        tremove(block.auctions, 1);
+        self:RemoveAuctionAmount(block, auction.count);
+        Recycler:Recycle(auction);
+        return true;
+    end
+
+    return false;
+end
+
+function AuctionList:Buy(block, forcePurchase) 
+    if (self.frame and block) then
+        if (not self.isBuying and self.commodity == nil and self.auction == nil) then
+            if (Utils:IsClassic()) then
+                self:ClassicPurchase(block);
+            else
+                self:Purchase(block, forcePurchase);
+            end
+        end
+
+        self.lastBuyTry = time();
+    end
+end
+
+function AuctionList:BuyFirst(forcePurchase) 
     if (self.frame and #self.items > 0) then
-        self:Buy(1);
+        self:Buy(self.items[1], forcePurchase);
+        return true;
     end
+
+    return false;
 end
 
-function AuctionList:BuySelected()
-    if (self.frame and #self.items > 0 and self.selectedEntry > 0) then
-        self:Buy(self.selectedEntry);
+function AuctionList:BuySelected(forcePurchase)
+    if (self.frame and self.selectedItem) then
+        self:Buy(self.selectedItem, forcePurchase);
+        return true;
     end
+
+    return false;
 end
 
 function AuctionList:ItemsExist()
     return #self.items > 0;
 end
 
-function AuctionList:AddItems(items)
+function AuctionList:AddItems(items,clearNew)
+    if (clearNew) then
+        for i,v in ipairs(self.items) do
+            v.isNew = false;
+        end
+    end
+
     for i,v in ipairs(items) do
-        tinsert(self.items, v:Clone());
+        local c = v:Clone();
+        c.isNew = true;
+        AddKnown(c);
+        tinsert(self.items, c);
     end 
-    table.sort(self.items, function(a,b) 
-        return a.percent < b.percent;
-    end);
-    self:Refresh();
+
+    self:Sort(self.lastSortMode, true);
+end
+
+function AuctionList:IsKnown(item)
+    return IsKnown(item);
+end
+
+function AuctionList:ClearMissing(item, current)
+    local known = GetKnown(item);
+    if (not known) then
+        return;
+    end
+
+    for k,v in pairs(known) do
+        if (v and not current[k]) then
+            self:RemoveAuction(v);
+        end
+    end
 end
 
 function AuctionList:SetItems(items)
@@ -104,31 +244,43 @@ function AuctionList:SetItems(items)
     for i,v in ipairs(items) do
         tinsert(self.items, v:Clone());
     end 
-    table.sort(self.items, function(a,b) 
-        return a.percent < b.percent;
-    end)
-    self:Refresh();
+    self:Sort(self.lastSortMode, true);
 end
 
-function AuctionList:Purchase(block)
+function AuctionList:Purchase(block, forcePurchaseAuction)
     if (self.commodity ~= nil) then
         return false, false;
     end
 
     if (block.auctionId ~= nil and not block.isCommodity) then
         if (GetMoney() >= block.buyoutPrice) then
-            C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);
-            block.count = block.count - 1;
+            self.isBuying = true;
+            self.auction = block;
+            if (forcePurchaseAuction) then
+                self.waitingForSearch = false;
+                self:PurchaseAuction();
+            else
+                self.waitingForSearch = true;
+            end
             return true, false;
         end
     elseif (block.auctionId == nil and block.isCommodity) then
-        if (ANS_GLOBAL_SETTINGS.useCommodityConfirm) then
+        -- waiting for confirm is for item auctions only on retail
+        -- commodities have their own states already for this
+        self.waitingForSearch = false;
+
+        if (Config.Sniper().useCommodityConfirm) then
+            self.isBuying = true;
             self.commodity = block:Clone();
+            self.auction = self.commodity;
             self.commodityConfirm:Show();
             return true, true;
         elseif (GetMoney() >= block.buyoutPrice) then
+            self.isBuying = true;
+            self.auction = block;
             self.commodity = block:Clone();
-            self:PurchaseCommodity(self.commodity.count);
+            self.commodity.toPurchase = self.commodity.count;
+            self:PurchaseCommodity();
             return true, true;
         end
     end
@@ -136,39 +288,138 @@ function AuctionList:Purchase(block)
     return false, false;
 end
 
-function AuctionList:PurchaseCommodity(total)
-    if (self.commodity == nil or total < 1) then
-        return false;
+-- retail only
+function AuctionList:PurchaseAuction()
+    local block = self.auction;
+
+    if (GetMoney() >= block.buyoutPrice) then
+        C_AuctionHouse.PlaceBid(block.auctionId, block.buyoutPrice);
+    else
+        print("AnS - Not enough money to purchase auction");
+    end
+end
+
+-- retail only
+function AuctionList:ConfirmAuctionPurchase()
+    local block = self.auction;
+    if (not block) then
+        return;
     end
 
-    self.commodity.toPurchase = total;
+    self:RemoveAuctionAmount(block, 1);
+    self.auction = nil;
+    self.isBuying = false;
+    self:Refresh();
+end
+
+function AuctionList:Sort(t, noFlip)
+    if (self.sortMode[t]) then
+        table.sort(self.items, 
+            function(x,y) 
+                local xnew = x.isNew and 1 or 0;
+                local ynew = y.isNew and 1 or 0;
+
+                if (xnew == ynew) then
+                    local xvalue = x[t];
+                    local yvalue = y[t];
+
+                    if (not xvalue or not yvalue) then
+                        return false;
+                    end
+
+                    if (type(xvalue) == "table") then
+                        xvalue = "Multiple";
+                    end
+                    if (type(yvalue) == "table") then
+                        yvalue = "Multiple";
+                    end
+
+                    return xvalue > yvalue;
+                end
+                
+                return xnew > ynew;
+            end);
+        if (not noFlip) then
+            self.sortMode[t] = false;
+        end
+    else
+        table.sort(self.items, 
+            function(x,y)
+                local xnew = x.isNew and 1 or 0;
+                local ynew = y.isNew and 1 or 0;
+
+                if (xnew == ynew) then              
+                    local xvalue = x[t];
+                    local yvalue = y[t];
+
+                    if (not xvalue or not yvalue) then
+                        return true;
+                    end
+
+                    if (type(xvalue) == "table") then
+                        xvalue = "Multiple";
+                    end
+                    if (type(yvalue) == "table") then
+                        yvalue = "Multiple";
+                    end
+
+                    return xvalue < yvalue;
+                end
+                
+                return xnew > ynew;
+            end);
+        if (not noFlip) then
+            self.sortMode[t] = true;
+        end
+    end
+    self.lastSortMode = t;
+    self:Refresh();
+end
+
+function AuctionList:PurchaseCommodity()
+    if (self.commodity == nil or not self.commodity.toPurchase or self.commodity.toPurchase < 1) then
+        self.auction = nil;
+        self.commodity = nil;
+        self.isBuying = false;
+
+        return false;
+    end
     
     if (self.commodity.toPurchase * self.commodity.ppu > GetMoney()) then
         print("AnS: Not enough gold to purchase "..total.." of "..self.commodity.name);
+        
+        self.auction = nil;
+        self.commodity = nil;
+        self.isBuying = false;
+
         return false;
     end
     
-
+    self.removeListing = false;
     C_AuctionHouse.StartCommoditiesPurchase(self.commodity.id, self.commodity.toPurchase, self.commodity.ppu);
     return true;
 end
 
-function AuctionList:ConfirmCommoditiesPurchase(ppu, total)
+-- the second boolean returned is whether to remove
+-- the listing on cancel
+function AuctionList:ConfirmCommoditiesPurchase()
     if (self.commodity == nil) then
+        self.removeListing = false;
         return false;
     end
 
-    if (total > self.commodity.ppu * self.commodity.toPurchase) then
+    if (self.commodityTotal > self.commodity.ppu * self.commodity.toPurchase) then
         print("AnS: Updated total price of commodities is higher than original total purchase price.");
-        self:CancelCommoditiesPurchase(true);
+        self.removeListing = true;
         return false;
-    elseif (ppu * self.commodity.toPurchase > GetMoney()) then
+    elseif (self.commodityPPU * self.commodity.toPurchase > GetMoney()) then
         print("AnS: You do not have enough gold to purchase everything at the updated price per unit!");
-        self:CancelCommoditiesPurchase(false);
+        self.removeListing = false;
         return false;
     end
 
     C_AuctionHouse.ConfirmCommoditiesPurchase(self.commodity.id, self.commodity.toPurchase);
+    self.removeListing = false;
     return true;
 end
 
@@ -183,10 +434,11 @@ function AuctionList:OnCommondityPurchased(failed)
     else
         print("AnS: Failed to buy "..self.commodity.toPurchase.." of "..self.commodity.name);
     end
+    self.auction = nil;
     self.commodity = nil;
 end
 
-function AuctionList:CancelCommoditiesPurchase(remove)
+function AuctionList:CancelCommoditiesPurchase()
     if (self.commodity == nil) then
         return;
     end
@@ -194,31 +446,63 @@ function AuctionList:CancelCommoditiesPurchase(remove)
     self.isBuying = false;
     C_AuctionHouse.CancelCommoditiesPurchase();
     
-    if (remove) then
+    if (self.removeListing) then
         self:RemoveAuction(self.commodity);
     end
 
+    self.removeListing = false;
+    self.auction = nil;
     self.commodity = nil;
 end
 
+function AuctionList:Recycle()
+    for i,v in ipairs(self.items) do
+        if (v.auctions) then
+            for k,c in ipairs(v.auctions) do
+                Recycler:Recycle(c);
+            end
+        else
+            Recycler:Recycle(v);
+        end
+    end
+
+    self.selectedItem = nil;
+
+    for k,v in pairs(knownAuctions) do
+        Utils:ReleaseTable(v);
+    end
+
+    wipe(knownAuctions);
+    wipe(self.items);
+    self:Refresh();
+    self:ShowSelectedItem();
+end
+
 function AuctionList:RemoveAuctionAmount(block, count)
+    local blockHash = Hash(block);
     for i = 1, #self.items do
         local item = self.items[i];
-        if (item.id == block.id
-            and item.link == block.link
-            and item.name == block.name
-            and item.ppu == block.ppu
-            and item.buyoutPrice == block.buyoutPrice
-            and item.count == block.count) then
 
-            block.count = block.count - count;
+        if (Hash(item) == blockHash and item.link == block.link) then
+            if (not Utils:IsClassic()) then
+                RemoveKnown(item);
+                block.count = block.count - count;
+            end
+        
             item.count = item.count - count;
 
-            if (item.count <= 0) then
-                Recycler:Recycle(table.remove(self.items, i));
+            -- for commodities
+            if (not Utils:IsClassic() and item.count > 0) then
+                AddKnown(item);
+            end
 
-                if (self.selectedEntry == i) then
+            if (item.count <= 0) then
+                Recycler:Recycle(tremove(self.items, i));
+
+                if (self.selectedEntry == i or item == self.selectedItem) then
                     self.selectedEntry = -1;
+                    self.selectedItem = nil;
+                    self:ShowSelectedItem();
                 end
             end
 
@@ -229,19 +513,18 @@ function AuctionList:RemoveAuctionAmount(block, count)
 end
 
 function AuctionList:RemoveAuction(block) 
+    local blockHash = Hash(block);
     for i = 1, #self.items do
         local item = self.items[i];
-        if (item.id == block.id
-            and item.link == block.link
-            and item.name == block.name
-            and item.ppu == block.ppu
-            and item.buyoutPrice == block.buyoutPrice
-            and item.count == block.count) then
+        if (Hash(item) == blockHash and item.link == block.link) then
+            RemoveKnown(item);
 
-            Recycler:Recycle(table.remove(self.items, i));
+            Recycler:Recycle(tremove(self.items, i));
 
-            if (self.selectedEntry == i) then
+            if (self.selectedEntry == i or item == self.selectedItem) then
                 self.selectedEntry = -1;
+                self.selectedItem = nil;
+                self:ShowSelectedItem();
             end
 
             self:Refresh();
@@ -250,37 +533,78 @@ function AuctionList:RemoveAuction(block)
     end
 end
 
+function AuctionList:ShowSelectedItem()
+    if (not self.selectedItem) then
+        self.buyNowFrame:SetWidth(1);
+        self.buyNowFrame:Hide();
+    else
+        local quality = self.selectedItem.quality;
+        local texture = self.selectedItem.texture;
+        local name = self.selectedItem.name;
+        local count = self.selectedItem.count;
+        local ppu = self.selectedItem.ppu;
+
+        local total = ppu * count;
+
+        local color = ITEM_QUALITY_COLORS[quality];
+        self.buyNowFrame.Icon:SetTexture(texture);
+        self.buyNowFrame.Name:SetText("stack of "..count.." "..color.hex..name);
+        self.buyNowFrame.Price:SetText(Utils:PriceToString(total));
+
+        self.buyNowFrame:SetWidth(168);
+
+        self.buyNowFrame:Show();
+    end
+end
+
 function AuctionList:Click(row, button, down) 
     local id = row:GetID();
 
-    if (time() - clickTime > 1) then
+    if(id ~= self.selectedEntry) then
         clickCount = 0;
     end
 
-    if (self.selectedEntry ~= id) then
+    self.selectedEntry = id;
+    self.selectedItem = self.items[id];
+
+    if (time() - clickTime > 2) then
         clickCount = 0;
     end
 
-    self.selectedEntry = id; 
-
-    clickCount = clickCount + 1;
-
-    local fps = math.floor(GetFramerate());
-
-    if (clickCount == 1 and IsControlKeyDown()) then
+    if (IsShiftKeyDown() and not IsControlKeyDown()) then
         local block = self.items[id];
 
         if (block) then
-            ANS_GLOBAL_SETTINGS.itemBlacklist[block.tsmId] = true;
+
+            if (block.auctions and #block.auctions > 0) then
+                for i,v in ipairs(block.auctions) do
+                    Query:Blacklist(v);
+                end
+            else
+                Query:Blacklist(block);
+            end
+            
             Recycler:Recycle(table.remove(self.items, id));
         end
 
         self.selectedEntry = -1;
+        self.selectedItem = nil;
+        clickCount = 0;
+    elseif (IsShiftKeyDown() and IsControlKeyDown()) then
+        local block = self.items[id];
+
+        if (block) then
+            Config.Sniper().itemBlacklist[block.tsmId] = block.link;
+            Recycler:Recycle(table.remove(self.items, id));
+        end
+
+        self.selectedEntry = -1;
+        self.selectedItem = nil;
         clickCount = 0;
     end
 
-    if (clickCount == 1 and ANS_GLOBAL_SETTINGS.showDressing) then
-        local block = self.items[id];
+    if (Config.General().showDressing and self.selectedItem) then
+        local block = self.selectedItem;
 
         if (block) then
             local itemLink = block.link;
@@ -290,13 +614,16 @@ function AuctionList:Click(row, button, down)
         end
     end
 
-    if (clickCount == 2) then
-        self:Buy(id);
+    clickCount = clickCount + 1;
+    clickTime = time();
+
+    if (clickCount > 1) then
+        AuctionSnipe:BuySelected();
         clickCount = 0;
     end
 
     self:Refresh();
-    clickTime = time();
+    self:ShowSelectedItem();
 end
 
 function AuctionList:ShowTip(item)
@@ -321,10 +648,12 @@ function AuctionList:UpdateRow(offset, row)
         end
 
         row:SetID(offset);
+        row.item = self.items[offset];
 
         local auction = self.items[offset];
         local itemKey = auction.itemKey;
 
+        local owner = auction.owner;
         local ppu = auction.ppu;
         local itemID = auction.id;
         local ilevel = auction.iLevel;
@@ -337,7 +666,7 @@ function AuctionList:UpdateRow(offset, row)
 
         local itemPrice = _G[row:GetName().."PPU"];
         local itemName = _G[row:GetName().."NameText"];
-        local itemStack = _G[row:GetName().."StackPrice"];
+        local itemOwner = _G[row:GetName().."Owner"];
         local itemPercent = _G[row:GetName().."Percent"];
         local itemIcon = _G[row:GetName().."ItemIcon"];
         local itemLevel = _G[row:GetName().."ILevel"];
@@ -371,10 +700,22 @@ function AuctionList:UpdateRow(offset, row)
             itemIcon:Hide();
         end
 
-        if (offset == self.selectedEntry) then
+        if (row.item.isNew) then
+            row.NewHighlight:Show();
+        else
+            row.NewHighlight:Hide();
+        end
+
+        if (row.item == self.selectedItem) then
             row:SetButtonState("PUSHED", true);
         else
             row:SetButtonState("NORMAL", false);
+        end
+
+        if (type(owner) == "table") then
+            itemOwner:SetText("Multiple");
+        else
+            itemOwner:SetText(owner);
         end
 
         row:Show();

@@ -1,14 +1,60 @@
-## Interface: 83000
+## Interface: 80300
 ## Title: AnS
 ## Version: 2.0.6
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
-## SavedVariables: ANS_CUSTOM_FILTERS, ANS_FILTERS, ANS_BASE_SELECTION, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_FILTER_SELECTION
+## SavedVariables: ANS_FILTERS, ANS_CONFIG, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_ANALYTICS_DATA
 
-## Default Settings
-Core\Settings.lua
+## Config Settings
+Core\Config.lua
 
-#e Data
+## Components UI Templates
+UI\Templates\Fonts.xml
+
+UI\Templates\Inputs\EditBox.xml
+
+UI\Templates\Buttons\FilterRow.xml
+UI\Templates\Buttons\AuctionRow.xml
+UI\Templates\Buttons\AuctionHeading.xml
+UI\Templates\Buttons\Buttons.xml
+UI\Templates\Buttons\DropdownItem.xml
+UI\Templates\Buttons\Dropdown.xml
+UI\Templates\Buttons\RecordRowMin.xml
+UI\Templates\Buttons\RecordRowFull.xml
+UI\Templates\Buttons\AuctionTreeRow.xml
+
+UI\Templates\Frames\RecordsHeadingMin.xml
+UI\Templates\Frames\RecordsHeadingFull.xml
+UI\Templates\Frames\Graph.xml
+UI\Templates\Frames\LedgerListView.xml
+UI\Templates\Frames\ConfirmDialog.xml
+UI\Templates\Frames\GroupEdit.xml
+UI\Templates\Frames\OperationViews.xml
+UI\Templates\Frames\SettingsViews.xml
+UI\Templates\Frames\Auctioning.xml
+
+## General Components
+UI\Components\Core.lua
+UI\Components\Common\Dropdown.lua
+UI\Components\Common\TextInput.lua
+UI\Components\Common\ConfirmDialog.lua
+UI\Components\Graph.lua
+UI\Components\TreeView.lua
+UI\Components\ListView.lua
+
+## General Utils
+Core\Utils\Core.lua
+Core\Utils\Minimap.lua
+Core\Utils\EventManager.lua
+Core\Utils\Tasker.lua
+Core\Utils\Logger.lua
+Core\Utils\Importer.lua
+Core\Utils\Exporter.lua
+Core\Utils\FSM.lua
+Core\Utils\BagScanner.lua
+Core\Utils\Macro.lua
+
+## Data
 Data\Core.lua
 Data\Herbs.lua
 Data\Ore.lua
@@ -18,49 +64,64 @@ Data\Enchanting.lua
 Data\Fish.lua
 Data\Mounts.lua
 Data\Pets.lua
+Data\Vendor.lua
 
-## Components
-UI\Templates\Fonts.xml
-UI\Templates\Inputs\EditBox.xml
-UI\Templates\Buttons\Buttons.xml
-UI\Templates\Buttons\DropdownItem.xml
-UI\Templates\Buttons\Dropdown.xml
-UI\Templates\Buttons\RecordRowMin.xml
-UI\Templates\Buttons\RecordRowFull.xml
-UI\Templates\Buttons\AuctionTreeRow.xml
-UI\Templates\Frames\RecordsHeadingMin.xml
-UI\Templates\Frames\RecordsHeadingFull.xml
-UI\Templates\Frames\Graph.xml
-
-UI\Components\Core.lua
-UI\Components\Common\Dropdown.lua
-UI\Components\Graph.lua
-UI\Components\TreeView.lua
-
-## General Utils
-Core\Minimap.lua
-Core\Utils.lua
+## Special Crafting Data for Recipes
+Data\Crafting.lua
 
 ## Auction Database Sources
 Core\Auction\Database\Core.lua
 Core\Auction\Database\TSM.lua
 Core\Auction\Database\TUJ.lua
 
-## Filters & Price Sources
+## Price Sources
 Core\PriceSource.lua
 Core\Sources.lua
-Core\Auction\Filter.lua
 
 ## Auction Queries
-Core\Auction\GroupQuery.lua
+Core\Auction\Query.lua
 
-## BagScanner
-Core\BagScanner.lua
+## Operations
+Core\Operations\Core.lua
+Core\Operations\Sniping.lua
+Core\Operations\Auctioning.lua
+Core\Operations\Mailing.lua
+Core\Operations\Shopping.lua
+Core\Operations\Vendoring.lua
+Core\Operations\Warehousing.lua
+Core\Operations\Crafting.lua
 
-## AnS Core
+## Analytics
+Core\Analytics\Core.lua
+Core\Analytics\Transactions.lua
+Core\Analytics\Modules\GoldTracker.lua
+Core\Analytics\Modules\ItemTracker.lua
+Core\Analytics\Modules\MerchantTracker.lua
+Core\Analytics\Modules\MailTracker.lua
+Core\Analytics\Modules\TradeTracker.lua
+Core\Analytics\Query.lua
+
+## AnS Core Window
+Core\WindowViews\DashboardView.lua
+Core\WindowViews\LedgerView.lua
+Core\WindowViews\GroupsView.lua
+Core\WindowViews\Subviews\SnipingOpView.lua
+Core\WindowViews\Subviews\AuctionOpView.lua
+Core\WindowViews\OperationsView.lua
+Core\WindowViews\Subviews\SniperSettingsView.lua
+Core\WindowViews\Subviews\GeneralSettingsView.lua
+Core\WindowViews\Subviews\CustomSourcesView.lua
+Core\WindowViews\Subviews\CraftSettingsView.lua
+Core\WindowViews\Subviews\MacroSettingsView.lua
+Core\WindowViews\SettingsView.lua
+Core\WindowViews\ImportExportView.lua
+Core\Window.lua
+
+## Special UI Hooks
+UI\Auctioning\Posting.lua
+UI\Auctioning\AuctionHook.lua
+UI\Crafting\CraftingHook.lua
+
+## Core Base
 AnS.lua
 AnS.xml
-
-## AnS Config -- This will be moving to separate modules eventually.
-AnsConfig.lua
-AnsConfig.xml

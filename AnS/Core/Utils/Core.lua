@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local Utils = {};
+local Config = Ans.Config;
 Utils.__index = Utils;
 
 Ans.Utils = Utils;
@@ -24,19 +25,45 @@ local OP_SHORT_HAND = {
     legendary = "5"
 };
 
+local hooks = {};
+
+local linkToNameCache = {};
+
 --- Standard Utils ---
 
-function Utils:GetTable()
-    if (#temporaryTables > 0) then
-        return tremove(temporaryTables);
-    else
-        return {};
+function Utils:IsClassic()
+    if (BattlePetTooltip) then
+        return false;
     end
+
+    return true;
+end
+
+function Utils:GetTable(...)
+    local t = nil;
+    if (#temporaryTables > 0) then
+        t = tremove(temporaryTables);
+        wipe(t);
+    else
+       t = {};
+    end
+
+    local total = select("#", ...);
+    for i = 1, total do
+        local v = select(i, ...);
+        tinsert(t, v);
+    end
+    return t;
 end
 
 function Utils:ReleaseTable(t)
     wipe(t);
     tinsert(temporaryTables, t);
+end
+
+function Utils:UnpackAndReleaseTable(t)
+    tinsert(temporaryTables, t);
+    return unpack(t);
 end
 
 local BattlePetTempTable = Utils:GetTable();
@@ -59,6 +86,139 @@ function Utils:GSC(val)
     return g, s, c
 end
 
+function Utils:GetNameFromLink(link)
+    if (not link) then
+        return "";
+    end
+
+    if (linkToNameCache[link]) then
+        return linkToNameCache[link][4];
+    end
+
+    local tbl = { strsplit("%|", link) };
+    linkToNameCache[link] = tbl;
+    return tbl[4];
+end
+
+function Utils:ParseGroups(groups, result)
+    local tempTbl = self:GetTable();
+    local queueTbl = self:GetTable();
+    local count = 0;
+
+    for i,v in ipairs(groups) do
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        if (not tempTbl[g.id]) then
+            tempTbl[g.id] = 1;
+            count = count + self:ParseIds(g.ids, result);
+
+            for i,v in ipairs(g.children) do
+                if (not tempTbl[v.id]) then
+                    tinsert(queueTbl, v);
+                end
+            end
+        end
+    end
+
+    self:ReleaseTable(queueTbl);
+    self:ReleaseTable(tempTbl);
+
+    return count;
+end
+
+function Utils:ParseIds(ids, result)
+    local tmp = "";
+    local count = 0;
+    for i = 1, #ids do
+        local c = ids:sub(i,i);
+        if (c == ",") then
+            if (self:ParseItem(tmp, result)) then
+                count = count + 1;
+            end
+            tmp = "";
+        else
+            tmp = tmp..c;
+        end
+    end
+
+    if (#tmp > 0) then
+        if (self:ParseItem(tmp, result)) then
+            count = count + 1;
+        end
+    end
+
+    return count;
+end
+
+function Utils:ParseItem(item, result)
+    local _, id = strsplit(":", item);
+    if (id) then
+        result[_..":"..id] = 1;
+        result[item] = 1;
+        return true;
+    else
+
+        local tn = tonumber(_);
+        if (tn) then
+            result["i:"..tn] = 1;
+            return true;
+        end
+    end
+
+    return false;
+end
+
+function Utils:ContainsGroup(tbl, id)
+    for i,v in ipairs(tbl) do
+        if(v.id == id) then
+            return true;
+        end
+    end
+
+    return false;
+end
+
+function Utils:GetGroupFromId(id)
+    local tempTbl = self:GetTable();
+    local queueTbl = self:GetTable();
+
+    for i,v in ipairs(Config.Groups()) do
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        if (not tempTbl[g.id]) then
+            tempTbl[g.id] = 1;
+            if (g.id == id) then
+                self:ReleaseTable(queueTbl);
+                self:ReleaseTable(tempTbl);
+                return g;
+            end
+
+            for i,v in ipairs(g.children) do
+                if (not tempTbl[v.id]) then
+                    tinsert(queueTbl, v);
+                end
+            end
+        end
+    end
+
+    self:ReleaseTable(queueTbl);
+    self:ReleaseTable(tempTbl);
+
+    return nil;
+end
+
+function Utils:CollectGarbage()
+    local preGC = collectgarbage("count")
+    collectgarbage("collect")
+    print("AnS - Collected " .. math.ceil((preGC-collectgarbage("count")) / 1024) .. " MB of garbage");
+end
+
 function Utils:FormatNumber(amount)
     local formatted = amount
     while true do  
@@ -70,14 +230,62 @@ function Utils:FormatNumber(amount)
     return formatted
 end
 
+function Utils:PriceToFormatted(prefix, val, negative)
+    local color = "|cFFFFFFFF";
 
-function Utils:PriceToString(val)
-    if (ANS_GLOBAL_SETTINGS.useCoinIcons) then
+    if (negative) then
+        color = "|cFFFF0000";
+    end
+
+    local gold, silver, copper = self:GSC(val);
+    local st = "";
+
+    if (gold ~= 0) then
+        st = color..prefix..self:FormatNumber(""..gold).."|cFFD7BC45g ";
+    end
+
+    if (st ~= "") then
+        st = st..color..format("%02i|cFF9C9B9Cs ", silver);
+    elseif (silver ~= 0) then
+        st = st..color..prefix..silver.."|cFF9C9B9Cs ";
+    end
+
+    if (st ~= "") then
+        st = st..color..format("%02i|cFF9B502Fc", copper);
+    elseif (copper ~= 0) then
+        st = st..color..prefix..copper.."|cFF9B502Fc";
+    end
+
+    if (st == "") then
+        st = color.."0|cFF9B502Fc";
+    end
+
+    return st;
+end
+
+function Utils:PriceToString(val, override, noFormatting)
+    if (Config.General().useCoinIcons and not override) then
         return GetMoneyString(val, true);
     end
 
-    local gold, silver, copper  = self:GSC(val);
+    local gold, silver, copper = self:GSC(val);
     local st = "";
+
+    if (noFormatting) then
+        if (gold ~= 0) then
+            st = gold.."g";
+        end
+        if (silver ~= 0) then
+            st = st..silver.."s";
+        end
+        if (copper ~= 0) then
+            st = st..copper.."c";
+        end
+        if (st == "") then
+            st = "0c";
+        end
+        return st;
+    end
 
     if (gold ~= 0) then
         st = "|cFFFFFFFF"..self:FormatNumber(""..gold).."|cFFD7BC45g ";
@@ -94,9 +302,9 @@ function Utils:PriceToString(val)
     elseif (copper ~= 0) then
         st = st.."|cFFFFFFFF"..copper.."|cFF9B502Fc";
     end
-	
-	if (st == "") then
-		st = "|cFFFFFFFF0|cFF9B502Fc";
+
+    if (st == "") then
+        st = "|cFFFFFFFF0|cFF9B502Fc";
     end
 
     return st;
@@ -280,9 +488,8 @@ function Utils:ReplaceShortHandPercent(str)
 end
 
 function Utils:MoneyStringToCopper(str)
-	str = gsub(str, "%s+", "");
+    str = gsub(str, "%s+", "");
     local g, s, c = string.match(str, "(%d+)g(%d+)s(%d+)c");
-    local value = 0;
 
     if (g and s and c) then
         return g.."g"..s.."s"..c.."c", tonumber(g) * 10000 + tonumber(s) * 100 + tonumber(c);
@@ -371,4 +578,21 @@ function Utils:InTable(tbl, val)
     end
 
     return false;
+end
+
+function Utils:HookSecure(name, fn)
+    hooksecurefunc(_G, name, fn);
+end
+
+function Utils:Hook(name, fn)
+    hooks[name] = _G[name];
+    _G[name] = function(...) fn(hooks[name], ...); end;
+end
+
+function Utils:Guid()
+    local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+    return string.gsub(template, '[xy]', function (c)
+        local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
+        return string.format('%x', v)
+    end)
 end

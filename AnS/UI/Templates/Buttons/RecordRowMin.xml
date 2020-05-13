@@ -1,4 +1,28 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <ScrollFrame name="AnsScrollFrameTemplate" virtual="true" inherits="UIPanelScrollFrameCodeTemplate">
+        <Frames>
+            <Slider name="$parentScrollBar" orientation="vertical" parentKey="ScrollBar">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="5" y="0" />
+                    <Anchor point="BOTTOMRIGHT" x="5" y="0" />
+                </Anchors>
+                <Size x="3" />
+                <ThumbTexture parentKey="ThumbTexture" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Size x="3" y="16" />
+                    <Color r="1" g="1" b="1" a="0.75" />
+                </ThumbTexture>
+                <Frames>
+                    <Button parentKey="ScrollUpButton" hidden="true" name="$parentScrollUpButton">
+                    </Button>
+                    <Button parentKey="ScrollDownButton" hidden="true" name="$parentScrollDownButton">
+                    </Button>
+                </Frames>
+                <Scripts>
+                    <OnValueChanged function="UIPanelScrollBar_OnValueChanged"/>
+                </Scripts>
+            </Slider>
+        </Frames>
+    </ScrollFrame>
     <ScrollFrame name="AnsFauxScrollFrameTemplate" virtual="true" inherits="UIPanelScrollFrameCodeTemplate">
         <Scripts>
             <OnScrollRangeChanged function=""/>
@@ -31,6 +55,42 @@
             </Slider>
         </Frames>
     </ScrollFrame>
+    <Button name="AnsInventoryRowTemplate" virtual="true" hidden="true">
+         <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Color r="1" g="1" b="1" a="0.25" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.10" />
+                </Texture>
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" justifyH="LEFT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="5" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="-5" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
     <Button name="AnsRecordRowMinTemplate" virtual="true" hidden="true">
         <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Color r="1" g="1" b="1" a="0.25" />

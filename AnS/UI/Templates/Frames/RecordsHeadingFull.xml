@@ -2,43 +2,6 @@
     <Frame name="AnsRecordsHeadingFullTemplate" virtual="true">
         <Layers>
             <Layer level="ARTWORK">
-                <FontString name="$parentName" justifyH="LEFT" text="Item" inherits="AnsGameFontWhiteTrans">
-                    <Size x="128" y="16" />
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="6" y="-4" />
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentWho" justifyH="LEFT" text="Player" inherits="AnsGameFontWhiteTrans">
-                    <Size x="100" y="16" />
-                    <Anchors>
-                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentName" relativePoint="RIGHT" />
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentType" justifyH="LEFT" text="Type" inherits="AnsGameFontWhiteTrans">
-                    <Size x="64" y="16" />
-                    <Anchors>
-                        <Anchor point="LEFT"  x="0" y="0" relativeTo="$parentWho" relativePoint="RIGHT" />
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentStack" justifyH="RIGHT" text="Stack" inherits="AnsGameFontWhiteTrans">
-                    <Size x="64" y="16" />
-                    <Anchors>
-                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentType" relativePoint="RIGHT" />
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentAmount" text="PPU" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
-                    <Size x="128" y="16" />
-                    <Anchors>
-                        <Anchor point="LEFT" relativeTo="$parentStack" x="0" y="0" relativePoint="RIGHT" />
-                    </Anchors>
-                </FontString>
-                <FontString name="$parentDate" text="Date" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
-                    <Size x="100" y="16" />
-                    <Anchors>
-                        <Anchor point="RIGHT" x="-6" y="0" />
-                    </Anchors>
-                </FontString>
-
                 <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
                     <Anchors>
                         <Anchor point="BOTTOMLEFT" x="0" y="-4" />
@@ -49,5 +12,86 @@
                 </Texture>
             </Layer>
         </Layers>
+        <Frames>
+            <Button name="$parentName" justifyH="LEFT" text="Item" inherits="AnsTab2Template">
+                <Size x="128" y="16" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="6" y="-4" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("item");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentWho" justifyH="LEFT" text="Player" inherits="AnsTab2Template">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT" x="0" y="0" relativeTo="$parentName" relativePoint="RIGHT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("from");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentType" justifyH="LEFT" text="Type" inherits="AnsTab2Template">
+                <Size x="64" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT"  x="0" y="0" relativeTo="$parentWho" relativePoint="RIGHT" />
+                </Anchors>
+
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("type");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentStack" text="Count" inherits="AnsTableHeaderRightTemplate">
+                <Size x="86" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT" x="0" y="0" relativeTo="$parentType" relativePoint="RIGHT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("quantity");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentDate" text="Date" inherits="AnsTableHeaderRightTemplate">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="RIGHT" x="-6" y="-4" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("time");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentAmount" text="PPU" inherits="AnsTableHeaderRightTemplate">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativeTo="$parentDate" x="0" y="0" relativePoint="LEFT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("copper");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
     </Frame>
 </Ui>

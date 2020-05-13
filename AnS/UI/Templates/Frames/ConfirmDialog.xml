@@ -1,0 +1,60 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsConfirmDialogTemplate" enableMouse="true" virtual="true" hidden="true" frameLevel="999">
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0" />
+            <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.75" />
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="Dialog" name="$parentDialog" frameLevel="1000">
+                <Size x="256" y="128" />
+                <Anchors>
+                    <Anchor point="CENTER" x="0" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.85" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="Message" name="$parentMessage" inherits="AnsGameFontNormalDark" justifyV="CENTER" justifyH="CENTER">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="10" y="-10" />
+                                <Anchor point="BOTTOMRIGHT" x="-10" y="10" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button parentKey="Cancel" name="$parentCancel" text="CANCEL" inherits="AnsTextButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" x="10" y="10" /> 
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="Confirm" name="$parentConfirm" text="OKAY" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="BOTTOMRIGHT" x="-10" y="10" />
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
+        </Frames>
+    </Frame>
+</Ui>

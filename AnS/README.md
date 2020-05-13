@@ -1,11 +1,12 @@
 AnS
 ==============
 
-What is it?
---------------------------
-It is a core library used for various things. But mainly for AnS [Auction Snipe].
+Official Discord
+-----------------
+Need help, have questions, suggestions or just found a bug?
 
-It also handles the configuration and storage of custom filters and importing of filters from TSM groups.
+https://discord.gg/DZueXS7
+
 
 Classes
 --------------
@@ -30,19 +31,6 @@ Data
 * Mounts
 * Ore
 * Pets
-
-UI Templates
---------------
-* AnsFilterRowTemplate (For filters listing)
-* AnsAuctionRowTemplate (For auction listings)
-* AnsAuctionHeadingTemplate (For auction sort etc)
-* SmallButtonTemplate
-
-Font Templates
-----------
-* AnsFontOrange
-* NumberFontNormalRightBlue
-* GameFontLightGraySmall
 
 TODO
 ===========

@@ -1,4 +1,7 @@
 local Ans = select(2, ...);
+local Data = Ans.Data;
+local VendorData = Data.Vendor;
+local Config = Ans.Config;
 local Sources = { items = {}};
 Sources.__index = Sources;
 Ans.Sources = Sources;
@@ -21,11 +24,12 @@ function OpCodes:New()
     op.buyout = 0;
     op.ilevel = 0;
     op.vendorsell = 0;
+    op.vendorBuy = 0;
     op.quality = 1;
     op.dbmarket = 0;
     op.dbminbuyout = 0; 
     op.dbhistorical = 0; 
-    op.dbregionmarketavg = 0; 
+    op.dbregionmarketavg = 0;
     op.dbregionminbuyoutavg = 0; 
     op.dbregionhistorical = 0; 
     op.dbregionsaleavg = 0; 
@@ -69,17 +73,29 @@ local ParseTemplate = [[
             log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, math.min, math.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
         local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
-
+        local bonus = function(v1,v2,v3)
+            return sources.bonus(ops.tsmId, v1, v2, v3);
+        end
 
         local percent = ops.percent;
         local ppu = ops.ppu;
         local stacksize = ops.stacksize;
         local buyout = ops.buyout;
-        local ilevel = ops.ilevel;
-        local quality = ops.quality;
-        local vendorsell = ops.vendorsell;
+        local ilevel, itemLevel, ItemLevel, itemlevel, Itemlevel = ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel;
+        local quality, itemquality, itemQuality, ItemQuality, Itemquality = ops.quality, ops.quality, ops.quality, ops.quality, ops.quality;
+        local vendorsell, vendorSell, Vendorsell, VendorSell = ops.vendorsell, ops.vendorsell, ops.vendorsell, ops.vendorsell;
+        local vendorbuy, vendorBuy, VendorBuy, Vendorbuy = ops.vendorbuy, ops.vendorbuy, ops.vendorbuy, ops.vendorbuy;
         local tsmId = ops.tsmId;
         local id = ops.id;
+
+        local DBMarket, Dbmarket = ops.dbmarket, ops.dbmarket;
+        local DBMinBuyout, Dbminbuyout = ops.dbminbuyout, ops.dbminbuyout;
+        local DBHistorical, Dbhistorical = ops.dbhistorical, ops.dbhistorical;
+
+        local DBRegionMinBuyoutAvg, Dbregionminbuyoutavg = ops.dbregionminbuyoutavg, ops.dbregionminbuyoutavg;
+        local DBRegionMarketAvg, Dbregionmarketavg = ops.dbregionmarketavg, ops.dbregionmarketavg;
+        local DBRegionHistorical, Dbregionhistorical = ops.dbregionhistorical, ops.dbregionhistorical;
+        local DBRegionSaleAvg, Dbregionsaleavg = ops.dbregionsaleavg, ops.dbregionsaleavg;
 
         %s
 
@@ -104,9 +120,7 @@ end
 
 function Sources:LoadCustomVars()
     wipe(VarCodes);
-    local i;
-    for i = 1, #ANS_CUSTOM_VARS do
-        local v = ANS_CUSTOM_VARS[i];
+    for i,v in ipairs(Config.CustomSources()) do
         local value = v.value;
 
         if (value and value:len() > 0) then
@@ -129,7 +143,7 @@ function Sources:GetNamesAsString()
     local sep = "";
     local i;
 
-    if (NameStringCache:len() > 0) then
+    if (NameStringCache and NameStringCache:len() > 0) then
         return NameStringCache;
     end
 
@@ -150,13 +164,14 @@ end
 function Sources:GetCustomVarsAsString()
     local str = "";
     local i;
-    local total = #VarCodes;
 
-    if (CustomVarStringCache:len() > 0) then
+    if (CustomVarStringCache and CustomVarStringCache:len() > 0) then
         return CustomVarStringCache;
+    else
+        self:LoadCustomVars();
     end
 
-    for i = 1, total do
+    for i = 1, #VarCodes do
         local cvar = VarCodes[i];
 
         local nstr = string.format(ParseVarsTemplate, cvar.name, cvar.value);
@@ -173,7 +188,7 @@ function Sources:GetVarsAsString()
     local i;
     local total = #self.items;
 
-    if (SourceStringCache:len() > 0) then
+    if (SourceStringCache and SourceStringCache:len() > 0) then
         return SourceStringCache;
     end
 
@@ -272,25 +287,25 @@ end
 Sources.check = function(v1,v2,v3)
     if (math.floor(v1) > 0) then
         return v2;
-    else
-        return v3;
     end
+    
+    return v3;
 end
 
 Sources.iflte = function(v1, v2, v3, v4)
     if (v1 <= v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.ifgte = function(v1, v2, v3, v4)
     if (v1 >= v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.iflt = function(v1, v2, v3, v4)
@@ -304,49 +319,161 @@ end
 Sources.ifgt = function(v1, v2, v3, v4)
     if (v1 > v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.ifeq = function(v1, v2, v3, v4)
     if (v1 == v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
 Sources.ifneq = function(v1, v2, v3, v4)
     if (v1 ~= v2) then
         return v3;
-    else
-        return v4;
     end
+    
+    return v4;
 end
 
-Sources.neq = function(v1,v2) 
-    return v1 ~= v2;
+Sources.neq = function(v1,v2,v3,v4) 
+    if (v1 ~= v2) then
+        return v3 or true;
+    end
+
+    return v4 or false;
 end
 
-Sources.eq = function(v1,v2)
-    return v1 == v2;
+Sources.eq = function(v1,v2,v3,v4)
+    if (v1 == v2) then
+        return v3 or true;
+    end
+
+    return v4 or false;
 end
 
-Sources.startswith = function(v1, v2)
-    return strsub(v1, 1, #v2) == v2
+Sources.startswith = function(v1, v2, v3, v4)
+    if (strsub(v1, 1, #v2) == v2) then
+        return v3 or true;
+    end
+
+    return v4 or false;
 end
 
-Sources.contains = function(v1, v2)
+Sources.contains = function(v1, v2, v3, v4)
     if (strfind(v1, v2)) then
-        return true;
+        return v3 or true;
     end
 
-    return false;
+    return v4 or false;
 end
 
-function Sources:Query(q, item)
-    local itemId = item.link or item.id;
+Sources.bonus = function(v1,v2,v3,v4)
+    if (not v1) then
+        return v4 or false;
+    end
+    
+    local s,e = strfind(v1, ":"..v2..":");
+    if (not s) then
+        s,e = strfind(v1, ":"..v2.."$");
+    end
+
+    if (s) then
+        return v3 or true; 
+    end
+
+    return v4 or false;
+end
+
+-- This accepts an item id in tsm format, numeric, or an item link
+function Sources:QueryID(q, itemId)
+    if (not itemId) then
+        return nil;
+    end
+    
+    local codes = nil;
+
+    local names = self:GetNamesAsString();
+    if (not names or names:len() == 0 ) then
+        return nil;
+    end
+
+    if (not q or q:len() == 0) then
+        return nil;
+    end
+
+    if (OpValueCache[itemId]) then
+        codes = OpValueCache[itemId];
+    else 
+        codes = OpCodes:New();
+        OpValueCache[itemId] = codes;
+        self:GetValues(itemId, codes);
+    end
+
+    codes.buyout = 0;
+    codes.stacksize = 0;
+    codes.quality = 99;
+    codes.percent = 0;
+    codes.ppu = 0;
+    codes.ilevel = 0;
+    codes.vendorsell = 0;
+    codes.tsmId = Utils:GetTSMID(itemId);
+    codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
+
+    local _, id = strsplit(":", codes.tsmId); 
+
+    codes.id = tonumber(id);
+
+    local _, fn, err = false, nil, nil;
+    local oq = q;
+
+    if (not OperationCache[q]) then
+        q = Utils:ReplaceOpShortHand(q);
+        q = Utils:ReplaceShortHandPercent(q);
+        q = Utils:ReplaceMoneyShorthand(q);    
+
+        --print(q);
+
+        if (not self:IsValidQuery(q)) then
+            print("AnS Invalid Filter / Pricing String: "..q);
+            return nil;
+        end
+
+        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
+
+        fn, err = loadstring(pstr);
+
+        if(not fn or err) then
+            print("AnS Filter / Pricing String Error: "..err);
+            return nil;
+        end
+
+        _, fn = pcall(fn);
+
+        if (not _ or not fn) then
+            print("AnS Invalid Filter / Pricing String: "..q);
+            return nil;
+        end
+
+        OperationCache[oq] = fn;
+    else
+        fn = OperationCache[oq];
+    end
+
+    if (not fn) then
+        return nil;
+    end
+
+    r = fn(self, codes);
+    return r;
+end
+
+function Sources:Query(q, item, groupId)
+    local itemId = groupId or item.link or item.id;
     local buyout = item.buyoutPrice;
     local stackSize = item.count;
     local quality = item.quality;
@@ -377,6 +504,7 @@ function Sources:Query(q, item)
         self:GetValues(itemId, codes);
     end
 
+
     codes.buyout = buyout;
     codes.stacksize = stackSize;
     codes.quality = quality;
@@ -386,8 +514,9 @@ function Sources:Query(q, item)
     codes.vendorsell = item.vendorsell;
     codes.tsmId = item.tsmId;
     codes.id = item.id;
+    codes.vendorbuy = Config.Vendor()[item.tsmId] or VendorData[item.tsmId] or 0;
 
-    local _, fn = false, nil;
+    local _, fn, err = false, nil, nil;
     local oq = q;
 
     if (not OperationCache[q]) then
@@ -404,10 +533,10 @@ function Sources:Query(q, item)
 
         local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
 
-        fn, error = loadstring(pstr);
+        fn, err = loadstring(pstr);
 
-        if(not fn or error) then
-            print("AnS Filter / Pricing String Error: "..error);
+        if(not fn or err) then
+            print("AnS Filter / Pricing String Error: "..err);
             return nil;
         end
 
