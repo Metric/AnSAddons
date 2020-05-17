@@ -54,6 +54,8 @@ function Auctioning:Init(name)
     self.idCount = 0;
     self.minPriceAction = 4;
     self.maxPriceAction = 3;
+    self.nonActiveGroups = {};
+    self.totalListed = 0;
 
     self.config = Auctioning:NewConfig(name);
 end
@@ -76,7 +78,8 @@ function Auctioning:NewConfig(name)
         applyAll = false,
         minPriceAction = 4,
         maxPriceAction = 3,
-        groups = {}
+        groups = {},
+        nonActiveGroups = {}
     };
 
     return t;
@@ -97,17 +100,31 @@ function Auctioning:FromConfig(config)
     a.applyAll = config.applyAll;
     a.minPriceAction = config.minPriceAction or 4;
     a.maxPriceAction = config.maxPriceAction or 3;
+    a.nonActiveGroups = config.nonActiveGroups or {};
 
     for i,v in ipairs(config.groups) do
-        local g = Utils:GetGroupFromId(v);
-        if (g) then
-            tinsert(a.groups, g);
+        if (not a.nonActiveGroups[v]) then
+            local g = Utils:GetGroupFromId(v);
+            if (g) then
+                tinsert(a.groups, g);
+            end
         end
     end
 
+    a.totalListed = 0;
     a.config = config;
     a.idCount = Utils:ParseGroups(a.groups, a.ids);
     return a;
+end
+
+function Auctioning:Track(item)
+    if (item.isOwnerItem or item.owner == UnitName("player")) then
+        self.totalListed = self.totalListed + item.count;
+    end
+end
+
+function Auctioning:MaxPosted()
+    return self.totalListed >= self.maxToPost and self.maxToPost > 0;
 end
 
 function Auctioning:IsValid(ppu, link, ignore, defaultValue)
@@ -184,6 +201,10 @@ end
 
 -- items should have had a .ppu assigned to them at this point
 function Auctioning:ApplyPost(item, queue)
+    if (self:MaxPosted()) then
+        return;
+    end
+
     if (Utils:IsClassic()) then
         self:ApplyPostClassic(item, queue);
     else

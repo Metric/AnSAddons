@@ -206,6 +206,12 @@
             </Layer>
         </Layers>
         <Frames>
+            <CheckButton parentKey="InheritGlobal" text="Inherit Global Settings" name="$parentInheritGlobal" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="25" />
+                </Anchors>
+            </CheckButton>
             <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>

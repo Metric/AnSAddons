@@ -343,14 +343,16 @@ function Dashboard:UpdateGraph()
 
     gmax = math.max(gmax + math.floor(gmax * (self.graph.SECTION_SIZE_PCT * 0.5)), 100);
 
+    local perY = gmax / (#self.graph.yFonts - 1);
+    local totalY = 0;
+
     local ftotal = #self.graph.yFonts;
     for i = 1, ftotal do
         if (i == 1) then
             tinsert(t3, 0);
         else
-            local copper = math.floor(gmax / (ftotal - i + 1));
             -- round to gold only
-            local gold = math.floor(copper / 10000);
+            local gold = math.floor(totalY / 10000);
 			if (gold > 10000000000) then
 				tinsert(t3, math.floor(gold / 10000000000).."B");
 			elseif (gold > 1000000000) then
@@ -367,6 +369,7 @@ function Dashboard:UpdateGraph()
                 tinsert(t3, gold);
             end
         end
+        totalY = totalY + perY;
     end
 
     self.graph:Update(t1, t2, t3, gmax);

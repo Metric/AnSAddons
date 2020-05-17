@@ -173,7 +173,7 @@ local function BuildStateMachine()
         end
 
         local next = inventory[1];
-        Query.SearchForItem(next:Clone(), next.isEquipment, true)
+        Query.SearchForItem(next:Clone(), next.isEquipment)
         PostingView.post:SetText("Scanning 1 of "..#inventory);
         PostingView.post:Disable();
         PostingView.cancel:Disable();
@@ -192,6 +192,10 @@ local function BuildStateMachine()
     end);
     postItemResults:AddEvent("ITEM_RESULT", function(self, event, item)
         if (item) then
+            if (self.item and self.item.op) then
+                self.item.op:Track(item);
+            end
+            
             PostingView.CalcLowest(item);
         end
     end);
@@ -244,7 +248,7 @@ local function BuildStateMachine()
                 Query.page = 0;
                 Query:Search(DEFAULT_BROWSE_QUERY, true);
             else
-                Query.SearchForItem(nextItem:Clone(), nextItem.isEquipment, true);
+                Query.SearchForItem(nextItem:Clone(), nextItem.isEquipment);
             end
             PostingView.post:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
         end
@@ -909,7 +913,13 @@ function PostingView:OnLoad(f)
         rowHeight = 21,
         childIndent = 16,
         template = filterTemplate, multiselect = true
-    }, function(item) this:Toggle(item.op) end);
+    }, function(item) 
+        if (item.op and not item.group) then
+            this:Toggle(item.op)
+        elseif (item.op and item.group) then
+            this:ToggleGroup(item.op, item.group); 
+        end
+    end);
 
     self.all:SetScript("OnClick", self.SelectAll);
     self.reset:SetScript("OnClick", self.Reset);
@@ -946,20 +956,46 @@ function PostingView.SelectAll()
     PostingView:RefreshTreeView();
 end
 
+function PostingView:ToggleGroup(f, g)
+    if (f.nonActiveGroups[g]) then
+        f.nonActiveGroups[g] = nil;
+    else
+        f.nonActiveGroups[g] = true;
+    end
+end
+
 function PostingView:RefreshTreeView()
     local ops = Config.Operations().Auctioning;
 
     wipe(treeViewItems);
     for i,v in ipairs(ops) do
+        v.nonActiveGroups = v.nonActiveGroups or {};
         local t = {
             name = v.name,
             op = v,
-            selected = activeOps[v.id] ~= nil
+            selected = activeOps[v.id] ~= nil,
+            children = {},
+            expanded = false
         };
+
+        for i,v2 in ipairs(v.groups) do
+            local g = Utils:GetGroupFromId(v2);
+            if (g) then
+                tinsert(t.children, {
+                    name = g.path,
+                    selected = (not v.nonActiveGroups[v2]),
+                    expanded = false,
+                    children = {},
+                    group = v2,
+                    op = v
+                });
+            end
+        end
+
         tinsert(treeViewItems, t);
     end
 
-    self.filterTree.items= treeViewItems;
+    self.filterTree.items = treeViewItems;
     self.filterTree:Refresh();
 end
 
@@ -1147,6 +1183,7 @@ end
 
 function PostingView:OnShow()
     PostingFSM = BuildStateMachine();
+    Utils:BuildGroupPaths();
     self:RefreshTreeView();
     self:RegisterEvents();
 end

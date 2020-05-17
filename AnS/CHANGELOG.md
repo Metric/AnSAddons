@@ -1,3 +1,12 @@
+AnS Changes 2.1.1
+-------------------
+* Can now select active / inactive groups per operation in sniping window / post / cancel.
+* Max to post is now character based and properly limits total based on amount already on AH.
+* Custom sources for TSM: avgBuy, avgSell, Destroy, maxBuy, maxSell now available.
+* Snipe operations can now inherit global snipe window settings and global snipe settings for Max Price / Boolean filter.
+* Corrected miscalculated Y Graph gold values UI text.
+* Fixed issue where MoneyStringToCopper was producing invalid return results for money string with spaces.
+
 AnS Changes 2.0.6
 -------------------
 * Fixed issue where stuff would not show up until the second scan, or not at all when it came to commodities.

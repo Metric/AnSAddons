@@ -139,6 +139,8 @@ function Utils:ParseIds(ids, result)
                 count = count + 1;
             end
             tmp = "";
+        elseif (c == "\n" or c == "\r" or c == "\t") then
+            -- ignore tabs, new lines and carriage returns
         else
             tmp = tmp..c;
         end
@@ -179,6 +181,34 @@ function Utils:ContainsGroup(tbl, id)
     end
 
     return false;
+end
+
+function Utils:BuildGroupPaths()
+    local tempTbl = self:GetTable();
+    local queueTbl = self:GetTable();
+
+    for i,v in ipairs(Config.Groups()) do
+        v.path = v.name;
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        if (not tempTbl[g.id]) then
+            tempTbl[g.id] = 1;
+            for i,v in ipairs(g.children) do
+                if (not tempTbl[v.id]) then
+                    v.path = g.path.."."..v.name; 
+                    tinsert(queueTbl, v);
+                end
+            end
+        end
+    end
+
+    self:ReleaseTable(queueTbl);
+    self:ReleaseTable(tempTbl);
+
+    return nil;
 end
 
 function Utils:GetGroupFromId(id)
@@ -488,29 +518,28 @@ function Utils:ReplaceShortHandPercent(str)
 end
 
 function Utils:MoneyStringToCopper(str)
-    str = gsub(str, "%s+", "");
-    local g, s, c = string.match(str, "(%d+)g(%d+)s(%d+)c");
+    local g, s2, s, s3, c = string.match(str, "(%d+)g(%s*)(%d+)s(%s*)(%d+)c");
 
     if (g and s and c) then
-        return g.."g"..s.."s"..c.."c", tonumber(g) * 10000 + tonumber(s) * 100 + tonumber(c);
+        return g.."g"..(s2 or "")..s.."s"..(s3 or "")..c.."c", tonumber(g) * 10000 + tonumber(s) * 100 + tonumber(c);
     end
 
-    g, s = string.match(str, "(%d+)g(%d+)s");
+    g, s2, s = string.match(str, "(%d+)g(%s*)(%d+)s");
 
     if (g and s) then
-        return g.."g"..s.."s", tonumber(g) * 10000 + tonumber(s) * 100;
+        return g.."g"..(s2 or "")..s.."s", tonumber(g) * 10000 + tonumber(s) * 100;
     end
 
-    g,c = string.match(str, "(%d+)g(%d+)c");
+    g, s2, c = string.match(str, "(%d+)g(%s*)(%d+)c");
 
     if (g and c) then
-        return g.."g"..c.."c", tonumber(g) * 10000 + tonumber(c);
+        return g.."g"..(s2 or "")..c.."c", tonumber(g) * 10000 + tonumber(c);
     end
 
-    s, c = string.match(str, "(%d+)s(%d+)c");
+    s, s2, c = string.match(str, "(%d+)s(%s*)(%d+)c");
 
     if (s and c) then
-        return s.."s"..c.."c", tonumber(s) * 100 + tonumber(c);
+        return s.."s"..(s2 or "")..c.."c", tonumber(s) * 100 + tonumber(c);
     end
 
     c = string.match(str, "(%d+)c");

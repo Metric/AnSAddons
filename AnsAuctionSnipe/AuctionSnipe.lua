@@ -747,7 +747,13 @@ function AuctionSnipe:Init()
         rowHeight = 21,
         childIndent = 16,
         template = snipeFilterTemplate, multiselect = true
-    }, function(item) d:ToggleFilter(item.filter) end);
+    }, function(item)
+        if (item.filter and not item.group) then 
+            d:ToggleFilter(item.filter)
+        elseif (item.filter and item.group) then
+            d:ToggleGroup(item.filter, item.group);
+        end 
+    end);
 
     self.baseTreeView = TreeView:New(_G[frame:GetName().."BaseList"], {
         rowHeight = 21,
@@ -807,6 +813,22 @@ function AuctionSnipe:BuildTreeViewFilters()
         pf.expanded = false;
         pf.children = {};
         pf.filter = v;
+
+        v.nonActiveGroups = v.nonActiveGroups or {};
+
+        for i,v2 in ipairs(v.groups) do
+            local g = Utils:GetGroupFromId(v2);
+            if (g) then
+                tinsert(pf.children, {
+                    name = g.path,
+                    selected = (not v.nonActiveGroups[v2]),
+                    expanded = false,
+                    children = {},
+                    group = v2,
+                    filter = v
+                });
+            end
+        end
 
         tinsert(opTreeViewItems, pf);
     end
@@ -1076,6 +1098,8 @@ function AuctionSnipe:Show()
 
     SniperFSM = BuildStateMachine();
 
+    Utils:BuildGroupPaths();
+
     self:BuildTreeViewFilters();
     self.filterTreeView.items = opTreeViewItems;
     self.filterTreeView:Refresh();
@@ -1176,10 +1200,6 @@ function AuctionSnipe:Start()
         SortAuctionApplySort("list");
     end
 
-    scanIndex = 1;
-    Query.page = 0;
-    Query:AssignDefaults(ilevel, maxBuyout, quality, maxPercent);
-
     local realOps = {};
 
     for i,v in ipairs(self.activeOps) do
@@ -1187,6 +1207,11 @@ function AuctionSnipe:Start()
     end
 
     Query:AssignSnipingOps(realOps);
+
+    scanIndex = 1;
+    Query.page = 0;
+    Query:AssignDefaults(ilevel, maxBuyout, quality, maxPercent);
+
     SniperFSM:Process("START");
 end
 
@@ -1257,6 +1282,14 @@ function AuctionSnipe:ToggleFilter(f)
     else
         tinsert(self.activeOps, f);
         Config.SelectionSniper()[f.id] = true;
+    end
+end
+
+function AuctionSnipe:ToggleGroup(f, g)
+    if (f.nonActiveGroups[g]) then
+        f.nonActiveGroups[g] = nil;
+    else
+        f.nonActiveGroups[g] = true;
     end
 end
 

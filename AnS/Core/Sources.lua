@@ -54,6 +54,11 @@ function OpCodes:New()
     op.ansmarket = 0;
     op.ansmin = 0;
     op.ans3day = 0;
+    op.avgsell = 0;
+    op.avgbuy = 0;
+    op.maxsell = 0;
+    op.maxbuy = 0;
+    op.destroy = 0;
     return op;
 end
 
@@ -81,6 +86,11 @@ local ParseTemplate = [[
         local ppu = ops.ppu;
         local stacksize = ops.stacksize;
         local buyout = ops.buyout;
+        local avgBuy, AvgBuy, Avgbuy = ops.avgbuy, ops.avgbuy, ops.avgbuy;
+        local avgSell, AvgSell, Avgsell = ops.avgsell, ops.avgsell, ops.avgsell;
+        local Destroy = ops.destroy;
+        local maxSell, MaxSell, Maxsell = ops.maxsell, ops.maxsell, ops.maxsell;
+        local maxBuy, MaxBuy, Maxbuy = ops.maxbuy, ops.maxbuy, ops.maxbuy;
         local ilevel, itemLevel, ItemLevel, itemlevel, Itemlevel = ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel;
         local quality, itemquality, itemQuality, ItemQuality, Itemquality = ops.quality, ops.quality, ops.quality, ops.quality, ops.quality;
         local vendorsell, vendorSell, Vendorsell, VendorSell = ops.vendorsell, ops.vendorsell, ops.vendorsell, ops.vendorsell;

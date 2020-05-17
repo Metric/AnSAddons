@@ -18,6 +18,8 @@ function Importer:ImportGroups(str, groups)
         if (c == ",") then
             group = self:ParseGroupItem(tmp, group, groups);
             tmp = "";
+        elseif (c == "\r" or c == "\n" or c == "\t") then
+            -- ignore
         else
             tmp = tmp..c;
         end

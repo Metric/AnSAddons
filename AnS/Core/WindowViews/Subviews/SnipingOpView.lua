@@ -49,6 +49,9 @@ function SnipingView:OnLoad(f)
     self.maxPPU.onTextChanged = function() this:ValuesChanged(); end;
     self.search.onTextChanged = function() this:ValuesChanged(); end;
 
+    self.inheritGlobal = self.frame.InheritGlobal;
+    self.inheritGlobal:SetScript("OnClick", function(f) this:ValuesChanged(); end);
+
     self.classIDSelected = 0;
     self.subClassIDSelected = 0;
     self.inventoryTypeSelected = 0;
@@ -75,6 +78,7 @@ function SnipingView:Set(snipeOp)
     self.search:Set(snipeOp.search);
     self.exactMatch:SetChecked(snipeOp.exactMatch);
     self.minQualityDropdown:SetSelected(snipeOp.minQuality + 1);
+    self.inheritGlobal:SetChecked(snipeOp.inheritGlobal);
 
     self.selected = snipeOp;
 
@@ -106,6 +110,8 @@ function SnipingView:ValuesChanged()
     self.selected.recalc = self.recalc:GetChecked();
 
     self.selected.minQuality = self.minQualityDropdown.selected - 1;
+
+    self.selected.inheritGlobal = self.inheritGlobal:GetChecked();
 
     if (self.onEdit) then
         self.onEdit();

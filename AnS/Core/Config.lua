@@ -46,7 +46,8 @@ local SNIPER_DEFAULT = {
     chatMessageNew = true,
     clevel = "0-120",
     minQuality = 1,
-    ilevel = 0
+    ilevel = 0,
+    reverseSort = false
 };
 
 local CRAFTING_DEFAULT = {

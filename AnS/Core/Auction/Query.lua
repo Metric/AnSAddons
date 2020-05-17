@@ -169,6 +169,7 @@ end
 
 local STATES = {};
 Query.ItemKeyHash = ItemKeyHash;
+Query.DEFAULT_ITEM_SORT = DEFAULT_ITEM_SORT;
 
 Query.ops = {};
 Query.page = 0;
@@ -205,6 +206,18 @@ function Query:AssignDefaults(ilevel, buyout, quality, maxPercent)
     self.maxBuyout = buyout;
     self.quality = quality;
     self.maxPercent = maxPercent;
+
+    local sniperConfig = Config.Sniper();
+
+    for i,v in ipairs(self.ops) do
+        if (v.inheritGlobal) then
+            v.minILevel = ilevel;
+            v.price = sniperConfig.pricing;
+            v.maxPercent = maxPercent;
+            v.maxPPU = buyout;
+            v.minQuality = quality;
+        end
+    end
 end
 
 function Query:AssignSnipingOps(ops) 

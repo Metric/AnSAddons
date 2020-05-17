@@ -34,6 +34,8 @@ function Sniping:Init(name)
     self.groups = {};
     self.ids = {};
     self.idCount = 0;
+    self.inheritGlobal = false;
+    self.nonActiveGroups = {};
 
     self.config = Sniping:NewConfig(name);
 end
@@ -50,7 +52,9 @@ function Sniping:NewConfig(name)
         exactMatch = false,
         recalc = false,
         search = "",
-        groups = {}
+        groups = {},
+        inheritGlobal = false,
+        nonActiveGroups = {}
     };
 
     return t;
@@ -68,12 +72,15 @@ function Sniping:FromConfig(snipe)
     n.minQuality = snipe.minQuality;
     n.exactMatch = snipe.exactMatch;
     n.search = snipe.search;
-    
+    n.inheritGlobal = snipe.inheritGlobal;
+    n.nonActiveGroups = snipe.nonActiveGroups or {};
 
     for i,v in ipairs(snipe.groups) do
-        local g = Utils:GetGroupFromId(v);
-        if (g) then
-            tinsert(n.groups, g);
+        if (not n.nonActiveGroups[v]) then
+            local g = Utils:GetGroupFromId(v);
+            if (g) then
+                tinsert(n.groups, g);
+            end
         end
     end
 
