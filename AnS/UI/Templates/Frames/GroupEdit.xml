@@ -36,7 +36,7 @@
                     <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentInventoryList" x="12" y="-5" />
                 </Anchors>
             </Button>
-            <ScrollFrame name="$parentIds" parentKey="Ids" inherits="AnsScrollFrameTemplate">
+            <ScrollFrame name="$parentIds" enableMouse="true" parentKey="Ids" inherits="AnsScrollFrameTemplate">
                 <Size x="256" y="249" />
                 <Anchors>
                     <Anchor point="TOPRIGHT" x="0" y="-64" />
@@ -57,6 +57,11 @@
                         <Size x="256" y="200" />
                     </EditBox>
                 </ScrollChild>
+                <Scripts>
+                    <OnLoad>
+                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                    </OnLoad>
+                </Scripts>
             </ScrollFrame>
             <Button parentKey="RemoveGroup" name="$parentRemoveGroup" text="Delete Group" inherits="AnsWarningButtonTemplate">
                 <Size x="100" y="20" />

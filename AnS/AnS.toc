@@ -1,6 +1,11 @@
+#@retail@
 ## Interface: 80300
+#@end-retail@
+#@non-retail@
+# ## Interface: 11304
+#@end-non-retail@
 ## Title: AnS
-## Version: 2.1.1
+## Version: 2.1.2
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
 ## SavedVariables: ANS_FILTERS, ANS_CONFIG, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_ANALYTICS_DATA

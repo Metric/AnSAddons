@@ -1,5 +1,6 @@
 local Ans = select(2, ...);
 local Sources = Ans.Sources;
+local Config = Ans.Config;
 local EventManager = Ans.EventManager;
 local PostingView = Ans.Auctions.PostingView;
 local AuctionHook = {};
@@ -7,8 +8,6 @@ AuctionHook.__index = AuctionHook;
 
 local AHFrame = nil;
 local didHook = false;
-
-local wx, wy = nil, nil;
 
 function AuctionHook.MakeDraggable()
     if (AHFrame and AHFrame:IsShown()) then
@@ -30,8 +29,8 @@ function AuctionHook.MakeDraggable()
 end
 
 function AuctionHook.StoreWindowPosition(self)
-    wx, wy = self:GetRect();
-    -- eventually add save settings here
+    local left, bottom, width, height = self:GetRect();
+    Config.General().auctionWindowPosition = {x = left, y = bottom};
 end
 
 function AuctionHook.RestoreWindowPosition(self)
@@ -39,12 +38,11 @@ function AuctionHook.RestoreWindowPosition(self)
         return;
     end
 
-    if (not wx and not wy) then
+    local pos = Config.General().auctionWindowPosition;
+
+    if (pos and Config.General().saveWindowLocations) then
         self:ClearAllPoints();
-        self:SetPoint("CENTER", self:GetParent(), "CENTER", 0, 0);
-    else
-        self:ClearAllPoints();
-        self:SetPoint("BOTTOMLEFT", self:GetParent(), "BOTTOMLEFT", wx, wy);
+        self:SetPoint("BOTTOMLEFT", self:GetParent(), "BOTTOMLEFT", pos.x, pos.y);
     end
 end
 

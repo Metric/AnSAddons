@@ -478,6 +478,11 @@ function Utils:GetAddonVersion(name)
     return "0","0";
 end
 
+function Utils:ReplaceTabReturns(str)
+    str = gsub(str, "[\r\n\t]+", "");
+    return str;
+end
+
 function Utils:ReplaceOpShortHand(str)
     for k, v in pairs(OP_SIM_HAND) do
         str = gsub(str, k.."[^%(]", v);

@@ -594,7 +594,7 @@
                             <Anchor point="TOPLEFT" x="120" y="0" />
                         </Anchors>
                     </Button>
-                    <ScrollFrame parentKey="Input" name="$parentInput" inherits="AnsScrollFrameTemplate">
+                    <ScrollFrame parentKey="Input" enableMouse="true" name="$parentInput" inherits="AnsScrollFrameTemplate">
                         <Size x="748" y="256" />
                         <Anchors>
                             <Anchor point="TOPLEFT" x="10" y="-30" />
@@ -615,6 +615,11 @@
                                 <Size x="748" y="256" />
                             </EditBox>
                         </ScrollChild>
+                        <Scripts>
+                            <OnLoad>
+                                self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                            </OnLoad>
+                        </Scripts>
                     </ScrollFrame>
                 </Frames>
             </Frame>

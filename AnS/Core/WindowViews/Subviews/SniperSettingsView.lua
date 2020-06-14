@@ -1,9 +1,26 @@
 local Ans = select(2, ...);
 local TextInput = Ans.UI.TextInput;
 local Config = Ans.Config;
+local Dropdown = Ans.UI.Dropdown;
 local SniperSettings = {};
+
+local soundKitSounds = {};
+local soundKitSoundsToIndex = {};
+
 SniperSettings.__index = SniperSettings;
 Ans.SnipeSettingsView = SniperSettings;
+
+-- prep sound kit array
+
+for k,v in pairs(SOUNDKIT) do
+    tinsert(soundKitSounds, k);
+end
+
+table.sort(soundKitSounds);
+
+for i,v in ipairs(soundKitSounds) do
+    soundKitSoundsToIndex[v] = i;
+end
 
 function SniperSettings:OnLoad(f)
     self.parent = f;
@@ -35,8 +52,13 @@ function SniperSettings:OnLoad(f)
     self.chatMessageNew = self.frame.ChatMessageNew;
     self.chatMessageNew:SetScript("OnClick", self.SaveChatMessageNew);
 
+    self.flashWoWIcon = self.frame.FlashWoWIcon;
+    self.flashWoWIcon:SetScript("OnClick", self.SaveFlashWoWIcon);
+
     self.itemsUpdate = TextInput:NewFrom(self.frame.ItemsUpdate);
     self.itemsUpdate.onTextChanged = self.SaveItemsUpdate;
+
+    self:CreateSoundList();
     self.frame:Hide();
 end
 
@@ -68,6 +90,22 @@ function SniperSettings:Load()
     self.commodityConfirm:SetChecked(Config.Sniper().useCommodityConfirm);
     self.ding:SetChecked(Config.Sniper().dingSound);
     self.itemsUpdate:Set(Config.Sniper().itemsPerUpdate.."");
+    self.flashWoWIcon:SetChecked(Config.Sniper().flashWoWIcon);
+    self.soundList:SetSelected(soundKitSoundsToIndex[Config.Sniper().soundKitSound]);
+end
+
+function SniperSettings:CreateSoundList()
+    self.soundList = Dropdown:New("DingSound", self.frame);
+    self.soundList:SetPoint("TOPLEFT", "TOPLEFT", 225, -20);
+    self.soundList:SetSize(300, 20);
+
+    for i,v in ipairs(soundKitSounds) do
+        self.soundList:AddItem(v, self.SaveSound);
+    end
+end
+
+function SniperSettings.SaveSound()
+    Config.Sniper().soundKitSound = soundKitSounds[SniperSettings.soundList.selected];
 end
 
 function SniperSettings.SaveSkipSeen()
@@ -104,4 +142,8 @@ end
 
 function SniperSettings:SaveScanDelay()
     Config.Sniper().scanDelay = tonumber(SniperSettings.scanDelay:Get()) or 10;
+end
+
+function SniperSettings.SaveFlashWoWIcon()
+    Config.Sniper().flashWoWIcon = SniperSettings.flashWoWIcon:GetChecked();
 end

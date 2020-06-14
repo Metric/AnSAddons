@@ -1,7 +1,12 @@
+#@retail@
 ## Interface: 80300
+#@end-retail@
+#@non-retail@
+# ## Interface: 11304
+#@end-non-retail@
 ## Title: AnS [Auction Data]
 ## License: MIT
-## Version: 2.1.1
+## Version: 2.1.2
 ## Dependencies: AnS
 ## Notes: A library for tracking auction prices and showing via tooltip
 ## SavedVariables: ANS_AUCTION_DATA, ANS_LAST_DATA_SCAN

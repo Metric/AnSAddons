@@ -20,7 +20,10 @@ local GENERAL_DEFAULT = {
     tooltipRegionMarket = false,
     tooltipRegionSeen = false,
     trackDataAnalytics = true,
-    showDebugWindow = false
+    showDebugWindow = false,
+    auctionWindowPosition = nil,
+    saveWindowLocations = true,
+    minimapShown = true,
 };
 
 local OPERATIONS_DEFAULT = {
@@ -47,7 +50,9 @@ local SNIPER_DEFAULT = {
     clevel = "0-120",
     minQuality = 1,
     ilevel = 0,
-    reverseSort = false
+    reverseSort = false,
+    flashWoWIcon = true,
+    soundKitSound = "AUCTION_WINDOW_OPEN"
 };
 
 local CRAFTING_DEFAULT = {

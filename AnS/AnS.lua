@@ -34,6 +34,24 @@ AnsCore.__index = AnsCore;
 AnsCore.API = Ans;
 AnsCore.Window = Window;
 
+-- slash commands for hiding minimap icon
+-- and access ans window when icon is hidden
+SlashCmdList["ANS_SLASHANS"] = function(msg)
+    Window:Toggle();
+end
+SLASH_ANS_SLASHANS1 = "/ans";
+
+SlashCmdList["ANS_SLASHMINIMAP"] = function(msg)
+    if (Config.General().minimapShown) then
+        Config.General().minimapShown = false;
+        Ans.MiniButton:Hide();
+    else
+        Config.General().minimapShown = true;
+        Ans.MiniButton:Show();
+    end
+end
+SLASH_ANS_SLASHMINIMAP1 = "/ansminimap";
+
 StaticPopupDialogs["ANS_NO_PRICING"] = {
     text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, AnsAuctionData, and Auctionator are currently supported.",
     button1 = "OKAY",
@@ -169,6 +187,12 @@ end
 local function CreateMiniButton()
     Ans.MiniButton = MinimapIcon:New("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
     function() Window:Toggle() end, AnsCore.SaveMiniButton, Config.MiniButton(), {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
+
+    if (Config.General().minimapShown) then
+        Ans.MiniButton:Show();
+    else
+        Ans.MiniButton:Hide();
+    end
 end
 
 function AnsCore:OnLoad()

@@ -37,6 +37,10 @@ if (not Utils:IsClassic()) then
     };
 end
 
+local ERRORS = {
+    ERR_ITEM_NOT_FOUND,
+    ERR_AUCTION_DATABASE_ERROR
+};
 
 local rootFrame = nil;
 
@@ -101,6 +105,7 @@ local clearNew = true;
 
 local currentAuctionIds = {};
 
+local scanCount = 0;
 
 local ERR_AUCTION_WON = gsub(ERR_AUCTION_WON_S or "", "%%s", "");
 
@@ -332,11 +337,13 @@ local function BuildStateMachine()
 
         if (totalValidAuctionsFound > 0) then
             scanDelay = Config.Sniper().scanDelay;
-            FlashClientIcon();
+            if (Config.Sniper().flashWoWIcon) then
+                FlashClientIcon();
+            end
         end
 
         if (totalValidAuctionsFound > 0 and Config.Sniper().dingSound) then
-            PlaySound(SOUNDKIT.AUCTION_WINDOW_OPEN, "Master");
+            PlaySound(SOUNDKIT[Config.Sniper().soundKitSound], "Master");
         end
 
         totalValidAuctionsFound = 0;
@@ -381,8 +388,12 @@ local function BuildStateMachine()
             
             Logger.Log("SNIPER", "Sending classic search query");
 
+            scanCount = scanCount + 1;
+
+            if (scanCount > 9999) then scanCount = 1; end
+
             if (AuctionSnipe.snipeStatusText) then
-                AuctionSnipe.snipeStatusText:SetText("Page: "..Query.page.." - Query Sent...");
+                AuctionSnipe.snipeStatusText:SetText("Query: "..scanCount.." Page: "..Query.page.." - Query Sent...");
             end
 
             Query:Search(DEFAULT_BROWSE_QUERY);
@@ -465,6 +476,10 @@ local function BuildStateMachine()
         Logger.Log("SNIPER", "search complete");
         if (not Utils:IsClassic()) then
             AuctionList:ClearMissing(currentItemScan, currentAuctionIds);
+        else
+            if (AuctionSnipe.snipeStatusText) then
+                AuctionSnipe.snipeStatusText:SetText("Query: "..scanCount.." Complete");
+            end
         end
         return "ITEMS";
     end);
@@ -916,6 +931,18 @@ function AuctionSnipe.OnChatMessage(msg)
     end
 end
 
+--- handle errors for buying ---
+function AuctionSnipe.OnErrorMessage(type, msg)
+    if (not SniperFSM or not AuctionSnipe.frame or not AuctionSnipe.frame:IsShown() or not AuctionList) then
+        return;
+    end
+    if (SniperFSM.current == "BUYING" and Utils:InTable(ERRORS, msg)) then
+        Logger.Log("SNIPER", "Item Purchased Failed with: "..msg);
+        AuctionList:ConfirmAuctionPurchase();
+        SniperFSM:Process("CANCEL_AUCTION");
+    end
+end
+
 function AuctionSnipe.BrowseFilter(item)
     local self = AuctionSnipe;
 
@@ -962,6 +989,7 @@ function AuctionSnipe:RegisterQueryEvents()
     EventManager:On("QUERY_BROWSE_RESULTS", AuctionSnipe.OnQueryBrowseResults);
     EventManager:On("COMMODITY_DIALOG_CANCEL", AuctionSnipe.OnCommodityDialogCancel);
     EventManager:On("CHAT_MSG_SYSTEM", AuctionSnipe.OnChatMessage);
+    EventManager:On("UI_ERROR_MESSAGE", AuctionSnipe.OnErrorMessage);
 end
 
 function AuctionSnipe:UnregisterQueryEvents()
@@ -970,6 +998,7 @@ function AuctionSnipe:UnregisterQueryEvents()
     EventManager:RemoveListener("QUERY_BROWSE_RESULTS", AuctionSnipe.OnQueryBrowseResults);
     EventManager:RemoveListener("COMMODITY_DIALOG_CANCEL", AuctionSnipe.OnCommodityDialogCancel);
     EventManager:RemoveListener("CHAT_MSG_SYSTEM", AuctionSnipe.OnChatMessage);
+    EventManager:RemoveListener("UI_ERROR_MESSAGE", AuctionSnipe.OnErrorMessage);
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)  

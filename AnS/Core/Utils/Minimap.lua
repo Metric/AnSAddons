@@ -71,6 +71,14 @@ function MinimapIcon:OnUpdate()
     end
 end
 
+function MinimapIcon:Toggle()
+    if (self.frame:IsShown()) then
+        self:Hide();
+    else
+        self:Show();
+    end
+end
+
 function MinimapIcon:OnDragStart()
     self.frame:LockHighlight();
     self.isDragging = true;

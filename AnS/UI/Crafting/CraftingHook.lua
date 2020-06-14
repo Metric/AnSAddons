@@ -131,12 +131,9 @@ function CraftingHook.RestoreWindowPosition(self)
 
     local pos = Config.Crafting().tradeWindowPosition;
 
-    if (pos) then
+    if (pos and Config.General().saveWindowLocations) then
         self:ClearAllPoints();
         self:SetPoint("BOTTOMLEFT", self:GetParent(), "BOTTOMLEFT", pos.x, pos.y);
-    else
-        self:ClearAllPoints();
-        self:SetPoint("CENTER", self:GetParent(), "CENTER", 0, 0);
     end
 end
 

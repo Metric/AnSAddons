@@ -36,10 +36,11 @@ Macro.BUTTON_MAPPING = BUTTONS;
 Macro.MODIFIER_MAPPING = MODIFIERS;
 
 function Macro.ActiveModifiers()
-    local up, alt, ctrl, shift = false, false, false, false;
+    local up, down, alt, ctrl, shift = false, false, false, false, false;
     local bindings = Utils:GetTable(GetBindingKey(BINDING_NAME));
     for i,v in ipairs(bindings) do
         up = up or strfind(v, "MOUSEWHEELUP");
+        down = down or strfind(v, "MOUSEWHEELDOWN");
         ctrl = ctrl or strfind(v, "CTRL-");
         shift = shift or strfind(v, "SHIFT-");
         alt = alt or strfind(v, "ALT-");
@@ -47,6 +48,7 @@ function Macro.ActiveModifiers()
     Utils:ReleaseTable(bindings);
     wipe(tempTbl);
     tempTbl["up"] = up;
+    tempTbl["down"] = down;
     tempTbl["ctrl"] = ctrl;
     tempTbl["shift"] = shift;
     tempTbl["alt"] = alt;
@@ -66,7 +68,7 @@ function Macro.ActiveButtons()
     return tempTbl;
 end
 
-function Macro.Create(commands, modifiers, up)
+function Macro.Create(commands, modifiers, up, down)
     local bindings = Utils:GetTable(GetBindingKey(BINDING_NAME));
     for i,v in ipairs(bindings) do
         SetBinding(v);
@@ -93,7 +95,8 @@ function Macro.Create(commands, modifiers, up)
     if (up) then
         SetBinding(modifierStr.."MOUSEWHEELUP", nil, mode);
         SetBinding(modifierStr.."MOUSEWHEELUP", BINDING_NAME, mode);
-    else
+    end
+    if (down) then
         SetBinding(modifierStr.."MOUSEWHEELDOWN", nil, mode);
         SetBinding(modifierStr.."MOUSEWHEELDOWN", BINDING_NAME, mode);
     end

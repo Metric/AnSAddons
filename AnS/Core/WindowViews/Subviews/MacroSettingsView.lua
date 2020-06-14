@@ -32,6 +32,7 @@ function MacroView.CreateMacro()
     local mods = Macro.MODIFIER_MAPPING;
     local buttons = Macro.BUTTON_MAPPING;
     local up = MacroView.frame.up:GetChecked();
+    local down = MacroView.frame.down:GetChecked();
 
     local actualMods = Utils:GetTable();
     local commands = Utils:GetTable();
@@ -48,7 +49,7 @@ function MacroView.CreateMacro()
         end
     end
 
-    Macro.Create(commands, actualMods, up);
+    Macro.Create(commands, actualMods, up, down);
 
     Utils:ReleaseTable(actualMods);
     Utils:ReleaseTable(commands);

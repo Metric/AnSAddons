@@ -218,7 +218,7 @@
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>
             </EditBox>
-            <ScrollFrame parentKey="Price" name="$parentPrice" inherits="AnsScrollFrameTemplate">
+            <ScrollFrame parentKey="Price" enableMouse="true" name="$parentPrice" inherits="AnsScrollFrameTemplate">
                 <Size x="435" y="128" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPriceLabel" />
@@ -239,6 +239,11 @@
                         <Size x="435" y="123" />
                     </EditBox>
                 </ScrollChild>
+                <Scripts>
+                    <OnLoad>
+                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                    </OnLoad>
+                </Scripts>
             </ScrollFrame>
             <EditBox parentKey="MaxPercent" text="0" name="$parentMaxPercent" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />

@@ -138,9 +138,14 @@
                     <Anchor point="TOPLEFT" x="0" y="-25"  relativePoint="BOTTOMLEFT" relativeKey="$parent.ansPost" />
                 </Anchors>
             </CheckButton>
-            <CheckButton parentKey="ctrl" text="CTRL Modifier" inherits="AnsCheckboxTemplate">
+            <CheckButton parentKey="down" text="Mouse Wheel Down" inherits="AnsCheckboxTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.up" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ctrl" text="CTRL Modifier" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.down" />
                 </Anchors>
             </CheckButton>
             <CheckButton parentKey="shift" text="SHIFT Modifier" inherits="AnsCheckboxTemplate">
@@ -150,14 +155,14 @@
             </CheckButton>
             <CheckButton parentKey="alt" text="ALT Modifier" inherits="AnsCheckboxTemplate">
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.shift" />
+                    <Anchor point="TOPLEFT" x="0" y="-25"  relativePoint="BOTTOMLEFT" relativeKey="$parent.up" />
                 </Anchors>
             </CheckButton>
 
             <Button parentKey="CreateMacroBtn" text="Create Macro" inherits="AnsStandardButtonTemplate">
                 <Size x="525" y="32" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativeKey="$parent.up" relativePoint="BOTTOMLEFT" x="0" y="-25" />
+                    <Anchor point="TOPLEFT" relativeKey="$parent.alt" relativePoint="BOTTOMLEFT" x="0" y="-25" />
                 </Anchors>
             </Button>
         </Frames>
@@ -224,6 +229,13 @@
                     <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeTo="$parentRRRTooltip" />
                 </Anchors>
             </CheckButton>
+
+            <CheckButton parentKey="SaveWindowLocations" text="Remember Window Locations" name="$parentSaveWindowLocations" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-20"  relativePoint="BOTTOMLEFT" relativeTo="$parentRRMMTooltip" />
+                </Anchors>
+            </CheckButton>
+
             <CheckButton parentKey="ShowDebug" text="Show Debug Window" name="$parentShowDebug" inherits="AnsCheckboxTemplate">
                 <Anchors>
                     <Anchor point="BOTTOMRIGHT" x="-100" y="10" />
@@ -294,6 +306,12 @@
                         <Anchor point="TOPLEFT" x="0" y="-194" />
                     </Anchors>
                 </FontString>
+                <FontString justifyH="LEFT" text="Ding Sound" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="225" y="0" />
+                    </Anchors>
+                </FontString>
             </Layer>
         </Layers>
         <Frames>
@@ -303,7 +321,7 @@
                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentSourceLabel" x="0" y="0" />
                 </Anchors>
             </EditBox>
-            <ScrollFrame parentKey="Price" name="$parentPriceValue" inherits="AnsScrollFrameTemplate">
+            <ScrollFrame parentKey="Price" enableMouse="true" name="$parentPriceValue" inherits="AnsScrollFrameTemplate">
                 <Size x="575" y="128" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPriceLabel" />
@@ -324,8 +342,13 @@
                         <Size x="575" y="123" />
                     </EditBox>
                 </ScrollChild>
+                <Scripts>
+                    <OnLoad>
+                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                    </OnLoad>
+                </Scripts>
             </ScrollFrame>
-            <ScrollFrame parentKey="Blacklist" name="$parentBlacklist" inherits="AnsScrollFrameTemplate">
+            <ScrollFrame parentKey="Blacklist" enableMouse="true" name="$parentBlacklist" inherits="AnsScrollFrameTemplate">
                 <Size x="200" y="128" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentBlacklistLabel" />
@@ -346,6 +369,11 @@
                         <Size x="200" y="123" />
                     </EditBox>
                 </ScrollChild>
+                <Scripts>
+                    <OnLoad>
+                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                    </OnLoad>
+                </Scripts>
             </ScrollFrame>
             <CheckButton parentKey="CommodityConfirm" text="Use Commodity Confirm" name="$parentCommodityConfirm" inherits="AnsCheckboxTemplate">
                 <Anchors>
@@ -404,6 +432,11 @@
                     </Layer>
                 </Layers>
             </EditBox>
+            <CheckButton parentKey="FlashWoWIcon" text="Flash WoW Icon" name="$parentFlashWoWIcon" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parentChatMessageNew" x="0" y="-10" />
+                </Anchors>
+            </CheckButton>
         </Frames>
     </Frame>
 </Ui>
