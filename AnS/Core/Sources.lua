@@ -445,6 +445,7 @@ function Sources:QueryID(q, itemId)
         q = Utils:ReplaceOpShortHand(q);
         q = Utils:ReplaceShortHandPercent(q);
         q = Utils:ReplaceMoneyShorthand(q);    
+        q = Utils:ReplaceTabReturns(q);
 
         --print(q);
 

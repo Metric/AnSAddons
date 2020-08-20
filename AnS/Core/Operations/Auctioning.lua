@@ -136,7 +136,7 @@ function Auctioning:IsValid(ppu, link, ignore, defaultValue)
         return ppu;
     end
 
-    if (ppu < minValue) then
+    if (ppu < minValue and ppu > 0) then
         if (self.minPriceAction == ACTIONS.MIN_PRICE) then
             return minValue;
         elseif (self.minPriceAction == ACTIONS.MAX_PRICE) then
@@ -156,6 +156,12 @@ function Auctioning:IsValid(ppu, link, ignore, defaultValue)
         else
             return 0;
         end
+    -- whoops forgot to take this into account where no
+    -- item may be listed on AH currently
+    -- ppu == 0 means nothing currently posted on AH to compare to
+    -- so return normal value or 0
+    elseif (ppu <= 0) then
+        return normalValue or 0;
     end
 
     return ppu;
@@ -235,6 +241,7 @@ end
 
 function Auctioning:ApplyPostClassic(v, queue)
     local total = v.total;
+    local ppu = v.ppu;
 
     total = total - self.keepInBags;
     if (total > self.maxToPost and self.maxToPost > 0) then
@@ -248,7 +255,8 @@ function Auctioning:ApplyPostClassic(v, queue)
             if ((self.stackSize > 0 and o.count <= self.stackSize) or self.stackSize <= 0) then
                 prevTotal = total;
                 total = total - o.count;
-    
+                o.ppu = ppu;
+
                 if (total < 0) then
                     o.count = prevTotal;
                 end

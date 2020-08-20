@@ -720,8 +720,6 @@ end
 
 function PostingView.CanPostItemClassic(v)
     local op = v.op;
-    local ppu = v.ppu;
-    local bidPPU = v.ppu * op.bidPercent;
 
     if (not BagScanner:Exists(v, true)) then
         tremove(postQueue, 1);
