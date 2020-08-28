@@ -59,6 +59,7 @@ function OpCodes:New()
     op.maxsell = 0;
     op.maxbuy = 0;
     op.destroy = 0;
+    op.numinventory = 0;
     return op;
 end
 
@@ -106,6 +107,7 @@ local ParseTemplate = [[
         local DBRegionMarketAvg, Dbregionmarketavg = ops.dbregionmarketavg, ops.dbregionmarketavg;
         local DBRegionHistorical, Dbregionhistorical = ops.dbregionhistorical, ops.dbregionhistorical;
         local DBRegionSaleAvg, Dbregionsaleavg = ops.dbregionsaleavg, ops.dbregionsaleavg;
+        local NumInventory, Numinventory, numInventory = ops.numinventory, ops.numinventory, ops.numinventory;
 
         %s
 
