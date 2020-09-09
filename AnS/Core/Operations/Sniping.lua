@@ -165,5 +165,5 @@ function Sniping:IsValid(item, exact, isGroup)
         or (not self:HasIds() and minlevel)
         or (not self:HasIds() and quality)
         or (not self:HasIds() and maxPPU)
-        or (not self.HasIds() and percent);
+        or (not self:HasIds() and percent);
 end
