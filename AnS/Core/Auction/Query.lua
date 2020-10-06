@@ -559,6 +559,14 @@ function Query:GetOwnedAuctionClassic(index)
     auction.tsmId = Utils:GetTSMID(auction.link);
 
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
+
+    -- fix for when ppu is less than 1 aka a decimal
+    -- mainly happens on items that are a buyoutPrice of 1c and have
+    -- multiples in stack
+    if (auction.ppu < 1) then
+        auction.ppu = 1;
+    end
+
     auction.hash = ItemHash(auction);
 
     return auction;
@@ -616,6 +624,14 @@ function Query:Next(auction)
     auction.tsmId = Utils:GetTSMID(auction.link);
 
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
+
+    -- fix for when ppu is less than 1 aka a decimal
+    -- mainly happens on items that are a buyoutPrice of 1c and have
+    -- multiples in stack
+    if (auction.ppu < 1) then
+        auction.ppu = 1;
+    end
+
     auction.hash = ItemHash(auction);
 
     return auction;

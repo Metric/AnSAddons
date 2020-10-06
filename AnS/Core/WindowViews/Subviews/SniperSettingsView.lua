@@ -84,7 +84,7 @@ function SniperSettings:Load()
     if (type(Config.Sniper().characterBlacklist) == "table") then
         self.blacklist:Set(table.concat(Config.Sniper().characterBlacklist, "\r\n"));
     else
-        Config.Sniper().characterBlacklist = { strsplit("\r\n", Config.Sniper().characterBlacklist) };
+        Config.Sniper().characterBlacklist = { strsplit("\r\n", Config.Sniper().characterBlacklist:lower()) };
         self.blacklist:Set(table.concat(Config.Sniper().characterBlacklist, "\r\n"));
     end
     self.commodityConfirm:SetChecked(Config.Sniper().useCommodityConfirm);
@@ -125,7 +125,7 @@ function SniperSettings.SavePrice()
 end
 
 function SniperSettings.SaveBlacklist()
-    Config.Sniper().characterBlacklist = { strsplit("\r\n", SniperSettings.blacklist:Get()) };
+    Config.Sniper().characterBlacklist = { strsplit("\r\n", SniperSettings.blacklist:Get():lower()) };
 end
 
 function SniperSettings.SaveCommodityConfirm()
