@@ -42,13 +42,20 @@ end
 SLASH_ANS_SLASHANS1 = "/ans";
 
 SlashCmdList["ANS_SLASHMINIMAP"] = function(msg)
-    if (Config.General().minimapShown) then
-        Config.General().minimapShown = false;
-        Ans.MiniButton:Hide();
-    else
-        Config.General().minimapShown = true;
-        Ans.MiniButton:Show();
-    end
+	if (msg == "") then
+		if (Config.General().minimapShown) then
+			Config.General().minimapShown = false;
+			Ans.MiniButton:Hide();
+		else
+			Config.General().minimapShown = true;
+			Ans.MiniButton:Show();
+		end
+	else
+		local deg = tonumber(msg);
+		Ans.MiniButton.angle = deg;
+		Ans.MiniButton:Reposition();
+		AnsCore:SaveMiniButton(deg);
+	end
 end
 SLASH_ANS_SLASHMINIMAP1 = "/ansminimap";
 
