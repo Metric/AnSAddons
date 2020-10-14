@@ -35,7 +35,7 @@ local miscArmorInventoryTypes = {
     LE_INVENTORY_TYPE_HEAD_TYPE
 };
 
-if (!Utils:IsClassic()) {
+if (not Utils:IsClassic()) {
     armorInventoryTypes = {
         Enum.InventoryType.IndexHeadType,
         Enum.InventoryType.IndexShoulderType,
