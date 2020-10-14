@@ -15,25 +15,48 @@ local armorBasicSubtypes = {
 };
 
 local armorInventoryTypes = {
-	Enum.InventoryType.IndexHeadType,
-    Enum.InventoryType.IndexShoulderType,
-    Enum.InventoryType.IndexChestType,
-    Enum.InventoryType.IndexWaistType,
-    Enum.InventoryType.IndexLegsType,
-    Enum.InventoryType.IndexFeetType,
-    Enum.InventoryType.IndexWristType,
-    Enum.InventoryType.IndexHandType,
+    LE_INVENTORY_TYPE_HEAD_TYPE,
+    LE_INVENTORY_TYPE_SHOULDER_TYPE,
+    LE_INVENTORY_TYPE_CHEST_TYPE,
+    LE_INVENTORY_TYPE_WAIST_TYPE,
+    LE_INVENTORY_TYPE_LEGS_TYPE,
+    LE_INVENTORY_TYPE_FEET_TYPE,
+    LE_INVENTORY_TYPE_WRIST_TYPE,
+    LE_INVENTORY_TYPE_HAND_TYPE,
 };
 
 local miscArmorInventoryTypes = {
-    Enum.InventoryType.IndexNeckType,
-    Enum.InventoryType.IndexCloakType,
-    Enum.InventoryType.IndexFingerType,
-    Enum.InventoryType.IndexTrinketType,
-    Enum.InventoryType.IndexHoldableType,
-    Enum.InventoryType.IndexBodyType,
-    Enum.InventoryType.IndexHeadType
+    LE_INVENTORY_TYPE_NECK_TYPE,
+    LE_INVENTORY_TYPE_CLOAK_TYPE,
+    LE_INVENTORY_TYPE_FINGER_TYPE,
+    LE_INVENTORY_TYPE_TRINKET_TYPE,
+    LE_INVENTORY_TYPE_HOLDABLE_TYPE,
+    LE_INVENTORY_TYPE_BODY_TYPE,
+    LE_INVENTORY_TYPE_HEAD_TYPE
 };
+
+if (!Utils:IsClassic()) {
+    armorInventoryTypes = {
+        Enum.InventoryType.IndexHeadType,
+        Enum.InventoryType.IndexShoulderType,
+        Enum.InventoryType.IndexChestType,
+        Enum.InventoryType.IndexWaistType,
+        Enum.InventoryType.IndexLegsType,
+        Enum.InventoryType.IndexFeetType,
+        Enum.InventoryType.IndexWristType,
+        Enum.InventoryType.IndexHandType,
+    };
+    
+    miscArmorInventoryTypes = {
+        Enum.InventoryType.IndexNeckType,
+        Enum.InventoryType.IndexCloakType,
+        Enum.InventoryType.IndexFingerType,
+        Enum.InventoryType.IndexTrinketType,
+        Enum.InventoryType.IndexHoldableType,
+        Enum.InventoryType.IndexBodyType,
+        Enum.InventoryType.IndexHeadType
+    };
+}
 
 local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
