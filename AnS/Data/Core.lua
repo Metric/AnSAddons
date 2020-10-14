@@ -35,7 +35,7 @@ local miscArmorInventoryTypes = {
     LE_INVENTORY_TYPE_HEAD_TYPE
 };
 
-if (not Utils:IsClassic()) {
+if (not Utils:IsClassic()) then
     armorInventoryTypes = {
         Enum.InventoryType.IndexHeadType,
         Enum.InventoryType.IndexShoulderType,
@@ -56,7 +56,7 @@ if (not Utils:IsClassic()) {
         Enum.InventoryType.IndexBodyType,
         Enum.InventoryType.IndexHeadType
     };
-}
+end
 
 local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
