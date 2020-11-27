@@ -483,6 +483,12 @@
                             </ScrollFrame>
                         </Frames>
                     </Frame>
+                    <Button parentKey="RestoreDefault" text="Restore Default" name="$parentRestoreDefault" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="20" y="0" />
+                        </Anchors>
+                    </Button>
                     <Frame parentKey="Edit" name="$parentEdit" inherits="AnsGroupEditTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentGroups" x="10" y="0" />

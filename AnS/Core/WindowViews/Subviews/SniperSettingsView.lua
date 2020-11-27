@@ -46,6 +46,9 @@ function SniperSettings:OnLoad(f)
     self.ding = self.frame.Ding;
     self.ding:SetScript("OnClick", self.SaveDing);
 
+    self.TestDing = self.frame.TestDing;
+    self.TestDing:SetScript("OnClick", function(f) PlaySound(SOUNDKIT[Config.Sniper().soundKitSound], "Master"); end);
+
     self.skipSeenGroup = self.frame.SkipSeenGroup;
     self.skipSeenGroup:SetScript("OnClick", self.SaveSkipSeen);
 

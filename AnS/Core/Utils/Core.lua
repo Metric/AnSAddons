@@ -183,11 +183,72 @@ function Utils:ContainsGroup(tbl, id)
     return false;
 end
 
-function Utils:BuildGroupPaths()
+function Utils:RestoreGroupDefaults()
+    local groups = Config.Groups();
+    local defaults = Ans.Data;
+
+    local gtemp = self:GetTable();
+    local queueTbl = self:GetTable();
+
+    for i,v in ipairs(groups) do
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        gtemp[g.path] = g;
+        if (#g.children > 0) then
+            for i,v in ipairs(g.children) do
+                tinsert(queueTbl, v);
+            end
+        end
+    end
+
+    for i,v in ipairs(defaults) do
+        tinsert(queueTbl, v);
+    end
+
+    while (#queueTbl > 0) do
+        local g = tremove(queueTbl, 1);
+        if (gtemp[g.path]) then
+            local group = gtemp[g.path];
+            group.ids = g.ids;
+        else
+            local p = g.path;
+            local found = false;
+            while (p) do
+                local idx = string.find(p, "%.[^%.]*$");
+                if (idx > 1) then
+                    p = strsub(g.path, 0, idx-1);
+                    if (gtemp[p]) then
+                        found = true;
+                        tinsert(gtemp[p].children, 1, g);  
+                        break;
+                    end
+                else
+                    break;
+                end
+            end
+            if (not found) then
+                tinsert(groups, 1, g);
+            end
+        end
+        if (#g.children > 0) then
+            for i,v in ipairs(g.children) do
+                tinsert(queueTbl, v);
+            end
+        end
+    end
+
+    self:ReleaseTable(gtemp);
+    self:ReleaseTable(queueTbl);
+end
+
+function Utils:BuildGroupPaths(groups)
     local tempTbl = self:GetTable();
     local queueTbl = self:GetTable();
 
-    for i,v in ipairs(Config.Groups()) do
+    for i,v in ipairs(groups) do
         v.path = v.name;
         tinsert(queueTbl, v);
     end

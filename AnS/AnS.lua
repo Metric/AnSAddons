@@ -208,6 +208,8 @@ function AnsCore:OnLoad()
 
     CreateMiniButton();
 
+    Utils:BuildGroupPaths(DefaultGroups);
+    Utils:BuildGroupPaths(Config.Groups());
     Window:OnLoad(self.frame);
     EventManager:Emit("ANS_DATA_READY");
 end

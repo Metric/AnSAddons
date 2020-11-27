@@ -1,11 +1,11 @@
 #@retail@
-## Interface: 80300
+## Interface: 90002
 #@end-retail@
 #@non-retail@
 # ## Interface: 11304
 #@end-non-retail@
 ## Title: AnS [Auction Sniper]
-## Version: 2.1.2
+## Version: 2.1.3
 ## Notes: A lightweight addon for auction sniping; Relies on Undermine Journal, TSM, or auctionator for pricing.
 ## License: MIT
 ## Dependencies: AnS

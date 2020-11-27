@@ -58,7 +58,6 @@ local DEFAULT_ITEM_SORT = { sortOrder = 0, reverseSort = false };
 AuctionSnipe = {};
 AuctionSnipe.__index = AuctionSnipe;
 AuctionSnipe.isInited = false;
-AuctionSnipe.quality = 1;
 AuctionSnipe.activeOps = {};
 AuctionSnipe.baseFilters = {};
 
@@ -172,7 +171,7 @@ local function ClearValidAuctions()
 end
 
 local function QualitySelected(self, arg1, arg2, checked)
-    AuctionSnipe.quality = arg1;
+    Config.Sniper().minQuality = arg1;
     if (AuctionSnipe.qualityInput ~= nil) then
         UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
     end
@@ -805,8 +804,10 @@ function AuctionSnipe:Init()
     self.dingCheckBox:SetChecked(Config.Sniper().dingSound);
     self.maxPercentInput:SetText("100");
 
+    local quality = Config.Sniper().minQuality;
+
     UIDropDownMenu_Initialize(self.qualityInput, BuildQualityDropDown);
-    UIDropDownMenu_SetText(self.qualityInput, ITEM_QUALITY_COLORS[1].hex.."Common");
+    UIDropDownMenu_SetText(self.qualityInput, ITEM_QUALITY_COLORS[quality].hex..AnsQualityToText[quality]);
 
     frame:Hide();
 end
@@ -1127,8 +1128,6 @@ function AuctionSnipe:Show()
 
     SniperFSM = BuildStateMachine();
 
-    Utils:BuildGroupPaths();
-
     self:BuildTreeViewFilters();
     self.filterTreeView.items = opTreeViewItems;
     self.filterTreeView:Refresh();
@@ -1140,11 +1139,6 @@ function AuctionSnipe:Show()
     self.clevelRange:SetText(Config.Sniper().clevel);
 
     self.minLevelInput:SetText(Config.Sniper().ilevel);
-    
-    self.quality = Config.Sniper().minQuality;
-
-    UIDropDownMenu_SetSelectedID(self.qualityInput, self.quality, true); 
-    UIDropDownMenu_SetText(self.qualityInput, ITEM_QUALITY_COLORS[self.quality].hex..AnsQualityToText[self.quality]);
 end
 
 ----
@@ -1175,9 +1169,7 @@ function AuctionSnipe:LoadCLevelFilter()
 end
 
 function AuctionSnipe:LoadBaseFilters()
-    local quality = self.quality;
-
-    Config.Sniper().minQuality = quality;
+    local quality = Config.Sniper().minQuality;
 
     DEFAULT_BROWSE_QUERY.quality = quality;
 
@@ -1203,7 +1195,7 @@ function AuctionSnipe:Start()
 
     local maxBuyout = MoneyInputFrame_GetCopper(self.maxBuyoutInput) or 0;
     local ilevel = tonumber(self.minLevelInput:GetText()) or 0;
-    local quality = self.quality;
+    local quality = Config.Sniper().minQuality;
     local maxPercent = tonumber(self.maxPercentInput:GetText()) or 100;
 
     local search = self.searchInput:GetText();

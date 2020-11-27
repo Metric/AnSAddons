@@ -24,6 +24,7 @@ local GENERAL_DEFAULT = {
     auctionWindowPosition = nil,
     saveWindowLocations = true,
     minimapShown = true,
+    showId = true,
 };
 
 local OPERATIONS_DEFAULT = {

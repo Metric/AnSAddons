@@ -6,6 +6,12 @@ Herb.children = {
     {
         id = Utils:Guid(),
         children = {},
+        name = "SL",
+        ids = "i:171315,i:169701,i:168586,i:168589,i:168583,i:170554"
+    },
+    {
+        id = Utils:Guid(),
+        children = {},
         name = "BFA",
         ids = "i:152505,i:152506,i:152507,i:152508,i:152509,i:152510,i:152511,i:168487",
     },

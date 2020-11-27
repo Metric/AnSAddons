@@ -67,15 +67,6 @@
          <Anchors>
             <Anchor point="TOPLEFT" x="168" y="-32" />
         </Anchors>
-        <Layers>
-            <Layer level="ARTWORK">
-                <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Create a macro bound to the scroll wheel to activate actions">
-                    <Anchors>
-                        <Anchor point="TOPLEFT" x="0" y="0"/>
-                    </Anchors>
-                </FontString>
-            </Layer>
-        </Layers>
         <Frames>
             <CheckButton parentKey="tsmCancel" text="TSM Cancel Auction" inherits="AnsCheckboxTemplate">
                 <Anchors>
@@ -166,6 +157,20 @@
                 </Anchors>
             </Button>
         </Frames>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Create a macro bound to the scroll wheel to activate actions">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0"/>
+                    </Anchors>
+                </FontString>
+                <FontString inherits="AnsGameFontWhiteTrans" justifyH="CENTER" text="A macro will be generated under Esc -> Macros">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.CreateMacroBtn" relativePoint="BOTTOMLEFT" x="0" y="-10" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
     </Frame>
 
     <Frame name="AnsGeneralSettingsTemplate" virtual="true">
@@ -230,9 +235,15 @@
                 </Anchors>
             </CheckButton>
 
-            <CheckButton parentKey="SaveWindowLocations" text="Remember Window Locations" name="$parentSaveWindowLocations" inherits="AnsCheckboxTemplate">
+            <CheckButton parentKey="ShowId" text="Show Item ID Tooltip" name="$parentShowId" inherits="AnsCheckboxTemplate">
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-20"  relativePoint="BOTTOMLEFT" relativeTo="$parentRRMMTooltip" />
+                </Anchors>
+            </CheckButton>
+
+            <CheckButton parentKey="SaveWindowLocations" text="Remember Window Locations" name="$parentSaveWindowLocations" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="200" y="0"  relativePoint="TOPRIGHT" relativeTo="$parentShowId" />
                 </Anchors>
             </CheckButton>
 
@@ -315,6 +326,12 @@
             </Layer>
         </Layers>
         <Frames>
+            <Button parentKey="TestDing" text="Play" name="$parentTestDing" inherits="AnsStandardButtonTemplate">
+                <Size x="42" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="530" y="-20" />
+                </Anchors>
+            </Button>
             <EditBox parentKey="Source" text="" name="$parentSourceValue" inherits="AnsEditBoxTemplate">
                 <Size x="200" y="20" />
                 <Anchors>

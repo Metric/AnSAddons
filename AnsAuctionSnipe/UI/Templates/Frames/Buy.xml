@@ -534,6 +534,17 @@
                 </Layers>
             </Frame>
 
+            <Button name="AnsSnipeFirst" hidden="true" text="">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:BuyFirst();
+                    </OnClick>
+                </Scripts>
+            </Button>
             <Button name="AnsSnipeBuy" hidden="true" text="PURCHASE">
                 <Size x="1" y="394" />
                 <Anchors>
@@ -1130,6 +1141,17 @@
                 </Frames>
             </Frame>
 
+          <Button name="AnsSnipeFirst" hidden="true" text="">
+           <Size x="1" y="1" />
+            <Anchors>
+                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0" />
+            </Anchors>
+            <Scripts>
+                <OnClick>
+                    AuctionSnipe:BuyFirst();
+                </OnClick>
+            </Scripts>
+          </Button>
           <Button name="AnsSnipeBuy" hidden="true" text="PURCHASE">
                 <Size x="1" y="394" />
                 <Anchors>

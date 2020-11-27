@@ -19,7 +19,7 @@ local BUTTONS = {
     ["ansPost"] = "/click AnsPostScan",
     ["ansCancel"] = "/click AnsCancelScan",
     ["ansSniper"] = "/click AnsSnipeBuy",
-    ["ansSniperFirst"] = "/script AuctionSnipe:BuyFirst()"
+    ["ansSniperFirst"] = "/click AnsSnipeFirst"
 };
 local MODIFIERS = {
     ["ctrl"] = "CTRL-",
@@ -92,13 +92,17 @@ function Macro.Create(commands, modifiers, up, down)
     end
 
     local mode = (GetCurrentBindingSet() == CHARACTER_BINDING_SET) and 1 or 2;
-    if (up) then
+    if (up and not down) then
         SetBinding(modifierStr.."MOUSEWHEELUP", nil, mode);
         SetBinding(modifierStr.."MOUSEWHEELUP", BINDING_NAME, mode);
-    end
-    if (down) then
+    elseif (down and not up) then
         SetBinding(modifierStr.."MOUSEWHEELDOWN", nil, mode);
         SetBinding(modifierStr.."MOUSEWHEELDOWN", BINDING_NAME, mode);
+    elseif (up and down) then
+        SetBinding(modifierStr.."MOUSEWHEELDOWN", nil, mode);
+        SetBinding(modifierStr.."MOUSEWHEELDOWN", BINDING_NAME, mode);
+        SetBinding(modifierStr.."MOUSEWHEELUP", nil, mode);
+        SetBinding(modifierStr.."MOUSEWHEELUP", BINDING_NAME, mode);
     end
 
     if (Utils:IsClassic()) then

@@ -30,7 +30,7 @@ function SnipingView:OnLoad(f)
     self.name = TextInput:NewFrom(self.frame.OpName);
     self.price = TextInput:NewFrom(self.frame.Price.Text);
     self.price:EnableMultiLine();
-
+    
     self.maxPercent = TextInput:NewFrom(self.frame.MaxPercent);
     self.minILevel = TextInput:NewFrom(self.frame.MinLevel);
     self.maxPPU = TextInput:NewFrom(self.frame.MaxPPU);

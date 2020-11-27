@@ -20,8 +20,10 @@ function GeneralSettings:OnLoad(f)
     self.rrmtooltip = self.frame.RRMTooltip;
     self.rr3tooltip = self.frame.RRThreeTooltip;
     self.rrmmtooltip = self.frame.RRMMTooltip;
-    self.saveWindowLocations = self.frame.SaveWindowLocations;
+    
+    self.showId = self.frame.ShowId;
 
+    self.saveWindowLocations = self.frame.SaveWindowLocations;
     self.showDebug = self.frame.ShowDebug;
 
     self.dressup:SetScript("OnClick", self.Save);
@@ -37,9 +39,10 @@ function GeneralSettings:OnLoad(f)
     self.rrmtooltip:SetScript("OnClick", self.Save);
     self.rr3tooltip:SetScript("OnClick", self.Save);
     self.rrmmtooltip:SetScript("OnClick", self.Save);
+    self.showId:SetScript("OnClick", self.Save);
+
     self.saveWindowLocations:SetScript("OnClick", self.Save);
-
-
+    
     self.showDebug:SetScript("OnClick", self.Save);
     self.frame:Hide();
 end
@@ -74,6 +77,7 @@ function GeneralSettings.Save()
 
     Config.General().showDebugWindow = GeneralSettings.showDebug:GetChecked();
 
+    Config.General().showId = GeneralSettings.showId:GetChecked();
     Config.General().saveWindowLocations = GeneralSettings.saveWindowLocations:GetChecked();
 end
 
@@ -91,6 +95,8 @@ function GeneralSettings:Load()
     self.rrmtooltip:SetChecked(Config.General().tooltipRegionMin);
     self.rr3tooltip:SetChecked(Config.General().tooltipRegion3Day);
     self.rrmmtooltip:SetChecked(Config.General().tooltipRegionMarket);
+
+    self.showId:SetChecked(Config.General().showId);
 
     self.saveWindowLocations:SetChecked(Config.General().saveWindowLocations);
 

@@ -1181,7 +1181,6 @@ end
 
 function PostingView:OnShow()
     PostingFSM = BuildStateMachine();
-    Utils:BuildGroupPaths();
     self:RefreshTreeView();
     self:RegisterEvents();
 end

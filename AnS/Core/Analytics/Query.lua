@@ -249,7 +249,10 @@ function DataQuery:JoinTotalSales(names, stime)
         tavg = tavg + avg;
     end
 
-    return total, math.floor(tavg / #names);
+    local ncount = #names;
+    ncount = ncount == 0 and 1 or ncount;
+
+    return total, math.floor(tavg / ncount);
 end
 
 function DataQuery:JoinTotalExpenses(names, stime)
@@ -262,7 +265,10 @@ function DataQuery:JoinTotalExpenses(names, stime)
         tavg = tavg + avg;
     end
 
-    return total, math.floor(tavg / #names); 
+    local ncount = #names;
+    ncount = ncount == 0 and 1 or ncount;
+
+    return total, math.floor(tavg / ncount); 
 end
 
 function DataQuery:JoinTotalProfit(names, stime)
@@ -275,7 +281,10 @@ function DataQuery:JoinTotalProfit(names, stime)
         tavg = tavg + avg;
     end
 
-    return total, math.floor(tavg / #names);
+    local ncount = #names;
+    ncount = ncount == 0 and 1 or ncount;
+
+    return total, math.floor(tavg / ncount);
 end
 
 function DataQuery:GetAllTransactions(name, type, subtype, tbl, nowipe, search)

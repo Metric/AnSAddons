@@ -199,6 +199,9 @@ function Groups:OnLoad(f)
     GroupEdit.onSave = self.OnEdit;
 
 
+    self.restoreDefault = tab.RestoreDefault;
+    self.restoreDefault:SetScript("OnClick", self.RestoreDefault);
+
     self.groups = tab.Groups;
     self.moveGroup = tab.MoveGroup;
 
@@ -241,6 +244,11 @@ function Groups:Hide()
 end
 
 function Groups.OnEdit()
+    Groups:Refresh();
+end
+
+function Groups.RestoreDefault()
+    Utils:RestoreGroupDefaults();
     Groups:Refresh();
 end
 
@@ -360,6 +368,8 @@ function Groups.ToggleGroupMoveView(parent)
 end
 
 function Groups:Refresh()
+    Utils:BuildGroupPaths(Config.Groups());
+
     if (#groupTreeItems == 0) then
         tinsert(groupTreeItems, rootGroup);
     end

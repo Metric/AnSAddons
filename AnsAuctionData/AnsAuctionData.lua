@@ -180,8 +180,10 @@ local function ShowDataPetFloat(tooltip, pet)
         rtxt = rtxt..regionSeen.."\r\n";
     end
 
-    ltxt = ltxt.."|c4400BBFFPet ID\r\n";
-    rtxt = rtxt..pid.."\r\n";
+    if (Config.General().showId) then
+        ltxt = ltxt.."|c4400BBFFPet ID\r\n";
+        rtxt = rtxt..pid.."\r\n";
+    end
 
     if (ltxt:len() > 0) then
         l:Show();
@@ -254,7 +256,9 @@ local function ShowData(tooltip, extra)
             tooltip:AddDoubleLine("AnS Region Seen", regionSeen, 0, 0.75, 1, 1, 1, 1);
         end
 
-        tooltip:AddDoubleLine("Item ID", id, 0, 0.75, 1, 1, 1, 1);
+        if (Config.General().showId) then
+            tooltip:AddDoubleLine("Item ID", id, 0, 0.75, 1, 1, 1, 1);
+        end
     end
 end
 
