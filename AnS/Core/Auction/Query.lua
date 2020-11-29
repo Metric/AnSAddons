@@ -795,11 +795,13 @@ end
 function Query.ThrottleReceived()
     throttleTime = GetTime();
     throttleMessageReceived = true;
+    Logger.Log("Throttled message received");
 end
 
 function Query.ThrottleQueued()
     throttleMessageReceived = false;
     throttleWaitingForSend = true;
+    Logger.Log("Throttle message queued");
 end
 
 function Query.ThrottleDropped()
@@ -808,12 +810,15 @@ function Query.ThrottleDropped()
 
     throttleTime = GetTime();
 
+    Logger.Log("Message dropped due to throttle - increasing retry time");
+
     QueryFSM:Process("DROPPED");
 end
 
 function Query.ThrottleSent()
     throttleTime = GetTime();
     throttleWaitingForSend = false;
+    Logger.Log("Throttled message sent");
 end
 
 function Query.ClearThrottle()
@@ -931,21 +936,31 @@ function Query.ProcessItem(item, itemKey)
             if (result.itemLink) then
                 item.link = result.itemLink;
 
-                if (item.link) then
-                    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.link); 
-
-                    item.quality = itemRarity;
-                    item.name = itemName;
-                    item.texture = itemIcon;
-                    item.vendorsell = itemSellPrice or 0;
-                end
-
                 if (Utils:IsBattlePetLink(item.link)) then
                     local info = Utils:ParseBattlePetLink(item.link);
                     item.name = info.name;
                     item.iLevel = info.level;
                     item.quality = info.breedQuality;
                     item.texture = info.icon;
+                    item.vendorsell = 0;
+                else
+                    local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(item.link); 
+
+                    if (_G["GetDetailedItemLevelInfo"]) then
+                        local eff, preview, base = GetDetailedItemLevelInfo(item.link);
+                        if (preview) then
+                            item.iLevel = itemLevel;
+                        else
+                            item.iLevel = eff;
+                        end
+                    else
+                        item.iLevel = itemLevel;
+                    end
+
+                    item.quality = itemRarity;
+                    item.name = itemName;
+                    item.texture = itemIcon;
+                    item.vendorsell = itemSellPrice or 0;
                 end
 
                 item.tsmId = Utils:GetTSMID(item.link);
@@ -1258,41 +1273,53 @@ local function BuildStateMachine()
             end
         end
 
+        if (itemKey.itemID == self.item.id 
+            and itemKey.battlePetSpeciesID == self.item.itemKey.battlePetSpeciesID 
+            and not C_AuctionHouse.HasFullItemSearchResults(itemKey) 
+            and Query.filter 
+            and not Query.filter.first) then
+                Logger.Log("QUERY", "Querying more items");
+                Tasker.Schedule(function()
+                    QueryFSM:Process("MORE_ITEMS");
+                end, TASKER_TAG);
+                return nil;
+        end
+
+        local needsProcessing = true;
+
         if (itemKey.itemID ~= self.item.id 
             or itemKey.battlePetSpeciesID ~= self.item.itemKey.battlePetSpeciesID 
-            or iLevel ~= self.item.iLevel
+            or (iLevel ~= self.item.iLevel and iLevel > 0 and self.item.iLevel > 0)
             or self.item.isCommodity) then
 
             Logger.Log("QUERY", "item id match: "..tostring(itemKey.itemID == self.item.id));
+            Logger.Log("QUERY", "item level incoming: "..tostring(itemKey.itemLevel).." item level expected:"..tostring(self.item.iLevel));
             Logger.Log("QUERY", "item level match: "..tostring(itemKey.itemLevel == self.item.iLevel));
             Logger.Log("QUERY", "incoming id: "..itemKey.itemID);
             Logger.Log("QUERY", "expected id:"..self.item.id);
             Logger.Log("QUERY", "battle pet species match: "..tostring(itemKey.battlePetSpeciesID == self.item.itemKey.battlePetSpeciesID));
             Logger.Log("QUERY", "is commodity: "..tostring(self.item.isCommodity));
-            return nil;
+
+            needsProcessing = false;
         end
 
-        if (not C_AuctionHouse.HasFullItemSearchResults(itemKey) and Query.filter and not Query.filter.first) then
-            Logger.Log("QUERY", "Querying more items");
-            Tasker.Schedule(function()
-                QueryFSM:Process("MORE_ITEMS");
-            end, TASKER_TAG);
-            return nil;
+        if (needsProcessing) then
+            Query.ProcessItem(self.item, itemKey);
         end
 
-        Query.ProcessItem(self.item, itemKey);
-        return "IDLE";
+        if (itemKey.itemID == self.item.id 
+            and itemKey.battlePetSpeciesID == self.item.itemKey.battlePetSpeciesID) then
+                return "IDLE";
+        end
+
+        return nil;
     end);
     itemResults:AddEvent("COMMODITY_RESULT", function(self, event, itemID)
         if (not self.item) then
             return nil;
         end
 
-        if (itemID ~= self.item.id or not self.item.isCommodity) then
-            return nil;
-        end
-
-        if (not C_AuctionHouse.HasFullCommoditySearchResults(itemID) and Query.filter and not Query.filter.first) then
+        if (itemID == self.item.id and not C_AuctionHouse.HasFullCommoditySearchResults(itemID) and Query.filter and not Query.filter.first) then
             Logger.Log("QUERY", "Querying more commodities");
             Tasker.Schedule(function()
                 QueryFSM:Process("MORE_COMMODITIES");
@@ -1300,8 +1327,21 @@ local function BuildStateMachine()
             return nil;
         end
 
-        Query.ProcessCommodity(self.item, itemID);
-        return "IDLE";
+        local needsProcessing = true;
+
+        if (itemID ~= self.item.id or not self.item.isCommodity) then
+            needsProcessing = false;
+        end
+
+        if (needsProcessing) then
+            Query.ProcessCommodity(self.item, itemID);
+        end
+
+        if (itemID == self.item.id) then
+            return "IDLE";
+        end
+
+        return nil;
     end);
 
     fsm:Add(itemResults);

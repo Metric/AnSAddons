@@ -6,7 +6,7 @@
 #@end-non-retail@
 ## Title: AnS [Auction Data]
 ## License: MIT
-## Version: 2.1.3
+## Version: 2.1.4
 ## Dependencies: AnS
 ## Notes: A library for tracking auction prices and showing via tooltip
 ## SavedVariables: ANS_AUCTION_DATA, ANS_LAST_DATA_SCAN

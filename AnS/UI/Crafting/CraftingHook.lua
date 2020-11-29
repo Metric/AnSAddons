@@ -255,6 +255,10 @@ EventManager:On("TRADE_SKILL_SHOW",
 
         TSFrame = TradeSkillFrame;
 
+        if (not TSFrame) then
+            return;
+        end
+
         if (not didHook) then
             didHook = true;
 

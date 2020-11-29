@@ -25,6 +25,9 @@ local SnipingOpView = Ans.SnipingOpView;
 local AuctioningOp = Ans.Operations.Auctioning;
 local AuctionOpView = Ans.AuctionOpView;
 
+local MailOp = Ans.Operations.Mailing;
+local MailOpView = Ans.MailOpView;
+
 local selectedGroups = {};
 
 local PI = 3.14159265358;
@@ -63,6 +66,10 @@ function Operations:OnLoad(f)
     AuctionOpView:OnLoad(self.tab);
     AuctionOpView:Hide();
     AuctionOpView.onEdit = function() this:Refresh(); end;
+
+    MailOpView:OnLoad(self.tab);
+    MailOpView:Hide();
+    MailOpView.onEdit = function() this:Refresh(); end;
 
     self.opTree = TreeView:New(self.tab.Ops,
         {rowHeight = 20, childIndent = 20, template = "AnsTreeRowAddTemplate", multiselect = false, useNormalTexture = false},
@@ -112,7 +119,7 @@ end
 function Operations.RenderRow(row, item)
     -- item.name == "Sniping" is temporary until all ops
     -- are implemented
-    if (item.showAddButton and (item.name == "Sniping" or item.name == "Auctioning")) then
+    if (item.showAddButton and (item.name == "Sniping" or item.name == "Auctioning" or item.name == "Mailing")) then
         local addButton = _G[row:GetName().."Add"];
         if (addButton) then
             addButton:GetNormalTexture():SetRotation(45 * Deg2Rad);
@@ -174,6 +181,12 @@ function Operations.Add(item)
         if (tbl) then
             tinsert(tbl, opConfig);
         end
+    elseif (item.name == "Mailing") then
+        local opConfig = MailOp:NewConfig("Mailing "..(#item.children + 1));
+        local tbl = Config.Operations()[item.name];
+        if (tbl) then
+            tinsert(tbl, opConfig);
+        end
     end
 
     Operations:Refresh();
@@ -198,6 +211,9 @@ function Operations:Delete(data)
             elseif (data.op == AuctionOpView.selected) then
                 AuctionOpView:Hide();
                 Operations.groupTree:Hide();
+            elseif (data.op == MailOpView.selected) then
+                MailOpView:Hide();
+                Operations.groupTree:Hide();
             end
             tremove(tbl, i);
             self:Refresh();
@@ -210,6 +226,7 @@ function Operations.Select(item)
     --- hide all views
     SnipingOpView:Hide();
     AuctionOpView:Hide();
+    MailOpView:Hide();
     selectedGroups = {};
     Operations.groupTree:Hide();
 
@@ -224,6 +241,11 @@ function Operations.Select(item)
             Operations:RefreshGroups();
         elseif (item.parent == "Auctioning") then
             AuctionOpView:Set(item.op);
+            selectedGroups = item.op.groups;
+            Operations.groupTree:Show();
+            Operations:RefreshGroups();
+        elseif (item.parent == "Mailing") then
+            MailOpView:Set(item.op);
             selectedGroups = item.op.groups;
             Operations.groupTree:Show();
             Operations:RefreshGroups();

@@ -32,6 +32,8 @@ function Analytics:RegisterEvents(frame)
     frame:RegisterEvent("MAIL_SHOW");
     frame:RegisterEvent("MAIL_CLOSED");
     frame:RegisterEvent("MAIL_INBOX_UPDATE");
+    frame:RegisterEvent("MAIL_FAILED");
+    frame:RegisterEvent("MAIL_SUCCESS");
     
     frame:RegisterEvent("TRADE_ACCEPT_UPDATE");
     

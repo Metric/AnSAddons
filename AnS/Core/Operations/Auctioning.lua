@@ -58,6 +58,7 @@ function Auctioning:Init(name)
     self.totalListed = 0;
 
     self.config = Auctioning:NewConfig(name);
+    self.config.id = self.id;
 end
 
 function Auctioning:NewConfig(name)
@@ -87,6 +88,7 @@ end
 
 function Auctioning:FromConfig(config)
     local a = Auctioning:New(config.name);
+    a.id = config.id;
     a.duration = config.duration;
     a.keepInBags = config.keepInBags;
     a.maxToPost = config.maxToPost;

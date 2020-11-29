@@ -58,12 +58,15 @@ function BagScanner:Release()
     wipe(stackTracker);
 end
 
-function BagScanner:Exists(item, checkCount)
+function BagScanner:Exists(item, checkCount, checkCountExact)
     local bag = item.bag;
     local slot = item.slot;
     local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
 
     if (checkCount) then
+        if (checkCountExact) then
+            return link == item.link and checkCountExact == icount;
+        end
         return link == item.link and item.count <= icount;
     end
 
@@ -88,6 +91,15 @@ end
 function BagScanner:FullDurability(bag, slot)
     local current, maximum = GetContainerItemDurability(bag, slot);
     return current == maximum;
+end
+
+function BagScanner:GetSendable(result)
+    wipe(result);
+    for i,v in ipairs(self.items) do
+        if (v and v.link and v.bound ~= nil and v.bound == false and v.count > 0 and not v.hidden and v.name and v.fullDurability) then
+            tinsert(result, v);
+        end
+    end
 end
 
 function BagScanner:GetAuctionable()

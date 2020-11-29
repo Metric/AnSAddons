@@ -5,7 +5,7 @@
 # ## Interface: 11304
 #@end-non-retail@
 ## Title: AnS
-## Version: 2.1.3
+## Version: 2.1.4
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
 ## SavedVariables: ANS_FILTERS, ANS_CONFIG, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_ANALYTICS_DATA
@@ -37,6 +37,7 @@ UI\Templates\Frames\GroupEdit.xml
 UI\Templates\Frames\OperationViews.xml
 UI\Templates\Frames\SettingsViews.xml
 UI\Templates\Frames\Auctioning.xml
+UI\Templates\Frames\Mailing.xml
 
 ## General Components
 UI\Components\Core.lua
@@ -113,6 +114,7 @@ Core\WindowViews\LedgerView.lua
 Core\WindowViews\GroupsView.lua
 Core\WindowViews\Subviews\SnipingOpView.lua
 Core\WindowViews\Subviews\AuctionOpView.lua
+Core\WindowViews\Subviews\MailOpView.lua
 Core\WindowViews\OperationsView.lua
 Core\WindowViews\Subviews\SniperSettingsView.lua
 Core\WindowViews\Subviews\GeneralSettingsView.lua
@@ -127,6 +129,8 @@ Core\Window.lua
 UI\Auctioning\Posting.lua
 UI\Auctioning\AuctionHook.lua
 UI\Crafting\CraftingHook.lua
+UI\Mailing\Send.lua
+UI\Mailing\MailHook.lua
 
 ## Core Base
 AnS.lua

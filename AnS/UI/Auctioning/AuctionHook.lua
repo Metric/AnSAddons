@@ -52,6 +52,10 @@ EventManager:On("AUCTION_HOUSE_SHOW",
 
         AHFrame = AuctionHouseFrame or AuctionFrame;
 
+        if (not AHFrame) then
+            return;
+        end
+
         -- clear sources cache on AH show
         Sources:ClearCache();
 

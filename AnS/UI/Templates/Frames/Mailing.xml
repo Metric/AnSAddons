@@ -1,0 +1,157 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsMailingTemplate" virtual="true">
+        <Size x="168" y="362" />
+        <Anchors>
+            <Anchor point="TOPRIGHT" x="168" y="-32" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="NineSlice" useParentLevel="true" inherits="NineSlicePanelTemplate"/>
+            <ScrollFrame parentKey="TreeView" name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="4" y="-4"/>
+                    <Anchor point="BOTTOMRIGHT" x="-29" y="26"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="BORDER">
+                        <Texture parentKey="scrollBorderTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                        <Size x="28" y="48"/>
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="28" y="4"/>
+                        </Anchors>
+                        <TexCoords left="0" right="0.484375" top="0" bottom="0.2"/>
+                        </Texture>
+                        <Texture parentKey="scrollBorderBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                        <Size x="28" y="67"/>
+                        <Anchors>
+                            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="28" y="-2"/>
+                        </Anchors>
+                        <TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
+                        </Texture>
+                        <Texture parentKey="scrollBorderMiddle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="BOTTOMLEFT"/>
+                            <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="TOPRIGHT"/>
+                        </Anchors>
+                        <TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="scrollFrameScrollBarBackground">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="TOPLEFT"/>
+                            <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="BOTTOMRIGHT"/>
+                        </Anchors>
+                        <Color r="0" g="0" b="0"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </ScrollFrame>
+            <Button parentKey="Reset" text="Reset" inherits="UIPanelButtonTemplate">
+                <Size x="52" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="0" y="8" relativeKey="$parent.TreeView" relativePoint="TOPLEFT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="All" text="Select All" inherits="UIPanelButtonTemplate">
+                <Size x="86" y="22" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="0" relativeKey="$parent.Reset" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="SendBtn" name="AnsSendMail" text="Send Scan" inherits="UIPanelButtonTemplate">
+                <Size x="168" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                </Anchors> 
+            </Button>
+        </Frames>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background" atlas="auctionhouse-background-categories" useAtlasSize="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="3" y="-3"/>
+                        <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+    </Frame>
+
+    <Frame name="AnsMailingClassicTemplate" virtual="true">
+        <Size x="168" y="362" />
+        <Anchors>
+            <Anchor point="TOPRIGHT" x="168" y="-32" />
+        </Anchors>
+        <Frames>
+            <ScrollFrame parentKey="TreeView" name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="4" y="-4"/>
+                    <Anchor point="BOTTOMRIGHT" x="-29" y="26"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="BORDER">
+                        <Texture parentKey="scrollBorderTop" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                        <Size x="28" y="48"/>
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="28" y="4"/>
+                        </Anchors>
+                        <TexCoords left="0" right="0.484375" top="0" bottom="0.2"/>
+                        </Texture>
+                        <Texture parentKey="scrollBorderBottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                        <Size x="28" y="67"/>
+                        <Anchors>
+                            <Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" x="28" y="-2"/>
+                        </Anchors>
+                        <TexCoords left="0.515625" right="1.0" top="0.1440625" bottom="0.4140625"/>
+                        </Texture>
+                        <Texture parentKey="scrollBorderMiddle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="BOTTOMLEFT"/>
+                            <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="TOPRIGHT"/>
+                        </Anchors>
+                        <TexCoords left="0" right="0.484375" top="0.1640625" bottom="1"/>
+                        </Texture>
+                    </Layer>
+                    <Layer level="BACKGROUND">
+                        <Texture parentKey="scrollFrameScrollBarBackground">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeKey="$parent.scrollBorderTop" relativePoint="TOPLEFT"/>
+                            <Anchor point="BOTTOMRIGHT" relativeKey="$parent.scrollBorderBottom" relativePoint="BOTTOMRIGHT"/>
+                        </Anchors>
+                        <Color r="0" g="0" b="0"/>
+                        </Texture>
+                    </Layer>
+                </Layers>
+            </ScrollFrame>
+            <Button parentKey="Reset" text="Reset" inherits="UIPanelButtonTemplate">
+                <Size x="52" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="0" y="8" relativeKey="$parent.TreeView" relativePoint="TOPLEFT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="All" text="Select All" inherits="UIPanelButtonTemplate">
+                <Size x="86" y="22" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="5" y="0" relativeKey="$parent.Reset" relativePoint="TOPRIGHT" />
+                </Anchors>
+            </Button>
+            <Button parentKey="SendBtn" name="AnsSendMail" text="Send Scan" inherits="UIPanelButtonTemplate">
+                <Size x="168" y="22" />
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                </Anchors> 
+            </Button>
+        </Frames>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background" file="Interface\AddOns\AnS\Images\bgforclassic">
+                    <TexCoords left="0" right="0.546875" top="0" bottom="0.849609375" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="3" y="-3"/>
+                        <Anchor point="BOTTOMRIGHT" x="-3" y="3" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+    </Frame>
+</Ui>
