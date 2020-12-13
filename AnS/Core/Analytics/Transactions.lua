@@ -1,11 +1,15 @@
 local Ans = select(2, ...);
-local Transactions = { log = {}, name = nil };
-Transactions.__index = Transactions;
-Ans.Analytics.Transactions = Transactions;
+local Config = Ans.Config;
+local Transactions = Ans.Object.Register("Transactions", Ans.Analytics);
+
+Transactions.log = {};
+Transactions.name = nil;
 
 local EventManager = Ans.EventManager;
 local Data = Ans.Analytics.Data;
-local TRANSACTION_TAG = "TRANSACTIONS_";
+local DEFAULT_TAG = "TRANSACTIONS_";
+local TRANSACTION_TAG = DEFAULT_TAG;
+local ALL_TRANSACTIONS = {};
 
 Transactions.MAX_COPPER = 9999999999;
 Transactions.SECONDS_PER_DAY = 60 * 60 * 24;
@@ -14,26 +18,49 @@ local MAX_TIME_LIMIT = 60 * 60 * 24 * 11;
 local MAX_DATA_LIMIT = 10000;
 
 function Transactions:GetLog(name)
-    if (self.name and not name) then
-        return self.log[self.name];
-    else
+    if (not name) then
+        name = self.name;
+    end
+
+    local realm = select(1, strsplit(":", name));
+    local realName = select(2, strsplit(":", name));
+    if (realName) then
+        name = realName;
+    end
+
+    if (not realName) then
         return self.log[name];
     end
+
+    local logName = DEFAULT_TAG..realm;
+    if (ALL_TRANSACTIONS[logName]) then
+        return ALL_TRANSACTIONS[logName][name];
+    end
+
+    return nil;
 end
 
 function Transactions:GetNames(tbl)
     wipe(tbl);
 
-    for k,v in pairs(self.log) do
-        tinsert(tbl, k);
+    for k, v in pairs(ALL_TRANSACTIONS) do
+        local realm = select(2, strsplit("_", k));
+        for p, _ in pairs(v) do
+            tinsert(tbl, realm..":"..p);
+        end
     end
 end
 
 function Transactions:OnLoad()
+    MAX_DATA_LIMIT = Config.General().maxDataLimit or 20000;
+    Data:Find(DEFAULT_TAG, ALL_TRANSACTIONS);
     TRANSACTION_TAG = TRANSACTION_TAG..GetRealmName();
     self.log = Data:Get(TRANSACTION_TAG) or {};
     self.name = UnitName("player").." - "..UnitFactionGroup("player");
     if (not self.log[self.name]) then self.log[self.name] = {}; end;
+    if (not ALL_TRANSACTIONS[TRANSACTION_TAG]) then
+        ALL_TRANSACTIONS[TRANSACTION_TAG] = self.log;
+    end
     self:Compact();
 end
 

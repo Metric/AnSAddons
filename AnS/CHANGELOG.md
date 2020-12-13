@@ -1,3 +1,56 @@
+## AnS Changes 2.2.0 (Includes fixes from 2.1.2.2 - 2.1.4)
+
+## 2.1.2.2 - 2.1.2.6
+
+-   Fixes for classic ppu decimal issue, and fix for where in character blacklist entry was not converting to lower case before converting to list
+-   Added in support for changing the orientation of the minimap icon via /ansminimap (degrees). Replace (degrees) with actual degrees to be rotated around the minimap center. Can also hide / show minimap icon with just /ansminimap. As a reminder, you can show / hide ans settings window with /ans.
+-   Fixes issue where blizz replaced old LE\_ Inventory Types with new Enum.InventoryTypes accessor in latest patch for retail.
+
+### 2.1.3 - 2.1.4
+
+-   Added default data for SL for herbs etc groups. To add the data to your groups, click the new Restore Default in the groups view in the top left. It will restore just the default groups predefined in AnS. It will not touch your custom made groups.
+-   Fixed a divide by zero bug in Analytics Query when Gold Tracking was turned off.
+-   Can now toggle item id tooltip display.
+-   Fixed bug where in macro would not be generated properly if both Up and Down were both selected.
+-   Macro no longer requires script access for using AnsBuyFirst. I have now added a hidden button that is clickable with /click AnsSnipeFirst.
+-   Added a play button to Sniper Settings to preview the ding sound for when an auction is found.
+-   Added in proper Classic Vendor Buy data.
+-   Added in new SL Vendor Buy data.
+-   Added in a short description about where the macro is created below the Create Macro Button.
+-   Fixed bug with minQuality not saving in some cases properly and not properly updating the UI.
+-   Crafting profit in crafting UI for Enchanting updated for SL.
+-   Added operations for sending items through mail. Will add send gold / send with cod later.
+-   Fixed issues where trying to access AHFrame or Craft Frame would cause a nil exception, when TSM was auto switching to the TSM UI before the original blizz frame could be instantiated.
+-   Fixed an issue where itemKey from blizz scan update event would come back with iLevel 0 in some cases, even though the expected iLevel from inventory or owned auctions would not be 0. Thus causing the query state machine to not continue on properly. Thanks Blixtmen for helping figure this one out.
+-   Fixed an issue where iLevel was not being properly filled in with incoming auction data.
+-   Added log messages for throttle events for future debugging purposes if needed.
+
+### 2.2.0
+
+-   Underlying Folder Structure Cleanup / Code Cleanup
+-   Moved to using Mixins for primary UI elements, except for posting, mailing, auction data scan, and sniper UI.
+-   Slight UI rework in some areas for better usability.
+-   Crafting profit for Mass Mills and Mass Prospect now works properly
+-   Crafting profit now takes into account all sub crafts, but only after scrolling through all your crafts and loading them at the moment.
+-   New settings tab for Blacklist, where in you can find a better character blacklist entry and permanent item blacklist removal.
+-   Sniper global settings now has a checkbox to ignore stacks of 1 for commodities
+-   Can now hide mailing send / post cancel windows
+-   Users can now define how many storage rows per character are allowed for tracking analytics for gold etc.
+-   Formulas will now have a green background when they are valid.
+-   Fixed issue where item id was trying to be listed twice in some cases.
+-   Fixed a memory leak when running lots of AH searchs on retail.
+-   Custom sources can now be reordered.
+-   Custom sources now have a confirmation window for deletion.
+-   Group editor now features item links when possible
+-   Group editor has new import / export dialogs.
+-   Operations can now be imported / exported - (Not compatible with TSM)
+-   Updated SL vendor buy items with latest patch data
+-   Can now ctrl + click minimap icon to reset all window positions to center
+-   New destroy window and destroy features for macro
+-   Can now right click minimap icon to open destroy window
+-   New settings for destroy window can be found under Settings -> Crafting
+-   Known Issue: Destroy window text overlaps for individual results of a selected item in some cases.
+
 ## AnS Changes 2.1.2
 
 -   Can now select from all possible sound kit sounds for Ding for sniper

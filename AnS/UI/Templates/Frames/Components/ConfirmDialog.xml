@@ -1,0 +1,145 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsConfirmDialogTemplate" enableMouse="true" virtual="true" hidden="true" frameStrata="HIGH" frameLevel="129">
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0" />
+            <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.75" />
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="Dialog">
+                <Size x="256" y="128" />
+                <Anchors>
+                    <Anchor point="CENTER" x="0" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="0.125" g="0.125" b="0.125" a="1" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="Message" inherits="AnsGameFontNormalLight" justifyV="CENTER" justifyH="CENTER">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="10" y="-10" />
+                                <Anchor point="BOTTOMRIGHT" x="-10" y="10" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Frames>
+                    <Button parentKey="Cancel" text="CANCEL" inherits="AnsTextButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" x="10" y="10" /> 
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="Confirm" text="OKAY" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="BOTTOMRIGHT" x="-10" y="10" />
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
+        </Frames>
+    </Frame>
+    
+    <Frame name="AnsConfirmInputDialogTemplate" enableMouse="true" virtual="true" hidden="true" frameStrata="HIGH" frameLevel="129">
+        <Anchors>
+            <Anchor point="TOPLEFT" x="0" y="0" />
+            <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.75" />
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Frame parentKey="Dialog">
+                <Size x="420" y="280" />
+                <Anchors>
+                    <Anchor point="CENTER" x="0" y="0" />
+                </Anchors>
+                <Frames>
+                    <ScrollFrame parentKey="Input" enableMouse="true" inherits="AnsScrollFrameTemplate">
+                        <Size x="380" y="200" />
+                        <Anchors>
+                            <Anchor point="CENTER" x="0" y="0" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.05" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                        <ScrollChild>
+                            <EditBox parentKey="Text" inherits="AnsEditBoxTemplate">
+                                <Size x="380" y="200" />
+                            </EditBox>
+                        </ScrollChild>
+                        <Scripts>
+                            <OnLoad>
+                                self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                            </OnLoad>
+                        </Scripts>
+                    </ScrollFrame>
+                    <Button parentKey="Cancel" text="CANCEL" inherits="AnsTextButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" x="10" y="10" /> 
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="Confirm" text="OKAY" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="BOTTOMRIGHT" x="-10" y="10" />
+                        </Anchors>
+                    </Button>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="0.125" g="0.125" b="0.125" a="1" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="Message" inherits="AnsGameFontNormalLight" justifyV="CENTER" justifyH="CENTER">
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" relativeKey="$parent.Input" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+        </Frames>
+    </Frame>
+</Ui>

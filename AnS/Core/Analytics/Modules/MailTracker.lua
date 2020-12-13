@@ -1,9 +1,6 @@
 local Ans = select(2, ...);
-local MailTracker = {};
+local MailTracker = Ans.Object.Register("MailTracker", Ans.Analytics);
 local Config = Ans.Config;
-MailTracker.__index = MailTracker;
-
-Ans.Analytics.MailTracker = MailTracker;
 
 local Sources = Ans.Sources;
 local Utils = Ans.Utils;
@@ -37,10 +34,10 @@ function MailTracker:OnLoad()
     EventManager:On("MAIL_INBOX_UPDATE", self.OnMailUpdate);
     EventManager:On("UPDATE", self.onUpdate);
 
-    Utils:Hook("TakeInboxItem", MailTracker.TakeItem);
-    Utils:Hook("TakeInboxMoney", MailTracker.TakeMoney);
-    Utils:Hook("AutoLootMailItem", MailTracker.AutoLoot);
-    Utils:Hook("SendMail", MailTracker.SendMail);
+    Utils.Hook("TakeInboxItem", MailTracker.TakeItem);
+    Utils.Hook("TakeInboxMoney", MailTracker.TakeMoney);
+    Utils.Hook("AutoLootMailItem", MailTracker.AutoLoot);
+    Utils.Hook("SendMail", MailTracker.SendMail);
 end
 
 function MailTracker.AutoLoot(ofn, index)
@@ -159,7 +156,7 @@ function MailTracker.SendMail(ofn, ...)
         Transactions:InsertExpense(moneyAmount, destination, time());
     end
 
-    Transactions:InsertPostage(mailCost, destination, time());
+    Transactions:InsertPostage(mailCost >= moneyAmount and (mailCost - moneyAmount) or mailCost, destination, time());
 
     return ofn(...);
 end

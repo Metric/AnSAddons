@@ -1,0 +1,106 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsMailOpEditorTemplate" virtual="true" hidden="true" mixin="AnsMailOperationFrameMixin">
+        <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="0" />
+        </Anchors>
+        <Frames>
+            <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
+                <Size x="435" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="KeepInBags" text="0" name="$parentKeepInBags" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-25" relativeKey="$parent.OpName" relativePoint="BOTTOMLEFT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Keep In Bags" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="5" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <EditBox parentKey="To" text="" name="$parentTo" inherits="AnsEditBoxTemplate">
+                <Size x="150" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="10" y="0" relativeKey="$parent.KeepInBags" relativePoint="TOPRIGHT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Send To" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="5" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad>
+                        AutoCompleteEditBox_SetAutoCompleteSource(self, GetAutoCompleteResults, AUTOCOMPLETE_LIST.MAIL.include, AUTOCOMPLETE_LIST.MAIL.exclude);
+                        self.addHighlightedText = true;
+                        self.autoCompleteContext = "mail";
+                    </OnLoad>
+                    <OnTabPressed>
+                        AutoCompleteEditBox_OnTabPressed(self);
+                    </OnTabPressed>
+                    <OnEnterPressed>
+                        if ( not AutoCompleteEditBox_OnEnterPressed(self) ) then
+                            EditBox_ClearFocus(self);
+                        end
+                    </OnEnterPressed>
+                    <OnTextChanged function="AutoCompleteEditBox_OnTextChanged"/>
+                    <OnChar function="AutoCompleteEditBox_OnChar"/>
+                    <OnEditFocusLost>
+                        AutoCompleteEditBox_OnEditFocusLost(self);
+                        EditBox_ClearHighlight(self)
+                    </OnEditFocusLost>
+                    <OnEscapePressed>
+                        if ( not AutoCompleteEditBox_OnEscapePressed(self) ) then
+                            EditBox_ClearFocus(self);
+                        end
+                    </OnEscapePressed>
+                    <OnArrowPressed function="AutoCompleteEditBox_OnArrowPressed"/>
+                    <OnKeyDown>
+                        if (AutoCompleteEditBox_OnKeyDown) then
+                            AutoCompleteEditBox_OnKeyDown(self);
+                        end
+                    </OnKeyDown>
+                    <OnKeyUp>
+                        if (AutoCompleteEditBox_OnKeyUp) then
+                            AutoCompleteEditBox_OnKeyUp(self);
+                        end
+                    </OnKeyUp>
+                </Scripts>
+            </EditBox>
+            <EditBox parentKey="Subject" text="" name="$parentSubject" inherits="AnsEditBoxTemplate">
+                <Size x="200" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="10" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.To" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Mail Subject" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="5" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

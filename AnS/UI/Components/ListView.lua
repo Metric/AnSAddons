@@ -1,18 +1,16 @@
 local Ans = select(2, ...);
-local ListView = {};
-ListView.__index = ListView;
+local ListView = Ans.Object.Register("ListView", Ans.UI);
 
-Ans.UI.ListView = ListView;
-
-function ListView:New(parent, style, selectFn, upFn, downFn, renderFn)
-    local fv = {};
-    setmetatable(fv, ListView);
+function ListView:Acquire(parent, style, selectFn, upFn, downFn, renderFn)
+    local fv = ListView:New();
     fv.view = {};
     fv.items = {};
 
-    fv.frame = _G[parent:GetName().."ListView"];
+    fv.lastSelectedIndex = 0;
+
+    fv.frame = parent.ScrollFrame;
     fv.scrollFrame = fv.frame;
-    fv.childFrame = _G[fv.scrollFrame:GetName().."ScrollChildFrame"];
+    fv.childFrame = fv.scrollFrame.ScrollChildFrame;
     fv.childFrame:SetSize(fv.frame:GetWidth(), fv.frame:GetHeight());
 
     fv.parent = parent;
@@ -34,17 +32,19 @@ function ListView:New(parent, style, selectFn, upFn, downFn, renderFn)
     fv.downFn = downFn;
     fv.renderFn = renderFn;
 
+    fv.selected = 1;
+
     fv:RegisterEvents();
-    fv:CreateRows();
+    fv:CreateRows(1, fv.style.totalRows);
 
     return fv;
 end
 
-function ListView:CreateRows()
+function ListView:CreateRows(start,endIndex)
     local fv = self;
     local i;
-    for i = 1, self.style.totalRows do
-        local f = CreateFrame("BUTTON", self.frame:GetName().."ItemRow"..i, self.scrollFrame:GetParent(), self.style.template);
+    for i = start, endIndex do
+        local f = CreateFrame("BUTTON", nil, self.scrollFrame:GetParent(), self.style.template);
         tinsert(self.rows, f);
         
         f:SetHeight(self.style.rowHeight);
@@ -52,17 +52,37 @@ function ListView:CreateRows()
         f:ClearAllPoints();
         f:SetPoint("TOPLEFT", self.scrollFrame, "TOPLEFT", 0, (i - 1) * -self.style.rowHeight);
 
-        local moveUp = _G[f:GetName().."MoveUp"];
+        local moveUp = f.MoveUp;
         if (moveUp) then
             moveUp:SetScript("OnClick", function() fv:OnUp(f) end);
         end
-        local moveDown = _G[f:GetName().."MoveDown"];
+        local moveDown = f.MoveDown;
         if (moveDown) then
             moveDown:SetScript("OnClick", function() fv:OnDown(f) end);
         end
 
         f:SetScript("OnClick", function() fv:OnSelect(f) end);
     end
+end
+
+function ListView:SetPoint(point, anchor, x, y, relativeTo)
+    self.frame:ClearAllPoints();
+    self.frame:SetPoint(point, relativeTo and self.parent[relativeTo] or self.parent, anchor, x, y);
+end
+
+function ListView:Resize()
+    local total = math.floor(self.frame:GetHeight() / self.style.rowHeight);
+    if (self.style.totalRows < total) then
+        self:CreateRows(self.style.totalRows, total);
+    end
+
+    for i = 1, total do
+        self.rows[i]:ClearAllPoints();
+        self.rows[i]:SetPoint("TOPLEFT", self.scrollFrame, "TOPLEFT", 0, (i - 1) * -self.style.rowHeight);
+    end
+
+    self.style.totalRows = total;
+    self:Refresh();
 end
 
 function ListView:OnUp(r)
@@ -124,8 +144,8 @@ function ListView:UpdateRow(offset, row)
             end
         end
 
-        if (_G[row:GetName().."Text"]) then
-            _G[row:GetName().."Text"]:SetText(row.item.name);
+        if (row.Text) then
+            row.Text:SetText(row.item.name);
         end
 
         if (self.renderFn) then
@@ -140,8 +160,8 @@ end
 
 function ListView:RemoveSelections()
     if (not self.style.multiselect) then
-        for i,v in ipairs(self.items) do
-            v.selected = false;
+        if (self.items[self.selected]) then
+            self.items[self.selected].selected = false;
         end
         for i,v in ipairs(self.rows) do
             self:UpdateRow(v:GetID(), v);
@@ -149,20 +169,78 @@ function ListView:RemoveSelections()
     end
 end
 
+function ListView:SetSelected(index)
+    if (index < 1 or index > #self.items) then
+        index = 1;
+    end
+
+    if (not self.style.multiselect) then
+        if (self.items[self.selected]) then
+            self.items[self.selected].selected = false;
+        end
+    end
+    
+    local item = self.items[index];
+    if (item) then
+        if (self.style.multiselect) then
+            item.selected = not item.selected;
+        else
+            item.selected = true;
+        end
+    end
+
+    self.selected = index;
+    
+    if (self.selectFn) then
+        self.selectFn(item, self.selected);
+    end
+
+    for i,v in ipairs(self.rows) do
+        self:UpdateRow(v:GetID(), v);
+    end
+end
+
+function ListView:ApplyShiftSelect(index)
+    if (self.style.multiselect and IsShiftKeyDown() and index) then
+        if (self.lastSelectedIndex and self.lastSelectedIndex > 0) then
+            local last = self.lastSelectedIndex;
+            self.lastSelectedIndex = 0;
+
+            local startIndex = last > index and index or last;
+            local endIndex = last > index and last or index;
+
+            for i = startIndex + 1, endIndex - 1 do
+                self:SetSelected(i);
+            end
+        end
+    end
+
+    if (index) then
+        self.lastSelectedIndex = index;
+    end
+end
+
 function ListView:OnSelect(f)
     self:RemoveSelections();
 
-    if (f.item.selected) then
-        f.item.selected = false;
+    self.selected = f:GetID();
+
+    if (self.style.multiselect) then
+        if (f.item.selected) then
+            f.item.selected = false;
+        else
+            f.item.selected = true;
+        end
     else
         f.item.selected = true;
     end
 
     if (self.selectFn) then
-        self.selectFn(f.item);
+        self.selectFn(f.item, self.selected);
     end
 
     self:UpdateRow(f:GetID(), f);
+    self:ApplyShiftSelect(self.selected);
 end
 
 function ListView:RegisterEvents()

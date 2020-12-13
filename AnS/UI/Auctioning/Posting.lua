@@ -1,10 +1,10 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
 local Utils = Ans.Utils;
+local Groups = Utils.Groups;
 local Query = Ans.Auctions.Query;
 local Recycler = Ans.Auctions.Recycler;
 local EventManager = Ans.EventManager;
-local BagScanner = Ans.BagScanner;
 local FSM = Ans.FSM;
 local FSMState = Ans.FSMState;
 local Tasker = Ans.Tasker;
@@ -14,10 +14,7 @@ local AuctionOp = Ans.Operations.Auctioning;
 
 local TreeView = Ans.UI.TreeView;
 
-local PostingView = {};
-PostingView.__index = PostingView;
-PostingView.inited = false;
-
+local PostingView = Ans.Object.Register("AuctionPostingView", Ans.UI);
 local PostingFSM = nil;
 
 -- used only for classic
@@ -41,8 +38,6 @@ STATES.CANCEL = 2;
 PostingView.state = STATES.NONE;
 PostingView.type = STATES.POST;
 
-Ans.Auctions.PostingView = PostingView;
-
 local activeOps = {};
 local ops = {};
 local treeViewItems = {};
@@ -64,13 +59,13 @@ local ERRORS = {
 };
 
 local function BuildStateMachine()
-    local fsm = FSM:New("PostingFSM");
+    local fsm = FSM:Acquire("PostingFSM");
 
-    local none = FSMState:New("NONE");
+    local none = FSMState:Acquire("NONE");
     none:AddEvent("IDLE");
     fsm:Add(none);
 
-    local idle = FSMState:New("IDLE");
+    local idle = FSMState:Acquire("IDLE");
     idle:SetOnEnter(function(self)
         PostingView.post:SetText("Post Scan");
         PostingView.post:Enable();
@@ -94,7 +89,7 @@ local function BuildStateMachine()
     fsm:Add(idle);
 
     -- POSTING STATES
-    local postScan = FSMState:New("POST_SCAN");
+    local postScan = FSMState:Acquire("POST_SCAN");
     postScan:SetOnEnter(function(self)
         wipe(postQueue);
         wipe(ops);
@@ -106,12 +101,12 @@ local function BuildStateMachine()
         searchesComplete = 0;
 
         for k,v in pairs(activeOps) do
-            local op = AuctionOp:FromConfig(v);
+            local op = AuctionOp.From(v);
             tinsert(ops, op);
             local items = op:GetAvailableItems();
     
             for i, item in ipairs(items) do
-                if (not Utils:IsClassic()) then
+                if (not Utils.IsClassic()) then
                     local location = ItemLocation:CreateFromBagAndSlot(item.bag, item.slot);
                     item.itemKey = C_AuctionHouse.GetItemKeyFromItem(location);
                     if (item.itemKey) then
@@ -129,7 +124,7 @@ local function BuildStateMachine()
             end
         end
 
-        if(Utils:IsClassic()) then
+        if(Utils.IsClassic()) then
             return "CLASSIC_POST_SCAN";
         else
             return "RETAIL_POST_SCAN";
@@ -141,7 +136,7 @@ local function BuildStateMachine()
 
     fsm:Add(postScan);
 
-    local classicPostScan = FSMState:New("CLASSIC_POST_SCAN");
+    local classicPostScan = FSMState:Acquire("CLASSIC_POST_SCAN");
     classicPostScan:SetOnEnter(function(self)
         if (#inventory == 0) then
             print("AnS - Nothing to Post");
@@ -165,7 +160,7 @@ local function BuildStateMachine()
 
     fsm:Add(classicPostScan);
 
-    local retailPostScan = FSMState:New("RETAIL_POST_SCAN");
+    local retailPostScan = FSMState:Acquire("RETAIL_POST_SCAN");
     retailPostScan:SetOnEnter(function(self)
         if (#inventory == 0) then
             print("AnS - Nothing to Post");
@@ -185,7 +180,7 @@ local function BuildStateMachine()
 
     fsm:Add(retailPostScan);
 
-    local postItemResults = FSMState:New("POST_ITEM_RESULTS");
+    local postItemResults = FSMState:Acquire("POST_ITEM_RESULTS");
     postItemResults:SetOnEnter(function(self, item)
         self.item = item;
         return nil;
@@ -204,7 +199,7 @@ local function BuildStateMachine()
 
         local v = self.item;
 
-        local txt, undercut = Utils:MoneyStringToCopper(v.op.undercut);
+        local txt, undercut = Utils.MoneyStringToCopper(v.op.undercut);
 
         if (not undercut) then
             undercut = 0;
@@ -212,7 +207,7 @@ local function BuildStateMachine()
 
         local ppu = bestPrices[v.tsmId] or 0;
 
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             ppu = v.op:IsValid(ppu, v.link, false);
         else
             ppu = v.op:IsValid(ppu, v.link, v.isCommodity and v.op.commodityLow);
@@ -223,7 +218,7 @@ local function BuildStateMachine()
         end
 
         if (ppu > 0) then
-            if (Utils:IsClassic()) then
+            if (Utils.IsClassic()) then
                 v.ppu = ppu;
             else
                 v.ppu = ppu - (ppu % COPPER_PER_SILVER);
@@ -243,7 +238,7 @@ local function BuildStateMachine()
         else
             local nextItem = inventory[searchesComplete + 1];
             self.item = nextItem;
-            if (Utils:IsClassic()) then
+            if (Utils.IsClassic()) then
                 DEFAULT_BROWSE_QUERY.searchString = nextItem.name;
                 Query.page = 0;
                 Query:Search(DEFAULT_BROWSE_QUERY, true);
@@ -259,9 +254,9 @@ local function BuildStateMachine()
     postItemResults:AddEvent("POST_READY");
 
     fsm:Add(postItemResults);
-    fsm:Add(FSMState:New("SEARCH_COMPLETE"));
+    fsm:Add(FSMState:Acquire("SEARCH_COMPLETE"));
 
-    local postReady = FSMState:New("POST_READY");
+    local postReady = FSMState:Acquire("POST_READY");
     postReady:SetOnEnter(function(self)
         PostingView.post:Enable();
         PostingView.post:SetText("Post ("..#postQueue..")");
@@ -270,7 +265,7 @@ local function BuildStateMachine()
     postReady:AddEvent("POST", function(self)
         local item = postQueue[1];
 
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             if (PostingView.CanPostItemClassic(item)) then
                 return "POST_CONFIRM", item;
             end
@@ -291,9 +286,9 @@ local function BuildStateMachine()
     postReady:AddEvent("POST_CONFIRM");
 
     fsm:Add(postReady);
-    fsm:Add(FSMState:New("POST"));
+    fsm:Add(FSMState:Acquire("POST"));
 
-    local postConfirm = FSMState:New("POST_CONFIRM");
+    local postConfirm = FSMState:Acquire("POST_CONFIRM");
     postConfirm:SetOnEnter(function(self, item)
         self.item = item;
         return nil;
@@ -334,7 +329,7 @@ local function BuildStateMachine()
 
     -- START CANCEL STATES
 
-    local cancelScan = FSMState:New("CANCEL_SCAN");
+    local cancelScan = FSMState:Acquire("CANCEL_SCAN");
     cancelScan:SetOnEnter(function(self)
         wipe(cancelQueue);
         wipe(ops)
@@ -346,11 +341,11 @@ local function BuildStateMachine()
         searchesComplete = 0;
 
         for k,v in pairs(activeOps) do
-            local op = AuctionOp:FromConfig(v);
+            local op = AuctionOp.From(v);
             tinsert(ops, op);
         end
 
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             return "CLASSIC_CANCEL_SCAN";
         else
             return "RETAIL_CANCEL_SCAN";
@@ -361,7 +356,7 @@ local function BuildStateMachine()
 
     fsm:Add(cancelScan);
 
-    local classicCancel = FSMState:New("CLASSIC_CANCEL_SCAN");
+    local classicCancel = FSMState:Acquire("CLASSIC_CANCEL_SCAN");
     classicCancel:SetOnEnter(function(self)
         local num = Query:OwnedCount();
         for i = 1, num do
@@ -403,7 +398,7 @@ local function BuildStateMachine()
 
     fsm:Add(classicCancel);
 
-    local retailCancel = FSMState:New("RETAIL_CANCEL_SCAN");
+    local retailCancel = FSMState:Acquire("RETAIL_CANCEL_SCAN");
     retailCancel:SetOnEnter(function(self)
         PostingView.post:Disable();
         PostingView.cancel:Disable();
@@ -452,9 +447,9 @@ local function BuildStateMachine()
     retailCancel:AddEvent("CANCEL_ITEM_RESULTS");
 
     fsm:Add(retailCancel);
-    fsm:Add(FSMState:New("OWNED"));
+    fsm:Add(FSMState:Acquire("OWNED"));
 
-    local cancelItemResults = FSMState:New("CANCEL_ITEM_RESULTS");
+    local cancelItemResults = FSMState:Acquire("CANCEL_ITEM_RESULTS");
     cancelItemResults:SetOnEnter(function(self, item)
         self.item = item;
         return nil;
@@ -470,7 +465,7 @@ local function BuildStateMachine()
         local v = self.item;
         local ppu = bestPrices[v.tsmId] or 0;
 
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             ppu = v.op:IsValid(ppu, v.link, false, v.ownedPPU);
         else
             ppu = v.op:IsValid(ppu, v.link, v.isCommodity and v.op.commodityLow, v.ownedPPU);
@@ -492,7 +487,7 @@ local function BuildStateMachine()
         else
             local nextItem = inventory[searchesComplete + 1];
             self.item = nextItem;
-            if (Utils:IsClassic()) then
+            if (Utils.IsClassic()) then
                 DEFAULT_BROWSE_QUERY.searchString = nextItem.name;
                 Query.page = 0;
                 Query:Search(DEFAULT_BROWSE_QUERY, true);
@@ -509,9 +504,9 @@ local function BuildStateMachine()
 
     fsm:Add(cancelItemResults);
 
-    fsm:Add(FSMState:New("ITEM_RESULT"));
+    fsm:Add(FSMState:Acquire("ITEM_RESULT"));
 
-    local cancelReady = FSMState:New("CANCEL_READY");
+    local cancelReady = FSMState:Acquire("CANCEL_READY");
     cancelReady:SetOnEnter(function(self)
         PostingView.cancel:Enable();
         PostingView.cancel:SetText("Cancel ("..#cancelQueue..")");
@@ -520,7 +515,7 @@ local function BuildStateMachine()
     cancelReady:AddEvent("CANCEL", function(self)
         local item = cancelQueue[1];
 
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             if (PostingView.CanCancelItemClassic(item)) then
                 return "CANCEL_CONFIRM", item;
             end
@@ -541,9 +536,9 @@ local function BuildStateMachine()
     cancelReady:AddEvent("CANCEL_CONFIRM");
 
     fsm:Add(cancelReady);
-    fsm:Add(FSMState:New("CANCEL"));
+    fsm:Add(FSMState:Acquire("CANCEL"));
 
-    local cancelConfirm = FSMState:New("CANCEL_CONFIRM");
+    local cancelConfirm = FSMState:Acquire("CANCEL_CONFIRM");
     cancelConfirm:SetOnEnter(function(self, item)
         self.item = item;
         return nil;
@@ -583,9 +578,9 @@ local function BuildStateMachine()
 
     -- END CANCEL STATES
 
-    fsm:Add(FSMState:New("DROPPED"));
-    fsm:Add(FSMState:New("SUCCESS"));
-    fsm:Add(FSMState:New("FAILURE"));
+    fsm:Add(FSMState:Acquire("DROPPED"));
+    fsm:Add(FSMState:Acquire("SUCCESS"));
+    fsm:Add(FSMState:Acquire("FAILURE"));
 
     fsm:Start("NONE");
     fsm:Process("IDLE");
@@ -633,7 +628,7 @@ end
 function PostingView.OnErrorMessage(type, msg)
     if (PostingFSM) then
         if (PostingFSM.current == "POST_CONFIRM" or PostingFSM.current == "CANCEL_CONFIRM") then
-            if (Utils:InTable(ERRORS, msg)) then
+            if (Utils.InTable(ERRORS, msg)) then
                 PostingFSM:Process("FAILURE");
             end
         end
@@ -644,19 +639,19 @@ function PostingView.CanPostItemRetail(v)
     local total = v.toSell;
     local op = v.op;
 
-    if (not BagScanner:Exists(v)) then
+    if (not v:Exists()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." no longer exists in the specified bag slot");
         return false;
     end
 
-    if (BagScanner:IsLocked(v)) then
+    if (v:IsLocked()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is currently locked - skipping");
         return false;
     end
 
-    if (not BagScanner:IsFullDurability(v)) then
+    if (not v:IsFullDurability()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is not full durability - skipping");
         return false;
@@ -681,19 +676,19 @@ function PostingView.PostItemRetail(v)
     local total = v.toSell;
     local op = v.op;
 
-    if (not BagScanner:Exists(v)) then
+    if (not v:Exists()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." no longer exists in the specified bag slot");
         return false;
     end
 
-    if (BagScanner:IsLocked(v)) then
+    if (v:IsLocked()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is currently locked - skipping");
         return false;
     end
 
-    if (not BagScanner:IsFullDurability(v)) then
+    if (not v:IsFullDurability()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is not full durability - skipping");
         return false;
@@ -703,11 +698,11 @@ function PostingView.PostItemRetail(v)
     if (total > 0) then
         local type = C_AuctionHouse.GetItemCommodityStatus(location);
         if (type == 2) then
-            print("AnS - Trying to post "..v.link.. " x "..total.." for "..Utils:PriceToString(v.ppu).."|cFFFFFFFF per unit");
+            print("AnS - Trying to post "..v.link.. " x "..total.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF per unit");
             C_AuctionHouse.PostCommodity(location, op.duration, total, v.ppu);
             return true;
         elseif (type == 1) then
-            print("AnS - Trying to post "..v.link.. " x "..total.." for "..Utils:PriceToString(v.ppu).."|cFFFFFFFF per unit");
+            print("AnS - Trying to post "..v.link.. " x "..total.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF per unit");
             C_AuctionHouse.PostItem(location, op.duration, total, nil, v.ppu);
             return true;
         end
@@ -721,19 +716,19 @@ end
 function PostingView.CanPostItemClassic(v)
     local op = v.op;
 
-    if (not BagScanner:Exists(v, true)) then
+    if (not v:Exists(true)) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." no longer exists in the specified bag slot");
         return false;
     end
 
-    if (BagScanner:IsLocked(v)) then
+    if (v:IsLocked()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is currently locked - skipping");
         return false;
     end
 
-    if (not BagScanner:IsFullDurability(v)) then
+    if (not v:IsFullDurability()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is not full durability - skipping");
         return false;
@@ -747,26 +742,26 @@ function PostingView.PostItemClassic(v)
     local ppu = v.ppu;
     local bidPPU = v.ppu * op.bidPercent;
 
-    if (not BagScanner:Exists(v, true)) then
+    if (not v:Exists(true)) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." no longer exists in the specified bag slot");
         return false;
     end
 
-    if (BagScanner:IsLocked(v)) then
+    if (v:IsLocked()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is currently locked - skipping");
         return false;
     end
 
-    if (not BagScanner:IsFullDurability(v)) then
+    if (not v:IsFullDurability()) then
         tremove(postQueue, 1);
         print("AnS - "..v.link.." is not full durability - skipping");
         return false;
     end
 
     local total = v.count;
-    print("AnS - Trying to post "..v.link.. " x "..total.." for "..Utils:PriceToString(v.ppu).."|cFFFFFFFF per unit");
+    print("AnS - Trying to post "..v.link.. " x "..total.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF per unit");
    
     UseContainerItem(v.bag, v.slot);
     PostAuction(v.count * bidPPU, v.count * ppu, op.duration, v.count, 1);
@@ -859,6 +854,60 @@ function PostingView.CancelItemClassic(v)
     return false;
 end
 
+function PostingView:UnhookTabs()
+    local AHDisplayMode = AuctionHouseFrameDisplayMode or {};
+    
+    if (AHDisplayMode.ItemSell) then
+        for i,v in ipairs(AHDisplayMode.ItemSell) do
+            if (v == "AnsPosting") then
+                tremove(AHDisplayMode.ItemSell, i);
+                break;
+            end
+        end
+    end
+    if (AHDisplayMode.CommoditiesSell) then
+        for i,v in ipairs(AHDisplayMode.CommoditiesSell) do
+            if (v == "AnsPosting") then
+                tremove(AHDisplayMode.CommoditiesSell, i);
+                break;
+            end
+        end
+    end
+    if (AHDisplayMode.Auctions) then
+        for i,v in ipairs(AHDisplayMode.Auctions) do
+            if (v == "AnsPosting") then
+                tremove(AHDisplayMode.Auctions, i);
+                break;
+            end
+        end
+    end
+
+    if (Utils.IsClassic()) then
+        AuctionFrameTab3.displayMode = {};
+    end
+end
+
+function PostingView:HookTabs()
+    local AHDisplayMode = AuctionHouseFrameDisplayMode or {};
+    
+    if (AHDisplayMode.ItemSell and not Utils.InTable(AHDisplayMode.ItemSell, "AnsPosting")) then
+        tinsert(AHDisplayMode.ItemSell, "AnsPosting");
+    end
+    if (AHDisplayMode.CommoditiesSell and not Utils.InTable(AHDisplayMode.CommoditiesSell, "AnsPosting")) then
+        tinsert(AHDisplayMode.CommoditiesSell, "AnsPosting");
+    end
+    if (AHDisplayMode.Auctions and not Utils.InTable(AHDisplayMode.Auctions, "AnsPosting")) then
+        tinsert(AHDisplayMode.Auctions, "AnsPosting");
+    end
+
+    if (Utils.IsClassic()) then
+        -- assign a tab display mode
+        -- to the classic AHTabs
+        -- required to show this
+        AuctionFrameTab3.displayMode = {"AnsPosting"};
+    end
+end
+
 function PostingView:OnLoad(f)
     local this = self;
 
@@ -869,7 +918,7 @@ function PostingView:OnLoad(f)
     local filterTemplate = "AnsFilterRowTemplate";
     local frameTemplate = "AnsPostingTemplate"
 
-    if (Utils:IsClassic()) then
+    if (Utils.IsClassic()) then
         frameTemplate = "AnsPostingClassicTemplate";
         filterTemplate = "AnsFilterRowClassicTemplate";
     end
@@ -883,31 +932,12 @@ function PostingView:OnLoad(f)
 
     self.parent.AnsPosting = self.frame;
 
-    local AHDisplayMode = AuctionHouseFrameDisplayMode or {};
-    
-    if (AHDisplayMode.ItemSell) then
-        tinsert(AHDisplayMode.ItemSell, "AnsPosting");
-    end
-    if (AHDisplayMode.CommoditiesSell) then
-        tinsert(AHDisplayMode.CommoditiesSell, "AnsPosting");
-    end
-    if (AHDisplayMode.Auctions) then
-        tinsert(AHDisplayMode.Auctions, "AnsPosting");
-    end
-
-    if (Utils:IsClassic()) then
-        -- assign a tab display mode
-        -- to the classic AHTabs
-        -- required to show this
-        AuctionFrameTab3.displayMode = {"AnsPosting"};
-    end
-
     self.cancel = self.frame.Cancel;
     self.post = self.frame.Post;
     self.reset = self.frame.Reset;
     self.all = self.frame.All;
 
-    self.filterTree = TreeView:New(self.frame, {
+    self.filterTree = TreeView:Acquire(self.frame, {
         rowHeight = 21,
         childIndent = 16,
         template = filterTemplate, multiselect = true
@@ -977,7 +1007,7 @@ function PostingView:RefreshTreeView()
         };
 
         for i,v2 in ipairs(v.groups) do
-            local g = Utils:GetGroupFromId(v2);
+            local g = Groups.GetGroupFromId(v2);
             if (g) then
                 tinsert(t.children, {
                     name = g.path,
@@ -1014,7 +1044,7 @@ function PostingView.CalcLowest(item)
         end
     end
 
-    if (Utils:IsClassic()) then
+    if (Utils.IsClassic()) then
         Recycler:Recycle(item);
     end
 end
@@ -1084,7 +1114,7 @@ function PostingView:Cancel()
             -- require physical user input on the same frame of execution
             local state = PostingFSM:GetCurrent();
             if (state.item and state.name == "CANCEL_CONFIRM") then
-                if (Utils:IsClassic()) then
+                if (Utils.IsClassic()) then
                     if (not PostingView.CancelItemClassic(state.item)) then
                         PostingFSM:Process("DROPPED");
                     end
@@ -1117,7 +1147,7 @@ function PostingView:Post()
             -- require physical user input on the same frame of execution
             local state = PostingFSM:GetCurrent();
             if (state.item and state.name == "POST_CONFIRM") then
-                if (Utils:IsClassic()) then
+                if (Utils.IsClassic()) then
                     if (not PostingView.PostItemClassic(state.item)) then
                         PostingFSM:Process("DROPPED");
                     end
@@ -1157,15 +1187,15 @@ function PostingView:RegisterEvents()
 end
 
 function PostingView:UnregisterEvents()
-    EventManager:RemoveListener("QUERY_SEARCH_RESULT", PostingView.OnSearchResult);
-    EventManager:RemoveListener("QUERY_SEARCH_COMPLETE", PostingView.OnSearchComplete);
-    EventManager:RemoveListener("QUERY_OWNED_AUCTIONS", PostingView.OnOwned);
-    EventManager:RemoveListener("AUCTION_HOUSE_AUCTION_CREATED", PostingView.OnAuctionCreated);
-    EventManager:RemoveListener("AUCTION_CANCELED", PostingView.OnAuctionCanceled);
-    EventManager:RemoveListener("AUCTION_MULTISELL_FAILURE", PostingView.OnFailure);
-    EventManager:RemoveListener("AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED", PostingView.OnDropped);
-    EventManager:RemoveListener("AUCTION_OWNED_LIST_UPDATE", PostingView.OnClassicOwnedUpdate);
-    EventManager:RemoveListener("UI_ERROR_MESSAGE", PostingView.OnErrorMessage);
+    EventManager:Off("QUERY_SEARCH_RESULT", PostingView.OnSearchResult);
+    EventManager:Off("QUERY_SEARCH_COMPLETE", PostingView.OnSearchComplete);
+    EventManager:Off("QUERY_OWNED_AUCTIONS", PostingView.OnOwned);
+    EventManager:Off("AUCTION_HOUSE_AUCTION_CREATED", PostingView.OnAuctionCreated);
+    EventManager:Off("AUCTION_CANCELED", PostingView.OnAuctionCanceled);
+    EventManager:Off("AUCTION_MULTISELL_FAILURE", PostingView.OnFailure);
+    EventManager:Off("AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED", PostingView.OnDropped);
+    EventManager:Off("AUCTION_OWNED_LIST_UPDATE", PostingView.OnClassicOwnedUpdate);
+    EventManager:Off("UI_ERROR_MESSAGE", PostingView.OnErrorMessage);
 end
 
 function PostingView:OnHide()

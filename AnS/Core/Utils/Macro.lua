@@ -1,12 +1,11 @@
 local Ans = select(2, ...);
 local Utils = Ans.Utils;
 local Logger = Ans.Logger;
-local Macro = {};
-Macro.__index = {};
-Ans.Macro = Macro;
+local TempTable = Ans.TempTable;
+local Macro = Ans.Object.Register("Macro");
 
 local MACRO_NAME = "AnSMacro";
-local MACRO_ICON = Utils:IsClassic() and "INV_Misc_Flower_01" or "Achievement_Faction_GoldenLotus";
+local MACRO_ICON = Utils.IsClassic() and "INV_Misc_Flower_01" or "Achievement_Faction_GoldenLotus";
 local BINDING_NAME = "MACRO "..MACRO_NAME;
 local BUTTONS = {
     ["tsmCancel"] = "/click TSMCancelAuctionBtn",
@@ -19,7 +18,8 @@ local BUTTONS = {
     ["ansPost"] = "/click AnsPostScan",
     ["ansCancel"] = "/click AnsCancelScan",
     ["ansSniper"] = "/click AnsSnipeBuy",
-    ["ansSniperFirst"] = "/click AnsSnipeFirst"
+    ["ansSniperFirst"] = "/click AnsSnipeFirst",
+    ["ansDestroy"] = "/click AnsDestroy",
 };
 local MODIFIERS = {
     ["ctrl"] = "CTRL-",
@@ -37,7 +37,7 @@ Macro.MODIFIER_MAPPING = MODIFIERS;
 
 function Macro.ActiveModifiers()
     local up, down, alt, ctrl, shift = false, false, false, false, false;
-    local bindings = Utils:GetTable(GetBindingKey(BINDING_NAME));
+    local bindings = TempTable:Acquire(GetBindingKey(BINDING_NAME));
     for i,v in ipairs(bindings) do
         up = up or strfind(v, "MOUSEWHEELUP");
         down = down or strfind(v, "MOUSEWHEELDOWN");
@@ -45,7 +45,7 @@ function Macro.ActiveModifiers()
         shift = shift or strfind(v, "SHIFT-");
         alt = alt or strfind(v, "ALT-");
     end
-    Utils:ReleaseTable(bindings);
+    bindings:Release();
     wipe(tempTbl);
     tempTbl["up"] = up;
     tempTbl["down"] = down;
@@ -69,12 +69,12 @@ function Macro.ActiveButtons()
 end
 
 function Macro.Create(commands, modifiers, up, down)
-    local bindings = Utils:GetTable(GetBindingKey(BINDING_NAME));
+    local bindings = TempTable:Acquire(GetBindingKey(BINDING_NAME));
     for i,v in ipairs(bindings) do
         SetBinding(v);
     end
     DeleteMacro(MACRO_NAME);
-    Utils:ReleaseTable(bindings);
+    bindings:Release();
 
     if (GetNumMacros() >= MAX_ACCOUNT_MACROS) then
         local helpText = "Could not create a new macro. Delete one of your existing macros and try again.";
@@ -105,7 +105,7 @@ function Macro.Create(commands, modifiers, up, down)
         SetBinding(modifierStr.."MOUSEWHEELUP", BINDING_NAME, mode);
     end
 
-    if (Utils:IsClassic()) then
+    if (Utils.IsClassic()) then
         AttemptToSaveBindings(CHARACTER_BINDING_SET);
     else
         SaveBindings(CHARACTER_BINDING_SET);

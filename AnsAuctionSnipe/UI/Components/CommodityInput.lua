@@ -1,6 +1,6 @@
-local Ans = select(2, ...);
-local AuctionList = Ans.AuctionList;
-local EventManager = AnsCore.API.EventManager;
+local Core = select(2, ...);
+local AuctionList = Core.AuctionList;
+local EventManager = Ans.API.EventManager;
 
 CommodityInputMixin = {};
 CommodityInputMixin.__index = CommodityInputMixin;

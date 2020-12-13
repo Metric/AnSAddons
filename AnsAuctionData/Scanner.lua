@@ -1,7 +1,7 @@
-local Ans = select(2, ...);
-local Query = AnsCore.API.Auctions.Query;
-local Recycler = AnsCore.API.Auctions.Recycler;
-local Utils = AnsCore.API.Utils;
+local Core = select(2, ...);
+local Query = Ans.API.Auctions.Query;
+local Recycler = Ans.API.Auctions.Recycler;
+local Utils = Ans.API.Utils;
 
 ANS_LAST_DATA_SCAN = 0;
 
@@ -18,7 +18,7 @@ local Scanner = {};
 Scanner.__index = Scanner;
 Scanner.state = STATES.NONE;
 
-Ans.Scanner = Scanner;
+Core.Scanner = Scanner;
 
 local function GetFormattedTime()
     local diff = time() - ANS_LAST_DATA_SCAN;
@@ -53,7 +53,7 @@ function Scanner:Init()
 
     self.inited = true;
 
-    if (not Utils:IsClassic()) then
+    if (not Utils.IsClassic()) then
         return;
     end
 

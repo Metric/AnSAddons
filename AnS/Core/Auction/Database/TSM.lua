@@ -1,17 +1,15 @@
 local Ans = select(2, ...);
-local TSMDB = {};
-TSMDB.__index = TSMDB;
-Ans.Database.TSM = TSMDB;
+local TSMDB = Ans.Object.Register("TSM", Ans.Database);
 
 local Utils = Ans.Utils;
-local TSM_MAJOR_VERSION = Utils:GetAddonVersion("TradeSkillMaster");
+local TSM_MAJOR_VERSION = Utils.GetAddonVersion("TradeSkillMaster");
 
 function TSMDB.GetPrice(link, key, name)
     if (strfind(link, "[ip]:%d+%(%d+%)")) then
         return 0;
     end
 
-    local id = Utils:GetTSMID(link);
+    local id = Utils.GetID(link);
     if(TSM_MAJOR_VERSION == "3") then
         return TSMAPI:GetCustomPriceValue(name, id) or 0;
     else

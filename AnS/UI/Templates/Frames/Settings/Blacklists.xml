@@ -1,0 +1,103 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsBlacklistsSettingsTemplate" virtual="true" mixin="AnsBlacklistsSettingsFrameMixin">
+        <Size x="555" y="376" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="0" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="Characters" mixin="AnsCharacterBlacklistFrameMixin">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-14" />
+                </Anchors>
+                <Size x="200" y="376" />
+                <Frames>
+                    <EditBox parentKey="Character" text="" inherits="AnsEditBoxTemplate">
+                        <Size x="150" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0" />
+                        </Anchors>
+                    </EditBox>
+                    <Button parentKey="Add" text="Add" inherits="AnsStandardButtonTemplate">
+                        <Size x="48" y="24" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="5" y="2" relativeKey="$parent.Character" />
+                        </Anchors>
+                    </Button>
+                    <ScrollFrame parentKey="ScrollFrame" enableMouse="true" inherits="AnsFauxScrollFrameTemplate">
+                        <Size x="200" y="340" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-10" relativePoint="BOTTOMLEFT" relativeKey="$parent.Character" />
+                        </Anchors>
+                    </ScrollFrame>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="-28" />
+                                <Anchor point="BOTTOMRIGHT" x="2" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" justifyV="CENTER" text="Character Blacklist" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" y="20" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="16" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+            <Frame parentKey="Items" mixin="AnsItemBlacklistFrameMixin">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="10" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.Characters" />
+                </Anchors>
+                 <Size x="355" y="376" />
+                <Frames>
+                    <ScrollFrame parentKey="ScrollFrame" enableMouse="true" inherits="AnsFauxScrollFrameTemplate">
+                        <Size x="355" y="376" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0" />
+                        </Anchors>
+                    </ScrollFrame>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="2" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" justifyV="CENTER" text="Item Blacklist" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" y="20" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="16" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

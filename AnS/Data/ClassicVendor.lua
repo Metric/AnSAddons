@@ -13,7 +13,7 @@
 -- for (i=0; i<listviewitems.length; i++) if (listviewitems[i].bonustrees) listviewitems[i].bonustrees.sort(); for (i=0; i<listviewitems.length; i++) if (listviewitems[i].buyprice) console.log("[\"i:"+listviewitems[i].id+(listviewitems[i].bonustrees ? ":" + listviewitems[i].bonustrees.length + ":" + listviewitems[i].bonustrees.join(":") : "") +"\"] = " + listviewitems[i].buyprice + ",  -- "+listviewitems[i].name);
 local Ans = select(2, ...);
 local Utils = Ans.Utils;
-local Vendor = Utils:IsClassic() and {
+local Vendor = Utils.IsClassic() and {
     ["i:6068"] = 1500,  -- Recipe: Shadow Oil
     ["i:4355"] = 1500,  -- Pattern: Icy Cloak
     ["i:14256"] = 8000,  -- Felcloth

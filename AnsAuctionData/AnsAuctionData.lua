@@ -1,11 +1,12 @@
-local Ans = select(2, ...);
-local Utils = AnsCore.API.Utils;
-local Scanner = Ans.Scanner;
-local Logger = AnsCore.API.Logger;
-local Config = AnsCore.API.Config;
-local Realms = Ans.Realms;
+local Core = select(2, ...);
+local Utils = Ans.API.Utils;
+local Scanner = Core.Scanner;
+local Logger = Ans.API.Logger;
+local Config = Ans.API.Config;
+local Realms = Core.Realms;
+local TempTable = Ans.API.TempTable;
 
-local stats = Ans.Statistics;
+local stats = Core.Statistics;
 
 local MAX_DAYS_TO_TRACK = 7;
 
@@ -13,7 +14,7 @@ ANS_AUCTION_DATA = {};
 AnsAuctionData = {};
 AnsAuctionData.__index = AnsAuctionData;
 
-local Utils = AnsCore.API.Utils;
+local Utils = Ans.API.Utils;
 
 local realmName = GetRealmName();
 
@@ -58,24 +59,6 @@ local hooked = false;
 local petTipLines = {};
 
 local tracker = {};
-
-local function IsSoulbound()
-    local numlines = GameTooltip:NumLines();
-
-    local i;
-    for i = 1, numlines do
-        local textObject = _G[GameTooltip:GetName().."TextLeft"..i];
-        local text = strtrim(textObject and textObject:GetText() or "");
-
-        if ((text == ITEM_BIND_ON_PICKUP and id < 4) or text == ITEM_SOULBOUND or text == ITEM_BIND_QUEST) then
-            return true;
-        elseif (text == ITEM_ACCOUNTBOUND or text == ITEM_BIND_TO_ACCOUNT or text == ITEM_BIND_TO_BNETACCOUNT or text == ITEM_BNETACCOUNTBOUND) then
-            return true;
-        end
-    end
-
-    return false;
-end
 
 local function InitPetLines(tooltip)
     if (not petTipLines[tooltip:GetName()]) then
@@ -127,50 +110,50 @@ local function ShowDataPetFloat(tooltip, pet)
     local rtxt = "";
 
     if (Config.General().tooltipRealmRecent and realmRecent > 0) then
-        p = Utils:PriceToString(realmRecent);
+        p = Utils.PriceToString(realmRecent);
 
         ltxt = ltxt.."|cFF00BBFFAnS Recent\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     if (Config.General().tooltipRealmMarket and realmMarket > 0) then
-        p = Utils:PriceToString(realmMarket);
+        p = Utils.PriceToString(realmMarket);
 
         ltxt = ltxt.."|cFF00BBFFAnS Market\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     if (Config.General().tooltipRealmMin and realmMin > 0) then
-        p = Utils:PriceToString(realmMin);
+        p = Utils.PriceToString(realmMin);
 
         ltxt = ltxt.."|cFF00BBFFAnS Min\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     if (Config.General().tooltipRealm3Day and realm3Day > 0) then
-        p = Utils:PriceToString(realm3Day);
+        p = Utils.PriceToString(realm3Day);
 
         ltxt = ltxt.."|cFF00BBFFAnS 3-Day\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     
     if (Config.General().tooltipRegionRecent and regionRecent > 0) then
-        p = Utils:PriceToString(regionRecent);
+        p = Utils.PriceToString(regionRecent);
 
         ltxt = ltxt.."|cFF00BBFFAnS Region Recent\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     if (Config.General().tooltipRegionMarket and regionMarket > 0) then
-        p = Utils:PriceToString(regionMarket);
+        p = Utils.PriceToString(regionMarket);
 
         ltxt = ltxt.."|cFF00BBFFAnS Region Market\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     if (Config.General().tooltipRegionMin and regionMin > 0) then
-        p = Utils:PriceToString(regionMin);
+        p = Utils.PriceToString(regionMin);
 
         ltxt = ltxt.."|cFF00BBFFAnS Region Min\r\n";
         rtxt = rtxt..p.."\r\n";
     end
     if (Config.General().tooltipRegion3Day and region3Day > 0) then
-        p = Utils:PriceToString(region3Day);
+        p = Utils.PriceToString(region3Day);
 
         ltxt = ltxt.."|cFF00BBFFAnS Region 3-Day\r\n";
         rtxt = rtxt..p.."\r\n";
@@ -208,7 +191,8 @@ local function ShowData(tooltip, extra)
     link = extra or link;
 
     if (link) then
-        local id = Utils:GetTSMID(link);
+        local id = Utils.GetID(link);
+
         local realmRecent = AnsAuctionData.GetRealmValue(link, "recent");
         local realmMin = AnsAuctionData.GetRealmValue(link, "min");
         local realm3Day = AnsAuctionData.GetRealmValue(link, "3day");
@@ -221,35 +205,35 @@ local function ShowData(tooltip, extra)
         local regionSeen = AnsAuctionData.GetRegionValue(link, "count");
 
         if (Config.General().tooltipRealmRecent and realmRecent > 0) then
-            p = Utils:PriceToString(realmRecent);
+            p = Utils.PriceToString(realmRecent);
             tooltip:AddDoubleLine("AnS Recent", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRealmMarket and realmMarket > 0) then
-            p = Utils:PriceToString(realmMarket);
+            p = Utils.PriceToString(realmMarket);
             tooltip:AddDoubleLine("AnS Market", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRealmMin and realmMin > 0) then
-            p = Utils:PriceToString(realmMin);
+            p = Utils.PriceToString(realmMin);
             tooltip:AddDoubleLine("AnS Min", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRealm3Day and realm3Day > 0) then
-            p = Utils:PriceToString(realm3Day);
+            p = Utils.PriceToString(realm3Day);
             tooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRegionRecent and regionRecent > 0) then
-            p = Utils:PriceToString(regionRecent);
+            p = Utils.PriceToString(regionRecent);
             tooltip:AddDoubleLine("AnS Region Recent", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRegionMarket and regionMarket > 0) then
-            p = Utils:PriceToString(regionMarket);
+            p = Utils.PriceToString(regionMarket);
             tooltip:AddDoubleLine("AnS Region Market", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRegionMin and regionMin > 0) then
-            p = Utils:PriceToString(regionMin);
+            p = Utils.PriceToString(regionMin);
             tooltip:AddDoubleLine("AnS Region Min", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRegion3Day and region3Day > 0) then
-            p = Utils:PriceToString(region3Day);
+            p = Utils.PriceToString(region3Day);
             tooltip:AddDoubleLine("AnS Region 3-Day", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRegionSeen and regionSeen > 0) then
@@ -257,6 +241,10 @@ local function ShowData(tooltip, extra)
         end
 
         if (Config.General().showId) then
+            if (not id or id == "" or id == "i:" or id == "i") then
+                return;
+            end
+
             tooltip:AddDoubleLine("Item ID", id, 0, 0.75, 1, 1, 1, 1);
         end
     end
@@ -303,7 +291,7 @@ function AnsAuctionData:OnLoad(frame)
     frame:RegisterEvent("AUCTION_HOUSE_SHOW");
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
 
-    if (Utils:IsClassic()) then
+    if (Utils.IsClassic()) then
         frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
     end
 
@@ -363,7 +351,7 @@ function AnsAuctionData:GetValidID(tsm)
         end
     end
 
-    local tmp = Utils:GetTable();
+    local tmp = TempTable:Acquire();
 
     local c = 1;
     for n in string.gmatch(tsm, "%d+") do
@@ -384,14 +372,14 @@ function AnsAuctionData:GetValidID(tsm)
         if (#tmp > 0) then
             table.sort(tmp, function(x,y) return x < y end);
             local bonus = table.concat(tmp, ":");
-            Utils:ReleaseTable(tmp);
+            Utils.ReleaseTable(tmp);
 
             ValidIDCache[tsm] = t..":"..id..":"..bonus;
             return ValidIDCache[tsm];
         end
     end
 
-    Utils:ReleaseTable(tmp);
+    tmp:Release();
     ValidIDCache[tsm] = t..":"..id;
     return ValidIDCache[tsm];
 end
@@ -505,7 +493,7 @@ function AnsAuctionData.GetRegionValue(link, key)
         return 0;
     end
 
-    local tsmId = Utils:GetTSMID(link);
+    local tsmId = Utils.GetID(link);
 
     if (not tsmId) then
         return 0;
@@ -518,7 +506,7 @@ function AnsAuctionData.GetRegionValue(link, key)
     if (kindex) then
         local r = AnsAuctionData:GetRawData();
         
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             if (r and r[vid]) then
                 local data = nil;
                 data = r[vid][kindex];
@@ -561,7 +549,7 @@ function AnsAuctionData.GetRealmValue(link, key)
         return 0;
     end
 
-    local tsmId = Utils:GetTSMID(link);
+    local tsmId = Utils.GetID(link);
 
     if (not tsmId) then
         return 0;
@@ -573,7 +561,7 @@ function AnsAuctionData.GetRealmValue(link, key)
 
     if (kindex) then
         local r = AnsAuctionData:GetRawData();
-        if (Utils:IsClassic()) then
+        if (Utils.IsClassic()) then
             if (r and r[vid]) then
                 local data = nil;
                 data = r[vid][kindex];

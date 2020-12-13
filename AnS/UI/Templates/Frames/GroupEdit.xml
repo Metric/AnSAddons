@@ -1,94 +1,89 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-    <Frame name="AnsGroupEditTemplate" virtual="true">
-        <Size x="570" y="386" />
-        <Anchors>
-            <Anchor point="TOPLEFT" x="178" y="-32" />
-        </Anchors>
+    <Frame name="AnsGroupEditTemplate" virtual="true" mixin="AnsGroupEditFrameMixin">
         <Frames>
-            <Frame parentKey="InventoryList" name="$parentInventoryList">
-                <Size x="256" y="249" />
+            <Frame parentKey="InventoryList">
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="0" y="-64" />
+                    <Anchor point="TOPLEFT" x="0" y="-48" />
+                    <Anchor point="BOTTOMRIGHT" x="-295" y="44" />
                 </Anchors>
                 <Layers>
                      <Layer level="BACKGROUND">
                         <Texture>
                             <Anchors>
-                                <Anchor point="TOPLEFT" x="0" y="0" />
-                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                                <Anchor point="TOPLEFT" x="-2" y="2" />
+                                <Anchor point="BOTTOMRIGHT" x="2" y="-2" />
                             </Anchors>
                             <Color r="1" g="1" b="1" a="0.03" />
                         </Texture>
                     </Layer>
                 </Layers>
                 <Frames>
-                    <ScrollFrame name="$parentListView" parentKey="ListView" inherits="AnsFauxScrollFrameTemplate" >
+                    <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate" >
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="0" />
                         </Anchors>
-                        <Size x="256" y="244" />
                     </ScrollFrame>
                 </Frames>
             </Frame>
-            <Button parentKey="AddItem" name="$parentAddItem" text=">" inherits="AnsStandardButtonTemplate">
-                <Size x="32" y="32" />
+            <Button parentKey="AddItem" text="Add To Group" inherits="AnsStandardButtonTemplate">
+                <Size x="275" y="24" />
                 <Anchors>
-                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentInventoryList" x="12" y="-5" />
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.InventoryList" x="0" y="-10" />
                 </Anchors>
             </Button>
-            <ScrollFrame name="$parentIds" enableMouse="true" parentKey="Ids" inherits="AnsScrollFrameTemplate">
+            <Frame parentKey="ItemList">
                 <Size x="256" y="249" />
-                <Anchors>
-                    <Anchor point="TOPRIGHT" x="0" y="-64" />
-                </Anchors>
                 <Layers>
-                    <Layer level="BACKGROUND">
+                     <Layer level="BACKGROUND">
                         <Texture>
                             <Anchors>
-                                <Anchor point="TOPLEFT" x="0" y="0" />
-                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                                <Anchor point="TOPLEFT" x="-2" y="2" />
+                                <Anchor point="BOTTOMRIGHT" x="2" y="-2" />
                             </Anchors>
-                            <Color r="1" g="1" b="1" a="0.05" />
+                            <Color r="1" g="1" b="1" a="0.03" />
                         </Texture>
                     </Layer>
                 </Layers>
-                <ScrollChild>
-                    <EditBox name="$parentText" parentKey="Text" inherits="AnsEditBoxTemplate">
-                        <Size x="256" y="200" />
-                    </EditBox>
-                </ScrollChild>
-                <Scripts>
-                    <OnLoad>
-                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
-                    </OnLoad>
-                </Scripts>
-            </ScrollFrame>
-            <Button parentKey="RemoveGroup" name="$parentRemoveGroup" text="Delete Group" inherits="AnsWarningButtonTemplate">
-                <Size x="100" y="20" />
                 <Anchors>
-                    <Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="$parentIds" x="0" y="-5" />
+                    <Anchor point="TOPLEFT" x="295" y="-48" />
+                    <Anchor point="BOTTOMRIGHT" x="0" y="44" />
+                </Anchors>
+                <Frames>
+                    <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate" >
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                        </Anchors>
+                    </ScrollFrame>
+                </Frames>
+            </Frame>
+            <Button parentKey="RemoveItem" text="Remove From Group" inherits="AnsStandardButtonTemplate">
+                <Size x="275" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.ItemList" x="0" y="-10" />
                 </Anchors>
             </Button>
-            <Frame parentKey="ConfirmDelete" name="$parentConfirmDelete" inherits="AnsConfirmDialogTemplate">
+            <Button parentKey="RemoveGroup" text="Delete Group" inherits="AnsWarningButtonTemplate">
+                <Size x="100" y="20" />
                 <Anchors>
-                    <Anchor point="TOPLEFT" x="-182" y="32" />
-                    <Anchor point="BOTTOMRIGHT" x="15" y="32" />
+                    <Anchor point="TOPRIGHT" x="7" y="0" />
                 </Anchors>
-            </Frame>
+            </Button>
         </Frames>
         <Layers>
             <Layer level="ARTWORK">
                 <FontString text="Inventory" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
                     <Anchors>
-                        <Anchor point="TOPLEFT" x="0" y="-42" />
+                        <Anchor point="TOPLEFT" x="0" y="16" relativeKey="$parent.InventoryList" relativePoint="TOPLEFT" />
                     </Anchors>
                     <FontHeight>
                         <AbsValue val="32" />
                     </FontHeight>
                 </FontString>
-                <FontString text="Ids in Group" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                <FontString text="Items In Group" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
                     <Anchors>
-                        <Anchor point="TOPRIGHT" x="-185" y="-42" />
+                        <Anchor point="TOPLEFT" x="0" y="16" relativeKey="$parent.ItemList" relativePoint="TOPLEFT" />
                     </Anchors>
                     <FontHeight>
                         <AbsValue val="32" />
@@ -96,5 +91,10 @@
                 </FontString>
             </Layer>
         </Layers>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
     </Frame>
 </Ui>

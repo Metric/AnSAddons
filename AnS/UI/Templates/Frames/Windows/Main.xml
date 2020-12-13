@@ -1,0 +1,533 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsMainWindowTemplate" virtual="true" inherits="AnsWindowTemplate" mixin="AnsMainWindowFrameMixin">
+         <Size x="768" y="430" />
+         <Anchors>
+            <Anchor point="CENTER" x="0" y="0" />
+         </Anchors>
+         <Frames>
+            <Button parentKey="Close" inherits="AnsIconCloseTemplate">
+                <Anchors>
+                    <Anchor point="TOPRIGHT" x="-8" y="-4" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        self:GetParent():Hide();
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Frame parentKey="Tabs">
+                <Size x="748" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="28" y="-4" />
+                </Anchors>
+                <Frames>
+                    <!-- tabs go here -->
+                    <Button id="1" parentKey="Tab1" text="Dashboard" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="BOTTOMLEFT" x="0" y="4" />
+                        </Anchors>
+                    </Button>
+                    <Button id="2" parentKey="Tab2" text="Ledger" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeKey="$parent.Tab1" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button id="3" parentKey="Tab3" text="Groups" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeKey="$parent.Tab2" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button id="4" parentKey="Tab4" text="Operations" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeKey="$parent.Tab3" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button id="5" parentKey="Tab5" text="Settings" inherits="AnsTabTemplate">
+                        <Anchors>
+                            <Anchor point="LEFT" relativeKey="$parent.Tab4" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                    </Button>
+                </Frames>
+            </Frame>
+            <Frame parentKey="TabView1" mixin="AnsDashboardFrameMixin">
+                <!-- dashboard -->
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.Tabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                    <Frame parentKey="GraphArea">
+                        <Size x="320" y="156" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-10" y="-32" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                    </Anchors>
+                                    <Size x="320" y="156" />
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="StatSales">
+                        <Size x="320" y="42" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeKey="$parent.GraphArea" relativePoint="BOTTOMRIGHT" x="0" y="-36" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                    </Anchors>
+                                    <Size x="320" y="42" />
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="TotalLabel" text="Total Earned" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="6" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString parentKey="Total" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-6" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString text="Average Per Day" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent.TotalLabel"  relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString parentKey="Average" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativeKey="$parent.Total" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="StatExpenses">
+                        <Size x="320" y="42" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeKey="$parent.StatSales" relativePoint="BOTTOMRIGHT" x="0" y="-15" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                    </Anchors>
+                                    <Size x="320" y="42" />
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="TotalLabel" text="Total Spent" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="6" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString parentKey="Total" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-6" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString text="Average Per Day" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent.TotalLabel"  relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString parentKey="Average" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativeKey="$parent.Total" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="StatProfit">
+                        <Size x="320" y="42" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" relativeKey="$parent.StatExpenses" relativePoint="BOTTOMRIGHT" x="0" y="-15" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                    </Anchors>
+                                    <Size x="320" y="42" />
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="TotalLabel" text="Total Profit" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="6" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString parentKey="Total" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativePoint="TOPRIGHT" x="-6" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString text="Average Per Day" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent.TotalLabel"  relativePoint="BOTTOMLEFT" x="0" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                                <FontString parentKey="Average" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                                    <Anchors>
+                                        <Anchor point="TOPRIGHT" relativeKey="$parent.Total" relativePoint="BOTTOMRIGHT" x="0" y="-8" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="RecentSales">
+                        <Size x="418" y="156" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="-32" />
+                        </Anchors>
+                         <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                    </Anchors>
+                                    <Size x="418" y="156" />
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString text="Sales" inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="8" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                        <Frames>
+                            <Frame parentKey="Header" inherits="AnsRecordsHeadingMinTemplate">
+                                <Size x="418" y="16" />
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                            </Frame>
+
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Header" relativePoint="BOTTOMLEFT" x="0" y="-4" />
+                                </Anchors>
+                                <Size x="418" y="136" />
+                            </ScrollFrame>
+                        </Frames>
+                    </Frame>
+                    <Frame parentKey="RecentPurchases">
+                        <Size x="418" y="156" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativeKey="$parent.RecentSales" relativePoint="BOTTOMLEFT" x="0" y="-37" />
+                        </Anchors>
+                         <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="0" y="0" />
+                                    </Anchors>
+                                    <Size x="418" y="156" />
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString text="Purchases" inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="8" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                        <Frames>
+                            <Frame parentKey="Header" inherits="AnsRecordsHeadingMinTemplate">
+                                <Size x="418" y="16" />
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                            </Frame>
+
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" relativeKey="$parent.Header" relativePoint="BOTTOMLEFT" x="0" y="-4" />
+                                </Anchors>
+                                <Size x="418" y="136" />
+                            </ScrollFrame>
+                        </Frames>
+                    </Frame>
+                </Frames>
+                 <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+            <Frame parentKey="TabView2" hidden="true" mixin="AnsLedgerFrameMixin">
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.Tabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                    <Frame parentKey="Filters">
+                        <Size x="148" y="345" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="-32" />
+                        </Anchors>
+                        <Frames>
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                                <Size x="148" y="340" />
+                            </ScrollFrame>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-10" y="40" />
+                                        <Anchor point="BOTTOMRIGHT" x="10" y="-20" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="List" inherits="AnsLedgerListTemplate"></Frame>
+                </Frames>
+                <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+            <Frame parentKey="TabView3" hidden="true" mixin="AnsGroupFrameMixin">
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.Tabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                    <Frame parentKey="Groups">
+                        <Size x="148" y="345" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="-32" />
+                        </Anchors>
+                        <Frames>
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                                <Size x="148" y="340" />
+                            </ScrollFrame>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-10" y="40" />
+                                        <Anchor point="BOTTOMRIGHT" x="10" y="-20" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Button parentKey="RestoreDefault" text="Restore Default" inherits="AnsStandardButtonTemplate">
+                        <Size x="100" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="Import" inherits="AnsIconImportTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="10" y="0" relativeKey="$parent.RestoreDefault" />
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="Export" inherits="AnsIconExportTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="10" y="0" relativeKey="$parent.Import" />
+                        </Anchors>
+                    </Button>
+                    <Frame parentKey="Edit" inherits="AnsGroupEditTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="178" y="0" />
+                            <Anchor point="BOTTOMRIGHT" x="-20" y="10" />
+                        </Anchors>
+                    </Frame>
+                    <Frame parentKey="ConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="10" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="10" />
+                        </Anchors>
+                    </Frame>
+                    <Frame parentKey="ConfirmInput" inherits="AnsConfirmInputDialogTemplate">
+                      <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="10" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="10" />
+                        </Anchors>
+                    </Frame>
+                </Frames>
+                 <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+            <Frame parentKey="TabView4" hidden="true" mixin="AnsOperationsFrameMixin">
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.Tabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                    <Frame parentKey="Ops">
+                        <Size x="148" y="350" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="-25" />
+                        </Anchors>
+                        <Frames>
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                                <Size x="148" y="350" />
+                            </ScrollFrame>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-10" y="35" />
+                                        <Anchor point="BOTTOMRIGHT" x="5" y="-20" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+
+                    <Button parentKey="Import" inherits="AnsIconImportTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="115" y="0" />
+                        </Anchors>
+                    </Button>
+                    <Button parentKey="Export" inherits="AnsIconExportTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="10" y="0" relativeKey="$parent.Import" />
+                        </Anchors>
+                    </Button>
+
+                    <Frame parentKey="AuctionEdit" inherits="AnsAuctionOpEditorTemplate" />
+                    <Frame parentKey="MailEdit" inherits="AnsMailOpEditorTemplate" />
+                    <Frame parentKey="SnipeEdit" inherits="AnsSnipeOpEditorTemplate" />
+
+                    <Frame parentKey="Groups" hidden="true">
+                        <Size x="148" y="375" />
+                        <Anchors>
+                            <Anchor point="TOPRIGHT" x="-10" y="-16" />
+                        </Anchors>
+                        <Frames>
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                                <Size x="148" y="370" />
+                            </ScrollFrame>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-5" y="25" />
+                                        <Anchor point="BOTTOMRIGHT" x="10" y="-4" />
+                                    </Anchors>
+                                    <Color r="0" g="0" b="0" a="1" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString parentKey="TotalLabel" text="Active Groups" inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="5" y="16" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="ConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="10" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="10" />
+                        </Anchors>
+                    </Frame>
+                    <Frame parentKey="ConfirmInput" inherits="AnsConfirmInputDialogTemplate">
+                      <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="10" />
+                            <Anchor point="BOTTOMRIGHT" x="0" y="10" />
+                        </Anchors>
+                    </Frame>
+                </Frames>
+                 <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+            <Frame parentKey="TabView5" hidden="true" mixin="AnsSettingsFrameMixin">
+                <Size x="768" y="396" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.Tabs" relativePoint="BOTTOMLEFT" x="-28" y="-5" />
+                </Anchors>
+                <Frames>
+                    <Frame parentKey="Items">
+                        <Size x="148" y="396" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="10" y="0" />
+                        </Anchors>
+                        <Frames>
+                            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="0" />
+                                </Anchors>
+                                <Size x="148" y="386" />
+                            </ScrollFrame>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-10" y="8" />
+                                        <Anchor point="BOTTOMRIGHT" x="10" y="-20" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="GeneralEdit" inherits="AnsGeneralSettingsTemplate" />
+                    <Frame parentKey="CraftingEdit" inherits="AnsCraftingSettingsTemplate" />
+                    <Frame parentKey="SniperEdit" inherits="AnsSniperSettingsTemplate" />
+                    <Frame parentKey="CustomSourcesEdit" inherits="AnsCustomSourcesSettingsTemplate" />
+                    <Frame parentKey="MacroEdit" inherits="AnsMacroSettingsTemplate" />
+                    <Frame parentKey="BlacklistsEdit" inherits="AnsBlacklistsSettingsTemplate" />
+                </Frames>
+                <Scripts>
+                    <OnLoad>
+                        self:Init();
+                    </OnLoad>
+                </Scripts>
+            </Frame>
+        </Frames>
+    </Frame>
+</Ui>

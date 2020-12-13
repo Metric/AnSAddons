@@ -2,10 +2,7 @@ local Ans = select(2, ...);
 local GTrack = Ans.Analytics.GoldTracker;
 local Trans = Ans.Analytics.Transactions;
 local ItemTrack = Ans.Analytics.ItemTracker;
-
-local DataQuery = {};
-DataQuery.__index = DataQuery;
-Ans.Analytics.Query = DataQuery;
+local DataQuery = Ans.Object.Register("Query", Ans.Analytics);
 
 local itemHolder = {};
 local nameHolder = {};

@@ -1,0 +1,47 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsRecordsHeadingMinTemplate" virtual="true">
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString name="$parentName" justifyH="LEFT" text="Item" inherits="AnsGameFontWhiteTrans">
+                    <Size x="110" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="6" y="-4" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentWho" justifyH="LEFT" text="Player" inherits="AnsGameFontWhiteTrans">
+                    <Size x="86" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentName" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentType" justifyH="LEFT" text="Type" inherits="AnsGameFontWhiteTrans">
+                    <Size x="48" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT"  x="0" y="0" relativeTo="$parentWho" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentStack" justifyH="RIGHT" text="Stack" inherits="AnsGameFontWhiteTrans">
+                    <Size x="64" y="16" />
+                    <Anchors>
+                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentType" relativePoint="RIGHT" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentAmount" text="PPU" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+                    <Size x="40" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-6" y="-4" />
+                    </Anchors>
+                </FontString>
+                
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="-4" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="-4" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+        </Layers>
+    </Frame>
+</Ui>

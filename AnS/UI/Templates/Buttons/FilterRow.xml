@@ -10,7 +10,7 @@
 		<HighlightTexture atlas="auctionhouse-nav-button-highlight" alphaMode="ADD"/>
 		<Layers>
 			<Layer level="ARTWORK">
-				<FontString name="$parentText" justifyV="CENTER" justifyH="LEFT" inherits="GameFontNormalSmallLeft">
+				<FontString parentKey="Text" justifyV="CENTER" justifyH="LEFT" inherits="GameFontNormalSmallLeft">
                     <Anchors>
                         <Anchor point="TOPLEFT" x="4" y="0" />
 						<Anchor point="BOTTOMRIGHT" x="-4" y="0" />
@@ -19,10 +19,10 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentExpander" text="+" inherits="UIPanelButtonTemplate">
+			<Button parentKey="Expander" text="+" inherits="UIPanelButtonTemplate">
 				<Size x="16" y="14" />
 				<Anchors>
-					<Anchor point="RIGHT" x="0" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+					<Anchor point="RIGHT" x="0" y="0" relativeKey="$parent.Text" relativePoint="LEFT" />
 				</Anchors>
 			</Button>
 		</Frames>
@@ -35,7 +35,7 @@
 		<HighlightTexture file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD"/>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="$parentLines" file="Interface\AuctionFrame\UI-AuctionFrame-FilterLines">
+				<Texture parentKey="Lines" file="Interface\AuctionFrame\UI-AuctionFrame-FilterLines">
 					<Size x="7" y="20"/>
 					<Anchors>
 						<Anchor point="LEFT" x="13" y="0"/>
@@ -44,7 +44,7 @@
 				</Texture>
 			</Layer>
 			<Layer level="ARTWORK">
-				<FontString name="$parentText" justifyV="CENTER" justifyH="LEFT" inherits="GameFontNormalSmallLeft">
+				<FontString parentKey="Text" justifyV="CENTER" justifyH="LEFT" inherits="GameFontNormalSmallLeft">
                     <Anchors>
                         <Anchor point="TOPLEFT" x="4" y="0" />
 						<Anchor point="BOTTOMRIGHT" x="-4" y="0" />
@@ -53,10 +53,10 @@
 			</Layer>
 		</Layers>
 		<Frames>
-			<Button name="$parentExpander" text="+" inherits="UIPanelButtonTemplate">
+			<Button parentKey="Expander" text="+" inherits="UIPanelButtonTemplate">
 				<Size x="16" y="14" />
 				<Anchors>
-					<Anchor point="RIGHT" x="0" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+					<Anchor point="RIGHT" x="0" y="0" relativeKey="$parent.Text" relativePoint="LEFT" />
 				</Anchors>
 			</Button>
 		</Frames>

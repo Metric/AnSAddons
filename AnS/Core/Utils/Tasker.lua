@@ -1,10 +1,8 @@
 local Ans = select(2, ...);
 local EventManager = Ans.EventManager;
 local Utils = Ans.Utils;
-local Tasker = {};
-Tasker.__index  = Tasker;
-
-Ans.Tasker = Tasker;
+local TempTable = Ans.TempTable;
+local Tasker = Ans.Object.Register("Tasker");
 
 local scheduled = {};
 
@@ -17,7 +15,7 @@ function Tasker.Delay(delay, fn, tag)
         tag = "general";
     end
 
-    local t = Utils:GetTable();
+    local t = TempTable:Acquire();
     t.delay = delay;
     t.fn = fn;
 
@@ -39,7 +37,7 @@ function Tasker.Clear(tag)
     if (scheduled[tag]) then
         local t = scheduled[tag];
         for i,v in ipairs(t) do
-            Utils:ReleaseTable(v);
+            v:Release();
         end
         wipe(scheduled[tag]);
     end
@@ -54,13 +52,13 @@ function Tasker.Update()
                 if (GetTime() - next.delay >= 0) then
                     tremove(v, 1);
                     local fn = next.fn;
-                    Utils:ReleaseTable(next);
+                    next:Release();
                     fn();
                 end
             elseif (not next.delay and next.fn) then
                 tremove(v, 1);
                 local fn = next.fn;
-                Utils:ReleaseTable(next);
+                next:Release();
                 fn();
             else
                 tremove(v, 1);

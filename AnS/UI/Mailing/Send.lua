@@ -1,6 +1,7 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
 local Utils = Ans.Utils;
+local Groups = Utils.Groups;
 local BagScanner = Ans.BagScanner;
 local EventManager = Ans.EventManager;
 local FSM = Ans.FSM;
@@ -12,14 +13,9 @@ local MailOp = Ans.Operations.Mailing;
 
 local TreeView = Ans.UI.TreeView;
 
-local SendView = {};
-SendView.__index = SendView;
-SendView.inited = false;
-
 local SendFSM = nil;
-
-Ans.Mailing = {};
-Ans.Mailing.SendView = SendView;
+local SendView = Ans.Object.Register("MailSendView", Ans.UI);
+SendView.inited = false;
 
 local activeOps = {};
 local ops = {};
@@ -29,12 +25,12 @@ local moreToSend = false;
 local SendFSM = nil;
 
 local function BuildStateMachine()
-    local fsm = FSM:New("MailingFSM");
-    local none = FSMState:New("NONE");
+    local fsm = FSM:Acquire("MailingFSM");
+    local none = FSMState:Acquire("NONE");
     none:AddEvent("IDLE");
     fsm:Add(none);
 
-    local idle = FSMState:New("IDLE");
+    local idle = FSMState:Acquire("IDLE");
     idle:SetOnEnter(function(self)
         Tasker.Clear(TASKER_TAG);
         SendView.sendBtn:SetText("Send Scan");
@@ -49,7 +45,7 @@ local function BuildStateMachine()
     idle:AddEvent("SEND_SCAN");
     fsm:Add(idle);
 
-    local sendScan = FSMState:New("SEND_SCAN");
+    local sendScan = FSMState:Acquire("SEND_SCAN");
     sendScan:SetOnEnter(function(self)
         wipe(ops);
         wipe(sendable);
@@ -57,12 +53,12 @@ local function BuildStateMachine()
         SendView.sendBtn:SetText("Scanning");
         SendView.sendBtn:Disable();
 
-        BagScanner:Release();
-        BagScanner:Scan();
-        BagScanner:GetSendable(sendable);
+        BagScanner.Release();
+        BagScanner.Scan();
+        BagScanner.GetSendable(sendable);
 
         for k,v in pairs(activeOps) do
-            local op = MailOp:FromConfig(v);
+            local op = MailOp.From(v);
             local available = op:GetAvailableItems(sendable);
             op:Prepare(available);
             if (op.totalToSend > 0) then
@@ -82,7 +78,7 @@ local function BuildStateMachine()
 
     fsm:Add(sendScan);
 
-    local ready = FSMState:New("READY");
+    local ready = FSMState:Acquire("READY");
     ready:SetOnEnter(function(self)
         if (not ops or #ops == 0) then
             return "IDLE";
@@ -96,7 +92,7 @@ local function BuildStateMachine()
 
     fsm:Add(ready);
 
-    local send = FSMState:New("SEND");
+    local send = FSMState:Acquire("SEND");
     send:SetOnEnter(function(self)
         if (not ops or #ops == 0) then
             return "IDLE";
@@ -122,7 +118,7 @@ local function BuildStateMachine()
 
     fsm:Add(send);
 
-    local process = FSMState:New("PROCESS");
+    local process = FSMState:Acquire("PROCESS");
     process:AddEvent("WAIT");
     process:AddEvent("IDLE");
     process:AddEvent("READY");
@@ -154,7 +150,7 @@ local function BuildStateMachine()
 
     fsm:Add(process);
 
-    local wait = FSMState:New("WAIT");
+    local wait = FSMState:Acquire("WAIT");
     wait:SetOnEnter(function(self)
         SendView.sendBtn:SetText("Validating");
         return nil;
@@ -165,7 +161,7 @@ local function BuildStateMachine()
 
     fsm:Add(wait);
 
-    fsm:Add(FSMState:New("UPDATE"));
+    fsm:Add(FSMState:Acquire("UPDATE"));
 
     fsm:Start("NONE");
     fsm:Process("IDLE");
@@ -193,7 +189,7 @@ function SendView:Init(f)
     local filterTemplate = "AnsFilterRowTemplate";
     local frameTemplate = "AnsMailingTemplate"
 
-    if (Utils:IsClassic()) then
+    if (Utils.IsClassic()) then
         frameTemplate = "AnsMailingClassicTemplate";
         filterTemplate = "AnsFilterRowClassicTemplate";
     end
@@ -204,7 +200,7 @@ function SendView:Init(f)
     self.reset = self.frame.Reset;
     self.all = self.frame.All;
 
-    self.filterTree = TreeView:New(self.frame, {
+    self.filterTree = TreeView:Acquire(self.frame, {
         rowHeight = 21,
         childIndent = 16,
         template = filterTemplate, multiselect = true
@@ -223,6 +219,12 @@ function SendView:Init(f)
     self.frame:SetScript("OnShow", function() this:OnShow() end);
     self.frame:SetScript("OnHide", function() this:OnHide() end);
     self:OnShow();
+end
+
+function SendView:Show()
+    if (self.frame) then
+        self.frame:Show();
+    end
 end
 
 function SendView:Hide()
@@ -277,7 +279,7 @@ function SendView:RefreshTreeView()
         };
 
         for i,v2 in ipairs(v.groups) do
-            local g = Utils:GetGroupFromId(v2);
+            local g = Groups.GetGroupFromId(v2);
             if (g) then
                 tinsert(t.children, {
                     name = g.path,
@@ -344,9 +346,9 @@ function SendView:RegisterEvents()
 end
 
 function SendView:UnregisterEvents()
-    EventManager:RemoveListener("MAIL_SUCCESS", SendView.Next);
-    EventManager:RemoveListener("MAIL_FAILED", SendView.Failed);
-    EventManager:RemoveListener("UPDATE", SendView.Process);
+    EventManager:Off("MAIL_SUCCESS", SendView.Next);
+    EventManager:Off("MAIL_FAILED", SendView.Failed);
+    EventManager:Off("UPDATE", SendView.Process);
 end
 
 function SendView:OnHide()

@@ -1,0 +1,230 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsMacroSettingsTemplate" virtual="true" mixin="AnsMacroSettingsFrameMixin">
+        <Size x="555" y="345" />
+         <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="-16" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="tsm">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+                <Size x="555" y="45" />
+                <Frames>
+                    <CheckButton parentKey="tsmCancel" text="TSM Cancel Auction" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-2" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="tsmPost" text="TSM Post Auction" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.tsmCancel" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="tsmBuy" text="TSM Buy Auction" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmPost" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="tsmSniper" text="TSM Sniper Buy" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmBuy" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="tsmCrafting" text="TSM Crafting" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeKey="$parent.tsmCancel" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="tsmDestroying" text="TSM Destroy" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmCrafting" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="tsmVendoring" text="TSM Vendor All" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tsmDestroying" />
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="-5" y="5" />
+                                <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="TSM Options">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+
+            <Frame parentKey="ans">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.tsm" x="0" y="-35" />
+                </Anchors>
+                <Size x="555" y="45" />
+                <Frames>
+                    <CheckButton parentKey="ansPost" text="AnS Post Auction" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-2" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="ansCancel" text="AnS Cancel Auction" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansPost" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="ansSniper" text="AnS Sniper Buy" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansCancel" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="ansSniperFirst" text="AnS Sniper Buy First" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansSniper" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="ansDestroy" text="AnS Destroy" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-10" relativePoint="BOTTOMLEFT" relativeKey="$parent.ansPost" />
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="-5" y="5" />
+                                <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                          <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="AnS Options">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+
+            <Frame parentKey="mouse">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.ans" x="0" y="-35" />
+                </Anchors>
+                <Size x="555" y="75" />
+                <Frames>
+                    <Frame parentKey="direction">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0" />
+                        </Anchors>
+                        <Size x="555" y="20" />
+                        <Frames>
+                            <CheckButton parentKey="up" text="Mouse Wheel Up" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-2" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="down" text="Mouse Wheel Down" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.up" />
+                                </Anchors>
+                            </CheckButton>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-5" y="5" />
+                                        <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Mouse Wheel Options">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="modifiers">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.direction" x="0" y="-35" />
+                        </Anchors>
+                        <Size x="555" y="20" />
+                        <Frames>
+                            <CheckButton parentKey="ctrl" text="CTRL Modifier" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-2" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="shift" text="SHIFT Modifier" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ctrl" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="alt" text="ALT Modifier" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.shift" />
+                                </Anchors>
+                            </CheckButton>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-5" y="5" />
+                                        <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Modifier Options">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                </Frames>
+            </Frame>
+
+            <Button parentKey="CreateMacroBtn" text="Create Macro" inherits="AnsStandardButtonTemplate">
+                <Size x="555" y="32" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.mouse" relativePoint="BOTTOMLEFT" x="0" y="-25" />
+                </Anchors>
+            </Button>
+        </Frames>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString inherits="AnsGameFontWhiteTrans" justifyH="CENTER" text="A macro will be generated under Esc -> Macros">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent.CreateMacroBtn" relativePoint="BOTTOMLEFT" x="0" y="-10" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

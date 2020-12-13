@@ -1,0 +1,94 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+     <Frame name="AnsGraph" virtual="true">
+        <Anchors>
+            <Anchor point="TOPLEFT"><Offset><AbsDimension x="0" y="0" /></Offset></Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="OVERLAY">
+                <Line parentKey="LineBg1" name="$parentLineBg1"></Line>
+                <Line parentKey="LineBg2" name="$parentLineBg2"></Line>
+                <Line parentKey="LineBg3" name="$parentLineBg3"></Line>
+                <Line parentKey="LineBg4" name="$parentLineBg4"></Line>
+                <Line parentKey="LineBg5" name="$parentLineBg5"></Line>
+                <Line parentKey="LineBg6" name="$parentLineBg6"></Line>
+                <Line parentKey="LineBg7" name="$parentLineBg7"></Line>
+                <Line parentKey="LineBg8" name="$parentLineBg8"></Line>
+
+                <Line parentKey="Line1" name="$parentLine1"></Line>
+                <Line parentKey="Line2" name="$parentLine2"></Line>
+                <Line parentKey="Line3" name="$parentLine3"></Line>
+                <Line parentKey="Line4" name="$parentLine4"></Line>
+                <Line parentKey="Line5" name="$parentLine5"></Line>
+                <Line parentKey="Line6" name="$parentLine6"></Line>
+                <Line parentKey="Line7" name="$parentLine7"></Line>
+                <Line parentKey="Line8" name="$parentLine8"></Line>
+                <Line parentKey="Line9" name="$parentLine9"></Line>
+                <Line parentKey="Line10" name="$parentLine10"></Line>
+                <Line parentKey="Line11" name="$parentLine11"></Line>
+                <Line parentKey="Line12" name="$parentLine12"></Line>
+
+                <FontString parentKey="YAxisLabel1" name="$parentYAxisLabel1" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel2" name="$parentYAxisLabel2" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel3" name="$parentYAxisLabel3" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel4" name="$parentYAxisLabel4" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel5" name="$parentYAxisLabel5" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel6" name="$parentYAxisLabel6" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel7" name="$parentYAxisLabel7" justifyH="RIGHT" />
+                <FontString parentKey="YAxisLabel8" name="$parentYAxisLabel8" justifyH="RIGHT" />
+
+                <FontString parentKey="XAxisLabel1" name="$parentXAxisLabel1" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel2" name="$parentXAxisLabel2" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel3" name="$parentXAxisLabel3" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel4" name="$parentXAxisLabel4" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel5" name="$parentXAxisLabel5" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel6" name="$parentXAxisLabel6" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel7" name="$parentXAxisLabel7" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel8" name="$parentXAxisLabel8" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel9" name="$parentXAxisLabel9" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel10" name="$parentXAxisLabel10" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel11" name="$parentXAxisLabel11" justifyH="LEFT" />
+                <FontString parentKey="XAxisLabel12" name="$parentXAxisLabel12" justifyH="LEFT" />
+
+                <Texture parentKey="TFill1" name="$parentTFill1"></Texture>
+                <Texture parentKey="TFill2" name="$parentTFill2"></Texture>
+                <Texture parentKey="TFill3" name="$parentTFill3"></Texture>
+                <Texture parentKey="TFill4" name="$parentTFill4"></Texture>
+                <Texture parentKey="TFill5" name="$parentTFill5"></Texture>
+                <Texture parentKey="TFill6" name="$parentTFill6"></Texture>
+                <Texture parentKey="TFill7" name="$parentTFill7"></Texture>
+                <Texture parentKey="TFill8" name="$parentTFill8"></Texture>
+                <Texture parentKey="TFill9" name="$parentTFill9"></Texture>
+                <Texture parentKey="TFill10" name="$parentTFill10"></Texture>
+                <Texture parentKey="TFill11" name="$parentTFill11"></Texture>
+                <Texture parentKey="TFill12" name="$parentTFill12"></Texture>
+
+                <Texture parentKey="Fill1" name="$parentFill1"></Texture>
+                <Texture parentKey="Fill2" name="$parentFill2"></Texture>
+                <Texture parentKey="Fill3" name="$parentFill3"></Texture>
+                <Texture parentKey="Fill4" name="$parentFill4"></Texture>
+                <Texture parentKey="Fill5" name="$parentFill5"></Texture>
+                <Texture parentKey="Fill6" name="$parentFill6"></Texture>
+                <Texture parentKey="Fill7" name="$parentFill7"></Texture>
+                <Texture parentKey="Fill8" name="$parentFill8"></Texture>
+                <Texture parentKey="Fill9" name="$parentFill9"></Texture>
+                <Texture parentKey="Fill10" name="$parentFill10"></Texture>
+                <Texture parentKey="Fill11" name="$parentFill11"></Texture>
+                <Texture parentKey="Fill12" name="$parentFill12"></Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+                <Button parentKey="Dot1" name="$parentDot1" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot2" name="$parentDot2" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot3" name="$parentDot3" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot4" name="$parentDot4" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot5" name="$parentDot5" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot6" name="$parentDot6" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot7" name="$parentDot7" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot8" name="$parentDot8" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot9" name="$parentDot9" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot10" name="$parentDot10" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot11" name="$parentDot11" inherits="AnsSolidCircleTemplate" />
+                <Button parentKey="Dot12" name="$parentDot12" inherits="AnsSolidCircleTemplate" />
+        </Frames>
+    </Frame>
+</Ui>

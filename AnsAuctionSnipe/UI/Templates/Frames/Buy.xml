@@ -374,7 +374,7 @@
                     </OnLoad>
                 </Scripts>
                 <Frames>
-                    <ScrollFrame name="$parentItems" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="$parentItems" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="-6" />
                             <Anchor point="BOTTOMRIGHT" x="-22" y="3" />
@@ -470,7 +470,7 @@
                 </Anchors>
                 <Frames>
                     <Frame parentKey="NineSlice" useParentLevel="true" inherits="NineSlicePanelTemplate"/>
-                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="$parentTreeView" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="4" y="-4"/>
                             <Anchor point="BOTTOMRIGHT" x="-29" y="4"/>
@@ -609,7 +609,7 @@
                 </Anchors>
                 <Frames>
                     <Frame parentKey="NineSlice" useParentLevel="true" inherits="NineSlicePanelTemplate"/>
-                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="$parentTreeView" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="4" y="-4"/>
                             <Anchor point="BOTTOMRIGHT" x="-29" y="4"/>
@@ -991,7 +991,7 @@
                     <Anchor point="BOTTOMRIGHT" x="-10" y="36" />
                 </Anchors>
                 <Frames>
-                    <ScrollFrame name="$parentItems" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="$parentItems" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="-6" />
                             <Anchor point="BOTTOMRIGHT" x="-22" y="3" />
@@ -1087,7 +1087,7 @@
                     <Anchor point="TOPLEFT" x="18" y="-100" />
                 </Anchors>
                 <Frames>
-                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="$parentTreeView" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="4" y="-4"/>
                             <Anchor point="BOTTOMRIGHT" x="-29" y="86"/>
@@ -1213,7 +1213,7 @@
                     <Anchor point="TOPLEFT" x="18" y="-100" />
                 </Anchors>
                 <Frames>
-                    <ScrollFrame name="$parentTreeView" inherits="FauxScrollFrameTemplate">
+                    <ScrollFrame name="$parentTreeView" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="4" y="-4"/>
                             <Anchor point="BOTTOMRIGHT" x="-29" y="86"/>

@@ -2,15 +2,15 @@ local Ans = select(2, ...);
 
 local Utils = Ans.Utils;
 
-local ItemTracker = { log = {}, name = nil};
-local guildOpen = false;
+local ItemTracker = Ans.Object.Register("ItemTracker", Ans.Analytics);
+ItemTracker.log = {};
 
-ItemTracker.__index = ItemTracker;
-Ans.Analytics.ItemTracker = ItemTracker;
+local guildOpen = false;
 
 local EventManager = Ans.EventManager;
 local Data = Ans.Analytics.Data;
-local ITEMS_TAG = "ITEMS_";
+local DEFAULT_ITEMS_TAG = "ITEMS_";
+local ITEMS_TAG = DEFAULT_ITEMS_TAG;
 
 local bankFrameOpen = false;
 local guildVaultOpen = false;
@@ -29,7 +29,7 @@ function ItemTracker:OnLoad()
     --if (self.guildName and not self.log[self.guildName]) then self.log[self.guildName] = {}; end;
 
     EventManager:On("BAG_UPDATE_DELAYED", self.OnBagUpdate);
-	if (not Utils:IsClassic()) then
+	if (not Utils.IsClassic()) then
 		EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
 		EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
 		EventManager:On("REAGENTBANK_UPDATE", self.OnReagentUpdate);
@@ -83,11 +83,6 @@ function ItemTracker.OnPlayerWorld()
     ItemTracker:ScanBags(INVENTORY);
 end
 
-function ItemTracker.IsSoulBound(bag, slot, link)
-    local boundType = select(14, GetItemInfo(link));
-    return Utils:IsSoulBound(bag, slot) or boundType == 1 or boundType == 4;
-end
-
 function ItemTracker:ScanBags(type)
     local log = self.log[self.name];
     local container = log[type] or {};
@@ -101,20 +96,20 @@ function ItemTracker:ScanBags(type)
             local link = GetContainerItemLink(BANK_CONTAINER, i);
             local _, count = GetContainerItemInfo(BANK_CONTAINER, i);
             if (link and count) then
-                local id = Utils:GetTSMID(link);
+                local id = Utils.GetID(link);
                 local prev = container[id] or {link = link, count = 0};
                 prev.count = prev.count + count;
                 container[id] = prev;
             end
         end
 
-        if (not Utils:IsClassic()) then
+        if (not Utils.IsClassic()) then
             local REAGENT_NUM_SLOTS = GetContainerNumSlots(REAGENTBANK_CONTAINER);
             for i = 1, REAGENT_NUM_SLOTS do
                 local link = GetContainerItemLink(REAGENTBANK_CONTAINER, i);
                 local _, count = GetContainerItemInfo(REAGENTBANK_CONTAINER, i);
                 if (link and count) then
-                    local id = Utils:GetTSMID(link);
+                    local id = Utils.GetID(link);
                     local prev = container[id] or {link = link, count = 0};
                     prev.count = prev.count + count;
                     container[id] = prev;
@@ -128,7 +123,7 @@ function ItemTracker:ScanBags(type)
                 local link = GetContainerItemLink(i, k);
                 local _, count = GetContainerItemInfo(i, k);
                 if (link and count) then
-                    local id = Utils:GetTSMID(link);
+                    local id = Utils.GetID(link);
                     local prev = container[id] or {link = link, count = 0};
                     prev.count = prev.count + count;
                     container[id] = prev;
@@ -142,7 +137,7 @@ function ItemTracker:ScanBags(type)
                 local link = GetContainerItemLink(i, k);
                 local _, count = GetContainerItemInfo(i, k);
                 if (link and count) then
-                    local id = Utils:GetTSMID(link);
+                    local id = Utils.GetID(link);
                     local prev = container[id] or {link = link, count = 0};
                     prev.count = prev.count + count;
                     container[id] = prev;

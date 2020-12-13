@@ -1,0 +1,87 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsCustomSourceRowTemplate" virtual="true">
+        <Size x="555" y="24" />
+        <Frames>
+            <EditBox parentKey="Name" autoFocus="false" inherits="AnsEditBoxTemplate">
+                <Size x="100" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Name">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="5"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <EditBox parentKey="Value" autoFocus="false" inherits="AnsEditBoxTemplate">
+                <Size x="400" y="24" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeKey="$parent.Name" relativePoint="TOPRIGHT" x="10" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTrans" justifyH="LEFT" text="Value">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="5"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <Button parentKey="MoveUp" inherits="AnsUpTemplate">
+                <Size x="12" y="12" />
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent.Value" x="0" y="0" />
+                </Anchors>
+            </Button>
+            <Button parentKey="MoveDown" inherits="AnsDownTemplate">
+                <Size x="12" y="12" />
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent.MoveUp" x="0" y="0" />
+                </Anchors>
+            </Button>
+            <Button parentKey="Delete" inherits="AnsIconDeleteTemplate">
+                <Size x="16" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT" relativeKey="$parent.MoveDown" relativePoint="RIGHT" x="5" y="0" />
+                </Anchors>
+            </Button>
+        </Frames>
+    </Frame>
+
+    <Frame name="AnsCustomSourcesSettingsTemplate" virtual="true" mixin="AnsCustomSourcesSettingsFrameMixin">
+        <Size x="555" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="-16" />
+        </Anchors>
+        <Frames>
+            <Button parentKey="NewSource" text="Add Source" inherits="AnsStandardButtonTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="16" />
+                </Anchors>
+            </Button>
+            <ScrollFrame parentKey="ScrollFrame" inherits="AnsFauxScrollFrameTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="-16" />
+                </Anchors>
+                <Size x="555" y="345" />
+            </ScrollFrame>
+            <Frame parentKey="ConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-16" y="16" />
+                    <Anchor point="BOTTOMRIGHT" x="34" y="-24" />
+                </Anchors>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

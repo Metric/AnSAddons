@@ -44,9 +44,9 @@
                     <Color r="1" g="1" b="1" a="0.75" />
                 </ThumbTexture>
                 <Frames>
-                    <Button hidden="true" name="$parentScrollUpButton">
+                    <Button hidden="true" parentKey="ScrollUpButton" name="$parentScrollUpButton">
                     </Button>
-                    <Button hidden="true" name="$parentScrollDownButton">
+                    <Button hidden="true" parentKey="ScrollDownButton" name="$parentScrollDownButton">
                     </Button>
                 </Frames>
                 <Scripts>
@@ -55,6 +55,123 @@
             </Slider>
         </Frames>
     </ScrollFrame>
+    <Button name="AnsDestroyRowTemplate" virtual="true" hidden="true">
+        <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Color r="1" g="1" b="1" a="0.25" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Frames>
+            <Button parentKey="MoveUp" inherits="AnsIconVisibleTemplate">
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-5" y="4" />
+                </Anchors>
+            </Button>
+        </Frames>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.10" />
+                </Texture>
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString parentKey="Text" justifyH="LEFT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="5" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="-30" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="TextRight" justifyH="RIGHT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-25" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="-10" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
+    <Button name="AnsDestroyPreviewRowTemplate" virtual="true" hidden="true">
+        <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Color r="1" g="1" b="1" a="0.25" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString parentKey="Text" justifyH="LEFT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="5" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="-30" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString parentKey="TextRight" justifyH="RIGHT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" x="-25" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="-10" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
+    <Button name="AnsBlacklistRowTemplate" virtual="true" hidden="true">
+        <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Color r="1" g="1" b="1" a="0.25" />
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+        </HighlightTexture>
+        <Frames>
+            <Button parentKey="MoveUp" inherits="AnsIconDeleteTemplate">
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-5" y="2" />
+                </Anchors>
+            </Button>
+        </Frames>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0" g="0" b="0" a="0.10" />
+                </Texture>
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <FontString parentKey="Text" justifyH="LEFT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="5" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="-20" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+    </Button>
     <Button name="AnsInventoryRowTemplate" virtual="true" hidden="true">
          <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Color r="1" g="1" b="1" a="0.25" />
@@ -82,7 +199,7 @@
                 </Texture>
             </Layer>
             <Layer level="ARTWORK">
-                <FontString name="$parentName" justifyH="LEFT" justifyV="CENTER" inherits="AnsGameFontSmall">
+                <FontString parentKey="Text" justifyH="LEFT" justifyV="CENTER" inherits="AnsGameFontSmall">
                     <Anchors>
                         <Anchor point="TOPLEFT" x="5" y="0" />
                         <Anchor point="BOTTOMRIGHT" x="-5" y="0" />
@@ -118,31 +235,31 @@
                 </Texture>
             </Layer>
             <Layer level="ARTWORK">
-                <FontString name="$parentName" justifyH="LEFT" inherits="AnsGameFontSmall">
+                <FontString parentKey="Name" justifyH="LEFT" inherits="AnsGameFontSmall">
                     <Size x="110" y="16" />
                     <Anchors>
                         <Anchor point="TOPLEFT" x="6" y="0" />
                     </Anchors>
                 </FontString>
-                <FontString name="$parentWho" justifyH="LEFT" inherits="AnsGameFontSmall">
-                    <Size x="64" y="16" />
+                <FontString parentKey="Who" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="84" y="16" />
                     <Anchors>
-                        <Anchor point="LEFT" relativeTo="$parentName" relativePoint="RIGHT" x="0" y="0" />
+                        <Anchor point="LEFT" relativeKey="$parent.Name" relativePoint="RIGHT" x="0" y="0" />
                     </Anchors>
                 </FontString>
-                <FontString name="$parentType" justifyH="LEFT" inherits="AnsGameFontSmall">
-                    <Size x="64" y="16" />
+                <FontString parentKey="Type" justifyH="LEFT" inherits="AnsGameFontSmall">
+                    <Size x="48" y="16" />
                     <Anchors>
-                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentWho" relativePoint="RIGHT" />
+                        <Anchor point="LEFT" x="0" y="0" relativeKey="$parent.Who" relativePoint="RIGHT" />
                     </Anchors>
                 </FontString>
-                <FontString name="$parentStack" justifyH="RIGHT" inherits="AnsGameFontSmall">
+                <FontString parentKey="Stack" justifyH="RIGHT" inherits="AnsGameFontSmall">
                     <Size x="64" y="16" />
                     <Anchors>
-                        <Anchor point="LEFT" x="0" y="0" relativeTo="$parentType" relativePoint="RIGHT" />
+                        <Anchor point="LEFT" x="0" y="0" relativeKey="$parent.Type" relativePoint="RIGHT" />
                     </Anchors>
                 </FontString>
-                <FontString name="$parentAmount" inherits="AnsGameFontSmall" justifyH="RIGHT">
+                <FontString parentKey="Amount" inherits="AnsGameFontSmall" justifyH="RIGHT">
                     <Size x="100" y="16" />
                     <Anchors>
                         <Anchor point="TOPRIGHT" x="-6" y="0" />

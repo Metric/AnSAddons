@@ -4,10 +4,11 @@ local Sources = Ans.Sources;
 local Query = Ans.Auctions.Query;
 local Recycler = Ans.Auctions.Recycler;
 local Utils = Ans.Utils;
+local Groups = Utils.Groups;
+local Exporter = Ans.Exporter;
+local TempTable = Ans.TempTable;
 local BagScanner = Ans.BagScanner;
-local Auctioning = {};
-Auctioning.__index = Auctioning;
-Ans.Operations.Auctioning = Auctioning;
+local Auctioning = Ans.Object.Register("Auctioning", Ans.Operations);
 
 local DEFAULT_MIN_PRICE_ANS = "max(25% avg(ansmarket, ansrecent, ansmin, ans3day), 150% vendorsell)";
 local DEFAULT_NORMAL_PRICE_ANS = "max(avg(ansmarket, ansrecent, ansmin, ans3day), 250% vendorsell)";
@@ -27,44 +28,21 @@ Auctioning.ACTIONS = ACTIONS;
 
 local tempTbl = {};
 
-function Auctioning:New(name)
-    local a = {};
-    setmetatable(a, Auctioning);
-    a:Init(name);
-    return a;
+function Auctioning.IsValidConfig(c)
+    return c.name and c.duration 
+        and c.keepInBags and c.maxToPost 
+        and c.stackSize and c.bidPercent
+        and c.undercut and c.minPrice
+        and c.maxPrice and c.normalPrice
+        and type(c.commodityLow) == "boolean" and type(c.applyAll) == "boolean"
+        and c.minPriceAction and c.maxPriceAction
+        and c.groups; 
 end
 
-function Auctioning:Init(name)
-    local isTSMActive = TSM_API or TSMAPI;
-    self.id = Utils:Guid();
-    self.name = name;
-    self.duration = 2;
-    self.keepInBags = 0;
-    self.maxToPost = 0 -- post everything
-    self.stackSize = 0; -- automatic
-    self.bidPercent = 1;
-    self.undercut = "0c";
-    self.minPrice = isTSMActive and DEFAULT_MIN_PRICE_TSM or DEFAULT_MIN_PRICE_ANS;
-    self.normalPrice = isTSMActive and DEFAULT_NORMAL_PRICE_TSM or DEFAULT_NORMAL_PRICE_ANS;
-    self.maxPrice = isTSMActive and DEFAULT_MAX_PRICE_TSM or DEFAULT_MAX_PRICE_ANS;
-    self.commodityLow = true;
-    self.applyAll = false;
-    self.groups = {};
-    self.ids = {};
-    self.idCount = 0;
-    self.minPriceAction = 4;
-    self.maxPriceAction = 3;
-    self.nonActiveGroups = {};
-    self.totalListed = 0;
-
-    self.config = Auctioning:NewConfig(name);
-    self.config.id = self.id;
-end
-
-function Auctioning:NewConfig(name)
+function Auctioning.Config(name)
     local isTSMActive = TSM_API or TSMAPI;
     local t = {
-        id = Utils:Guid(),
+        id = Utils.Guid(),
         name = name,
         duration = 2,
         keepInBags = 0,
@@ -86,8 +64,37 @@ function Auctioning:NewConfig(name)
     return t;
 end
 
-function Auctioning:FromConfig(config)
-    local a = Auctioning:New(config.name);
+function Auctioning.PrepareExport(config)
+    local a = {};
+    a.name = config.name;
+    a.duration = config.duration;
+    a.keepInBags = config.keepInBags;
+    a.maxToPost = config.maxToPost;
+    a.stackSize = config.stackSize;
+    a.bidPercent = config.bidPercent;
+    a.undercut = config.undercut;
+    a.minPrice = config.minPrice;
+    a.normalPrice = config.normalPrice;
+    a.maxPrice = config.maxPrice;
+    a.commodityLow = config.commodityLow;
+    a.applyAll = config.applyAll;
+    a.minPriceAction = config.minPriceAction or 4;
+    a.maxPriceAction = config.maxPriceAction or 3;
+    a.groups = {};
+
+    for i,v in ipairs(config.groups) do
+        local g = Groups.GetGroupFromId(v);
+        if (g) then
+            tinsert(a.groups, g.path);
+        end
+    end
+
+    return a;
+end
+
+function Auctioning.From(config)
+    local a = Auctioning:New();
+    a.name = config.name;
     a.id = config.id;
     a.duration = config.duration;
     a.keepInBags = config.keepInBags;
@@ -103,10 +110,12 @@ function Auctioning:FromConfig(config)
     a.minPriceAction = config.minPriceAction or 4;
     a.maxPriceAction = config.maxPriceAction or 3;
     a.nonActiveGroups = config.nonActiveGroups or {};
+    a.groups = {};
+    a.ids = {};
 
     for i,v in ipairs(config.groups) do
         if (not a.nonActiveGroups[v]) then
-            local g = Utils:GetGroupFromId(v);
+            local g = Groups.GetGroupFromId(v);
             if (g) then
                 tinsert(a.groups, g);
             end
@@ -115,7 +124,7 @@ function Auctioning:FromConfig(config)
 
     a.totalListed = 0;
     a.config = config;
-    a.idCount = Utils:ParseGroups(a.groups, a.ids);
+    a.idCount = Groups.ParseGroups(a.groups, a.ids);
     return a;
 end
 
@@ -186,12 +195,12 @@ end
 function Auctioning:GetAvailableItems()
     wipe(tempTbl);
 
-    BagScanner:Release();
-    BagScanner:Scan();
-    local auctionable = BagScanner:GetAuctionable();
+    BagScanner.Release();
+    BagScanner.Scan();
+    local auctionable = BagScanner.GetAuctionable();
 
     for i,v in ipairs(auctionable) do
-        local tsmId = Utils:GetTSMID(v.link);
+        local tsmId = Utils.GetID(v.link);
         local _, id = strsplit(":", tsmId);
         if (self.ids[tsmId] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
             -- assign op to the items
@@ -213,7 +222,7 @@ function Auctioning:ApplyPost(item, queue)
         return;
     end
 
-    if (Utils:IsClassic()) then
+    if (Utils.IsClassic()) then
         self:ApplyPostClassic(item, queue);
     else
         self:ApplyPostRetail(item, queue);

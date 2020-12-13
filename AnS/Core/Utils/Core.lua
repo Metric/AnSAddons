@@ -1,12 +1,8 @@
 local Ans = select(2, ...);
-local Utils = {};
+local Utils = Ans.Object.Register("Utils");
+local TempTable = Ans.TempTable;
 local Config = Ans.Config;
-Utils.__index = Utils;
-
-Ans.Utils = Utils;
-
-local temporaryTables = {};
-local TooltipScanner = nil;
+local TooltipScanner = Ans.TooltipScanner;
 
 local OP_SIM_HAND = {
     lte = "<=",
@@ -25,52 +21,20 @@ local OP_SHORT_HAND = {
     legendary = "5"
 };
 
-local hooks = {};
-
-local linkToNameCache = {};
+local HOOK_CACHE = TempTable:Acquire();
+local LINK_CACHE = TempTable:Acquire();
+local PET_CACHE = TempTable:Acquire();
+local ID_CACHE = TempTable:Acquire();
 
 --- Standard Utils ---
 
-function Utils:IsClassic()
-    if (BattlePetTooltip) then
-        return false;
-    end
-
-    return true;
+function Utils.IsClassic()
+    local v = GetBuildInfo();
+    local f = v:match("%d");
+    return f == "1" or f == "2" or f == "3";
 end
 
-function Utils:GetTable(...)
-    local t = nil;
-    if (#temporaryTables > 0) then
-        t = tremove(temporaryTables);
-        wipe(t);
-    else
-       t = {};
-    end
-
-    local total = select("#", ...);
-    for i = 1, total do
-        local v = select(i, ...);
-        tinsert(t, v);
-    end
-    return t;
-end
-
-function Utils:ReleaseTable(t)
-    wipe(t);
-    tinsert(temporaryTables, t);
-end
-
-function Utils:UnpackAndReleaseTable(t)
-    tinsert(temporaryTables, t);
-    return unpack(t);
-end
-
-local BattlePetTempTable = Utils:GetTable();
-local TSMID_CACHE = Utils:GetTable();
-local TempBonusID = Utils:GetTable();
-
-function Utils:GSC(val) 
+function Utils.GSC(val) 
     local rv = math.floor(val);
 
     local g = math.floor (rv/10000);
@@ -86,231 +50,27 @@ function Utils:GSC(val)
     return g, s, c
 end
 
-function Utils:GetNameFromLink(link)
+function Utils.GetName(link)
     if (not link) then
         return "";
     end
 
-    if (linkToNameCache[link]) then
-        return linkToNameCache[link][4];
+    if (LINK_CACHE[link]) then
+        return LINK_CACHE[link][4];
     end
 
     local tbl = { strsplit("%|", link) };
-    linkToNameCache[link] = tbl;
+    LINK_CACHE[link] = tbl;
     return tbl[4];
 end
 
-function Utils:ParseGroups(groups, result)
-    local tempTbl = self:GetTable();
-    local queueTbl = self:GetTable();
-    local count = 0;
-
-    for i,v in ipairs(groups) do
-        tinsert(queueTbl, v);
-    end
-
-    while (#queueTbl > 0) do
-        local g = tremove(queueTbl, 1);
-        if (not tempTbl[g.id]) then
-            tempTbl[g.id] = 1;
-            count = count + self:ParseIds(g.ids, result);
-
-            for i,v in ipairs(g.children) do
-                if (not tempTbl[v.id]) then
-                    tinsert(queueTbl, v);
-                end
-            end
-        end
-    end
-
-    self:ReleaseTable(queueTbl);
-    self:ReleaseTable(tempTbl);
-
-    return count;
-end
-
-function Utils:ParseIds(ids, result)
-    local tmp = "";
-    local count = 0;
-    for i = 1, #ids do
-        local c = ids:sub(i,i);
-        if (c == ",") then
-            if (self:ParseItem(tmp, result)) then
-                count = count + 1;
-            end
-            tmp = "";
-        elseif (c == "\n" or c == "\r" or c == "\t") then
-            -- ignore tabs, new lines and carriage returns
-        else
-            tmp = tmp..c;
-        end
-    end
-
-    if (#tmp > 0) then
-        if (self:ParseItem(tmp, result)) then
-            count = count + 1;
-        end
-    end
-
-    return count;
-end
-
-function Utils:ParseItem(item, result)
-    local _, id = strsplit(":", item);
-    if (id) then
-        result[_..":"..id] = 1;
-        result[item] = 1;
-        return true;
-    else
-
-        local tn = tonumber(_);
-        if (tn) then
-            result["i:"..tn] = 1;
-            return true;
-        end
-    end
-
-    return false;
-end
-
-function Utils:ContainsGroup(tbl, id)
-    for i,v in ipairs(tbl) do
-        if(v.id == id) then
-            return true;
-        end
-    end
-
-    return false;
-end
-
-function Utils:RestoreGroupDefaults()
-    local groups = Config.Groups();
-    local defaults = Ans.Data;
-
-    local gtemp = self:GetTable();
-    local queueTbl = self:GetTable();
-
-    for i,v in ipairs(groups) do
-        tinsert(queueTbl, v);
-    end
-
-    while (#queueTbl > 0) do
-        local g = tremove(queueTbl, 1);
-        gtemp[g.path] = g;
-        if (#g.children > 0) then
-            for i,v in ipairs(g.children) do
-                tinsert(queueTbl, v);
-            end
-        end
-    end
-
-    for i,v in ipairs(defaults) do
-        tinsert(queueTbl, v);
-    end
-
-    while (#queueTbl > 0) do
-        local g = tremove(queueTbl, 1);
-        if (gtemp[g.path]) then
-            local group = gtemp[g.path];
-            group.ids = g.ids;
-        else
-            local p = g.path;
-            local found = false;
-            while (p) do
-                local idx = string.find(p, "%.[^%.]*$");
-                if (idx > 1) then
-                    p = strsub(g.path, 0, idx-1);
-                    if (gtemp[p]) then
-                        found = true;
-                        tinsert(gtemp[p].children, 1, g);  
-                        break;
-                    end
-                else
-                    break;
-                end
-            end
-            if (not found) then
-                tinsert(groups, 1, g);
-            end
-        end
-        if (#g.children > 0) then
-            for i,v in ipairs(g.children) do
-                tinsert(queueTbl, v);
-            end
-        end
-    end
-
-    self:ReleaseTable(gtemp);
-    self:ReleaseTable(queueTbl);
-end
-
-function Utils:BuildGroupPaths(groups)
-    local tempTbl = self:GetTable();
-    local queueTbl = self:GetTable();
-
-    for i,v in ipairs(groups) do
-        v.path = v.name;
-        tinsert(queueTbl, v);
-    end
-
-    while (#queueTbl > 0) do
-        local g = tremove(queueTbl, 1);
-        if (not tempTbl[g.id]) then
-            tempTbl[g.id] = 1;
-            for i,v in ipairs(g.children) do
-                if (not tempTbl[v.id]) then
-                    v.path = g.path.."."..v.name; 
-                    tinsert(queueTbl, v);
-                end
-            end
-        end
-    end
-
-    self:ReleaseTable(queueTbl);
-    self:ReleaseTable(tempTbl);
-
-    return nil;
-end
-
-function Utils:GetGroupFromId(id)
-    local tempTbl = self:GetTable();
-    local queueTbl = self:GetTable();
-
-    for i,v in ipairs(Config.Groups()) do
-        tinsert(queueTbl, v);
-    end
-
-    while (#queueTbl > 0) do
-        local g = tremove(queueTbl, 1);
-        if (not tempTbl[g.id]) then
-            tempTbl[g.id] = 1;
-            if (g.id == id) then
-                self:ReleaseTable(queueTbl);
-                self:ReleaseTable(tempTbl);
-                return g;
-            end
-
-            for i,v in ipairs(g.children) do
-                if (not tempTbl[v.id]) then
-                    tinsert(queueTbl, v);
-                end
-            end
-        end
-    end
-
-    self:ReleaseTable(queueTbl);
-    self:ReleaseTable(tempTbl);
-
-    return nil;
-end
-
-function Utils:CollectGarbage()
+function Utils.CollectGarbage()
     local preGC = collectgarbage("count")
     collectgarbage("collect")
     print("AnS - Collected " .. math.ceil((preGC-collectgarbage("count")) / 1024) .. " MB of garbage");
 end
 
-function Utils:FormatNumber(amount)
+function Utils.FormatNumber(amount)
     local formatted = amount
     while true do  
         formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
@@ -321,18 +81,18 @@ function Utils:FormatNumber(amount)
     return formatted
 end
 
-function Utils:PriceToFormatted(prefix, val, negative)
+function Utils.PriceToFormatted(prefix, val, negative)
     local color = "|cFFFFFFFF";
 
     if (negative) then
         color = "|cFFFF0000";
     end
 
-    local gold, silver, copper = self:GSC(val);
+    local gold, silver, copper = Utils.GSC(val);
     local st = "";
 
     if (gold ~= 0) then
-        st = color..prefix..self:FormatNumber(""..gold).."|cFFD7BC45g ";
+        st = color..prefix..Utils.FormatNumber(""..gold).."|cFFD7BC45g ";
     end
 
     if (st ~= "") then
@@ -354,12 +114,12 @@ function Utils:PriceToFormatted(prefix, val, negative)
     return st;
 end
 
-function Utils:PriceToString(val, override, noFormatting)
+function Utils.PriceToString(val, override, noFormatting)
     if (Config.General().useCoinIcons and not override) then
         return GetMoneyString(val, true);
     end
 
-    local gold, silver, copper = self:GSC(val);
+    local gold, silver, copper = Utils.GSC(val);
     local st = "";
 
     if (noFormatting) then
@@ -379,7 +139,7 @@ function Utils:PriceToString(val, override, noFormatting)
     end
 
     if (gold ~= 0) then
-        st = "|cFFFFFFFF"..self:FormatNumber(""..gold).."|cFFD7BC45g ";
+        st = "|cFFFFFFFF"..Utils.FormatNumber(""..gold).."|cFFD7BC45g ";
     end
 
     if (st ~= "") then
@@ -401,7 +161,7 @@ function Utils:PriceToString(val, override, noFormatting)
     return st;
 end
 
-function Utils:IsBattlePetLink(link)
+function Utils.IsBattlePetLink(link)
     if (link) then
         return string.find(link,"Hbattlepet:",1) ~= nil;
     else
@@ -409,28 +169,28 @@ function Utils:IsBattlePetLink(link)
     end
 end
 
-function Utils:ParseBattlePetLink(link)
+function Utils.ParseBattlePetLink(link)
     local _, id, level, quality, health, power, speed, other = strsplit(":", link);
     local name, icon, type = C_PetJournal.GetPetInfoBySpeciesID(tonumber(id));
 
-    BattlePetTempTable.speciesID = tonumber(id);
-    BattlePetTempTable.name = name;
-    BattlePetTempTable.level = tonumber(level);
-    BattlePetTempTable.breedQuality = tonumber(quality);
-    BattlePetTempTable.petType = type;
-    BattlePetTempTable.maxHealth = tonumber(health);
-    BattlePetTempTable.power = tonumber(power);
-    BattlePetTempTable.speed = tonumber(speed);
-    BattlePetTempTable.customName = nil;
-    BattlePetTempTable.icon = icon;
+    PET_CACHE.speciesID = tonumber(id);
+    PET_CACHE.name = name;
+    PET_CACHE.level = tonumber(level);
+    PET_CACHE.breedQuality = tonumber(quality);
+    PET_CACHE.petType = type;
+    PET_CACHE.maxHealth = tonumber(health);
+    PET_CACHE.power = tonumber(power);
+    PET_CACHE.speed = tonumber(speed);
+    PET_CACHE.customName = nil;
+    PET_CACHE.icon = icon;
 
-    return BattlePetTempTable;
+    return PET_CACHE;
 end
 
-function Utils:ShowTooltip(f, link, quantity)
+function Utils.ShowTooltip(f, link, quantity)
     GameTooltip:SetOwner(f, "ANCHOR_RIGHT");
-    if (self:IsBattlePetLink(link)) then
-        self:ShowBattlePetTip(link);
+    if (Utils.IsBattlePetLink(link)) then
+        Utils.ShowBattlePetTip(link);
     else
         GameTooltip:SetHyperlink(link, quantity or 1);
         GameTooltip:Show();
@@ -446,9 +206,16 @@ function Utils.HideTooltip()
 	end
 end
 
-function Utils:ShowBattlePetTip(link)
+function Utils.ShowTooltipText(f, txt)
+    GameTooltip:SetOwner(f, "ANCHOR_RIGHT");
+    GameTooltip:ClearLines();
+    GameTooltip:SetText(txt);
+    GameTooltip:Show();
+end
+
+function Utils.ShowBattlePetTip(link)
 	if BattlePetTooltip then
-		local pet = self:ParseBattlePetLink(link);
+		local pet = Utils.ParseBattlePetLink(link);
 		BattlePetTooltipTemplate_SetBattlePet(BattlePetTooltip, pet);
 		BattlePetTooltip:SetSize(260,136);
 		BattlePetTooltip:Show();
@@ -457,31 +224,65 @@ function Utils:ShowBattlePetTip(link)
 	end
 end
 
-function Utils:IsAddonInstalled(name)
+function Utils.IsAddonInstalled(name)
     return select(2, GetAddOnInfo(name)) and true or false;
 end
 
-function Utils:IsAddonEnabled(name)
+function Utils.IsAddonEnabled(name)
     return GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, GetAddOnInfo(name)) and true or false;
 end
 
-function Utils:ClearTSMIDCache()
-    wipe(TSMID_CACHE);
+function Utils.ClearCache()
+    ID_CACHE:Release();
+    ID_CACHE = TempTable:Acquire();
 end
 
 function Utils.SortLowToHigh(x,y) 
     return x < y;
 end
 
-function Utils:GetTSMID(link)
-    if (TSMID_CACHE[link]) then
-        return TSMID_CACHE[link];
+function Utils.ToWowItemString(itemString)
+	local _, itemId, rand, extra = strsplit(":", itemString);
+	local level = UnitLevel("player");
+	local spec = not Utils.IsClassic() and GetSpecialization() or nil;
+	spec = spec and GetSpecializationInfo(spec) or "";
+	local extraPart = extra and strmatch(itemString, "i:[0-9]+:[0-9%-]*:(.+)") or "";
+	return "item:"..itemId.."::::::"..(rand or "").."::"..level..":"..spec..":::"..extraPart..":::";
+end
+
+function Utils.GetLink(itemString)
+	if (not itemString) then return nil; end
+	local link = nil
+	local itemStringType, speciesId, level, quality, health, power, speed, petId = strsplit(":", itemString)
+	if itemStringType == "p" then
+		local name, icon, type = C_PetJournal.GetPetInfoBySpeciesID(tonumber(speciesId));
+		local fullItemString = strjoin(":", speciesId, level or "", quality or "", health or "", power or "", speed or "", petId or "")
+		quality = tonumber(quality) or 0
+		local qualityColor = ITEM_QUALITY_COLORS[quality] and ITEM_QUALITY_COLORS[quality].hex or "|cffff0000"
+		link = qualityColor.."|Hbattlepet:"..fullItemString.."|h["..name.."]|h|r"
+	else
+        local name, _, quality = GetItemInfo(tonumber(speciesId));
+        
+        if (not name) then
+            -- not in cache
+            return nil;
+        end
+
+		local qualityColor = ITEM_QUALITY_COLORS[quality] and ITEM_QUALITY_COLORS[quality].hex or "|cffff0000"
+		link = qualityColor.."|H"..Utils.ToWowItemString(itemString).."|h["..(name or "UNKNOWN").."]|h|r"
+	end
+	return link
+end
+
+function Utils.GetID(link)
+    if (ID_CACHE[link]) then
+        return ID_CACHE[link];
     end
 
-    if (self:IsBattlePetLink(link)) then
-        local pet = self:ParseBattlePetLink(link);
+    if (Utils.IsBattlePetLink(link)) then
+        local pet = Utils.ParseBattlePetLink(link);
         local fresult = "p:"..pet.speciesID..":"..pet.level..":"..pet.breedQuality;
-        TSMID_CACHE[link] = fresult;
+        ID_CACHE[link] = fresult;
         return fresult;
     else
         if (type(link) == "number") then
@@ -489,13 +290,14 @@ function Utils:GetTSMID(link)
         end
 
         if (string.find(link, "i:") or string.find(link, "p:")) then
-            TSMID_CACHE[link] = link;
-            return TSMID_CACHE[link];
+            ID_CACHE[link] = link;
+            return ID_CACHE[link];
         end
 
-        local tbl = { strsplit(":", link) };
+        local tbl = TempTable:Acquire(strsplit(":", link));
         local bonusCount = tbl[14];
         local id = tbl[2];
+        local tempBonus = TempTable:Acquire();
         local extra = "";
 
         if (bonusCount) then
@@ -507,29 +309,31 @@ function Utils:GetTSMID(link)
                     local num = tonumber(tbl[14+i]);
 
                     if (num) then
-                        tinsert(TempBonusID, num);
+                        tinsert(tempBonus, num);
                     end
                 end
 
-                table.sort(TempBonusID, Utils.SortLowToHigh);
+                table.sort(tempBonus, Utils.SortLowToHigh);
 
-                extra = "::"..bonusCount..":"..strjoin(":", unpack(TempBonusID));
+                extra = "::"..bonusCount..":"..strjoin(":", unpack(tempBonus));
 
-                wipe(TempBonusID);
+                tempBonus:Release();
             end
         end
+
+        tbl:Release();
 
         if (id == nil) then
             return nil;
         end
 
         local fresult = "i:"..id..extra;
-        TSMID_CACHE[link] = fresult;
+        ID_CACHE[link] = fresult;
         return fresult;
     end
 end
 
-function Utils:GetAddonVersion(name)
+function Utils.GetAddonVersion(name)
     local v = GetAddOnMetadata(name, "Version");
     if (v) then
         local maj, min = string.match(v, "(%d+).(%d+)");
@@ -539,12 +343,12 @@ function Utils:GetAddonVersion(name)
     return "0","0";
 end
 
-function Utils:ReplaceTabReturns(str)
+function Utils.ReplaceTabReturns(str)
     str = gsub(str, "[\r\n\t]+", "");
     return str;
 end
 
-function Utils:ReplaceOpShortHand(str)
+function Utils.ReplaceOpShortHand(str)
     for k, v in pairs(OP_SIM_HAND) do
         str = gsub(str, k.."[^%(]", v);
     end
@@ -554,17 +358,17 @@ function Utils:ReplaceOpShortHand(str)
     return str;
 end
 
-function Utils:ReplaceMoneyShorthand(str)
-    local s, v = self:MoneyStringToCopper(str);
+function Utils.ReplaceMoneyShorthand(str)
+    local s, v = Utils.MoneyStringToCopper(str);
 
     while (s and v) do
         str = gsub(str, s, v);
-        s,v = self:MoneyStringToCopper(str);
+        s,v = Utils.MoneyStringToCopper(str);
     end
     return str;
 end
 
-function Utils:ReplaceShortHandPercent(str)
+function Utils.ReplaceShortHandPercent(str)
     local s = string.match(str, "(%d+)%%");
 
     while (s) do
@@ -583,7 +387,7 @@ function Utils:ReplaceShortHandPercent(str)
     return str;
 end
 
-function Utils:MoneyStringToCopper(str)
+function Utils.MoneyStringToCopper(str)
     local g, s2, s, s3, c = string.match(str, "(%d+)g(%s*)(%d+)s(%s*)(%d+)c");
 
     if (g and s and c) then
@@ -629,41 +433,11 @@ function Utils:MoneyStringToCopper(str)
     return nil, nil;
 end
 
-function Utils:IsSoulbound(bag, slot)
-    if (not TooltipScanner) then
-        TooltipScanner = CreateFrame("GameTooltip", "AnsTooltipScanner", UIParent, "GameTooltipTemplate");
-    end
-
-    TooltipScanner:SetOwner(UIParent, "ANCHOR_NONE");
-    TooltipScanner:ClearLines();
-    if (bag == BANK_CONTAINER) then
-        TooltipScanner:SetInventoryItem("player", bag, slot + BankButtonIDToInvSlotID(0));
-    elseif (REAGENTBANK_CONTAINER and bag == REAGENTBANK_CONTAINER) then
-        TooltipScanner:SetInventoryItem("player", bag, slot + ReagentBankButtonIDToInvSlotID(0));
-    else
-        TooltipScanner:SetBagItem(bag, slot);
-    end
-    local numlines = TooltipScanner:NumLines();
-    
-    if (numlines < 1) then
-        return nil;
-    end
-
-    for id = 1, numlines do
-        local textObject = _G["AnsTooltipScannerTextLeft"..id];
-        local text = strtrim(textObject and textObject:GetText() or "");
-
-        if ((text == ITEM_BIND_ON_PICKUP and id < 4) or text == ITEM_SOULBOUND or text == ITEM_BIND_QUEST) then
-            return true;
-        elseif (text == ITEM_ACCOUNTBOUND or text == ITEM_BIND_TO_ACCOUNT or text == ITEM_BIND_TO_BNETACCOUNT or text == ITEM_BNETACCOUNTBOUND) then
-            return true;
-        end
-    end
-
-    return false;
+function Utils.IsSoulbound(bag, slot)
+    return TooltipScanner:IsSoulbound(bag, slot);
 end
 
-function Utils:InTable(tbl, val)
+function Utils.InTable(tbl, val)
     local t = #tbl;
     local i;
     for i = 1, t do
@@ -675,16 +449,16 @@ function Utils:InTable(tbl, val)
     return false;
 end
 
-function Utils:HookSecure(name, fn)
+function Utils.HookSecure(name, fn)
     hooksecurefunc(_G, name, fn);
 end
 
-function Utils:Hook(name, fn)
-    hooks[name] = _G[name];
-    _G[name] = function(...) fn(hooks[name], ...); end;
+function Utils.Hook(name, fn)
+    HOOK_CACHE[name] = _G[name];
+    _G[name] = function(...) fn(HOOK_CACHE[name], ...); end;
 end
 
-function Utils:Guid()
+function Utils.Guid()
     local template ='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
     return string.gsub(template, '[xy]', function (c)
         local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)

@@ -35,7 +35,7 @@ local miscArmorInventoryTypes = {
     LE_INVENTORY_TYPE_HEAD_TYPE
 };
 
-if (not Utils:IsClassic()) then
+if (not Utils.IsClassic()) then
     armorInventoryTypes = {
         Enum.InventoryType.IndexHeadType,
         Enum.InventoryType.IndexShoulderType,
@@ -97,7 +97,7 @@ local function AddBaseData(classID, subClassID, parent, inventoryType)
 end
 
 local function AddSubBaseData(classID, parent)
-    if (not Utils:IsClassic()) then
+    if (not Utils.IsClassic()) then
         local subclasses = C_AuctionHouse.GetAuctionItemSubClasses(classID);
         for i = 1, #subclasses do
             local subClassID = subclasses[i];
@@ -133,7 +133,7 @@ local weaponsRoot = AddBaseData(LE_ITEM_CLASS_WEAPON, nil, Ans.BaseData);
 local armorRoot = AddBaseData(LE_ITEM_CLASS_ARMOR, nil, Ans.BaseData);
 local containerRoot = AddBaseData(LE_ITEM_CLASS_CONTAINER, nil, Ans.BaseData);
 
-if (not Utils:IsClassic()) then
+if (not Utils.IsClassic()) then
     local gemRoot = AddBaseData(LE_ITEM_CLASS_GEM, nil, Ans.BaseData);
     AddSubBaseData(LE_ITEM_CLASS_GEM, gemRoot);
 end
@@ -142,14 +142,14 @@ local enhanceRoot = AddBaseData(LE_ITEM_CLASS_ITEM_ENHANCEMENT, nil, Ans.BaseDat
 local consumableRoot = AddBaseData(LE_ITEM_CLASS_CONSUMABLE, nil, Ans.BaseData);
 local tradeRoot = AddBaseData(LE_ITEM_CLASS_TRADEGOODS, nil, Ans.BaseData);
 
-if (not Utils:IsClassic()) then
+if (not Utils.IsClassic()) then
     local glyphRoot = AddBaseData(LE_ITEM_CLASS_GLYPH, nil, Ans.BaseData);
     AddSubBaseData(LE_ITEM_CLASS_GLYPH, glyphRoot);
 end
 
 local recipeRoot = AddBaseData(LE_ITEM_CLASS_RECIPE, nil, Ans.BaseData);
 
-if (not Utils:IsClassic()) then
+if (not Utils.IsClassic()) then
     local battlePetRoot = AddBaseData(LE_ITEM_CLASS_BATTLEPET, nil, Ans.BaseData);
     AddSubBaseData(LE_ITEM_CLASS_BATTLEPET, battlePetRoot);
 end

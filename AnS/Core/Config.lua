@@ -1,10 +1,8 @@
-local Ans = select(2, ...);
-local Config = {};
-Config.__index = Config;
-
+-- GLOBAL
 ANS_CONFIG = {};
 
-Ans.Config = Config;
+local Ans = select(2, ...);
+local Config = Ans.Object.Register("Config");
 
 -- default config holders
 local GENERAL_DEFAULT = {
@@ -21,10 +19,13 @@ local GENERAL_DEFAULT = {
     tooltipRegionSeen = false,
     trackDataAnalytics = true,
     showDebugWindow = false,
-    auctionWindowPosition = nil,
     saveWindowLocations = true,
     minimapShown = true,
     showId = true,
+    maxDataLimit = 20000,
+    defaultTimeMode = 3,
+    showPostCancel = true,
+    showMailSend = true,
 };
 
 local OPERATIONS_DEFAULT = {
@@ -40,12 +41,12 @@ local OPERATIONS_DEFAULT = {
 local SNIPER_DEFAULT = {
     source = "",
     pricing = "",
-    characterBlacklist = "",
+    characterBlacklist = {},
     useCommodityConfirm = true, -- set to true as default, as I could see someone new accidentally buying more than they expected without it
     dingSound = true,
     itemsPerUpdate = 20,
     itemBlacklist = {},
-    scanDelay = 10,
+    scanDelay = 2,
     skipSeenGroup = false,
     chatMessageNew = true,
     clevel = "0-120",
@@ -53,17 +54,23 @@ local SNIPER_DEFAULT = {
     ilevel = 0,
     reverseSort = false,
     flashWoWIcon = true,
-    soundKitSound = "AUCTION_WINDOW_OPEN"
+    soundKitSound = "AUCTION_WINDOW_OPEN",
+    ignoreSingleStacks = false,
 };
 
 local CRAFTING_DEFAULT = {
     craftValue = "",
     materialCost = "",
     excludeCooldowns = false,
-    tradeWindowPosition = nil
+    destroyMaxQuality = 2,
+    disenchantMinValue = "0c",
+    autoShowDestroying = false,
 };
 
+local WINDOWS_DEFAULT = {};
+
 local ANALYTICS_DEFAULT = {};
+
 local VENDOR_DEFAULT = {};
 local GROUPS_DEFAULT = {};
 local SOURCES_DEFAULT = {};
@@ -95,6 +102,10 @@ function Config.EnsureDefaults(config, default)
             config[k] = v;
         end
     end
+end
+
+function Config.Windows()
+    return Config.Get("windows", WINDOWS_DEFAULT);
 end
 
 function Config.Analytics()

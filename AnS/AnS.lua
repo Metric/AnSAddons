@@ -1,15 +1,26 @@
-local Ans = select(2, ...);
+local Core = select(2, ...);
 
-local TUJDB = Ans.Database.TUJ;
-local TSMDB = Ans.Database.TSM;
+local TUJDB = Core.Database.TUJ;
+local TSMDB = Core.Database.TSM;
 
-local Sources = Ans.Sources;
+local Sources = Core.Sources;
 
-local Utils = Ans.Utils;
+local Utils = Core.Utils;
+local Groups = Core.Utils.Groups;
 
-local DefaultGroups = Ans.Data;
+local Config = Core.Config;
 
-local AuctionQuery = Ans.Auctions.Query;
+local MinimapIcon = Core.MinimapIcon;
+local EventManager = Core.EventManager;
+local Analytics = Core.Analytics;
+local Operations = Core.Operations;
+local SnipingOperation = Operations.Sniping;
+
+local DefaultGroups = Core.Data;
+local AuctionQuery = Core.Auctions.Query;
+local Crafting = Core.Crafting;
+local Destroy = Core.Destroy;
+local Draggable = Utils.Draggable;
 
 local AHFrame = nil;
 local AH_TAB_CLICK = nil;
@@ -19,25 +30,24 @@ local AH_TAB_CLICK = nil;
 -- even if you did not have it originally
 ANS_FILTERS = ANS_FILTERS or {};
 
-local Config = Ans.Config;
+Ans = {};
+Ans.__index = Ans;
 
-local MinimapIcon = Ans.MinimapIcon;
-local EventManager = Ans.EventManager;
-local Window = Ans.Window;
-local Analytics = Ans.Analytics;
-local Operations = Ans.Operations;
-local SnipingOperation = Operations.Sniping;
-
-AnsCore = {};
-AnsCore.__index = AnsCore;
-
-AnsCore.API = Ans;
-AnsCore.Window = Window;
+Ans.API = Core;
 
 -- slash commands for hiding minimap icon
 -- and access ans window when icon is hidden
 SlashCmdList["ANS_SLASHANS"] = function(msg)
-    Window:Toggle();
+    if (msg == "") then
+        AnsMainWindow:Toggle();
+    elseif (msg == "resetwindows") then
+        Draggable.Reset();
+    elseif (msg == "destroy") then
+        if (AnsDestroyWindow) then
+            AnsDestroyWindow:Populate();
+            AnsDestroyWindow:Show();
+        end
+    end
 end
 SLASH_ANS_SLASHANS1 = "/ans";
 
@@ -54,13 +64,13 @@ SlashCmdList["ANS_SLASHMINIMAP"] = function(msg)
 		local deg = tonumber(msg);
 		Ans.MiniButton.angle = deg;
 		Ans.MiniButton:Reposition();
-		AnsCore:SaveMiniButton(deg);
+		Ans.SaveMiniButton(deg);
 	end
 end
 SLASH_ANS_SLASHMINIMAP1 = "/ansminimap";
 
 StaticPopupDialogs["ANS_NO_PRICING"] = {
-    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, AnsAuctionData, and Auctionator are currently supported.",
+    text = "Looks like, you have no data pricing source! TheUndermineJournal, TSM, and AnsAuctionData are currently supported.",
     button1 = "OKAY",
     OnAccept = function() end,
     timeout = 0,
@@ -71,13 +81,13 @@ StaticPopupDialogs["ANS_NO_PRICING"] = {
 
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
-local TUJAndTSMPercentFn = "min(dbmarket,tujmarket)";
-local AnsOnlyPercentFn = "min(ansrecent,ansmarket)";
+local TUJAndTSMPercentFn = "avg(dbmarket,tujmarket)";
+local AnsOnlyPercentFn = "avg(ansrecent,ansmarket)";
 local TSMMaterialCost = "min(dbmarket, first(vendorbuy, dbminbuyout))";
 local TSMCraftingValue = "first(dbminbuyout, dbmarket)";
 local AnsMaterialCost = "min(ansmarket, first(vendorbuy, ansrecent))";
 local AnsCraftingValue = "first(ansmin, ansmarket)";
-local TujMatCraftValue = "min(tujmarket, first(vendorbuy, tujmarket))";
+local TujMatCraftValue = "min(tujmarket, vendorbuy)";
 
 local function AuctionTab_OnClick(self, button, down, index)
     AH_TAB_CLICK(self, button, down, index);
@@ -143,35 +153,34 @@ local function AddClassicAHTab(name, displayMode)
     end
 end
 
-function AnsCore:AddAHTab(name, displayMode)
-    if (Utils:IsClassic()) then
+function Ans:AddAHTab(name, displayMode)
+    if (Utils.IsClassic()) then
         AddClassicAHTab(name, displayMode);
     else
         AddRetailAHTab(name, displayMode);
     end
 end
 
-function AnsCore:RegisterEvents(frame)
+function Ans:RegisterEvents(frame)
     self.frame = frame;
+
     frame:RegisterEvent("VARIABLES_LOADED");
     frame:RegisterEvent("ADDON_LOADED");
 
-    -- move trade skill to Crafting:RegisterEvents()
-    frame:RegisterEvent("TRADE_SKILL_SHOW");
-    frame:RegisterEvent("TRADE_SKILL_CLOSE");
-
+    Crafting:RegisterEvents(frame);
     Analytics:RegisterEvents(frame);
     AuctionQuery:RegisterEvents(frame);
+    Destroy:RegisterEvents(frame);
 end
 
-function AnsCore:AddOnLoaded(...)
+function Ans:AddOnLoaded(...)
     local addonName = select(1, ...);
     if (addonName:lower() == "blizzard_auctionhouseui" or addonName:lower() == "blizzard_auctionui") then
         AHFrame = AuctionHouseFrame or AuctionFrame;
     end
 end
 
-function AnsCore:EventHandler(frame, event, ...)
+function Ans:EventHandler(frame, event, ...)
     EventManager:Emit(event, ...);
 
     if (event == "ADDON_LOADED") then
@@ -183,17 +192,25 @@ function AnsCore:EventHandler(frame, event, ...)
     end
 end
 
-function AnsCore:OnUpdate(elapsed)
+function Ans:OnUpdate(elapsed)
     EventManager:Emit("UPDATE", elapsed);
 end
 
-function AnsCore.SaveMiniButton(angle)
+function Ans.SaveMiniButton(angle)
     Config.MiniButton(angle);
 end
 
 local function CreateMiniButton()
-    Ans.MiniButton = MinimapIcon:New("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
-    function() Window:Toggle() end, AnsCore.SaveMiniButton, Config.MiniButton(), {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move"});
+    Ans.MiniButton = MinimapIcon:Acquire("AnsMiniButton", "Interface\\AddOns\\AnS\\Images\\ansicon", 
+    function() AnsMainWindow:Toggle() end, 
+    function() 
+        if (AnsDestroyWindow) then
+            AnsDestroyWindow:Populate(false);
+            AnsDestroyWindow:Show();
+        end
+    end,
+    Draggable.Reset,
+    Ans.SaveMiniButton, Config.MiniButton(), {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move", "Ctrl+Click to Reset Window Positions", "Right Click to Show Destroy Window"});
 
     if (Config.General().minimapShown) then
         Ans.MiniButton:Show();
@@ -202,22 +219,21 @@ local function CreateMiniButton()
     end
 end
 
-function AnsCore:OnLoad()
+function Ans:OnLoad()
     self:Migrate();
     self:RegisterPriceSources();
 
     CreateMiniButton();
 
-    Utils:BuildGroupPaths(DefaultGroups);
-    Utils:BuildGroupPaths(Config.Groups());
-    Window:OnLoad(self.frame);
+    Groups.BuildGroupPaths(DefaultGroups);
+    Groups.BuildGroupPaths(Config.Groups());
     EventManager:Emit("ANS_DATA_READY");
 end
 
-function AnsCore:MigrateFiltersToGroups(parent, root)
+function Ans:MigrateFiltersToGroups(parent, root)
     for i,f in ipairs(parent) do
         local t = {
-            id = Utils:Guid(),
+            id = Utils.Guid(),
             name = f.name,
             ids = f.ids,
             children = {}
@@ -232,7 +248,7 @@ function AnsCore:MigrateFiltersToGroups(parent, root)
     end
 end
 
-function AnsCore:MigrateFiltersToSnipingOperations(items, parentName)
+function Ans:MigrateFiltersToSnipingOperations(items, parentName)
     for i,f in ipairs(items) do
         local snipeName = f.name;
         if (parentName) then
@@ -240,7 +256,7 @@ function AnsCore:MigrateFiltersToSnipingOperations(items, parentName)
         end
 
         if (f.priceFn and #f.priceFn > 0) then
-            local tmp = SnipingOperation:NewConfig(snipeName);
+            local tmp = SnipingOperation.Config(snipeName);
             tmp.price = f.priceFn;
             tmp.exactMatch = f.exactMatch;
             if (f.id) then
@@ -255,14 +271,14 @@ function AnsCore:MigrateFiltersToSnipingOperations(items, parentName)
     end
 end
 
-function AnsCore:RegisterPriceSources()
+function Ans:RegisterPriceSources()
     local tsmEnabled = false;
     local tujEnabled = false;
     local ansEnabled = false;
     
     --local auctionatorEnabled = false;
 
-    -- if (Utils:IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
+    -- if (Utils.IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
     --    auctionatorEnabled = true; 
     -- end
     
@@ -367,7 +383,7 @@ function AnsCore:RegisterPriceSources()
     -- end
 end
 
-function AnsCore:Migrate()
+function Ans:Migrate()
 
     Config.MigrateCopy("ANS_ANALYTICS_DATA", Config.Analytics(), true);
     Config.MigrateArray("ANS_CUSTOM_VARS", Config.CustomSources(), true);

@@ -1,8 +1,5 @@
 local Ans = select(2, ...);
-local TUJ = {};
-TUJ.__index = TUJ;
-
-Ans.Database.TUJ = TUJ;
+local TUJ = Ans.Object.Register("TUJ", Ans.Database);
 
 local temp = {};
 

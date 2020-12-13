@@ -7,23 +7,13 @@ local Tasker = Ans.Tasker;
 local FSM = Ans.FSM;
 local FSMState = Ans.FSMState;
 local EventManager = Ans.EventManager;
+local Recycler = Ans.Auctions.Recycler;
+local Auction = Ans.Auctions.Auction;
+local TempTable = Ans.TempTable;
 
 local QueryFSM = nil;
 
-
-local Query = {};
-Query.__index = Query;
-
-Ans.Auctions = {};
-Ans.Auctions.Query = Query;
-
-local Recycler = { auctions = {}};
-Recycler.__index = Recycler;
-
-Ans.Auctions.Recycler = Recycler;
-
-local Auction = {};
-Auction.__index = Auction;
+local Query = Ans.Object.Register("Query", Ans.Auctions);
 
 local throttleMessageReceived = true;
 local throttleWaitingForSend = false;
@@ -38,7 +28,7 @@ local ownedAuctions = {};
 local MAX_THROTTLE_WAIT = 0.25;
 local TASKER_TAG = "QUERY";
 
-if (not Utils:IsClassic()) then
+if (not Utils.IsClassic()) then
     EVENTS_TO_REGISTER = {
         "AUCTION_HOUSE_BROWSE_RESULTS_ADDED",
         "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED",
@@ -65,78 +55,6 @@ else
     };
 end
 
-function Auction:New()
-    local a = {};
-    setmetatable(a, Auction);
-    a.itemKey = nil;
-    a.id = nil;
-    a.name = nil;
-    a.texture = nil;
-    a.count = 1;
-    a.level = 0;
-    a.ppu = 0;
-    a.owner = nil;
-    a.link = nil;
-    a.sniped = false;
-    a.tsmId  = nil;
-    a.percent = -1;
-    a.quality = 0;
-    
-    a.iLevel = 0;
-    a.vendorsell = 0;
-    a.isCommodity = false;
-    a.isEquipment = false;
-    a.auctionId = nil;
-    a.avg = 1;
-    return a;
-end
-
-function Auction:Clone()
-    local a = Recycler:Get();
-    setmetatable(a, Auction);
-    a.id = self.id;
-    a.itemKey = self.itemKey;
-    a.name = self.name;
-    a.texture = self.texture;
-    a.quality = self.quality;
-    a.count = self.count;
-    a.level = self.level;
-    a.ppu = self.ppu;
-    a.buyoutPrice = self.buyoutPrice;
-    a.owner = self.owner;
-    a.link = self.link;
-    a.sniped = self.sniped;
-    a.tsmId = self.tsmId;
-    a.percent = self.percent;
-    a.iLevel = self.iLevel;
-    a.vendorsell = self.vendorsell;
-    a.isCommodity = self.isCommodity;
-    a.isPet = self.isPet;
-    a.auctionId = self.auctionId;
-    a.itemIndex = self.itemIndex;
-    a.avg = self.avg;
-    a.auctions = self.auctions;
-    a.op = self.op;
-    a.isEquipment = self.isEquipment;
-    return a;
-end
-
-function Recycler:Reset()
-    wipe(self.auctions);
-end
-
-function Recycler:Recycle(auction)
-    wipe(auction);
-    tinsert(self.auctions, auction);
-end
-
-function Recycler:Get()
-    if (#self.auctions > 0) then
-        return tremove(self.auctions);
-    end
-    return Auction:New();
-end
-
 local function Truncate(str)
     if(str:len() <= 63) then
         return str;
@@ -146,6 +64,10 @@ local function Truncate(str)
 end
 
 local function ItemHash(item)
+    if (item.auctionId) then
+        return tostring(item.auctionId);
+    end
+
     return item.link..item.count..item.ppu;
 end
 
@@ -167,7 +89,6 @@ local function GetOwners(result)
     end
 end
 
-local STATES = {};
 Query.ItemKeyHash = ItemKeyHash;
 Query.DEFAULT_ITEM_SORT = DEFAULT_ITEM_SORT;
 
@@ -175,9 +96,9 @@ Query.ops = {};
 Query.page = 0;
 Query.itemIndex = 1;
 Query.blacklist = {};
-Query.groupResults = {};
+Query.results = {};
 
-Query.BrowseFilterFunc = nil;
+Query.browseFilter = nil;
 Query.fullBrowseResults = false;
 Query.lastQueryType = nil;
 
@@ -254,12 +175,8 @@ function Query:IsFiltered(auction)
     -- the config already handles if it is in a table
     -- and will fill in the edit box appropriately
     if (type(blacklist) == "string") then
-        if (blacklist == "" or blacklist:len() == 0) then
-            blacklist = {};
-        else
-            blacklist = { strsplit("\r\n", blacklist:lower()) };
-            Config.Sniper().characterBlacklist = blacklist;
-        end
+        blacklist = {};
+        Config.Sniper().characterBlacklist = blacklist;
     end
 
     local isOnBlacklist = false;
@@ -267,12 +184,12 @@ function Query:IsFiltered(auction)
     if (auction.owner and #blacklist > 0) then
         if (type(auction.owner) ~= "table") then
             if (auction.owner ~= "" and auction.owner:len() > 0) then
-                isOnBlacklist = Utils:InTable(blacklist, auction.owner:lower());
+                isOnBlacklist = Utils.InTable(blacklist, auction.owner:lower());
             end
         else
             for i,v in ipairs(auction.owner) do
                 if (v ~= "" and v:len() > 0) then
-                    local contains = Utils:InTable(blacklist, v:lower());
+                    local contains = Utils.InTable(blacklist, v:lower());
                     if (contains) then
                         isOnBlacklist = true;
                         break;
@@ -380,13 +297,13 @@ function Query:GetAuctionData(group)
     auction.subtype = 0;
     auction.vendorsell = 0;
 
-    if (auction.link and Utils:IsBattlePetLink(auction.link)) then
-        local info = Utils:ParseBattlePetLink(auction.link);
+    if (auction.link and Utils.IsBattlePetLink(auction.link)) then
+        local info = Utils.ParseBattlePetLink(auction.link);
         auction.texture = info.icon;
         auction.iLevel = info.level;
         auction.name = info.name;
         auction.quality = info.breedQuality;
-        auction.tsmId = Utils:GetTSMID(auction.link);
+        auction.tsmId = Utils.GetID(auction.link);
     else
         auction.tsmId = "i:"..auction.id;
     end
@@ -482,7 +399,7 @@ function Query:Search(filter, autoPage)
 
     if (ready) then
         -- ensure we remove the previous listener if there was one still
-        EventManager:RemoveListener("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
+        EventManager:Off("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
         EventManager:On("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
         self.delay = nil;
         QueryAuctionItems(filter.searchString or "", filter.minLevel, filter.maxLevel, self.page, false, filter.quality, false, false);
@@ -556,7 +473,7 @@ function Query:GetOwnedAuctionClassic(index)
         auction.vendorsell = vendorsell or 0;
     end
 
-    auction.tsmId = Utils:GetTSMID(auction.link);
+    auction.tsmId = Utils.GetID(auction.link);
 
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
 
@@ -621,7 +538,7 @@ function Query:Next(auction)
         return nil;
     end
 
-    auction.tsmId = Utils:GetTSMID(auction.link);
+    auction.tsmId = Utils.GetID(auction.link);
 
     auction.ppu = math.floor(auction.buyoutPrice / auction.count);
 
@@ -673,7 +590,7 @@ function Query.OnListUpdate()
     local self = Query;
 
     -- remove listener as we only want the first update
-    EventManager:RemoveListener("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
+    EventManager:Off("AUCTION_ITEM_LIST_UPDATE", Query.OnListUpdate);
 
     while (Query:HasNext()) do
         local item = Query:Next();
@@ -698,16 +615,16 @@ local browseIndex = 1;
 -- retail and classic specific updates
 
 function Query.OnUpdate()
-    if (#browseResults > 0 and browseIndex <= #browseResults and Query.BrowseFilterFunc) then
+    if (#browseResults > 0 and browseIndex <= #browseResults and Query.browseFilter) then
         local count = 0;
         while (browseIndex <= #browseResults and count < Config.Sniper().itemsPerUpdate) do
 
             local group = browseResults[browseIndex];
 
             if (group) then
-                local filtered = Query.BrowseFilterFunc(group);
+                local filtered = Query.browseFilter(group);
                 if (filtered) then
-                    tinsert(Query.groupResults, filtered);
+                    tinsert(Query.results, filtered);
                 end
             end
 
@@ -718,6 +635,10 @@ function Query.OnUpdate()
         if (browseIndex > #browseResults) then
             wipe(browseResults);
             browseIndex = 1;
+
+            if (not QueryFSM) then
+                return;
+            end
 
             QueryFSM:Process("IDLE");
         end
@@ -737,7 +658,7 @@ function Query:GetOwnedAuctionRetail(index)
     end
 
     auction.link = info.itemLink;
-    auction.tsmId = Utils:GetTSMID(auction.link);
+    auction.tsmId = Utils.GetID(auction.link);
 
     local keyInfo = C_AuctionHouse.GetItemKeyInfo(info.itemKey);
 
@@ -759,9 +680,9 @@ function Query:GetOwnedAuctionRetail(index)
 
     if (info.itemKey.battlePetSpeciesID > 0 
         and keyInfo.battlePetLink 
-        and Utils:IsBattlePetLink(keyInfo.battlePetLink)) then
+        and Utils.IsBattlePetLink(keyInfo.battlePetLink)) then
         
-        local info = Utils:ParseBattlePetLink(keyInfo.battlePetLink);
+        local info = Utils.ParseBattlePetLink(keyInfo.battlePetLink);
         auction.iLevel = info.level;
         auction.link = keyInfo.battlePetLink;
     end
@@ -782,7 +703,9 @@ function Query:GetOwnedAuctionRetail(index)
         auction.quality = itemRarity;
     end
 
-    auction.tsmId = Utils:GetTSMID(auction.link);
+    auction.tsmId = Utils.GetID(auction.link);
+
+    auction.hash = ItemHash(auction);
 
     return auction;
 end
@@ -812,6 +735,10 @@ function Query.ThrottleDropped()
 
     Logger.Log("Message dropped due to throttle - increasing retry time");
 
+    if (not QueryFSM) then
+        return;
+    end
+
     QueryFSM:Process("DROPPED");
 end
 
@@ -830,6 +757,11 @@ end
 
 function Query.Clear()
     Tasker.Clear(TASKER_TAG);
+
+    if (not QueryFSM) then
+        return;
+    end
+
     QueryFSM:Interrupt();
 end
 
@@ -853,6 +785,10 @@ function Query.Error(type, msg)
 end
 
 function Query.Browse(filter)
+    if (not QueryFSM) then
+        return;
+    end
+
     if (not QueryFSM.current) then
         QueryFSM.current = "IDLE";
     end
@@ -860,6 +796,10 @@ function Query.Browse(filter)
 end
 
 function Query.BrowseMore()
+    if (not QueryFSM) then
+        return;
+    end
+
     if (not QueryFSM.current) then
         QueryFSM.current = "IDLE";
     end
@@ -873,13 +813,33 @@ function Query.OnBrowseResults(added)
 end
 
 function Query.SearchForItem(item, byItemID, firstOnly)
+    if (not QueryFSM) then
+        return;
+    end
+
     if (not QueryFSM.current) then
         QueryFSM.current = "IDLE";
     end
     QueryFSM:Process("SEARCH", item, byItemID, firstOnly);
 end
 
+function Query.SearchForItems(items, byItemID, firstOnly)
+    if (not QueryFSM) then
+        return;
+    end
+
+    if (not QueryFSM.current) then
+        QueryFSM.current = "IDLE";
+    end
+
+    QueryFSM:Process("SEARCH", items, byItemID, firstOnly);
+end
+
 function Query.Owned()
+    if (not QueryFSM) then
+        return;
+    end
+
     if (not QueryFSM.current) then
         QueryFSM.current = "IDLE";
     end
@@ -914,6 +874,8 @@ function Query.ProcessCommodity(item, itemID)
         -- how got filled in
         item.auctionId = nil;
 
+        item.hash = ItemHash(item);
+
         EventManager:Emit("QUERY_SEARCH_RESULT", item);
 
         if (Query.filter and Query.filter.first) then
@@ -936,8 +898,8 @@ function Query.ProcessItem(item, itemKey)
             if (result.itemLink) then
                 item.link = result.itemLink;
 
-                if (Utils:IsBattlePetLink(item.link)) then
-                    local info = Utils:ParseBattlePetLink(item.link);
+                if (Utils.IsBattlePetLink(item.link)) then
+                    local info = Utils.ParseBattlePetLink(item.link);
                     item.name = info.name;
                     item.iLevel = info.level;
                     item.quality = info.breedQuality;
@@ -950,8 +912,10 @@ function Query.ProcessItem(item, itemKey)
                         local eff, preview, base = GetDetailedItemLevelInfo(item.link);
                         if (preview) then
                             item.iLevel = itemLevel;
-                        else
+                        elseif (eff) then
                             item.iLevel = eff;
+                        else
+                            item.iLevel = itemLevel;
                         end
                     else
                         item.iLevel = itemLevel;
@@ -963,10 +927,12 @@ function Query.ProcessItem(item, itemKey)
                     item.vendorsell = itemSellPrice or 0;
                 end
 
-                item.tsmId = Utils:GetTSMID(item.link);
+                item.tsmId = Utils.GetID(item.link);
             end
 
             item.auctionId = result.auctionID;
+
+            item.hash = ItemHash(item);
 
             EventManager:Emit("QUERY_SEARCH_RESULT", item);
 
@@ -983,21 +949,37 @@ function Query.IsExiting()
 end
 
 function Query.OnItemResults(itemKey)
+    if (not QueryFSM) then
+        return;
+    end
+
     Logger.Log("QUERY", "item results");
     QueryFSM:Process("ITEM_RESULT", itemKey);
 end
 
 function Query.OnItemResultsAdded(itemKey)
+    if (not QueryFSM) then
+        return;
+    end
+
     Logger.Log("QUERY", "item results added");
     QueryFSM:Process("ITEM_RESULT", itemKey);
 end
 
 function Query.OnCommodityResults(itemID)
+    if (not QueryFSM) then
+        return;
+    end
+
     Logger.Log("QUERY", "commodity results");
     QueryFSM:Process("COMMODITY_RESULT", itemID);
 end
 
 function Query.OnCommodityResultsAdded(itemID)
+    if (not QueryFSM) then
+        return;
+    end
+
     Logger.Log("QUERY", "commodity results added");
     QueryFSM:Process("COMMODITY_RESULT", itemID);
 end
@@ -1007,9 +989,9 @@ end
 -- since the classic version is simpler
 -- it is not needed
 local function BuildStateMachine()
-    local fsm = FSM:New("QueryFSM");
+    local fsm = FSM:Acquire("QueryFSM");
 
-    local idle = FSMState:New("IDLE");
+    local idle = FSMState:Acquire("IDLE");
     idle:AddEvent("BROWSE");
     idle:AddEvent("BROWSE_MORE");
     idle:AddEvent("SEARCH");
@@ -1017,12 +999,12 @@ local function BuildStateMachine()
 
     fsm:Add(idle);
 
-    local browse = FSMState:New("BROWSE");
+    local browse = FSMState:Acquire("BROWSE");
     browse:SetOnEnter(function(self, filter)
         Query.filter = filter;
         Query.fullBrowseResults = false;
         Query.lastQueryType = "BROWSE";
-        wipe(Query.groupResults);
+        wipe(Query.results);
 
         Logger.Log("QUERY", "browse on enter");
 
@@ -1037,7 +1019,7 @@ local function BuildStateMachine()
 
     fsm:Add(browse);
 
-    local tryBrowse = FSMState:New("TRY_BROWSE");
+    local tryBrowse = FSMState:Acquire("TRY_BROWSE");
     tryBrowse:SetOnEnter(function(self)
         if (not Query.filter) then
             return "IDLE";
@@ -1066,35 +1048,35 @@ local function BuildStateMachine()
 
     fsm:Add(tryBrowse);
 
-    local fsmbrowseResults = FSMState:New("BROWSE_RESULTS");
+    local fsmbrowseResults = FSMState:Acquire("BROWSE_RESULTS");
     fsmbrowseResults:SetOnEnter(function(self, added)
         Logger.Log("QUERY", "processing browse results");
         if (added) then
             for i,v in ipairs(added) do
-                if (Query.BrowseFilterFunc) then
+                if (Query.browseFilter) then
                     tinsert(browseResults, v);
                 else
-                    tinsert(Query.groupResults, v);
+                    tinsert(Query.results, v);
                 end
             end
         else
             local results = C_AuctionHouse.GetBrowseResults();
-            wipe(Query.groupResults);
+            wipe(Query.results);
             wipe(browseResults);
             browseIndex = 1;
 
             for i,v in ipairs(results) do
-                if (Query.BrowseFilterFunc) then
+                if (Query.browseFilter) then
                     tinsert(browseResults, v);
                 else
-                    tinsert(Query.groupResults, v);
+                    tinsert(Query.results, v);
                 end
             end
         end
 
         Query.fullBrowseResults = C_AuctionHouse.HasFullBrowseResults();
 
-        if (not Query.BrowseFilterFunc or #browseResults == 0) then
+        if (not Query.browseFilter or #browseResults == 0) then
             return "IDLE";
         end
 
@@ -1113,7 +1095,7 @@ local function BuildStateMachine()
 
     fsm:Add(fsmbrowseResults);
 
-    local browseMore = FSMState:New("BROWSE_MORE");
+    local browseMore = FSMState:Acquire("BROWSE_MORE");
     browseMore:SetOnEnter(function(self)
         Query.lastQueryType = "BROWSE";
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
@@ -1127,7 +1109,7 @@ local function BuildStateMachine()
 
     fsm:Add(browseMore);
 
-    local tryBrowseMore = FSMState:New("TRY_BROWSE_MORE");
+    local tryBrowseMore = FSMState:Acquire("TRY_BROWSE_MORE");
     tryBrowseMore:SetOnEnter(function(self)
         Query.lastQueryType = "BROWSE";
         C_AuctionHouse.RequestMoreBrowseResults();
@@ -1143,13 +1125,19 @@ local function BuildStateMachine()
 
     fsm:Add(tryBrowseMore);
 
-    local search = FSMState:New("SEARCH");
+    local search = FSMState:Acquire("SEARCH");
     search:SetOnEnter(function(self, item, sell, first)
-        Query.filter = {
-            item = item,
-            sell = sell,
-            first = first
-        };
+        if (Query.filter) then
+            Query.filter.item = item;
+            Query.filter.sell = sell;
+            Query.filter.first = first;
+        else
+            Query.filter = {
+                item = item,
+                sell = sell,
+                first = first
+            };
+        end
 
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
             QueryFSM:Process("TRY_SEARCH");
@@ -1159,7 +1147,7 @@ local function BuildStateMachine()
     search:AddEvent("IDLE");
     fsm:Add(search);
 
-    local trySearch = FSMState:New("TRY_SEARCH");
+    local trySearch = FSMState:Acquire("TRY_SEARCH");
     trySearch:SetOnEnter(function(self)
         if (not Query.filter or not Query.filter.item) then
             return "IDLE";
@@ -1213,7 +1201,7 @@ local function BuildStateMachine()
 
     fsm:Add(trySearch);
 
-    local itemResults = FSMState:New("ITEM_RESULTS");
+    local itemResults = FSMState:Acquire("ITEM_RESULTS");
     itemResults:SetOnEnter(function(self, item)
         Logger.Log("QUERY", "on item results");
         self.item = item;
@@ -1267,8 +1255,8 @@ local function BuildStateMachine()
 
         if (itemKey.battlePetSpeciesID > 0) then
             local info = C_AuctionHouse.GetItemKeyInfo(itemKey);
-            if (info and info.battlePetLink and Utils:IsBattlePetLink(info.battlePetLink)) then
-                local info = Utils:ParseBattlePetLink(info.battlePetLink);
+            if (info and info.battlePetLink and Utils.IsBattlePetLink(info.battlePetLink)) then
+                local info = Utils.ParseBattlePetLink(info.battlePetLink);
                 iLevel = info.level;
             end
         end
@@ -1345,12 +1333,12 @@ local function BuildStateMachine()
     end);
 
     fsm:Add(itemResults);
-    fsm:Add(FSMState:New("MORE_ITEMS"));
-    fsm:Add(FSMState:New("ITEM_RESULT"));
-    fsm:Add(FSMState:New("MORE_COMMODITIES"));
-    fsm:Add(FSMState:New("COMMODITY_RESULT"));
+    fsm:Add(FSMState:Acquire("MORE_ITEMS"));
+    fsm:Add(FSMState:Acquire("ITEM_RESULT"));
+    fsm:Add(FSMState:Acquire("MORE_COMMODITIES"));
+    fsm:Add(FSMState:Acquire("COMMODITY_RESULT"));
 
-    local owned = FSMState:New("OWNED");
+    local owned = FSMState:Acquire("OWNED");
     owned:SetOnEnter(function(self)
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
            QueryFSM:Process("TRY_OWNED");
@@ -1361,7 +1349,7 @@ local function BuildStateMachine()
 
     fsm:Add(owned);
 
-    local tryOwned = FSMState:New("TRY_OWNED");
+    local tryOwned = FSMState:Acquire("TRY_OWNED");
     tryOwned:SetOnEnter(function(self)
         C_AuctionHouse.QueryOwnedAuctions(DEFAULT_ITEM_SORT);
         return nil;
@@ -1374,7 +1362,7 @@ local function BuildStateMachine()
 
     fsm:Add(tryOwned);
 
-    local ownedResults = FSMState:New("OWNED_RESULTS");
+    local ownedResults = FSMState:Acquire("OWNED_RESULTS");
     ownedResults:SetOnEnter(function(self)
         for i,v in ipairs(ownedAuctions) do
             Recycler:Recycle(v);
@@ -1400,8 +1388,8 @@ local function BuildStateMachine()
 
     fsm:Add(ownedResults);
 
-    fsm:Add(FSMState:New("DROPPED"));
-    fsm:Add(FSMState:New("DELAY_COMPLETE"));
+    fsm:Add(FSMState:Acquire("DROPPED"));
+    fsm:Add(FSMState:Acquire("DELAY_COMPLETE"));
 
     fsm:Start("IDLE");
 

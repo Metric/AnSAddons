@@ -1,9 +1,6 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
-local TradeTracker = {};
-TradeTracker.__index = TradeTracker;
-
-Ans.Analytics.TradeTracker = TradeTracker;
+local TradeTracker = Ans.Object.Register("TradeTracker", Ans.Analytics);
 
 local Sources = Ans.Sources;
 

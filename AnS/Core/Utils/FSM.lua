@@ -1,22 +1,16 @@
 local Ans = select(2, ...);
 local EventManager = Ans.EventManager;
 local Logger = Ans.Logger;
-local Utils = Ans.Utils;
-local FSM = {};
-local FSMState = {};
-FSMState.__index = FSMState;
-FSM.__index = FSM;
-
-Ans.FSM = FSM;
-Ans.FSMState = FSMState;
+local TempTable = Ans.TempTable;
+local FSM = Ans.Object.Register("FSM");
+local FSMState = Ans.Object.Register("FSMState");
 
 local function DefaultHandler(self, ...)
     return ...;
 end
 
-function FSMState:New(name)
-    local a = {};
-    setmetatable(a, FSMState);
+function FSMState:Acquire(name)
+    local a = FSMState:New();
     a:Init(name);
     return a;
 end
@@ -94,9 +88,8 @@ function FSMState:Process(event, ...)
 end
 
 
-function FSM:New(name)
-    local a = {};
-    setmetatable(a, FSM);
+function FSM:Acquire(name)
+    local a = FSM:New();
     a:Init(name);
     return a;
 end
@@ -164,7 +157,7 @@ function FSM:Process(event, ...)
     self.handlingEvent = true;
     local state = self.states[self.current];
     if (state:HasHandler(event)) then
-        self:Transition(Utils:GetTable(state:Process(event, ...)));
+        self:Transition(TempTable:Acquire(state:Process(event, ...)));
     end
     self.handlingEvent = false;
 
@@ -184,9 +177,10 @@ function FSM:Transition(results)
             self.inTransition = true;
             current:Exit(to, unpack(results));
             self.current = to;
-            results = Utils:GetTable(next:Enter(Utils:UnpackAndReleaseTable(results)));
+            results = TempTable:Acquire(next:Enter(results:UnpackAndRelease()));
             self.inTransition = false;
-        else
+        elseif (results) then
+            results:Release();
             results = nil;
         end
     end

@@ -25,6 +25,57 @@
             <Color r="1" g="1" b="1" a="0.25" />
         </HighlightTexture>
      </Button>
+     <Button name="AnsIconDeleteSmallTemplate" virtual="true">
+        <Size x="16" y="16" />
+        <NormalTexture file="Interface\AddOns\AnS\Images\icons">
+            <TexCoords left="1" right="0.5" top="0.5" bottom="1" />
+            <Size x="18" y="18" />
+            <Color r="1" g="0.2" b="0.2" a="0.85" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons">
+            <TexCoords left="1" right="0.5" top="0.5" bottom="1" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="0.25" />
+        </HighlightTexture>
+     </Button>
+     <Button name="AnsIconImportTemplate" virtual="true">
+      <Size x="16" y="16" />
+      <NormalTexture file="Interface\AddOns\AnS\Images\icons2">
+            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons2">
+            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="1" />
+        </HighlightTexture>
+    </Button>
+    <Button name="AnsIconExportTemplate" virtual="true">
+        <Size x="16" y="16" />
+        <NormalTexture file="Interface\AddOns\AnS\Images\icons2">
+            <TexCoords left="0.5" right="1" top="0.5" bottom="1" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons2">
+            <TexCoords left="0.5" right="1" top="0.5" bottom="1" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="1" />
+        </HighlightTexture>
+     </Button>
+    <Button name="AnsIconVisibleTemplate" virtual="true">
+        <NormalTexture file="Interface\AddOns\AnS\Images\icons2">
+            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\AddOns\AnS\Images\icons2">
+            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <Size x="18" y="18" />
+            <Color r="1" g="1" b="1" a="1" />
+        </HighlightTexture>
+     </Button>
      <Button name="AnsIconAddTemplate" virtual="true">
         <NormalTexture file="Interface\AddOns\AnS\Images\icons">
             <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
@@ -67,7 +118,7 @@
      </Button>
      <Button name="AnsTabTemplate" virtual="true">
         <Size x="100" y="20" />
-        <ButtonText name="$parentText" justifyV="CENTER" inherits="AnsGameFontWhiteTrans" justifyH="CENTER">
+        <ButtonText parentKey="Text" name="$parentText" justifyV="CENTER" inherits="AnsGameFontWhiteTrans" justifyH="CENTER">
             <Anchors>
                 <Anchor point="TOPLEFT" x="0" y="0" />
                 <Anchor point="BOTTOMRIGHT" x="0" y="0" />
@@ -88,7 +139,7 @@
         </HighlightTexture>
      </Button>
      <Button name="AnsTableHeaderRightTemplate" virtual="true">
-        <ButtonText name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="RIGHT">
             <Anchors>
                 <Anchor point="TOPLEFT" x="20" y="0" />
                 <Anchor point="BOTTOMRIGHT" x="-20" y="0" />
@@ -119,10 +170,10 @@
      </Button>
      <Button name="AnsTab2Template" virtual="true">
         <Size x="100" y="20" />
-        <ButtonText name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="LEFT">
             <Anchors>
-                <Anchor point="TOPLEFT" x="20" y="0" />
-                <Anchor point="BOTTOMRIGHT" x="-20" y="0" />
+                <Anchor point="TOPLEFT" x="5" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="-5" y="0" />
             </Anchors>
         </ButtonText>
         <NormalFont inherits="AnsGameFontWhiteTrans" />
@@ -150,13 +201,13 @@
      </Button>
      <Button name="AnsSolidCircleTemplate" virtual="true">
         <Size x="4" y="4" />
-        <NormalTexture name="$parentIcon" file="Interface\AddOns\AnS\Images\icons">
+        <NormalTexture parentKey="Icon" name="$parentIcon" file="Interface\AddOns\AnS\Images\icons">
             <TexCoords left="0" right="0.5" top="1" bottom="0.5" />
             <Size x="4" y="4" />
         </NormalTexture>
      </Button>
      <Button name="AnsUnderlineTemplate" virtual="true">
-        <ButtonText name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="LEFT" />
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="LEFT" />
         <NormalFont inherits="AnsGameFontWhiteTrans" />
         <NormalTexture file="Interface\Buttons\WHITE8X8">
             <Anchors>
@@ -191,14 +242,32 @@
             <Size x="12" y="12" />
             <Color r="0" g="1" b="0.93" a="0.75" />
         </CheckedTexture>
-        <ButtonText name="$parentText" inherits="AnsGameFontWhiteTrans" justifyV="CENTER" justifyH="LEFT">
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontWhiteTrans" justifyV="CENTER" justifyH="LEFT">
             <Anchors>
                 <Anchor point="LEFT" x="18" y="0" />
             </Anchors>
         </ButtonText>
      </CheckButton>
      <Button name="AnsStandardButtonTemplate" virtual="true">
-        <ButtonText name="$parentText" inherits="AnsGameFontNormalDark" justifyH="CENTER" justifyV="CENTER" />
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontNormalDark" justifyH="CENTER" justifyV="CENTER" />
+        <NormalFont inherits="AnsGameFontNormalDark" />
+        <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+            <Color r="1" g="1" b="1" a="0.75" />
+        </NormalTexture>
+        <HighlightTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+            <Anchors>
+                <Anchor point="TOPLEFT" x="0" y="0" />
+                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+            </Anchors>
+            <Color r="1" g="1" b="1" a="0.25" />
+        </HighlightTexture>
+     </Button>
+     <Button name="AnsSecureButtonTemplate" virtual="true" inherits="SecureActionButtonTemplate">
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontNormalDark" justifyH="CENTER" justifyV="CENTER" />
         <NormalFont inherits="AnsGameFontNormalDark" />
         <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Anchors>
@@ -216,7 +285,7 @@
         </HighlightTexture>
      </Button>
      <Button name="AnsWarningButtonTemplate" virtual="true">
-        <ButtonText name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="CENTER" justifyV="CENTER" />
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontWhiteTrans" justifyH="CENTER" justifyV="CENTER" />
         <NormalFont inherits="AnsGameFontWhiteTrans" />
         <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Anchors>
@@ -234,7 +303,7 @@
         </HighlightTexture>
      </Button>
      <Button name="AnsTextButtonTemplate" virtual="true">
-        <ButtonText name="$parentText" inherits="AnsGameFontNormalBlue" justifyH="CENTER" justifyV="CENTER" />
+        <ButtonText parentKey="Text" name="$parentText" inherits="AnsGameFontNormalBlue" justifyH="CENTER" justifyV="CENTER" />
         <NormalFont inherits="AnsGameFontNormalBlue" />
         <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Anchors>
@@ -257,28 +326,28 @@
      <Button name="AnsTreeRowTemplate" enableMouse="true" movable="true" inherits="AnsTab2Template" virtual="true">
         <Size x="200" y="20"/>
 		<Frames>
-			<Button name="$parentExpander" text="+" inherits="AnsStandardButtonTemplate">
+			<Button parentKey="Expander" text="+" inherits="AnsStandardButtonTemplate">
 				<Size x="12" y="12" />
 				<Anchors>
-					<Anchor point="RIGHT" x="-2" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+					<Anchor point="RIGHT" x="-2" y="0" relativeKey="$parent.Text" relativePoint="LEFT" />
 				</Anchors>
 			</Button>
-            <Button name="$parentMoveDown" inherits="AnsDownTemplate">
+            <Button parentKey="MoveDown" inherits="AnsDownTemplate">
                 <Size x="12" y="12" />
                 <Anchors>
                     <Anchor point="RIGHT" />
                 </Anchors>
             </Button>
-            <Button name="$parentMoveUp" inherits="AnsUpTemplate">
+            <Button parentKey="MoveUp" inherits="AnsUpTemplate">
                 <Size x="12" y="12" />
                 <Anchors>
-                    <Anchor point="RIGHT" relativeTo="$parentMoveDown" relativePoint="LEFT" x="0" y="0" />
+                    <Anchor point="RIGHT" relativeKey="$parent.MoveDown" relativePoint="LEFT" x="0" y="0" />
                 </Anchors>
             </Button>
-            <Button name="$parentAdd" inherits="AnsIconAddtemplate">
+            <Button parentKey="Add" inherits="AnsIconAddtemplate">
                 <Size x="16" y="16" />
                 <Anchors>
-                    <Anchor point="RIGHT" relativeTo="$parentMoveUp" relativePoint="LEFT" x="0" y="0" />
+                    <Anchor point="RIGHT" relativeKey="$parent.MoveUp" relativePoint="LEFT" x="0" y="0" />
                 </Anchors>
             </Button>
 		</Frames>
@@ -286,19 +355,19 @@
     <Button Name="AnsTreeRowAddTemplate" inherits="AnsTab2Template" virtual="true">
         <Size x="200" y="20" />
         <Frames>
-        	<Button name="$parentExpander" text="+" inherits="AnsStandardButtonTemplate">
+        	<Button parentKey="Expander" text="+" inherits="AnsStandardButtonTemplate">
 				<Size x="12" y="12" />
 				<Anchors>
-					<Anchor point="RIGHT" x="-2" y="0" relativeTo="$parentText" relativePoint="LEFT" />
+					<Anchor point="RIGHT" x="-2" y="0" relativeKey="$parent.Text" relativePoint="LEFT" />
 				</Anchors>
 			</Button>
-            <Button name="$parentAdd" inherits="AnsIconAddTemplate">
+            <Button parentKey="Add" inherits="AnsIconAddTemplate">
                 <Size x="16" y="16" />
                 <Anchors>
                     <Anchor point="RIGHT" x="-4" y="0" />
                 </Anchors>
             </Button>
-            <Button name="$parentDelete" inherits="AnsIconDeleteTemplate">
+            <Button parentKey="Delete" inherits="AnsIconDeleteTemplate">
                 <Size x="16" y="16" />
                 <Anchors>
                     <Anchor point="RIGHT" x="-2" y="0" />

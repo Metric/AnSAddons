@@ -1,10 +1,11 @@
-local Ans = select(2, ...);
+local Core = select(2, ...);
 
-local Utils = AnsCore.API.Utils;
+local Utils = Ans.API.Utils;
+local TempTable = Ans.API.TempTable;
 local Statistics = {};
 Statistics.__index = Statistics;
 
-Ans.Statistics = Statistics;
+Core.Statistics = Statistics;
 
 local function RoundToInt(num)
     return math.floor(num + 0.5);
@@ -46,7 +47,7 @@ end
 function Statistics:Calculate(x, prevSum, prevCount)
 	local half = ceil(#x * 0.25);
 	local low = ceil(#x * 0.15);
-    local valid = Utils:GetTable();
+    local valid = TempTable:Acquire();
 
     table.sort(x, SorthMethod);
 
@@ -92,7 +93,7 @@ function Statistics:Calculate(x, prevSum, prevCount)
 		num = count;
 	end
 
-	Utils:ReleaseTable(valid);
+	valid:Release();
 	avg = RoundToInt((sum + prevSum) / math.max(1, num + prevCount));
     return mina, avg, sum, num;
 end

@@ -1,0 +1,97 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsRecordsHeadingFullTemplate" virtual="true">
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture file="Interface\Buttons\WHITE8X8" horizTile="true">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="-4" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="-4" />
+                    </Anchors>
+                    <Size y="0.5" />
+                    <Color r="1" g="1" b="1" a="0.25" />
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button parentKey="Name" justifyH="LEFT" text="Item" inherits="AnsTab2Template">
+                <Size x="128" y="16" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="6" y="-4" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("item");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="Who" justifyH="LEFT" text="Player" inherits="AnsTab2Template">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT" x="0" y="0" relativeKey="$parent.Name" relativePoint="RIGHT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("from");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="Type" justifyH="LEFT" text="Type" inherits="AnsTab2Template">
+                <Size x="64" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT"  x="0" y="0" relativeKey="$parent.Who" relativePoint="RIGHT" />
+                </Anchors>
+
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("type");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="Stack" text="Count" inherits="AnsTableHeaderRightTemplate">
+                <Size x="86" y="16" />
+                <Anchors>
+                    <Anchor point="LEFT" x="0" y="0" relativeKey="$parent.Type" relativePoint="RIGHT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("quantity");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="Date" text="Date" inherits="AnsTableHeaderRightTemplate">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="RIGHT" x="-6" y="-4" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("time");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="Amount" text="PPU" inherits="AnsTableHeaderRightTemplate">
+                <Size x="100" y="16" />
+                <Anchors>
+                    <Anchor point="RIGHT" relativeKey="$parent.Date" x="0" y="0" relativePoint="LEFT" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        if (self:GetParent().dataProvider) then
+                            self:GetParent().dataProvider:Sort("copper");
+                        end
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+</Ui>

@@ -1,22 +1,35 @@
 local Ans = select(2, ...);
-local MinimapIcon = {};
-MinimapIcon.__index = MinimapIcon;
-
-Ans.MinimapIcon = MinimapIcon;
+local MinimapIcon = Ans.Object.Register("MinimapIcon");
 
 --- Minimap  Icon ---
 
-function MinimapIcon:New(name, icon, clickFn, onMoveFn, angle, tooltipLines)
-    local micon = {};
-    setmetatable(micon, MinimapIcon);
+function MinimapIcon:Acquire(name, icon, clickFn, rightClickFn, ctrlClickFn, onMoveFn, angle, tooltipLines)
+    local micon = MinimapIcon:New();
     micon.clickFn = clickFn;
     micon.tooltipLines = tooltipLines;
     micon.name = name;
     micon.angle = angle or 45;
     micon.onMoveFn = onMoveFn;
+    micon.rightClickFn = rightClickFn;
+    micon.ctrlClickFn = ctrlClickFn;
 
     micon.frame = CreateFrame("BUTTON", name, Minimap, "AnsMiniButtonTemplate");
-    micon.frame:SetScript("OnClick", micon.clickFn);
+    micon.frame:SetScript("OnClick", function(f)
+        if (IsControlKeyDown()) then
+            if (micon.ctrlClickFn) then
+                micon.ctrlClickFn(f);
+            end
+        else
+            if (GetMouseButtonClicked():lower() == "rightbutton") then
+                if (micon.rightClickFn) then
+                    micon.rightClickFn(f);
+                end
+            elseif (micon.clickFn) then
+                micon.clickFn(f);
+            end
+        end
+    end);
+
     micon.frame:SetScript("OnDragStart", function() micon:OnDragStart() end);
     micon.frame:SetScript("OnDragStop", function() micon:OnDragStop() end);
     micon.frame:SetScript("OnUpdate", function() micon:OnUpdate() end);
@@ -29,7 +42,6 @@ function MinimapIcon:New(name, icon, clickFn, onMoveFn, angle, tooltipLines)
     ictex:SetTexture(icon);
 
     micon:Reposition();
-
     return micon;
 end
 
@@ -47,7 +59,7 @@ function MinimapIcon:ShowTip()
     end
 end
 
-function MinimapIcon:HideTip()
+function MinimapIcon.HideTip()
     GameTooltip:Hide();
 end
 
@@ -73,9 +85,9 @@ end
 
 function MinimapIcon:Toggle()
     if (self.frame:IsShown()) then
-        self:Hide();
+        self.frame:Hide();
     else
-        self:Show();
+        self.frame:Show();
     end
 end
 

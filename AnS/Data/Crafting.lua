@@ -1,24 +1,1892 @@
 local Ans = select(2, ...);
+local Utils = Ans.Utils;
+local Config = Ans.Config;
+local Sources = Ans.Sources;
 local CraftingData = {};
 
 Ans.Data.Crafting = CraftingData;
 
-local MASS_MILLING_RECIPES = {
-	[190381] = "i:114931",  -- Frostweed
-	[190382] = "i:114931",  -- Fireweed
-	[190383] = "i:114931",  -- Gorgrond Flytrap
-	[190384] = "i:114931",  -- Starflower
-	[190385] = "i:114931",  -- Nargrand Arrowbloom
-	[190386] = "i:114931",  -- Talador Orchid
-	[209658] = "i:129032",  -- Aethril
-	[209659] = "i:129032",  -- Dreamleaf
-	[209660] = "i:129032",  -- Foxflower
-	[209661] = "i:129032",  -- Fjarnskaggl
-	[209662] = "i:129032",  -- Starlight Rose
-	[209664] = "i:129034",  -- Felwort
-	[210116] = "i:129032",  -- Yseralline Seeds
-	[247861] = "i:129034",  -- Astral Glory
+local SPELLS = {
+	milling = 51005,
+	prospect = 31252,
+	disenchant = 13262,
+};
+
+CraftingData.SPELLS = SPELLS;
+
+local DISENCHANT_INFO = {};
+local PROSPECT_INFO = {};
+local MILL_INFO = {};
+
+-- From TSM so we can be consistent
+if Utils.IsClassic() then
+	DISENCHANT_INFO = {
+		-- Dust
+		["i:10940"] = { -- Strange Dust
+			minLevel = 1,
+			maxLevel = 20,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 5, maxItemLevel = 15, matRate = 0.800, minAmount = 1, maxAmount = 2, amountOfMats = 1.200},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 16, maxItemLevel = 20, matRate = 0.750, minAmount = 2, maxAmount = 3, amountOfMats = 1.850},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 21, maxItemLevel = 25, matRate = 0.750, minAmount = 4, maxAmount = 6, amountOfMats = 3.750},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 5, maxItemLevel = 15, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 16, maxItemLevel = 20, matRate = 0.200, minAmount = 2, maxAmount = 3, amountOfMats = 0.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 21, maxItemLevel = 25, matRate = 0.150, minAmount = 4, maxAmount = 6, amountOfMats = 0.750},
+			},
+		},
+		["i:11083"] = { -- Soul Dust
+			minLevel = 21,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 26, maxItemLevel = 30, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 31, maxItemLevel = 35, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 2.550},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 26, maxItemLevel = 30, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 31, maxItemLevel = 35, matRate = 0.200, minAmount = 2, maxAmount = 5, amountOfMats = 0.700},
+			},
+		},
+		["i:11137"] = { -- Vision Dust
+			minLevel = 31,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 36, maxItemLevel = 40, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 41, maxItemLevel = 45, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 2.550},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 36, maxItemLevel = 40, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 41, maxItemLevel = 45, matRate = 0.200, minAmount = 2, maxAmount = 5, amountOfMats = 0.700},
+			},
+		},
+		["i:11176"] = { -- Dream Dust
+			minLevel = 41,
+			maxLevel = 50,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 46, maxItemLevel = 50, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 51, maxItemLevel = 55, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 2.550},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 46, maxItemLevel = 50, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 51, maxItemLevel = 55, matRate = 0.200, minAmount = 2, maxAmount = 5, amountOfMats = 0.700},
+			},
+		},
+		["i:16204"] = { -- Illusion Dust
+			minLevel = 51,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 56, maxItemLevel = 60, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 61, maxItemLevel = 65, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 2.550},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 56, maxItemLevel = 60, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 61, maxItemLevel = 65, matRate = 0.200, minAmount = 2, maxAmount = 5, amountOfMats = 0.700},
+			},
+		},
+
+		-- Essences
+		["i:10938"] = { -- Lesser Magic Essence
+			minLevel = 1,
+			maxLevel = 10,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 5, maxItemLevel = 15, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 5, maxItemLevel = 15, matRate = 0.800, minAmount = 1, maxAmount = 2, amountOfMats = 1.200},
+			},
+		},
+		["i:10939"] = { -- Greater Magic Essence
+			minLevel = 11,
+			maxLevel = 15,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 16, maxItemLevel = 20, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 16, maxItemLevel = 20, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:10998"] = { -- Lesser Astral Essence
+			minLevel = 16,
+			maxLevel = 20,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 21, maxItemLevel = 25, matRate = 0.150, minAmount = 1, maxAmount = 2, amountOfMats = 0.200},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 21, maxItemLevel = 25, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:11082"] = { -- Greater Astral Essence
+			minLevel = 21,
+			maxLevel = 25,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 26, maxItemLevel = 30, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 26, maxItemLevel = 30, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:11134"] = { -- Lesser Mystic Essence
+			minLevel = 26,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 31, maxItemLevel = 35, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 31, maxItemLevel = 35, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:11135"] = { -- Greater Mystic Essence
+			minLevel = 31,
+			maxLevel = 35,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 36, maxItemLevel = 40, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 36, maxItemLevel = 40, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:11174"] = { -- Lesser Nether Essence
+			minLevel = 36,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 41, maxItemLevel = 45, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 41, maxItemLevel = 45, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:11175"] = { -- Greater Nether Essence
+			minLevel = 41,
+			maxLevel = 45,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 46, maxItemLevel = 50, matRate = 0.250, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 46, maxItemLevel = 50, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:16202"] = { -- Lesser Eternal Essence
+			minLevel = 46,
+			maxLevel = 50,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 51, maxItemLevel = 55, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 51, maxItemLevel = 55, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+			},
+		},
+		["i:16203"] = { -- Greater Eternal Essence
+			minLevel = 51,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 56, maxItemLevel = 60, matRate = 0.200, minAmount = 1, maxAmount = 2, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 61, maxItemLevel = 65, matRate = 0.200, minAmount = 2, maxAmount = 3, amountOfMats = 0.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 56, maxItemLevel = 60, matRate = 0.750, minAmount = 1, maxAmount = 2, amountOfMats = 1.100},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 61, maxItemLevel = 65, matRate = 0.750, minAmount = 2, maxAmount = 3, amountOfMats = 1.850},
+			},
+		},
+
+		-- Shards
+		["i:10978"] = { -- Small Glimmering Shard
+			minLevel = 1,
+			maxLevel = 20,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 16, maxItemLevel = 20, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 21, maxItemLevel = 25, matRate = 0.100, minAmount = 1, maxAmount = 1, amountOfMats = 0.100},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 5, maxItemLevel = 25, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 16, maxItemLevel = 20, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 21, maxItemLevel = 25, matRate = 0.100, minAmount = 1, maxAmount = 1, amountOfMats = 0.100},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 5, maxItemLevel = 25, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:11084"] = { -- Large Glimmering Shard
+			minLevel = 21,
+			maxLevel = 25,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 26, maxItemLevel = 30, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 26, maxItemLevel = 30, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 26, maxItemLevel = 30, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 26, maxItemLevel = 30, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:11138"] = { -- Small Glowing Shard
+			minLevel = 26,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 31, maxItemLevel = 35, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 31, maxItemLevel = 35, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 31, maxItemLevel = 35, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 31, maxItemLevel = 35, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:11139"] = { -- Large Glowing Shard
+			minLevel = 31,
+			maxLevel = 35,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 36, maxItemLevel = 40, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 36, maxItemLevel = 40, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 36, maxItemLevel = 40, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 36, maxItemLevel = 40, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:11177"] = { -- Small Radiant Shard
+			minLevel = 36,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 41, maxItemLevel = 45, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 41, maxItemLevel = 45, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 40, maxItemLevel = 45, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 3.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 41, maxItemLevel = 45, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 41, maxItemLevel = 45, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 40, maxItemLevel = 45, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 3.000},
+			},
+		},
+		["i:11178"] = { -- Large Radiant Shard
+			minLevel = 41,
+			maxLevel = 45,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 46, maxItemLevel = 50, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 46, maxItemLevel = 50, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 46, maxItemLevel = 50, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 3.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 46, maxItemLevel = 50, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 46, maxItemLevel = 50, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 46, maxItemLevel = 50, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 3.000},
+			},
+		},
+		["i:14343"] = { -- Small Brilliant Shard
+			minLevel = 46,
+			maxLevel = 50,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 51, maxItemLevel = 55, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.030},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 51, maxItemLevel = 55, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 51, maxItemLevel = 55, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 3.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 51, maxItemLevel = 55, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.030},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 51, maxItemLevel = 55, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 51, maxItemLevel = 55, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 3.000},
+			},
+		},
+		["i:14344"] = { -- Large Brilliant Shard
+			minLevel = 51,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 56, maxItemLevel = 65, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 56, maxItemLevel = 65, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 0.995},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 56, maxItemLevel = 65, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 56, maxItemLevel = 65, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 0.995},
+			},
+		},
+
+		-- Crystals
+		["i:20725"] = { -- Nexus Crystal
+			minLevel = 51,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 56, maxItemLevel = 65, matRate = 0.005, minAmount = 1, maxAmount = 1, amountOfMats = 0.005},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 56, maxItemLevel = 60, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 61, maxItemLevel = 95, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.666},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 56, maxItemLevel = 65, matRate = 0.005, minAmount = 1, maxAmount = 1, amountOfMats = 0.005},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 56, maxItemLevel = 60, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 61, maxItemLevel = 95, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.666},
+			},
+		},
+	}
+else
+	DISENCHANT_INFO = {
+		-- Dust
+		["i:10940"] = { -- Strange Dust
+			minLevel = 1,
+			maxLevel = 12,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 1, maxItemLevel = 8, matRate = 0.800, minAmount = 1, maxAmount = 6, amountOfMats = 1.222},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 9, maxItemLevel = 12, matRate = 0.800, minAmount = 2, maxAmount = 8, amountOfMats = 2.025},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 13, maxItemLevel = 16, matRate = 1.000, minAmount = 4, maxAmount = 10, amountOfMats = 5.008},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 5, maxItemLevel = 16, matRate = 0.030, minAmount = 3, maxAmount = 6, amountOfMats = 0.127},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 1, maxItemLevel = 8, matRate = 0.200, minAmount = 1, maxAmount = 4, amountOfMats = 0.302},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 9, maxItemLevel = 12, matRate = 0.200, minAmount = 2, maxAmount = 6, amountOfMats = 0.507},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 13, maxItemLevel = 16, matRate = 0.150, minAmount = 4, maxAmount = 8, amountOfMats = 0.753},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 5, maxItemLevel = 16, matRate = 0.030, minAmount = 3, maxAmount = 6, amountOfMats = 0.127},
+			},
+		},
+		["i:16204"] = { -- Light Illusion Dust
+			minLevel = 11,
+			maxLevel = 21,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 17, maxItemLevel = 24, matRate = 0.750, minAmount = 1, maxAmount = 6, amountOfMats = 1.155},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 17, maxItemLevel = 24, matRate = 0.030, minAmount = 3, maxAmount = 6, amountOfMats = 0.127},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 17, maxItemLevel = 24, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.344},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 17, maxItemLevel = 24, matRate = 0.030, minAmount = 3, maxAmount = 6, amountOfMats = 0.127},
+			},
+		},
+		["i:156930"] = { -- Rich Illusion Dust
+			minLevel = 20,
+			maxLevel = 25,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 25, maxItemLevel = 29, matRate = 0.750, minAmount = 1, maxAmount = 6, amountOfMats = 1.155},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 25, maxItemLevel = 29, matRate = 0.030, minAmount = 3, maxAmount = 6, amountOfMats = 0.127},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 29, maxItemLevel = 30, matRate = 0.200, minAmount = 3, maxAmount = 6, amountOfMats = 0.900},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 25, maxItemLevel = 29, matRate = 0.220, minAmount = 1, maxAmount = 6, amountOfMats = 0.344},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 25, maxItemLevel = 29, matRate = 0.030, minAmount = 3, maxAmount = 6, amountOfMats = 0.127},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 29, maxItemLevel = 30, matRate = 0.200, minAmount = 3, maxAmount = 6, amountOfMats = 0.900},
+			},
+		},
+		["i:22445"] = { -- Arcane Dust
+			minLevel = 24,
+			maxLevel = 27,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 30, maxItemLevel = 31, matRate = 0.750, minAmount = 2, maxAmount = 7, amountOfMats = 1.933},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.750, minAmount = 2, maxAmount = 9, amountOfMats = 2.655},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 30, maxItemLevel = 31, matRate = 0.220, minAmount = 2, maxAmount = 5, amountOfMats = 0.750},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.220, minAmount = 2, maxAmount = 7, amountOfMats = 0.787},
+			},
+		},
+		["i:34054"] = { -- Infinite Dust
+			minLevel = 26,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.750, minAmount = 2, maxAmount = 7, amountOfMats = 1.933},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 34, maxItemLevel = 35, matRate = 0.750, minAmount = 4, maxAmount = 11, amountOfMats = 4.155},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.220, minAmount = 2, maxAmount = 5, amountOfMats = 0.562},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 34, maxItemLevel = 35, matRate = 0.220, minAmount = 4, maxAmount = 9, amountOfMats = 1.200},
+			},
+		},
+		["i:52555"] = { -- Hypnotic Dust
+			minLevel = 29,
+			maxLevel = 32,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 36, maxItemLevel = 36, matRate = 0.750, minAmount = 1, maxAmount = 8, amountOfMats = 1.556},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 37, maxItemLevel = 37, matRate = 0.750, minAmount = 1, maxAmount = 10, amountOfMats = 2.628},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 36, maxItemLevel = 36, matRate = 0.250, minAmount = 1, maxAmount = 6, amountOfMats = 0.510},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 37, maxItemLevel = 37, matRate = 0.250, minAmount = 1, maxAmount = 10, amountOfMats = 0.864},
+			},
+		},
+		["i:74249"] = { -- Spirit Dust
+			minLevel = 31,
+			maxLevel = 35,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 38, maxItemLevel = 38, matRate = 0.850, minAmount = 1, maxAmount = 9, amountOfMats = 2.285},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 39, maxItemLevel = 39, matRate = 0.850, minAmount = 2, maxAmount = 10, amountOfMats = 3.135},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 38, maxItemLevel = 38, matRate = 0.850, minAmount = 1, maxAmount = 8, amountOfMats = 2.245},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 39, maxItemLevel = 39, matRate = 0.850, minAmount = 3, maxAmount = 10, amountOfMats = 3.560},
+			},
+		},
+		["i:109693"] = { -- Draenic Dust
+			minLevel = 35,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 40, maxItemLevel = 44, matRate = 1.000, minAmount = 1, maxAmount = 4, amountOfMats = 2.600},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 40, maxItemLevel = 44, matRate = 0.750, minAmount = 5, maxAmount = 12, amountOfMats = 5.810},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 40, maxItemLevel = 44, matRate = 1.000, minAmount = 1, maxAmount = 4, amountOfMats = 2.600},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 40, maxItemLevel = 44, matRate = 0.800, minAmount = 5, maxAmount = 12, amountOfMats = 6.220},
+			},
+		},
+		["i:124440"] = { -- Arkhana
+			minLevel = 40,
+			maxLevel = 45,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 45, maxItemLevel = 48, matRate = 1.000, minAmount = 4, maxAmount = 6, amountOfMats = 4.750},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 45, maxItemLevel = 48, matRate = 1.000, minAmount = 4, maxAmount = 6, amountOfMats = 4.750},
+			},
+		},
+		["i:152875"] = { -- Gloom Dust
+			minLevel = 45,
+			maxLevel = 50,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 49, maxItemLevel = 52, matRate = 1.000, minAmount = 1, maxAmount = 6, amountOfMats = 3.600},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 53, maxItemLevel = 58, matRate = 1.000, minAmount = 4, maxAmount = 9, amountOfMats = 6.500},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 51, maxItemLevel = 84, matRate = 0.950, minAmount = 1, maxAmount = 2, amountOfMats = 1.425},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 58, maxItemLevel = 100, matRate = 0.200, minAmount = 4, maxAmount = 6, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 49, maxItemLevel = 52, matRate = 1.000, minAmount = 1, maxAmount = 6, amountOfMats = 3.600},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 53, maxItemLevel = 58, matRate = 1.000, minAmount = 4, maxAmount = 9, amountOfMats = 6.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 51, maxItemLevel = 84, matRate = 1.950, minAmount = 1, maxAmount = 2, amountOfMats = 1.425},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 58, maxItemLevel = 100, matRate = 1.200, minAmount = 4, maxAmount = 6, amountOfMats = 1.000},
+			},
+		},
+		["i:172230"] = { -- Soul Dust
+			minLevel = 50,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 85, maxItemLevel = 999, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 2.500},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 85, maxItemLevel = 999, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.400},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 85, maxItemLevel = 999, matRate = 1.000, minAmount = 2, maxAmount = 4, amountOfMats = 2.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 85, maxItemLevel = 999, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.400},
+			},
+		},
+
+		-- Essences
+		["i:10938"] = { -- Lesser Magic Essence
+			minLevel = 1,
+			maxLevel = 7,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 1, maxItemLevel = 8, matRate = 0.200, minAmount = 1, maxAmount = 6, amountOfMats = 0.303},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 1, maxItemLevel = 8, matRate = 0.800, minAmount = 1, maxAmount = 5, amountOfMats = 1.218},
+			},
+		},
+		["i:10939"] = { -- Greater Magic Essence
+			minLevel = 8,
+			maxLevel = 11,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 9, maxItemLevel = 16, matRate = 0.200, minAmount = 1, maxAmount = 5, amountOfMats = 0.307},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 5, maxItemLevel = 16, matRate = 1.000, minAmount = 2, maxAmount = 2, amountOfMats = 2.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 9, maxItemLevel = 16, matRate = 0.200, minAmount = 1, maxAmount = 4, amountOfMats = 1.217},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 5, maxItemLevel = 16, matRate = 1.000, minAmount = 2, maxAmount = 2, amountOfMats = 2.000},
+			},
+		},
+		["i:16202"] = { -- Lesser Eternal Essence
+			minLevel = 12,
+			maxLevel = 20,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 17, maxItemLevel = 24, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.346},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 17, maxItemLevel = 24, matRate = 0.220, minAmount = 1, maxAmount = 3, amountOfMats = 0.750},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 17, maxItemLevel = 24, matRate = 0.750, minAmount = 1, maxAmount = 4, amountOfMats = 1.302},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 17, maxItemLevel = 24, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 0.750},
+			},
+		},
+		["i:16203"] = { -- Greater Eternal Essence
+			minLevel = 20,
+			maxLevel = 25,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 25, maxItemLevel = 29, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.346},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 25, maxItemLevel = 29, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.650},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 29, maxItemLevel = 30, matRate = 0.800, minAmount = 2, maxAmount = 5, amountOfMats = 2.800},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 25, maxItemLevel = 29, matRate = 0.750, minAmount = 1, maxAmount = 5, amountOfMats = 1.182},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 25, maxItemLevel = 29, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.650},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 29, maxItemLevel = 30, matRate = 0.800, minAmount = 2, maxAmount = 5, amountOfMats = 2.800},
+			},
+		},
+		["i:22447"] = { -- Lesser Planar Essence
+			minLevel = 24,
+			maxLevel = 27,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 30, maxItemLevel = 30, matRate = 0.220, minAmount = 2, maxAmount = 5, amountOfMats = 0.562},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 30, maxItemLevel = 30, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 1.932},
+			},
+		},
+		["i:22446"] = { -- Greater Planar Essence
+			minLevel = 24,
+			maxLevel = 27,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 31, maxItemLevel = 31, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.346},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 31, maxItemLevel = 31, matRate = 0.750, minAmount = 1, maxAmount = 5, amountOfMats = 1.170},
+			},
+		},
+		["i:34056"] = { -- Lesser Cosmic Essence
+			minLevel = 26,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.220, minAmount = 2, maxAmount = 5, amountOfMats = 0.562},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 1.932},
+			},
+		},
+		["i:34055"] = { -- Greater Cosmic Essence
+			minLevel = 26,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 34, maxItemLevel = 35, matRate = 0.220, minAmount = 1, maxAmount = 5, amountOfMats = 0.346},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 34, maxItemLevel = 35, matRate = 0.750, minAmount = 1, maxAmount = 5, amountOfMats = 1.170},
+			},
+		},
+		["i:52718"] = { -- Lesser Celestial Essence
+			minLevel = 29,
+			maxLevel = 32,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 36, maxItemLevel = 36, matRate = 0.250, minAmount = 2, maxAmount = 5, amountOfMats = 0.655},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 36, maxItemLevel = 36, matRate = 0.750, minAmount = 2, maxAmount = 5, amountOfMats = 1.932},
+			},
+		},
+		["i:52719"] = { -- Greater Celestial Essence
+			minLevel = 29,
+			maxLevel = 32,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 37, maxItemLevel = 37, matRate = 0.250, minAmount = 1, maxAmount = 5, amountOfMats = 0.412},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 37, maxItemLevel = 37, matRate = 0.750, minAmount = 1, maxAmount = 5, amountOfMats = 1.157},
+			},
+		},
+		["i:74250"] = { -- Mysterious Essence
+			minLevel = 31,
+			maxLevel = 34,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 38, maxItemLevel = 38, matRate = 0.150, minAmount = 1, maxAmount = 6, amountOfMats = 0.178},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 39, maxItemLevel = 39, matRate = 0.150, minAmount = 1, maxAmount = 6, amountOfMats = 0.244},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 38, maxItemLevel = 38, matRate = 0.150, minAmount = 1, maxAmount = 6, amountOfMats = 0.178},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 39, maxItemLevel = 39, matRate = 0.150, minAmount = 1, maxAmount = 6, amountOfMats = 0.333},
+			},
+		},
+
+		-- Shards
+		["i:14343"] = { -- Small Brilliant Shard
+			minLevel = 12,
+			maxLevel = 21,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 17, maxItemLevel = 24, matRate = 0.050, minAmount = 1, maxAmount = 2, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 17, maxItemLevel = 24, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 2.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 17, maxItemLevel = 24, matRate = 0.050, minAmount = 1, maxAmount = 2, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 17, maxItemLevel = 24, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 2.000},
+			},
+		},
+		["i:14344"] = { -- Large Brilliant Shard
+			minLevel = 20,
+			maxLevel = 25,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 25, maxItemLevel = 29, matRate = 0.050, minAmount = 1, maxAmount = 2, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 25, maxItemLevel = 29, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 2.000},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 29, maxItemLevel = 30, matRate = 1.000, minAmount = 2, maxAmount = 5, amountOfMats = 3.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 25, maxItemLevel = 29, matRate = 0.050, minAmount = 1, maxAmount = 2, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 25, maxItemLevel = 29, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 2.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 29, maxItemLevel = 30, matRate = 1.000, minAmount = 2, maxAmount = 5, amountOfMats = 3.500},
+			},
+		},
+		["i:22448"] = { -- Small Prismatic Shard
+			minLevel = 23,
+			maxLevel = 27,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 30, maxItemLevel = 30, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 30, maxItemLevel = 30, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.030},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 30, maxItemLevel = 30, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 30, maxItemLevel = 30, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.030},
+			},
+		},
+		["i:22449"] = { -- Large Prismatic Shard
+			minLevel = 23,
+			maxLevel = 27,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 31, maxItemLevel = 31, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 31, maxItemLevel = 31, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.03},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 31, maxItemLevel = 31, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 31, maxItemLevel = 31, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.03},
+			},
+		},
+		["i:34053"] = { -- Small Dream Shard
+			minLevel = 27,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 32, maxItemLevel = 33, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 32, maxItemLevel = 33, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 32, maxItemLevel = 33, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:34052"] = { -- Dream Shard
+			minLevel = 27,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 2, minItemLevel = 34, maxItemLevel = 35, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 34, maxItemLevel = 35, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 2, minItemLevel = 34, maxItemLevel = 35, matRate = 0.030, minAmount = 1, maxAmount = 2, amountOfMats = 0.033},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 34, maxItemLevel = 35, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:52720"] = { -- Small Heavenly Shard
+			minLevel = 29,
+			maxLevel = 32,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 36, maxItemLevel = 36, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 36, maxItemLevel = 36, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:52721"] = { -- Heavenly Shard
+			minLevel = 29,
+			maxLevel = 32,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 37, maxItemLevel = 37, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 37, maxItemLevel = 37, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:74252"] = { -- Small Ethereal Shard
+			minLevel = 32,
+			maxLevel = 35,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 38, maxItemLevel = 38, matRate = 0.950, minAmount = 1, maxAmount = 2, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 39, maxItemLevel = 39, matRate = 0.050, minAmount = 1, maxAmount = 2, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 38, maxItemLevel = 38, matRate = 0.950, minAmount = 1, maxAmount = 2, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 39, maxItemLevel = 39, matRate = 0.050, minAmount = 1, maxAmount = 2, amountOfMats = 0.050},
+			},
+		},
+		["i:74247"] = { -- Ethereal Shard
+			minLevel = 32,
+			maxLevel = 35,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 38, maxItemLevel = 38, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 39, maxItemLevel = 39, matRate = 0.950, minAmount = 1, maxAmount = 1, amountOfMats = 0.950},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 38, maxItemLevel = 38, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 39, maxItemLevel = 39, matRate = 0.950, minAmount = 1, maxAmount = 1, amountOfMats = 0.950},
+			},
+		},
+		["i:115502"] = { -- Small Luminous Shard
+			minLevel = 35,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 42, maxItemLevel = 44, matRate = 0.100, minAmount = 3, maxAmount = 6, amountOfMats = 0.430},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 42, maxItemLevel = 44, matRate = 0.100, minAmount = 3, maxAmount = 6, amountOfMats = 0.430},
+			},
+		},
+		["i:111245"] = { -- Luminous Shard
+			minLevel = 35,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 42, maxItemLevel = 44, matRate = 0.220, minAmount = 1, maxAmount = 1, amountOfMats = 0.220},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 42, maxItemLevel = 44, matRate = 0.220, minAmount = 1, maxAmount = 1, amountOfMats = 0.220},
+			},
+		},
+		["i:124441"] = { -- Leylight Shard
+			minLevel = 40,
+			maxLevel = 45,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 45, maxItemLevel = 46, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 45, maxItemLevel = 46, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:152876"] = { -- Umbra Shard
+			minLevel = 45,
+			maxLevel = 50,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 51, maxItemLevel = 84, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.500},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 58, maxItemLevel = 100, matRate = 0.400, minAmount = 1, maxAmount = 2, amountOfMats = 0.600},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 51, maxItemLevel = 84, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 58, maxItemLevel = 100, matRate = 0.400, minAmount = 1, maxAmount = 2, amountOfMats = 0.600},
+			},
+		},
+		["i:172231"] = { -- Sacred Shard
+			minLevel = 50,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 85, maxItemLevel = 999, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.500},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 101, maxItemLevel = 999, matRate = 0.350, minAmount = 1, maxAmount = 1, amountOfMats = 0.350},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 85, maxItemLevel = 999, matRate = 1.000, minAmount = 1, maxAmount = 2, amountOfMats = 1.500},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 101, maxItemLevel = 999, matRate = 0.350, minAmount = 1, maxAmount = 1, amountOfMats = 0.350},
+			},
+		},
+
+		-- Crystals
+		["i:22450"] = { -- Void Crystal
+			minLevel = 26,
+			maxLevel = 26,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 30, maxItemLevel = 34, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 1.530},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 30, maxItemLevel = 34, matRate = 1.000, minAmount = 1, maxAmount = 3, amountOfMats = 1.530},
+			},
+		},
+		["i:34057"] = { -- Abyss Crystal
+			minLevel = 30,
+			maxLevel = 30,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 35, maxItemLevel = 36, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 35, maxItemLevel = 36, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:52722"] = { -- Maelstrom Crystal
+			minLevel = 32,
+			maxLevel = 32,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 37, maxItemLevel = 38, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 37, maxItemLevel = 38, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:74248"] = { -- Sha Crystal
+			minLevel = 32,
+			maxLevel = 35,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 39, maxItemLevel = 42, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 39, maxItemLevel = 42, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:115504"] = { -- Fractured Temporal Crystal
+			minLevel = 35,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 40, maxItemLevel = 44, matRate = 0.100, minAmount = 3, maxAmount = 3, amountOfMats = 0.300},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 43, maxItemLevel = 47, matRate = 0.250, minAmount = 3, maxAmount = 3, amountOfMats = 0.750},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 40, maxItemLevel = 44, matRate = 0.050, minAmount = 3, maxAmount = 3, amountOfMats = 0.150},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 43, maxItemLevel = 47, matRate = 0.250, minAmount = 3, maxAmount = 3, amountOfMats = 0.750},
+			},
+		},
+		["i:113588"] = { -- Temporal Crystal
+			minLevel = 35,
+			maxLevel = 40,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 40, maxItemLevel = 44, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 43, maxItemLevel = 47, matRate = 0.750, minAmount = 1, maxAmount = 1, amountOfMats = 0.750},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 40, maxItemLevel = 44, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 43, maxItemLevel = 47, matRate = 0.750, minAmount = 1, maxAmount = 1, amountOfMats = 0.750},
+			},
+		},
+		["i:124442"] = { -- Chaos Crystal
+			minLevel = 40,
+			maxLevel = 45,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 50, maxItemLevel = 50, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 50, maxItemLevel = 50, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:152877"] = { -- Veiled Crystal
+			minLevel = 45,
+			maxLevel = 50,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 3, minItemLevel = 51, maxItemLevel = 84, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 58, maxItemLevel = 100, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 3, minItemLevel = 51, maxItemLevel = 84, matRate = 0.050, minAmount = 1, maxAmount = 1, amountOfMats = 0.050},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 58, maxItemLevel = 100, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+		["i:172232"] = { -- Eternal Crystal
+			minLevel = 50,
+			maxLevel = 60,
+			sourceInfo = {
+				{classId = LE_ITEM_CLASS_ARMOR, quality = 4, minItemLevel = 101, maxItemLevel = 999, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+				{classId = LE_ITEM_CLASS_WEAPON, quality = 4, minItemLevel = 101, maxItemLevel = 999, matRate = 1.000, minAmount = 1, maxAmount = 1, amountOfMats = 1.000},
+			},
+		},
+	}
+end
+
+-- From TSM so we can be consistent
+-- add in SL prospect rate so far
+if (not Utils.IsClassic()) then
+	PROSPECT_INFO = { 	
+		-- ======================================== Uncommon Gems ======================================
+		["i:774"] = { -- Malachite
+			["i:2770"] = {matRate = 0.5000, minAmount = 1, maxAmount = 1, amountOfMats = 0.1000}, -- Copper Ore
+		},
+		["i:818"] = { -- Tigerseye
+			["i:2770"] = {matRate = 0.5000, minAmount = 1, maxAmount = 1, amountOfMats = 0.1000}, -- Copper Ore
+		},
+		["i:1210"] = {  -- Shadowgem
+			["i:2771"] = {matRate = 0.3800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0800}, -- Tin Ore
+			["i:2770"] = {matRate = 0.1000, minAmount = 1, maxAmount = 1, amountOfMats = 0.0200}, -- Copper Ore
+		},
+		["i:1206"] = { -- Moss Agate
+			["i:2771"] = {matRate = 0.3800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0800}, -- Tin Ore
+		},
+		["i:1705"] = { -- Lesser Moonstone
+			["i:2771"] = {matRate = 0.3800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0800}, -- Tin Ore
+			["i:2772"] = {matRate = 0.3500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0700}, -- Iron Ore
+		},
+		["i:1529"] = { -- Jade
+			["i:2772"] = {matRate = 0.3500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0700}, -- Iron Ore
+			["i:2771"] = {matRate = 0.0325, minAmount = 1, maxAmount = 1, amountOfMats = 0.0065}, -- Tin Ore
+		},
+		["i:3864"] = { -- Citrine
+			["i:2772"] = {matRate = 0.3800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0785}, -- Iron Ore
+			["i:3858"] = {matRate = 0.3500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0725}, -- Mithril Ore
+			["i:2771"] = {matRate = 0.0325, minAmount = 1, maxAmount = 1, amountOfMats = 0.0065}, -- Tin Ore
+		},
+		["i:7909"] = { -- Aquamarine
+			["i:3858"] = {matRate = 0.3500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0725}, -- Mithril Ore
+			["i:2772"] = {matRate = 0.0500, minAmount = 1, maxAmount = 1, amountOfMats = 0.0100}, -- Iron Ore
+			["i:2771"] = {matRate = 0.0325, minAmount = 1, maxAmount = 1, amountOfMats = 0.0065}, -- Tin Ore
+		},
+		["i:7910"] = { -- Star Ruby
+			[ "i:3858"] = {matRate = 0.3500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0725}, -- Mithril Ore
+			["i:10620"] = {matRate = 0.1550, minAmount = 1, maxAmount = 2, amountOfMats = 0.0320}, -- Thorium Ore
+			[ "i:2772"] = {matRate = 0.0500, minAmount = 1, maxAmount = 1, amountOfMats = 0.0100}, -- Iron Ore
+		},
+		["i:12361"] = { -- Blue Sapphire
+			["i:10620"] = {matRate = 0.3100, minAmount = 1, maxAmount = 2, amountOfMats = 0.0660}, -- Thorium Ore
+			[ "i:3858"] = {matRate = 0.0225, minAmount = 1, maxAmount = 1, amountOfMats = 0.0050}, -- Mithril Ore
+		},
+		["i:12799"] = { -- Large Opal
+			["i:10620"] = {matRate = 0.3100, minAmount = 1, maxAmount = 2, amountOfMats = 0.0660}, -- Thorium Ore
+			[ "i:3858"] = {matRate = 0.0225, minAmount = 1, maxAmount = 1, amountOfMats = 0.0050}, -- Mithril Ore
+		},
+		["i:12800"] = { -- Azerothian Diamond
+			["i:10620"] = {matRate = 0.3100, minAmount = 1, maxAmount = 2, amountOfMats = 0.0660}, -- Thorium Ore
+			[ "i:3858"] = {matRate = 0.0225, minAmount = 1, maxAmount = 1, amountOfMats = 0.0050}, -- Mithril Ore
+		},
+		["i:12364"] = { -- Huge Emerald
+			["i:10620"] = {matRate = 0.3100, minAmount = 1, maxAmount = 2, amountOfMats = 0.0660}, -- Thorium Ore
+			[ "i:3858"] = {matRate = 0.0225, minAmount = 1, maxAmount = 1, amountOfMats = 0.0050}, -- Mithril Ore
+		},
+		["i:23117"] = { -- Azure Moonstone
+			["i:23424"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.5000, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Adamantite Ore
+		},
+		["i:23077"] = { -- Blood Garnet
+			["i:23424"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Adamantite Ore
+		},
+		["i:23079"] = { -- Deep Peridot
+			["i:23424"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Adamantite Ore
+		},
+		["i:21929"] = { -- Flame Spessarite
+			["i:23424"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Adamantite Ore
+		},
+		["i:23112"] = { -- Golden Draenite
+			["i:23424"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Adamantite Ore
+		},
+		["i:23107"] = { -- Shadow Draenite
+			["i:23424"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Adamantite Ore
+		},
+		["i:36917"] = { -- Bloodstone
+			["i:36909"] = {matRate = 0.2400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0495}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.2500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0525}, -- Titanium Ore
+		},
+		["i:36923"] = { -- Chalcedony
+			["i:36909"] = {matRate = 0.2400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0495}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.2500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0525}, -- Titanium Ore
+		},
+		["i:36932"] = { -- Dark Jade
+			["i:36909"] = {matRate = 0.2400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0495}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.2500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0525}, -- Titanium Ore
+		},
+		["i:36929"] = { -- Huge Citrine
+			["i:36909"] = {matRate = 0.2400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0495}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.2500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0525}, -- Titanium Ore
+		},
+		["i:36926"] = { -- Shadow Crystal
+			["i:36909"] = {matRate = 0.2400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0495}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.2500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0525}, -- Titanium Ore
+		},
+		["i:36920"] = { -- Sun Crystal
+			["i:36909"] = {matRate = 0.2400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0495}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.2500, minAmount = 1, maxAmount = 2, amountOfMats = 0.0525}, -- Titanium Ore
+		},
+		["i:52182"] = { -- Jasper
+			["i:53038"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0500}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Pyrite Ore
+		},
+		["i:52180"] = { -- Nightstone
+			["i:53038"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0500}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Pyrite Ore
+		},
+		["i:52178"] = { -- Zephyrite
+			["i:53038"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0500}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Pyrite Ore
+		},
+		["i:52179"] = { -- Alicite
+			["i:53038"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0500}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Pyrite Ore
+		},
+		["i:52177"] = { -- Carnelian
+			["i:53038"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0500}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Pyrite Ore
+		},
+		["i:52181"] = { -- Hessonite
+			["i:53038"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0500}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.1800, minAmount = 1, maxAmount = 2, amountOfMats = 0.0365}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Pyrite Ore
+		},
+		["i:76130"] = { -- Tiger Opal
+			["i:72092"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0497}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.2300, minAmount = 1, maxAmount = 2, amountOfMats = 0.0487}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76133"] = { -- Lapis Lazuli
+			["i:72092"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0497}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.2300, minAmount = 1, maxAmount = 2, amountOfMats = 0.0487}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76134"] = { -- Sunstone
+			["i:72092"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0497}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.2300, minAmount = 1, maxAmount = 2, amountOfMats = 0.0487}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76135"] = { -- Roguestone
+			["i:72092"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0497}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.2300, minAmount = 1, maxAmount = 2, amountOfMats = 0.0487}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76136"] = { -- Pandarian Garnet
+			["i:72092"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0497}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.2300, minAmount = 1, maxAmount = 2, amountOfMats = 0.0487}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76137"] = { -- Alexandrite
+			["i:72092"] = {matRate = 0.2350, minAmount = 1, maxAmount = 2, amountOfMats = 0.0497}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.2300, minAmount = 1, maxAmount = 2, amountOfMats = 0.0487}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 1, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:130173"] = { -- Deep Amber
+			["i:123918"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0100}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0550, minAmount = 2, maxAmount = 5, amountOfMats = 0.0385}, -- Felslate
+		},
+		["i:130174"] = { -- Azsunite
+			["i:123918"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0100}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0550, minAmount = 2, maxAmount = 5, amountOfMats = 0.0385}, -- Felslate
+		},
+		["i:130176"] = { -- Skystone
+			["i:123918"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0100}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0550, minAmount = 2, maxAmount = 5, amountOfMats = 0.0385}, -- Felslate
+		},
+		["i:130177"] = { -- Queen's Opal
+			["i:123918"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0100}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0550, minAmount = 2, maxAmount = 5, amountOfMats = 0.0385}, -- Felslate
+		},
+		["i:130175"] = { -- Chaotic Spinel
+			["i:123918"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0100}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0550, minAmount = 2, maxAmount = 5, amountOfMats = 0.0385}, -- Felslate
+		},
+		["i:130172"] = { -- Sangrite
+			["i:123918"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0100}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0550, minAmount = 2, maxAmount = 5, amountOfMats = 0.0385}, -- Felslate
+		},
+		["i:153700"] = { -- Golden Beryl
+			["i:152512"] = {matRate = 0.1800, minAmount = 1, maxAmount = 4, amountOfMats = 0.0551}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.1950, minAmount = 1, maxAmount = 4, amountOfMats = 0.0603}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.2100, minAmount = 1, maxAmount = 4, amountOfMats = 0.0660}, -- Platinum Ore
+		},
+		["i:153701"] = { -- Rubellite
+			["i:152512"] = {matRate = 0.1800, minAmount = 1, maxAmount = 4, amountOfMats = 0.0551}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.1950, minAmount = 1, maxAmount = 4, amountOfMats = 0.0603}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.2100, minAmount = 1, maxAmount = 4, amountOfMats = 0.0660}, -- Platinum Ore
+		},
+		["i:153702"] = { -- Kubiline
+			["i:152512"] = {matRate = 0.1800, minAmount = 1, maxAmount = 4, amountOfMats = 0.0551}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.1950, minAmount = 1, maxAmount = 4, amountOfMats = 0.0603}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.2100, minAmount = 1, maxAmount = 4, amountOfMats = 0.0660}, -- Platinum Ore
+		},
+		["i:153703"] = { -- Solstone
+			["i:152512"] = {matRate = 0.1800, minAmount = 1, maxAmount = 4, amountOfMats = 0.0551}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.1950, minAmount = 1, maxAmount = 4, amountOfMats = 0.0603}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.2100, minAmount = 1, maxAmount = 4, amountOfMats = 0.0660}, -- Platinum Ore
+		},
+		["i:153704"] = { -- Viridium
+			["i:152512"] = {matRate = 0.1800, minAmount = 1, maxAmount = 4, amountOfMats = 0.0551}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.1950, minAmount = 1, maxAmount = 4, amountOfMats = 0.0603}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.2100, minAmount = 1, maxAmount = 4, amountOfMats = 0.0660}, -- Platinum Ore
+		},
+		["i:153705"] = { -- Kyanite
+			["i:152512"] = {matRate = 0.1800, minAmount = 1, maxAmount = 4, amountOfMats = 0.0551}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.1950, minAmount = 1, maxAmount = 4, amountOfMats = 0.0603}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.2100, minAmount = 1, maxAmount = 4, amountOfMats = 0.0660}, -- Platinum Ore
+		},
+		-- ========================================== Rare Gems ========================================
+		["i:23440"] = { -- Dawnstone
+			["i:23424"] = {matRate = 0.0150, minAmount = 1, maxAmount = 1, amountOfMats = 0.0030}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.0400, minAmount = 1, maxAmount = 1, amountOfMats = 0.0080}, -- Adamantite Ore
+		},
+		["i:23436"] = { -- Living Ruby
+			["i:23424"] = {matRate = 0.0150, minAmount = 1, maxAmount = 1, amountOfMats = 0.0030}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.0400, minAmount = 1, maxAmount = 1, amountOfMats = 0.0080}, -- Adamantite Ore
+		},
+		["i:23441"] = { -- Nightseye
+			["i:23424"] = {matRate = 0.0150, minAmount = 1, maxAmount = 1, amountOfMats = 0.0030}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.0400, minAmount = 1, maxAmount = 1, amountOfMats = 0.0080}, -- Adamantite Ore
+		},
+		["i:23439"] = { -- Noble Topaz
+			["i:23424"] = {matRate = 0.0150, minAmount = 1, maxAmount = 1, amountOfMats = 0.0030}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.0400, minAmount = 1, maxAmount = 1, amountOfMats = 0.0080}, -- Adamantite Ore
+		},
+		["i:23438"] = { -- Star of Elune
+			["i:23424"] = {matRate = 0.0150, minAmount = 1, maxAmount = 1, amountOfMats = 0.0030}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.0400, minAmount = 1, maxAmount = 1, amountOfMats = 0.0080}, -- Adamantite Ore
+		},
+		["i:23437"] = { -- Talasite
+			["i:23424"] = {matRate = 0.0150, minAmount = 1, maxAmount = 1, amountOfMats = 0.0030}, -- Fel Iron Ore
+			["i:23425"] = {matRate = 0.0400, minAmount = 1, maxAmount = 1, amountOfMats = 0.0080}, -- Adamantite Ore
+		},
+		["i:36921"] = { -- Autumn's Glow
+			["i:36909"] = {matRate = 0.0150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0030}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.0400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0083}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36933"] = { -- Forest Emerald
+			["i:36909"] = {matRate = 0.0150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0030}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.0400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0083}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36930"] = { -- Monarch Topaz
+			["i:36909"] = {matRate = 0.0150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0030}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.0400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0083}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36918"] = { -- Scarlet Ruby
+			["i:36909"] = {matRate = 0.0150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0030}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.0400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0083}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36924"] = { -- Sky Sapphire
+			["i:36909"] = {matRate = 0.0150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0030}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.0400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0083}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36927"] = { -- Twilight Opal
+			["i:36909"] = {matRate = 0.0150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0030}, -- Cobalt Ore
+			["i:36912"] = {matRate = 0.0400, minAmount = 1, maxAmount = 2, amountOfMats = 0.0083}, -- Saronite Ore
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:52192"] = { -- Dream Emerald
+			["i:53038"] = {matRate = 0.0125, minAmount = 1, maxAmount = 1, amountOfMats = 0.0025}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0152}, -- Pyrite Ore
+		},
+		["i:52193"] = { -- Ember Topaz
+			["i:53038"] = {matRate = 0.0125, minAmount = 1, maxAmount = 1, amountOfMats = 0.0025}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0152}, -- Pyrite Ore
+		},
+		["i:52190"] = { -- Inferno Ruby
+			["i:53038"] = {matRate = 0.0125, minAmount = 1, maxAmount = 1, amountOfMats = 0.0025}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0152}, -- Pyrite Ore
+		},
+		["i:52195"] = { -- Amberjewel
+			["i:53038"] = {matRate = 0.0125, minAmount = 1, maxAmount = 1, amountOfMats = 0.0025}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0152}, -- Pyrite Ore
+		},
+		["i:52194"] = { -- Demonseye
+			["i:53038"] = {matRate = 0.0125, minAmount = 1, maxAmount = 1, amountOfMats = 0.0025}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0152}, -- Pyrite Ore
+		},
+		["i:52191"] = { -- Ocean Sapphire
+			["i:53038"] = {matRate = 0.0125, minAmount = 1, maxAmount = 1, amountOfMats = 0.0025}, -- Obsidium Ore
+			["i:52185"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Elementium Ore
+			["i:52183"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0152}, -- Pyrite Ore
+		},
+		["i:76131"] = { -- Primordial Ruby
+			["i:72092"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1650, minAmount = 1, maxAmount = 3, amountOfMats = 0.0340}, -- Black Trillium Ore
+		},
+		["i:76138"] = { -- River's Heart
+			["i:72092"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76139"] = { -- Wild Jade
+			["i:72092"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76140"] = { -- Vermillion Onyx
+			["i:72092"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76141"] = { -- Imperial Amethyst
+			["i:72092"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:76142"] = { -- Sun's Radiance
+			["i:72092"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Ghost Iron Ore
+			["i:72093"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0091}, -- Kyparite
+			["i:72103"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- White Trillium Ore
+			["i:72094"] = {matRate = 0.1600, minAmount = 1, maxAmount = 3, amountOfMats = 0.0341}, -- Black Trillium Ore
+		},
+		["i:130179"] = { -- Eye of Prophecy
+			["i:123918"] = {matRate = 0.0100, minAmount = 1, maxAmount = 1, amountOfMats = 0.0020}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0100, minAmount = 2, maxAmount = 5, amountOfMats = 0.0020}, -- Felslate
+		},
+		["i:130180"] = { -- Dawnlight
+			["i:123918"] = {matRate = 0.0100, minAmount = 1, maxAmount = 1, amountOfMats = 0.0020}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0100, minAmount = 2, maxAmount = 5, amountOfMats = 0.0020}, -- Felslate
+		},
+		["i:130182"] = { -- Maelstrom Sapphire
+			["i:123918"] = {matRate = 0.0100, minAmount = 1, maxAmount = 1, amountOfMats = 0.0020}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0100, minAmount = 2, maxAmount = 5, amountOfMats = 0.0020}, -- Felslate
+		},
+		["i:130183"] = { -- Shadowruby
+			["i:123918"] = {matRate = 0.0100, minAmount = 1, maxAmount = 1, amountOfMats = 0.0020}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0100, minAmount = 2, maxAmount = 5, amountOfMats = 0.0020}, -- Felslate
+		},
+		["i:130178"] = { -- FuryStone
+			["i:123918"] = {matRate = 0.0100, minAmount = 1, maxAmount = 1, amountOfMats = 0.0020}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0100, minAmount = 2, maxAmount = 5, amountOfMats = 0.0020}, -- Felslate
+		},
+		["i:130181"] = { -- Pandemonite
+			["i:123918"] = {matRate = 0.0100, minAmount = 1, maxAmount = 1, amountOfMats = 0.0020}, -- Leystone Ore
+			["i:123919"] = {matRate = 0.0100, minAmount = 2, maxAmount = 5, amountOfMats = 0.0020}, -- Felslate
+		},
+		["i:154120"] = { -- Owlseye
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 2, amountOfMats = 0.0086}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0153}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.1150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0237}, -- Platinum Ore
+		},
+		["i:154121"] = { -- Scarlet Diamond
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 2, amountOfMats = 0.0086}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0153}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.1150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0237}, -- Platinum Ore
+		},
+		["i:154122"] = { -- Tidal Amethyst
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 2, amountOfMats = 0.0086}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0153}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.1150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0237}, -- Platinum Ore
+		},
+		["i:154123"] = { -- Amberblaze
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 2, amountOfMats = 0.0086}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0153}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.1150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0237}, -- Platinum Ore
+		},
+		["i:154124"] = { -- Laribole
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 2, amountOfMats = 0.0086}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0153}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.1150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0237}, -- Platinum Ore
+		},
+		["i:154125"] = { -- Royal Quartz
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 2, amountOfMats = 0.0086}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0750, minAmount = 1, maxAmount = 2, amountOfMats = 0.0153}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.1150, minAmount = 1, maxAmount = 2, amountOfMats = 0.0237}, -- Platinum Ore
+		},
+		-- ========================================== Epic Gems ========================================
+		["i:36931"] = { -- Ametrine
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36919"] = { -- Cardinal Ruby
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36928"] = { -- Dreadstone
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36934"] = { -- Eye of Zul
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36922"] = { -- King's Amber
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:36925"] = { -- Majestic Zircon
+			["i:36910"] = {matRate = 0.0450, minAmount = 1, maxAmount = 2, amountOfMats = 0.0093}, -- Titanium Ore
+		},
+		["i:151719"] = { -- Lightsphene
+			["i:151564"] = {matRate = 0.0300, minAmount = 1, maxAmount = 1, amountOfMats = 0.0060}, -- Empyrium
+		},
+		["i:151720"] = { -- Chemirine
+			["i:151564"] = {matRate = 0.0300, minAmount = 1, maxAmount = 1, amountOfMats = 0.0060}, -- Empyrium
+		},
+		["i:151722"] = { -- Florid Malachite
+			["i:151564"] = {matRate = 0.0300, minAmount = 1, maxAmount = 1, amountOfMats = 0.0060}, -- Empyrium
+		},
+		["i:151721"] = { -- Hesselian
+			["i:151564"] = {matRate = 0.0300, minAmount = 1, maxAmount = 1, amountOfMats = 0.0060}, -- Empyrium
+		},
+		["i:151718"] = { -- Argulite
+			["i:151564"] = {matRate = 0.0300, minAmount = 1, maxAmount = 1, amountOfMats = 0.0060}, -- Empyrium
+		},
+		["i:151579"] = { -- Labradorite
+			["i:151564"] = {matRate = 0.0300, minAmount = 1, maxAmount = 1, amountOfMats = 0.0060}, -- Empyrium
+		},
+		["i:153706"] = { -- Kraken's Eye
+			["i:152512"] = {matRate = 0.0425, minAmount = 1, maxAmount = 1, amountOfMats = 0.0085}, -- Monelite Ore
+			["i:152579"] = {matRate = 0.0425, minAmount = 1, maxAmount = 1, amountOfMats = 0.0085}, -- Storm Silver Ore
+			["i:152513"] = {matRate = 0.0450, minAmount = 1, maxAmount = 1, amountOfMats = 0.0090}, -- Platinum Ore
+		},
+		["i:168188"] = { -- Sage Agate
+			["i:168185"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Osmenite Ore
+		},
+		["i:168193"] = { -- Azsharine
+			["i:168185"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Osmenite Ore
+		},
+		["i:168189"] = { -- Dark Opal
+			["i:168185"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Osmenite Ore
+		},
+		["i:168190"] = { -- Lava Lazuli
+			["i:168185"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Osmenite Ore
+		},
+		["i:168191"] = { -- Sea Currant
+			["i:168185"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Osmenite Ore
+		},
+		["i:168192"] = { -- Sand Spinel
+			["i:168185"] = {matRate = 0.1650, minAmount = 1, maxAmount = 1, amountOfMats = 0.0330}, -- Osmenite Ore
+		},
+		["i:168635"] = { -- Leviathan's Eye
+			["i:168185"] = {matRate = 0.1200, minAmount = 1, maxAmount = 1, amountOfMats = 0.0240}, -- Osmenite Ore
+		},
+		-- ============== SL prospects ========================
+		["i:173108"] = { -- oriblase
+			["i:171833"] = {matRate = 0.35, minAmount = 2, maxAmount = 4, amountOfMats = 0.05}, -- elethium
+			["i:171831"] = {matRate = 0.35, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- phaedrum
+			["i:171830"] = {matRate = 0.36, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- oxxein
+			["i:171829"] = {matRate = 0.36, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- solenium
+			["i:171828"] = {matRate = 0.33, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+			["i:171832"] = {matRate = 0.36, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- sinvyr
+		},
+		["i:173109"] = { -- angers eye
+			["i:171833"] = {matRate = 0.28, minAmount = 2, maxAmount = 4, amountOfMats = 0.05}, -- elethium
+			["i:171831"] = {matRate = 0.36, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- phaedrum
+			["i:171830"] = {matRate = 0.36, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- oxxein
+			["i:171829"] = {matRate = 0.33, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- solenium
+			["i:171828"] = {matRate = 0.34, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+			["i:171832"] = {matRate = 0.31, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- sinvyr
+		},
+		["i:173110"] = { -- umbryl
+			["i:171833"] = {matRate = 0.35, minAmount = 2, maxAmount = 4, amountOfMats = 0.05}, -- elethium
+			["i:171831"] = {matRate = 0.28, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- phaedrum
+			["i:171830"] = {matRate = 0.28, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- oxxein
+			["i:171829"] = {matRate = 0.31, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- solenium
+			["i:171828"] = {matRate = 0.33, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+			["i:171832"] = {matRate = 0.33, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- sinvyr
+		},
+		["i:173170"] = { -- essence of rebirth
+			["i:171833"] = {matRate = 0.17, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- elethium
+			["i:171831"] = {matRate = 0.18, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- phaedrum
+			["i:171828"] = {matRate = 0.03, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+		},
+		["i:173171"] = { -- essence of torment
+			["i:171833"] = {matRate = 0.27, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- elethium
+			["i:171832"] = {matRate = 0.19, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- sinvyr
+			["i:171828"] = {matRate = 0.03, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+		},
+		["i:173172"] = { -- essence of servitude
+			["i:171833"] = {matRate = 0.31, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- elethium
+			["i:171830"] = {matRate = 0.20, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- oxxein
+			["i:171828"] = {matRate = 0.02, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+		},
+		["i:173173"] = { -- essence of valor
+			["i:171833"] = {matRate = 0.23, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- elethium
+			["i:171829"] = {matRate = 0.18, minAmount = 1, maxAmount = 2, amountOfMats = 0.0875}, -- solenium
+			["i:171828"] = {matRate = 0.019, minAmount = 1, maxAmount = 2, amountOfMats = 0.05}, -- laestrite
+		},
+	}
+end
+
+-- From TSM so we can be conistent
+-- added in SL mill rate so far
+if (not Utils.IsClassic()) then
+	MILL_INFO =	{
+		-- ======================================= Common Pigments =======================================
+		["i:39151"] = { -- Alabaster Pigment (Ivory / Moonglow Ink)
+			["i:765"] = 0.5,
+			["i:2447"] = 0.5,
+			["i:2449"] = 0.6,
+		},
+		["i:39343"] = { -- Azure Pigment (Ink of the Sea)
+			["i:39969"] = 0.5,
+			["i:36904"] = 0.5,
+			["i:36907"] = 0.5,
+			["i:36901"] = 0.5,
+			["i:39970"] = 0.5,
+			["i:37921"] = 0.5,
+			["i:36905"] = 0.6,
+			["i:36906"] = 0.6,
+			["i:36903"] = 0.6,
+		},
+		["i:61979"] = { -- Ashen Pigment (Blackfallow Ink)
+			["i:52983"] = 0.5,
+			["i:52984"] = 0.5,
+			["i:52985"] = 0.5,
+			["i:52986"] = 0.5,
+			["i:52987"] = 0.6,
+			["i:52988"] = 0.6,
+		},
+		["i:39334"] = { -- Dusky Pigment (Midnight Ink)
+			["i:785"] = 0.5,
+			["i:2450"] = 0.5,
+			["i:2452"] = 0.5,
+			["i:2453"] = 0.6,
+			["i:3820"] = 0.6,
+		},
+		["i:39339"] = { -- Emerald Pigment (Jadefire Ink)
+			["i:3818"] = 0.5,
+			["i:3821"] = 0.5,
+			["i:3358"] = 0.6,
+			["i:3819"] = 0.6,
+		},
+		["i:39338"] = { -- Golden Pigment (Lion's Ink)
+			["i:3355"] = 0.5,
+			["i:3369"] = 0.5,
+			["i:3356"] = 0.6,
+			["i:3357"] = 0.6,
+		},
+		["i:39342"] = { -- Nether Pigment (Ethereal Ink)
+			["i:22785"] = 0.5,
+			["i:22786"] = 0.5,
+			["i:22787"] = 0.5,
+			["i:22789"] = 0.5,
+			["i:22790"] = 0.6,
+			["i:22791"] = 0.6,
+			["i:22792"] = 0.6,
+			["i:22793"] = 0.6,
+		},
+		["i:79251"] = { -- Shadow Pigment (Ink of Dreams)
+			["i:72237"] = 0.5,
+			["i:72234"] = 0.5,
+			["i:79010"] = 0.5,
+			["i:72235"] = 0.5,
+			["i:89639"] = 0.5,
+			["i:79011"] = 0.6,
+		},
+		["i:39341"] = { -- Silvery Pigment (Shimmering Ink)
+			["i:13463"] = 0.5,
+			["i:13464"] = 0.5,
+			["i:13465"] = 0.6,
+			["i:13466"] = 0.6,
+			["i:13467"] = 0.6,
+		},
+		["i:39340"] = { -- Violet Pigment (Celestial Ink)
+			["i:4625"] = 0.5,
+			["i:8831"] = 0.5,
+			["i:8838"] = 0.5,
+			["i:8839"] = 0.6,
+			["i:8845"] = 0.6,
+			["i:8846"] = 0.6,
+		},
+		["i:114931"] = { -- Cerulean Pigment (Warbinder's Ink)
+			["i:109124"] = 0.42,
+			["i:109125"] = 0.42,
+			["i:109126"] = 0.42,
+			["i:109127"] = 0.42,
+			["i:109128"] = 0.42,
+			["i:109129"] = 0.42,
+		},
+		["i:129032"] = { -- Roseate Pigment (No Legion Ink)
+			["i:124101"] = 0.42,
+			["i:124102"] = 0.42,
+			["i:124103"] = 0.42,
+			["i:124104"] = 0.47,
+			["i:124105"] = 1.22,
+			["i:124106"] = 0.42,
+			["i:128304"] = 0.2,
+			["i:151565"] = 0.43,
+		},
+		-- ======================================= Rare Pigments =======================================
+		["i:43109"] = { -- Icy Pigment (Snowfall Ink)
+			["i:39969"] = 0.05,
+			["i:36904"] = 0.05,
+			["i:36907"] = 0.05,
+			["i:36901"] = 0.05,
+			["i:39970"] = 0.05,
+			["i:37921"] = 0.05,
+			["i:36905"] = 0.1,
+			["i:36906"] = 0.1,
+			["i:36903"] = 0.1,
+		},
+		["i:61980"] = { -- Burning Embers (Inferno Ink)
+			["i:52983"] = 0.05,
+			["i:52984"] = 0.05,
+			["i:52985"] = 0.05,
+			["i:52986"] = 0.05,
+			["i:52987"] = 0.1,
+			["i:52988"] = 0.1,
+		},
+		["i:43104"] = { -- Burnt Pigment (Dawnstar Ink)
+			["i:3356"] = 0.1,
+			["i:3357"] = 0.1,
+			["i:3369"] = 0.05,
+			["i:3355"] = 0.05,
+		},
+		["i:43108"] = { -- Ebon Pigment (Darkflame Ink)
+			["i:22792"] = 0.1,
+			["i:22790"] = 0.1,
+			["i:22791"] = 0.1,
+			["i:22793"] = 0.1,
+			["i:22786"] = 0.05,
+			["i:22785"] = 0.05,
+			["i:22787"] = 0.05,
+			["i:22789"] = 0.05,
+		},
+		["i:43105"] = { -- Indigo Pigment (Royal Ink)
+			["i:3358"] = 0.1,
+			["i:3819"] = 0.1,
+			["i:3821"] = 0.05,
+			["i:3818"] = 0.05,
+		},
+		["i:79253"] = { -- Misty Pigment (Starlight Ink)
+			["i:72237"] = 0.05,
+			["i:72234"] = 0.05,
+			["i:79010"] = 0.05,
+			["i:72235"] = 0.05,
+			["i:79011"] = 0.1,
+			["i:89639"] = 0.05,
+		},
+		["i:43106"] = { -- Ruby Pigment (Fiery Ink)
+			["i:4625"] = 0.05,
+			["i:8838"] = 0.05,
+			["i:8831"] = 0.05,
+			["i:8845"] = 0.1,
+			["i:8846"] = 0.1,
+			["i:8839"] = 0.1,
+		},
+		["i:43107"] = { -- Sapphire Pigment (Ink of the Sky)
+			["i:13463"] = 0.05,
+			["i:13464"] = 0.05,
+			["i:13465"] = 0.1,
+			["i:13466"] = 0.1,
+			["i:13467"] = 0.1,
+		},
+		["i:43103"] = { -- Verdant Pigment (Hunter's Ink)
+			["i:2453"] = 0.1,
+			["i:3820"] = 0.1,
+			["i:2450"] = 0.05,
+			["i:785"] = 0.05,
+			["i:2452"] = 0.05,
+		},
+		["i:129034"] = { -- Sallow Pigment (No Legion Ink)
+			["i:124101"] = 0.04,
+			["i:124102"] = 0.04,
+			["i:124103"] = 0.05,
+			["i:124104"] = 0.05,
+			["i:124105"] = 0.04,
+			["i:124106"] = 2.14,
+			["i:128304"] = 0.0018,
+			["i:151565"] = 0.048,
+		},
+		-- ======================================= BFA Pigments ========================================
+		["i:153669"] = { -- Viridescent Pigment
+			["i:152505"] = 0.1325,
+			["i:152506"] = 0.1325,
+			["i:152507"] = 0.1325,
+			["i:152508"] = 0.1325,
+			["i:152509"] = 0.1325,
+			["i:152511"] = 0.1325,
+			["i:152510"] = 0.325,
+		},
+		["i:153636"] = { -- Crimson Pigment
+			["i:152505"] = 0.315,
+			["i:152506"] = 0.315,
+			["i:152507"] = 0.315,
+			["i:152508"] = 0.315,
+			["i:152509"] = 0.315,
+			["i:152511"] = 0.315,
+			["i:152510"] = 0.315,
+		},
+		["i:153635"] = { -- Ultramarine Pigment
+			["i:152505"] = 0.825,
+			["i:152506"] = 0.825,
+			["i:152507"] = 0.825,
+			["i:152508"] = 0.825,
+			["i:152509"] = 0.825,
+			["i:152511"] = 0.825,
+			["i:152510"] = 0.825,
+		},
+		["i:168662"] = { -- Maroon Pigment
+			["i:168487"] = 0.6,
+		},
+		-- ====================== SL Pigments =========================
+		["i:173057"] = { -- Luminous Pigment
+			["i:170554"] = 0.202, -- vigil
+			["i:168586"] = 0.202, -- rising glory
+			["i:168589"] = 0.15, -- marrow root
+			["i:168583"] = 0.096, -- widow
+			["i:169701"] = 0.091, -- death
+			["i:171315"] = 0.232, -- night shade
+		},
+		["i:173056"] = { -- Umbral Pigment
+			["i:170554"] = 0.092, -- vigil
+			["i:168586"] = 0.092, -- rising glory
+			["i:168589"] = 0.140, -- marrow root
+			["i:168583"] = 0.194, -- widow
+			["i:169701"] = 0.204, -- death
+			["i:171315"] = 0.263, -- night shade
+		},
+		["i:175788"] = {
+			["i:170554"] = 0.004, -- vigil
+			["i:168586"] = 0.004, -- rising glory
+			["i:168589"] = 0.005, -- marrow root
+			["i:168583"] = 0.005, -- widow
+			["i:169701"] = 0.004, -- death
+			["i:171315"] = 0.305, -- night shade
+		}
+	}
+end
+
+-- URLs for non-disenchantable items:
+-- 	http://www.wowhead.com/items=2?filter=qu=2%3A3%3A4%3Bcr=8%3A2%3Bcrs=2%3A2%3Bcrv=0%3A0
+-- 	http://www.wowhead.com/items=4?filter=qu=2%3A3%3A4%3Bcr=8%3A2%3Bcrs=2%3A2%3Bcrv=0%3A0
+-- also includes all tabards
+local NON_DISENCHANTABLE_ITEMS = {
+	["i:11290"] = true,
+	["i:11289"] = true,
+	["i:11288"] = true,
+	["i:11287"] = true,
+	["i:60223"] = true,
+	["i:52252"] = true,
+	["i:20406"] = true,
+	["i:20407"] = true,
+	["i:20408"] = true,
+	["i:21766"] = true,
+	["i:52485"] = true,
+	["i:52486"] = true,
+	["i:52487"] = true,
+	["i:52488"] = true,
+	["i:75274"] = true,
+	["i:84661"] = true,
+	["i:97826"] = true,
+	["i:97827"] = true,
+	["i:97828"] = true,
+	["i:97829"] = true,
+	["i:97830"] = true,
+	["i:97831"] = true,
+	["i:97832"] = true,
+	["i:109262"] = true,
+	["i:178991"] = true,
+	["i:52252"] = true,
+	["i:178336"] = true,
+	["i:179282"] = true,
+	["i:43155"] = true,
+	["i:46874"] = true,
+	["i:45585"] = true,
+	["i:23705"] = true,
+	["i:25549"] = true,
+	["i:45574"] = true,
+	["i:45581"] = true,
+	["i:43154"] = true,
+	["i:23192"] = true,
+	["i:38311"] = true,
+	["i:180431"] = true,
+	["i:140575"] = true,
+	["i:23709"] = true,
+	["i:20131"] = true,
+	["i:64882"] = true,
+	["i:38312"] = true,
+	["i:38314"] = true,
+	["i:45584"] = true,
+	["i:28788"] = true,
+	["i:22999"] = true,
+	["i:43157"] = true,
+	["i:43349"] = true,
+	["i:40643"] = true,
+	["i:35221"] = true,
+	["i:160546"] = true,
+	["i:38310"] = true,
+	["i:45579"] = true,
+	["i:5976"] = true,
+	["i:45583"] = true,
+	["i:31404"] = true,
+	["i:31405"] = true,
+	["i:38313"] = true,
+	["i:38309"] = true,
+	["i:152399"] = true,
+	["i:95592"] = true,
+	["i:31780"] = true,
+	["i:45577"] = true,
+	["i:46818"] = true,
+	["i:65909"] = true,
+	["i:69210"] = true,
+	["i:36941"] = true,
+	["i:20132"] = true,
+	["i:163055"] = true,
+	["i:178120"] = true,
+	["i:174069"] = true,
+	["i:63378"] = true,
+	["i:138429"] = true,
+	["i:152669"] = true,
+	["i:165010"] = true,
+	["i:51534"] = true,
+	["i:43156"] = true,
+	["i:24344"] = true,
+	["i:165001"] = true,
+	["i:19505"] = true,
+	["i:115517"] = true,
+	["i:65905"] = true,
+	["i:157758"] = true,
+	["i:43348"] = true,
+	["i:46817"] = true,
+	["i:45582"] = true,
+	["i:180434"] = true,
+	["i:65908"] = true,
+	["i:89796"] = true,
+	["i:49052"] = true,
+	["i:31776"] = true,
+	["i:118365"] = true,
+	["i:180432"] = true,
+	["i:45578"] = true,
+	["i:89799"] = true,
+	["i:45580"] = true,
+	["i:64884"] = true,
+	["i:83079"] = true,
+	["i:160540"] = true,
+	["i:140580"] = true,
+	["i:119138"] = true,
+	["i:160548"] = true,
+	["i:160545"] = true,
+	["i:49054"] = true,
+	["i:63379"] = true,
+	["i:89795"] = true,
+	["i:49086"] = true,
+	["i:168100"] = true,
+	["i:160539"] = true,
+	["i:31804"] = true,
+	["i:168610"] = true,
+	["i:19506"] = true,
+	["i:31779"] = true,
+	["i:161329"] = true,
+	["i:98162"] = true,
+	["i:19031"] = true,
+	["i:167811"] = true,
+	["i:103636"] = true,
+	["i:171361"] = true,
+	["i:133670"] = true,
+	["i:31775"] = true,
+	["i:89800"] = true,
+	["i:19160"] = true,
+	["i:35280"] = true,
+	["i:161328"] = true,
+	["i:89196"] = true,
+	["i:35279"] = true,
+	["i:157759"] = true,
+	["i:31773"] = true,
+	["i:19032"] = true,
+	["i:24004"] = true,
+	["i:65904"] = true,
+	["i:180435"] = true,
+	["i:89797"] = true,
+	["i:69209"] = true,
+	["i:160543"] = true,
+	["i:31778"] = true,
+	["i:167812"] = true,
+	["i:119133"] = true,
+	["i:65906"] = true,
+	["i:65907"] = true,
+	["i:160544"] = true,
+	["i:23999"] = true,
+	["i:15196"] = true,
+	["i:31774"] = true,
+	["i:31777"] = true,
+	["i:115972"] = true,
+	["i:174068"] = true,
+	["i:160542"] = true,
+	["i:168619"] = true,
+	["i:169274"] = true,
+	["i:45983"] = true,
+	["i:164909"] = true,
+	["i:95591"] = true,
+	["i:128450"] = true,
+	["i:31781"] = true,
+	["i:140579"] = true,
+	["i:140576"] = true,
+	["i:115518"] = true,
+	["i:142504"] = true,
+	["i:147205"] = true,
+	["i:157757"] = true,
+	["i:118372"] = true,
+	["i:83080"] = true,
+	["i:168915"] = true,
+	["i:140578"] = true,
+	["i:156666"] = true,
+	["i:97131"] = true,
+	["i:157756"] = true,
+	["i:89784"] = true,
+	["i:119135"] = true,
+	["i:127371"] = true,
+	["i:140577"] = true,
+	["i:164572"] = true,
+	["i:160547"] = true,
+	["i:32828"] = true,
+	["i:119136"] = true,
+	["i:89401"] = true,
+	["i:140667"] = true,
+	["i:172651"] = true,
+	["i:180433"] = true,
+	["i:174647"] = true,
+	["i:160541"] = true,
+	["i:128449"] = true,
+	["i:15197"] = true,
+	["i:149450"] = true,
+	["i:32445"] = true,
+	["i:127365"] = true,
+	["i:89798"] = true,
+	["i:127366"] = true,
+	["i:119140"] = true,
+	["i:19722"] = true,
+	["i:174648"] = true,
+	["i:31279"] = true,
+	["i:147336"] = true,
+	["i:119137"] = true,
+	["i:172652"] = true,
+	["i:147337"] = true,
+	["i:147338"] = true,
+	["i:101697"] = true,
+	["i:167362"] = true,
+	["i:44789"] = true,
+	["i:49648"] = true,
+	["i:167363"] = true,
+	["i:164573"] = true,
+	["i:149442"] = true,
+	["i:147339"] = true,
+	["i:149446"] = true,
+	["i:31278"] = true,
+	["i:107897"] = true,
+	["i:127369"] = true,
+	["i:147342"] = true,
+	["i:164910"] = true,
+	["i:149451"] = true,
+	["i:64310"] = true,
+	["i:147343"] = true,
+	["i:147345"] = true,
+	["i:149447"] = true,
+	["i:149443"] = true,
+	["i:147344"] = true,
+	["i:49913"] = true,
+	["i:147340"] = true,
+	["i:147341"] = true,
+	["i:49680"] = true,
 }
+
+-- scraped from wow head with: 
+-- listviewitems.sort((a,b) => a.name < b.name); console.log(listviewitems.map(k => { if (k.name.indexOf("Nugget") == -1) { return "[\"i:" + k.id + "\"] = true"; }}).join(",\r\n"));
+local PROSPECTABLE_ORES = {
+	["i:171833"] = true,
+	["i:171830"] = true,
+	["i:171829"] = true,
+	["i:171828"] = true,
+	["i:171831"] = true,
+	["i:171832"] = true,
+	["i:109119"] = true,
+	["i:123918"] = true,
+	["i:152512"] = true,
+	["i:168185"] = true,
+	["i:36910"] = true,
+	["i:52185"] = true,
+	["i:72092"] = true,
+	["i:23427"] = true,
+	["i:36909"] = true,
+	["i:53038"] = true,
+	["i:23426"] = true,
+	["i:10620"] = true,
+	["i:152579"] = true,
+	["i:36912"] = true,
+	["i:152513"] = true,
+	["i:23425"] = true,
+	["i:23424"] = true,
+	["i:2775"] = true,
+	["i:3858"] = true,
+	["i:109118"] = true,
+	["i:2772"] = true,
+	["i:72094"] = true,
+	["i:72103"] = true,
+	["i:2770"] = true,
+	["i:52183"] = true,
+	["i:2771"] = true,
+	["i:11370"] = true,
+	["i:7911"] = true, 
+	["i:2776"] = true
+};
+
+-- scraped from wow head with: 
+-- listviewitems.sort((a,b) => a.name < b.name); console.log(listviewitems.map(k => { if (k.name.indexOf("Seed") == -1 && k.name.indexOf("Petal") == -1 && k.name.indexOf("Spores") == -1 && (k.name.indexOf("Stem") == -1 || k.name == 'Sea Stalk') && k.name.indexOf("Pod") == -1 && k.name.indexOf("Stalk") == -1 && k.name.indexOf("Ichor") == -1 && k.name.indexOf("Blade") == -1 && (k.name.indexOf("Leaf") == -1 || k.name == "Green Tea Leaf") && (k.name.indexOf("Cap") == -1 || k.name == "Fool's Cap") && k.name != "Bloodthistle") { return "[\"i:" + k.id + "\"] = true"; }}).join(",\r\n"));
+local MILLABLE_HERBS = {
+	["i:170554"] = true,
+	["i:168589"] = true,
+	["i:168583"] = true,
+	["i:169701"] = true,
+	["i:168586"] = true,
+	["i:171315"] = true,
+	["i:152510"] = true,
+	["i:124106"] = true,
+	["i:168487"] = true,
+	["i:52985"] = true,
+	["i:72238"] = true,
+	["i:52983"] = true,
+	["i:2447"] = true,
+	["i:22790"] = true,
+	["i:8153"] = true,
+	["i:22794"] = true,
+	["i:765"] = true,
+	["i:124101"] = true,
+	["i:3820"] = true,
+	["i:152509"] = true,
+	["i:8831"] = true,
+	["i:152506"] = true,
+	["i:52988"] = true,
+	["i:2449"] = true,
+	["i:124103"] = true,
+	["i:3821"] = true,
+	["i:36903"] = true,
+	["i:152508"] = true,
+	["i:36908"] = true,
+	["i:2450"] = true,
+	["i:13466"] = true,
+	["i:22792"] = true,
+	["i:13468"] = true,
+	["i:8836"] = true,
+	["i:8845"] = true,
+	["i:4625"] = true,
+	["i:8838"] = true,
+	["i:3818"] = true,
+	["i:124105"] = true,
+	["i:152507"] = true,
+	["i:8839"] = true,
+	["i:22791"] = true,
+	["i:152505"] = true,
+	["i:2452"] = true,
+	["i:52984"] = true,
+	["i:52986"] = true,
+	["i:124102"] = true,
+	["i:151565"] = true,
+	["i:2453"] = true,
+	["i:8846"] = true,
+	["i:36905"] = true,
+	["i:13464"] = true,
+	["i:3355"] = true,
+	["i:36901"] = true,
+	["i:36907"] = true,
+	["i:3369"] = true,
+	["i:3356"] = true,
+	["i:22786"] = true,
+	["i:785"] = true,
+	["i:109124"] = true,
+	["i:13463"] = true,
+	["i:36906"] = true,
+	["i:22793"] = true,
+	["i:13465"] = true,
+	["i:22785"] = true,
+	["i:22789"] = true,
+	["i:22787"] = true,
+	["i:79011"] = true,
+	["i:109126"] = true,
+	["i:3357"] = true,
+	["i:3358"] = true,
+	["i:13467"] = true,
+	["i:3819"] = true,
+	["i:72237"] = true,
+	["i:37921"] = true,
+	["i:109127"] = true,
+	["i:109125"] = true,
+	["i:52987"] = true,
+	["i:72234"] = true,
+	["i:109128"] = true,
+	["i:79010"] = true,
+	["i:124104"] = true,
+	["i:109129"] = true,
+	["i:36904"] = true,
+	["i:72235"] = true,
+	["i:108331"] = true,
+};
+
+local MASS_MILLING_RECIPIES = {
+
+	-- Draenor
+	[190381] = true;
+	[190382] = true;
+	[190383] = true;
+	[190384] = true;
+	[190385] = true;
+	[190386] = true;
+
+	-- Legion
+	[209658] = true;
+	[209659] = true;
+	[209660] = true;
+	[209661] = true;
+	[209662] = true;
+	[209664] = true;
+	[247861] = true;
+
+	-- BFA
+    [256218] = true;
+	[256217] = true;
+	[298927] = true;
+	[256221] = true;
+	[256308] = true;
+	[256219] = true;
+	[256223] = true;
+	[256220] = true;
+
+	-- Shadowlands
+	[311413] = true;
+	
+	[311418] = true;
+	[311414] = true;
+	[311417] = true;
+	[311416] = true;
+	[311415] = true;
+};
+
+local MASS_PROSPECT_RECIPIES = {
+	[311948] = true,
+	[311953] = true,
+	[311951] = true,
+	[311949] = true,
+	[311952] = true,
+	[311950] = true,
+	[300619] = true,
+	[225904] = true,
+	[256622] = true,
+	[256611] = true,
+	[247761] = true,
+	[225902] = true,
+	[256613] = true,
+};
+
 local ENCHANTING_RECIPIES = {
 	-- Scraped from Wowhead (http://www.wowhead.com/items/consumables/item-enhancements-permanent?filter=86;4;0) using the following javascript:
 	-- for (i=0; i<listviewitems.length; i++) if (listviewitems[i].sourcemore) console.log("["+listviewitems[i].sourcemore[0].ti+"] = \"i:"+listviewitems[i].id+"\",  -- "+listviewitems[i].name);
@@ -566,16 +2434,217 @@ local ENCHANTING_RECIPIES = {
 	[342316] = "i:183738", -- Enchant Chest - Eternal Insight
 }
 
+function CraftingData.IsProspectable(id)
+	if (not id) then
+		return false;
+	end
+
+	return PROSPECTABLE_ORES[id];
+end
+
+function CraftingData.IsMillable(id)
+	if (not id) then
+		return false;
+	end
+
+	return MILLABLE_HERBS[id];
+end
+
+function CraftingData.IsDisenchantable(id, link)
+	if (not id) then
+		return false;
+	end
+
+	local _, i = strsplit(":", id);
+
+	if (not i) then
+		return false;
+	end
+
+	local inum = tonumber(i);
+	if (NON_DISENCHANTABLE_ITEMS[_..":"..i]) then
+		return false;
+	end
+
+	if (not inum) then
+		return false;
+	end
+
+	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, _, _, _, _, classId, subClassId = GetItemInfo(inum);
+
+	if (classId) then
+		if (classId ~= LE_ITEM_CLASS_ARMOR and classId ~= LE_ITEM_CLASS_WEAPON) then
+			return false;
+		end
+	end
+
+	if (link) then
+		local minValue = Config.Crafting().disenchantMinValue;
+		if (minValue and minValue:len() > 0) then
+			local _, copper = Utils.MoneyStringToCopper(minValue);
+			if (copper and copper > 0) then
+				if (CraftingData.DisenchantValue(link, 1) < copper) then
+					return false;
+				end
+			end
+		end
+	end
+
+	return itemRarity >= (Utils.IsClassic() and LE_ITEM_QUALITY_UNCOMMON or Enum.ItemQuality.Uncommon);
+end
+
+function CraftingData.HasMinimumCount(item)
+	if (CraftingData.IsProspectable(item.tsmId) or CraftingData.IsMillable(item.tsmId)) then
+		return item.count >= 5;
+	end
+
+	return true;
+end
+
+function CraftingData.IsDestroyable(id,link)
+	if (link) then
+		local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, _, _, _, _, classId, subClassId = GetItemInfo(link);
+		local maxQuality = Config.Crafting().destroyMaxQuality;
+		if (maxQuality and maxQuality > 0) then
+			if (itemRarity > maxQuality) then
+				return false;
+			end
+		end
+	end
+
+	if (not CraftingData.IsProspectable(id) 
+		and not CraftingData.IsMillable(id) 
+		and not CraftingData.IsDisenchantable(id, link)) then
+			return false;
+	end
+
+	local spellId = CraftingData.GetDestroySpell(id);
+
+	if (not spellId) then
+		return false;
+	end
+
+	return IsSpellKnown(spellId);
+end
+
+function CraftingData.GetDestroySpell(id)
+	if (CraftingData.IsProspectable(id)) then
+		return SPELLS.prospect;
+	elseif (CraftingData.IsMillable(id)) then
+		return SPELLS.milling;
+	elseif (CraftingData.IsDisenchantable(id)) then
+		return SPELLS.disenchant;
+	end
+
+	return nil;
+end
 
 -- Secondary boolean indicates it was
 -- a enchanting special item
 -- otherwise it was a mass milling item
 function CraftingData.Item(recipeID)
     if (ENCHANTING_RECIPIES[recipeID]) then
-        return ENCHANTING_RECIPIES[recipeID], true;
-    elseif (MASS_MILLING_RECIPES[recipeID]) then
-        return MASS_MILLING_RECIPES[recipeID], false;
-    end
+		return ENCHANTING_RECIPIES[recipeID], true;
+	end
 
-    return nil, false;
+	return (MASS_MILLING_RECIPIES[recipeID] or MASS_PROSPECT_RECIPIES[recipeID]), false;
+end
+
+function CraftingData.DisenchantValue(link, quantity, ref)
+	if (not link) then
+		return 0;
+	end
+
+	local id = Utils.GetID(link);
+
+	if (CraftingData.IsProspectable(id)) then
+		return CraftingData.GetProspectValue(id, quantity == 1 and 5 or quantity, ref);
+	elseif (CraftingData.IsMillable(id)) then
+		return CraftingData.GetMillValue(id, quantity == 1 and 5 or quantity, ref);
+	end
+
+	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, _, _, _, _, classId, subClassId = GetItemInfo(link);
+	if (_G["GetDetailedItemLevelInfo"]) then
+		local eff, preview, base = GetDetailedItemLevelInfo(link);
+		if (not preview and eff) then
+			itemLevel = eff;
+		end
+	end
+
+	return CraftingData.GetDisenchantValue(classId, itemMinLevel, itemLevel, itemRarity, quantity, ref);
+end
+
+function CraftingData.GetValue(tbl, id, quantity, ref)
+	local worth = 0;
+
+	if (not quantity or quantity < 1) then
+		quantity = 1;
+	end
+
+	if (ref) then
+		wipe(ref);
+	end
+
+	for k,v in pairs(tbl) do
+		local s = v[id];
+		if (s) then
+			local rate = type(s) == "number" and s or s.matRate;
+			local amt = type(s) == "number" and 1 or (s.maxAmount * s.amountOfMats);
+			if (ref) then
+				if (not ref[k]) then
+					ref[k] = 0;
+				end
+				ref[k] = ref[k] + rate * amt;
+			end
+			if (Config.Crafting().materialCost and Config.Crafting().materialCost:len() > 0) then
+				worth = worth + math.ceil((Sources:QueryID(Config.Crafting().materialCost, k) or 0) * rate * amt);
+			end 
+		end
+	end
+	return worth * quantity;
+end
+
+function CraftingData.GetMillValue(id, quantity, ref)
+	return CraftingData.GetValue(MILL_INFO, id, quantity, ref);
+end
+
+function CraftingData.GetProspectValue(id, quantity, ref)
+	return CraftingData.GetValue(PROSPECT_INFO, id, quantity, ref);
+end
+
+function CraftingData.GetDisenchantValue(classId, minLevel, ilevel, quality, quantity, ref)
+	local worth = 0;
+	
+	if (not quantity or quantity < 1) then
+		quantity = 1;
+	end
+
+	if (quality <= 1) then
+		return worth;
+	end
+
+	if (classId ~= LE_ITEM_CLASS_ARMOR and classId ~= LE_ITEM_CLASS_WEAPON) then
+		return worth;
+	end
+
+	if (ref) then
+		wipe(ref);
+	end
+
+	for k,v in pairs(DISENCHANT_INFO) do
+		local source = v.sourceInfo;
+		if (minLevel >= v.minLevel and minLevel <= v.maxLevel) then
+			for i,s in ipairs(source) do
+				if (s.classId == classId and quality == s.quality and ilevel >= s.minItemLevel and ilevel <= s.maxItemLevel) then
+					if (ref) then
+						ref[k] = s.amountOfMats;
+					end
+					if (Config.Crafting().materialCost and Config.Crafting().materialCost:len() > 0) then
+						worth = worth + math.ceil((Sources:QueryID(Config.Crafting().materialCost, k) or 0) * s.amountOfMats);
+					end
+				end
+			end
+		end
+	end
+	return worth * quantity;
 end

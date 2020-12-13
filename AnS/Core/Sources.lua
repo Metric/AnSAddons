@@ -2,21 +2,19 @@ local Ans = select(2, ...);
 local Data = Ans.Data;
 local VendorData = Data.Vendor;
 local Config = Ans.Config;
-local Sources = { items = {}};
-Sources.__index = Sources;
-Ans.Sources = Sources;
+local Sources = Ans.Object.Register("Sources");
+Sources.items = {};
 
 local Utils = Ans.Utils;
 local PriceSource = Ans.PriceSource;
 
-local NameStringCache = "";
-local SourceStringCache = "";
-local CustomVarStringCache = "";
+local NAME_CACHE = "";
+local SOURCE_CACHE = "";
+local CVAR_CACHE = "";
 
-local OpCodes = {};
-OpCodes.__index = OpCodes;
+local OpCodes = Ans.Object.Register("OpCodes", Sources);
 
-function OpCodes:New() 
+function OpCodes:Acquire() 
     local op = {};
     op.percent = 0;
     op.ppu = 0;
@@ -63,15 +61,15 @@ function OpCodes:New()
     return op;
 end
 
-local VarCodes = {};
+local VAR_CACHE = {};
 
-local OperationCache = {};
-local OpValueCache = {};
+local OP_CACHE = {};
+local VALUE_CACHE = {};
 
-local ParseSourceTemplate = "local %s = ops.%s or 0; ";
-local ParseVarsTemplate = "local %s = %s or 0; ";
+local SOURCE_TEMPLATE = "local %s = ops.%s or 0; ";
+local VAR_TEMPLATE = "local %s = %s or 0; ";
 
-local ParseTemplate = [[
+local TEMPLATE = [[
     return function(sources, ops)
         local ifgte, iflte, iflt, ifgt, ifeq, ifneq, check, avg, first, round,
             min, max, mod, 
@@ -118,45 +116,45 @@ local ParseTemplate = [[
 ]];
 
 
-function Sources:ClearCache()
-    NameStringCache = "";
-    SourceStringCache = "";
-    CustomVarStringCache = "";
-    wipe(OpValueCache);
-    wipe(OperationCache);
+function Sources:Clear()
+    NAME_CACHE = "";
+    SOURCE_CACHE = "";
+    CVAR_CACHE = "";
+    wipe(VALUE_CACHE);
+    wipe(OP_CACHE);
 end
 
-function Sources:ClearValueCache()
-    wipe(OpValueCache);
+function Sources:ClearValues()
+    wipe(VALUE_CACHE);
 end
 
-function Sources:LoadCustomVars()
-    wipe(VarCodes);
+function Sources:LoadCVars()
+    wipe(VAR_CACHE);
     for i,v in ipairs(Config.CustomSources()) do
         local value = v.value;
 
         if (value and value:len() > 0) then
-            value = Utils:ReplaceOpShortHand(value);
-            value = Utils:ReplaceShortHandPercent(value);
-            value = Utils:ReplaceMoneyShorthand(value); 
+            value = Utils.ReplaceOpShortHand(value);
+            value = Utils.ReplaceShortHandPercent(value);
+            value = Utils.ReplaceMoneyShorthand(value); 
 
-            tinsert(VarCodes, {name = v.name, value = value});
+            tinsert(VAR_CACHE, {name = v.name, value = value});
         end
     end
 end
 
 function Sources:Register(name, fn, key)
-    local source = PriceSource:New(name:lower(),fn,key);
+    local source = PriceSource:Acquire(name:lower(),fn,key);
     tinsert(self.items, source);
 end
 
-function Sources:GetNamesAsString()
+function Sources:GetNameString()
     local str = "";
     local sep = "";
     local i;
 
-    if (NameStringCache and NameStringCache:len() > 0) then
-        return NameStringCache;
+    if (NAME_CACHE and NAME_CACHE:len() > 0) then
+        return NAME_CACHE;
     end
 
     for i = 1, #self.items do
@@ -173,47 +171,46 @@ function Sources:GetNamesAsString()
     return str;
 end
 
-function Sources:GetCustomVarsAsString()
+function Sources:GetCVarString()
     local str = "";
     local i;
 
-    if (CustomVarStringCache and CustomVarStringCache:len() > 0) then
-        return CustomVarStringCache;
+    if (CVAR_CACHE and CVAR_CACHE:len() > 0) then
+        return CVAR_CACHE;
     else
-        self:LoadCustomVars();
+        self:LoadCVars();
     end
 
-    for i = 1, #VarCodes do
-        local cvar = VarCodes[i];
-
-        local nstr = string.format(ParseVarsTemplate, cvar.name, cvar.value);
+    for i = 1, #VAR_CACHE do
+        local cvar = VAR_CACHE[i];
+        local nstr = string.format(VAR_TEMPLATE, cvar.name, cvar.value);
         str = str..nstr;
     end
 
-    CustomVarStringCache = str;
+    CVAR_CACHE = str;
 
     return str;
 end
 
-function Sources:GetVarsAsString()
+function Sources:GetVarString()
     local str = "";
     local i;
     local total = #self.items;
 
-    if (SourceStringCache and SourceStringCache:len() > 0) then
-        return SourceStringCache;
+    if (SOURCE_CACHE and SOURCE_CACHE:len() > 0) then
+        return SOURCE_CACHE;
     end
 
     for i = 1, total do
         local s = self.items[i];
         if (s.fn ~= nil) then
             local name = s.name;
-            local nstr = string.format(ParseSourceTemplate, name, name);
+            local nstr = string.format(SOURCE_TEMPLATE, name, name);
             str = str..nstr;
         end
     end
 
-    SourceStringCache = str;
+    SOURCE_CACHE = str;
 
     return str;
 end
@@ -409,7 +406,7 @@ function Sources:QueryID(q, itemId)
     
     local codes = nil;
 
-    local names = self:GetNamesAsString();
+    local names = self:GetNameString();
     if (not names or names:len() == 0 ) then
         return nil;
     end
@@ -418,11 +415,11 @@ function Sources:QueryID(q, itemId)
         return nil;
     end
 
-    if (OpValueCache[itemId]) then
-        codes = OpValueCache[itemId];
+    if (VALUE_CACHE[itemId]) then
+        codes = VALUE_CACHE[itemId];
     else 
-        codes = OpCodes:New();
-        OpValueCache[itemId] = codes;
+        codes = OpCodes:Acquire();
+        VALUE_CACHE[itemId] = codes;
         self:GetValues(itemId, codes);
     end
 
@@ -433,7 +430,7 @@ function Sources:QueryID(q, itemId)
     codes.ppu = 0;
     codes.ilevel = 0;
     codes.vendorsell = 0;
-    codes.tsmId = Utils:GetTSMID(itemId);
+    codes.tsmId = Utils.GetID(itemId);
     codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
 
     local _, id = strsplit(":", codes.tsmId); 
@@ -443,46 +440,135 @@ function Sources:QueryID(q, itemId)
     local _, fn, err = false, nil, nil;
     local oq = q;
 
-    if (not OperationCache[q]) then
-        q = Utils:ReplaceOpShortHand(q);
-        q = Utils:ReplaceShortHandPercent(q);
-        q = Utils:ReplaceMoneyShorthand(q);    
-        q = Utils:ReplaceTabReturns(q);
+    if (not OP_CACHE[q]) then
+        q = Utils.ReplaceOpShortHand(q);
+        q = Utils.ReplaceShortHandPercent(q);
+        q = Utils.ReplaceMoneyShorthand(q);    
+        q = Utils.ReplaceTabReturns(q);
 
         --print(q);
 
         if (not self:IsValidQuery(q)) then
             print("AnS Invalid Filter / Pricing String: "..q);
-            return nil;
+            return 0;
         end
 
-        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
+        local pstr = string.format(TEMPLATE, self:GetVarString(), self:GetCVarString(), q);
 
         fn, err = loadstring(pstr);
 
         if(not fn or err) then
             print("AnS Filter / Pricing String Error: "..err);
-            return nil;
+            return 0;
         end
 
         _, fn = pcall(fn);
 
         if (not _ or not fn) then
             print("AnS Invalid Filter / Pricing String: "..q);
-            return nil;
+            return 0;
         end
 
-        OperationCache[oq] = fn;
+        OP_CACHE[oq] = fn;
     else
-        fn = OperationCache[oq];
+        fn = OP_CACHE[oq];
     end
 
     if (not fn) then
+        return 0;
+    end
+
+    local _, r = pcall(fn, self, codes);
+
+    if (not _) then
+        print("AnS Invalid Filter / Pricing String: "..q);
+        return 0;
+    end 
+
+    return r;
+end
+
+function Sources:Validate(q)
+    local itemId = "i:2589";
+
+    local codes = nil;
+
+    local names = self:GetNameString();
+    if (not names or names:len() == 0 ) then
         return nil;
     end
 
-    r = fn(self, codes);
-    return r;
+    if (not q or q:len() == 0) then
+        return nil;
+    end
+
+    if (VALUE_CACHE[itemId]) then
+        codes = VALUE_CACHE[itemId];
+    else 
+        codes = OpCodes:Acquire();
+        VALUE_CACHE[itemId] = codes;
+        self:GetValues(itemId, codes);
+    end
+
+    codes.buyout = 0;
+    codes.stacksize = 0;
+    codes.quality = 99;
+    codes.percent = 0;
+    codes.ppu = 0;
+    codes.ilevel = 0;
+    codes.vendorsell = 0;
+    codes.tsmId = Utils.GetID(itemId);
+    codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
+
+    local _, id = strsplit(":", codes.tsmId); 
+
+    codes.id = tonumber(id);
+
+    local _, fn, err = false, nil, nil;
+    local oq = q;
+
+    if (not OP_CACHE[q]) then
+        q = Utils.ReplaceOpShortHand(q);
+        q = Utils.ReplaceShortHandPercent(q);
+        q = Utils.ReplaceMoneyShorthand(q);    
+        q = Utils.ReplaceTabReturns(q);
+
+        --print(q);
+
+        if (not self:IsValidQuery(q)) then
+            return false;
+        end
+
+        local pstr = string.format(TEMPLATE, self:GetVarString(), self:GetCVarString(), q);
+
+        fn, err = loadstring(pstr);
+
+        if(not fn or err) then
+            return false;
+        end
+
+        _, fn = pcall(fn);
+
+        if (not _ or not fn) then
+            return false;
+        end
+
+        OP_CACHE[oq] = fn;
+    else
+        fn = OP_CACHE[oq];
+    end
+
+    if (not fn) then
+        return false;
+    end
+
+    local _, r = pcall(fn, self, codes);
+
+    if (not _) then
+        return false;
+    end 
+
+    return true;
 end
 
 function Sources:Query(q, item, groupId)
@@ -500,7 +586,7 @@ function Sources:Query(q, item, groupId)
     
     local codes = nil;
 
-    local names = self:GetNamesAsString();
+    local names = self:GetNameString();
     if (not names or names:len() == 0 ) then
         return nil;
     end
@@ -509,11 +595,11 @@ function Sources:Query(q, item, groupId)
         return nil;
     end
 
-    if (OpValueCache[itemId]) then
-        codes = OpValueCache[itemId];
+    if (VALUE_CACHE[itemId]) then
+        codes = VALUE_CACHE[itemId];
     else 
-        codes = OpCodes:New();
-        OpValueCache[itemId] = codes;
+        codes = OpCodes:Acquire();
+        VALUE_CACHE[itemId] = codes;
         self:GetValues(itemId, codes);
     end
 
@@ -532,44 +618,50 @@ function Sources:Query(q, item, groupId)
     local _, fn, err = false, nil, nil;
     local oq = q;
 
-    if (not OperationCache[q]) then
-        q = Utils:ReplaceOpShortHand(q);
-        q = Utils:ReplaceShortHandPercent(q);
-        q = Utils:ReplaceMoneyShorthand(q);    
-        q = Utils:ReplaceTabReturns(q);
+    if (not OP_CACHE[q]) then
+        q = Utils.ReplaceOpShortHand(q);
+        q = Utils.ReplaceShortHandPercent(q);
+        q = Utils.ReplaceMoneyShorthand(q);    
+        q = Utils.ReplaceTabReturns(q);
 
         --print(q);
 
         if (not self:IsValidQuery(q)) then
             print("AnS Invalid Filter / Pricing String: "..q);
-            return nil;
+            return 0;
         end
 
-        local pstr = string.format(ParseTemplate, self:GetVarsAsString(), self:GetCustomVarsAsString(), q);
+        local pstr = string.format(TEMPLATE, self:GetVarString(), self:GetCVarString(), q);
 
         fn, err = loadstring(pstr);
 
         if(not fn or err) then
             print("AnS Filter / Pricing String Error: "..err);
-            return nil;
+            return 0;
         end
 
         _, fn = pcall(fn);
 
         if (not _ or not fn) then
             print("AnS Invalid Filter / Pricing String: "..q);
-            return nil;
+            return 0;
         end
 
-        OperationCache[oq] = fn;
+        OP_CACHE[oq] = fn;
     else
-        fn = OperationCache[oq];
+        fn = OP_CACHE[oq];
     end
 
     if (not fn) then
-        return nil;
+        return 0;
     end
 
-    r = fn(self, codes);
+    local _, r = pcall(fn, self, codes);
+
+    if (not _) then
+        print("AnS Invalid Filter / Pricing String: "..q);
+        return 0;
+    end 
+
     return r;
 end

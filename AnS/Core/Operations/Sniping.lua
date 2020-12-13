@@ -1,48 +1,51 @@
 local Ans = select(2, ...);
 local Utils = Ans.Utils;
 local Sources = Ans.Sources;
-local Sniping = {};
+local Sniping = Ans.Object.Register("Sniping", Ans.Operations);
+local Exporter = Ans.Exporter;
 
 local tempTbl = {};
 local queueTbl = {};
 
 local Config = Ans.Config;
+local Groups = Utils.Groups;
 
-Sniping.__index = Sniping;
-Ans.Operations.Sniping = Sniping;
-
-function Sniping:New(name)
-    local t = {};
-    setmetatable(t, Sniping);
-    t:Init(name);
-    return t;
+function Sniping.IsValidConfig(c)
+    return c.name and c.price 
+        and c.maxPercent and c.minILevel 
+        and c.maxPPU and c.minQuality
+        and type(c.exactMatch) == "boolean" and type(c.recalc) == "boolean"
+        and c.search and c.groups
+        and type(c.inheritGlobal) == "boolean";
 end
 
-function Sniping:Init(name)
-    self.id = Utils:Guid();
-    self.name = name;
-    self.price = "";
-    self.maxPercent = 100;
-    self.minILevel = 0;
-    self.maxPPU = 0;
-    self.minQuality = 0;
-    self.minCLevel = 0;
-    self.maxCLevel = 120;
-    self.exactMatch = false;
-    self.search = "";
-    self.recalc = false;
-    self.groups = {};
-    self.ids = {};
-    self.idCount = 0;
-    self.inheritGlobal = false;
-    self.nonActiveGroups = {};
+function Sniping.PrepareExport(snipe)
+    local n = {};
+    n.name = snipe.name;
+    n.price = snipe.price;
+    n.maxPercent = snipe.maxPercent;
+    n.minILevel = snipe.minILevel;
+    n.recalc = snipe.recalc;
+    n.maxPPU = snipe.maxPPU;
+    n.minQuality = snipe.minQuality;
+    n.exactMatch = snipe.exactMatch;
+    n.search = snipe.search;
+    n.inheritGlobal = snipe.inheritGlobal;
+    n.groups = {};
 
-    self.config = Sniping:NewConfig(name);
+    for i,v in ipairs(snipe.groups) do
+        local g = Groups.GetGroupFromId(v);
+        if (g) then
+            tinsert(n.groups, g.path);
+        end
+    end
+
+    return n;
 end
 
-function Sniping:NewConfig(name)
+function Sniping.Config(name)
     local t  = {
-        id = Utils:Guid(),
+        id = Utils.Guid(),
         name = name,
         price = "",
         maxPercent = 0,
@@ -60,8 +63,8 @@ function Sniping:NewConfig(name)
     return t;
 end
 
-function Sniping:FromConfig(snipe)
-    local n = Sniping:New(snipe.name);
+function Sniping.From(snipe)
+    local n = Sniping:New();
     n.id = snipe.id;
     n.name = snipe.name;
     n.price = snipe.price;
@@ -74,10 +77,12 @@ function Sniping:FromConfig(snipe)
     n.search = snipe.search;
     n.inheritGlobal = snipe.inheritGlobal;
     n.nonActiveGroups = snipe.nonActiveGroups or {};
+    n.groups = {};
+    n.ids = {};
 
     for i,v in ipairs(snipe.groups) do
         if (not n.nonActiveGroups[v]) then
-            local g = Utils:GetGroupFromId(v);
+            local g = Groups.GetGroupFromId(v);
             if (g) then
                 tinsert(n.groups, g);
             end
@@ -85,12 +90,12 @@ function Sniping:FromConfig(snipe)
     end
 
     n.config = snipe;
-    n.idCount = Utils:ParseGroups(n.groups, n.ids);
+    n.idCount = Groups.ParseGroups(n.groups, n.ids);
     return n;
 end
 
 function Sniping:ContainsGroup(id)
-    return Utils:ContainsGroup(self.groups, id);
+    return Groups.ContainsGroup(self.groups, id);
 end
 
 function Sniping:HasIds()

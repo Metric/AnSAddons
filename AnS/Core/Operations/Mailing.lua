@@ -1,42 +1,24 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
 local Utils = Ans.Utils;
+local Groups = Utils.Groups;
+local Exporter = Ans.Exporter;
 local BagScanner = Ans.BagScanner;
-local Mailing = {};
-Mailing.__index = Mailing;
-Ans.Operations.Mailing = Mailing;
+local Mailing = Ans.Object.Register("Mailing", Ans.Operations);
 
 local tempTbl = {};
 
 local PLAYER_NAME = UnitName("player")
 local PLAYER_NAME_REALM = string.gsub(PLAYER_NAME.."-"..GetRealmName(), "%s+", "")
 
-function Mailing:New(name)
-    local a = {};
-    setmetatable(a, Mailing);
-    a:Init(name);
-    return a;
+function Mailing.IsValidConfig(c)
+    return c.name and c.to 
+        and c.subject and c.keepInBags and c.groups;
 end
 
-function Mailing:Init(name)
-    self.id = Utils:Guid();
-    self.name = name;
-    self.to = "";
-    self.subject = "";
-    self.keepInBags = 0;
-    self.groups = {};
-    self.ids = {};
-    self.idCount = 0;
-
-    self.totalToSend = 0;
-
-    self.config = Mailing:NewConfig(name);
-    self.config.id = self.id;
-end
-
-function Mailing:NewConfig(name)
+function Mailing.Config(name)
     local t = {
-        id = Utils:Guid(),
+        id = Utils.Guid(),
         name = name,
         to = "",
         subject = "",
@@ -47,18 +29,38 @@ function Mailing:NewConfig(name)
     return t;
 end
 
-function Mailing:FromConfig(config)
-    local a = Mailing:New(config.name);
+function Mailing.PrepareExport(config)
+    local a = {};
+    a.name = config.name;
+    a.keepInBags = config.keepInBags;
+    a.to = config.to;
+    a.subject = config.subject;
+    a.groups = {};
+
+    for i,v in ipairs(config.groups) do
+        local g = Groups.GetGroupFromId(v);
+        if (g) then
+            tinsert(a.groups, g.path);
+        end
+    end
+
+    return a;
+end
+
+function Mailing.From(config)
+    local a = Mailing:New();
+    a.name = config.name;
     a.id = config.id;
     a.keepInBags = config.keepInBags;
     a.to = config.to;
     a.subject = config.subject;
     a.groups = {};
     a.nonActiveGroups = config.nonActiveGroups or {};
+    a.ids = {};
 
     for i,v in ipairs(config.groups) do
         if (not a.nonActiveGroups[v]) then
-            local g = Utils:GetGroupFromId(v);
+            local g = Groups.GetGroupFromId(v);
             if (g) then
                 tinsert(a.groups, g);
             end
@@ -72,7 +74,7 @@ function Mailing:FromConfig(config)
     a.itemInfo = {};
     a.total = {};
     a.config = config;
-    a.idCount = Utils:ParseGroups(a.groups, a.ids);
+    a.idCount = Groups.ParseGroups(a.groups, a.ids);
     return a;
 end
 
@@ -98,7 +100,7 @@ function Mailing:GetAvailableItems(sendable)
     wipe(tempTbl);
     
     for i,v in ipairs(sendable) do
-        local tsmId = Utils:GetTSMID(v.link);
+        local tsmId = Utils.GetID(v.link);
         local _, id = strsplit(":", tsmId);
         if (self.ids[tsmId] or self.ids[_..":"..id]) then
             tinsert(tempTbl, v);
@@ -130,7 +132,7 @@ function Mailing:Prepare(items)
         local slot = v.slot;
         local bag = v.bag;
         local count = v.count;
-        if (not BagScanner:IsLocked(v) and not self:MaxSent(v.link)) then
+        if (not v:IsLocked() and not self:MaxSent(v.link)) then
             if (self.total[v.link] and self.total[v.link] + count > self.keepInBags and self.keepInBags > 0) then
                 count = self.keepInBags - self.total[v.link];
             end
@@ -175,7 +177,7 @@ function Mailing:Process()
     if (self.currentGroup and #self.currentGroup > 0) then
         local info = tremove(self.currentGroup, 1);
         
-        if (BagScanner:Exists(info.ref, true, info.count) and not BagScanner:IsLocked(info.ref)) then
+        if (info.ref:Exists(true, info.count) and not info.ref:IsLocked()) then
             PickupContainerItem(info.bag, info.slot);
             ClickSendMailItemButton();
             self.pending = self.pending + 1;

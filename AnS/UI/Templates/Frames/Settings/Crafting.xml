@@ -1,0 +1,100 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsCraftingSettingsTemplate" virtual="true" mixin="AnsCraftingSettingsFrameMixin">
+        <Size x="555" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="-16" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="values">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+                <Size x="555" y="64" />
+                <Frames>
+                    <EditBox parentKey="CraftValue" text="" inherits="AnsEditBoxTemplate">
+                        <Size x="555" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="0" />
+                        </Anchors>
+                    </EditBox>
+                    <EditBox parentKey="MaterialCost" text="" inherits="AnsEditBoxTemplate">
+                        <Size x="555" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.CraftValue" x="0" y="-25" />
+                        </Anchors>
+                    </EditBox>
+                </Frames>
+            </Frame>
+            <Frame parentKey="destroying">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.values" x="0" y="-35" />
+                </Anchors>
+                <Size x="555" y="64" />
+                <Frames>
+                    <CheckButton parentKey="AutoDestroy" text="Auto Show Destroy Window" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-4" />
+                        </Anchors>
+                    </CheckButton>
+                    <EditBox parentKey="DisenchantMinValue" text="" inherits="AnsEditBoxTemplate">
+                        <Size x="128" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.AutoDestroy" x="200" y="0" />
+                        </Anchors>
+                    </EditBox>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="-5" y="15" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="-15" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Destroying">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="26"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+        </Frames>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Craft Value" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="0" relativeKey="$parent.values.CraftValue" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Material Cost" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" x="0" y="0" relativePoint="TOPLEFT" relativeKey="$parent.values.MaterialCost" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Disenchant Min Value" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT" x="0" y="-2" relativeKey="$parent.destroying.DisenchantMinValue" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Max Destroy Quality" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" x="0" y="-5" relativeKey="$parent.destroying.AutoDestroy" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

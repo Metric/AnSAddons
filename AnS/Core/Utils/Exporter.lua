@@ -1,8 +1,5 @@
 local Ans = select(2, ...);
-local Exporter = {};
-Exporter.__index = Exporter;
-
-Ans.Exporter = Exporter;
+local Exporter = Ans.Object.Register("Exporter");
 
 function Exporter:ExportGroups(groups)
     local str = "";

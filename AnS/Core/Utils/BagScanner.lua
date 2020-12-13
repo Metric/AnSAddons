@@ -1,19 +1,11 @@
 local Ans = select(2, ...);
-
 local Utils = Ans.Utils;
+local BagScanner = Ans.Object.Register("BagScanner");
+local BagItem = Ans.Object.Register("BagItem", BagScanner);
 
-local BagScanner = {};
-BagScanner.__index = BagScanner;
-BagScanner.items = {};
-
-local BagItem = {};
-BagItem.__index = BagItem;
-
-
-Ans.BagScanner = BagScanner;
-
-local auctionItemCache = {};
-local stackTracker = {};
+local AUCTION_CACHE = {};
+local STACK_CACHE = {};
+local ITEM_CACHE = {};
 
 local function Sort(a,b)
     if (a.name == b.name) then
@@ -23,18 +15,12 @@ local function Sort(a,b)
     return a.name < b.name;
 end
 
-function BagItem:NewFrom(t)
-    setmetatable(t, BagItem);
-    return t;
-end
-
 function BagItem:Clone()
-    local b = {
+    return BagItem:New({
         link = self.link,
         iLevel = self.iLevel,
         count = self.count,
         quality = self.quality,
-        bound = self.bound,
         bag = self.bag,
         slot = self.slot,
         tex = self.tex,
@@ -42,83 +28,105 @@ function BagItem:Clone()
         name = self.name,
         vendorsell = self.vendorsell,
         total = self.total,
-        stack = self.stacks,
+        stacks = self.stacks,
         isEquipment = self.isEquipment,
         isCommodity = self.isCommodity,
         itemKey = self.itemKey,
         tsmId = self.tsmId
-    };
-    setmetatable(b, BagItem);
-    return b;
+    });
 end
 
-function BagScanner:Release()
-    wipe(self.items);
-    wipe(auctionItemCache);
-    wipe(stackTracker);
-end
-
-function BagScanner:Exists(item, checkCount, checkCountExact)
-    local bag = item.bag;
-    local slot = item.slot;
+function BagItem:Exists(checkCount, checkCountExact)
+    local bag = self.bag;
+    local slot = self.slot;
     local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
 
     if (checkCount) then
         if (checkCountExact) then
-            return link == item.link and checkCountExact == icount;
+            return link == self.link and checkCountExact == icount;
         end
-        return link == item.link and item.count <= icount;
+        return link == self.link and self.count <= icount;
     end
 
-    return link == item.link;
+    return link == self.link;
 end
 
-function BagScanner:IsLocked(item)
-    local bag = item.bag;
-    local slot = item.slot;
-    local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
-    return locked;
-end
-
-function BagScanner:IsFullDurability(item)
-    local bag = item.bag;
-    local slot = item.slot;
+function BagItem:IsFullDurability()
+    local bag = self.bag;
+    local slot = self.slot;
     local current, maximum = GetContainerItemDurability(bag,slot);
 
     return current == maximum;
 end
 
-function BagScanner:FullDurability(bag, slot)
+function BagItem:IsLocked()
+    local bag = self.bag;
+    local slot = self.slot;
+    local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
+    return locked;
+end
+
+function BagItem:IsSoulbound()
+    local bag = self.bag;
+    local slot = self.slot;
+
+    return Utils.IsSoulbound(bag, slot);
+end
+
+function BagScanner.Release()
+    wipe(ITEM_CACHE);
+    wipe(AUCTION_CACHE);
+    wipe(STACK_CACHE);
+end
+
+function BagScanner.FullDurability(bag, slot)
     local current, maximum = GetContainerItemDurability(bag, slot);
     return current == maximum;
 end
 
-function BagScanner:GetSendable(result)
+function BagScanner.GetDestroyable(result, craftingHandler)
     wipe(result);
-    for i,v in ipairs(self.items) do
-        if (v and v.link and v.bound ~= nil and v.bound == false and v.count > 0 and not v.hidden and v.name and v.fullDurability) then
+
+    if (not craftingHandler) then
+        return;
+    end
+
+    for i,v in ipairs(ITEM_CACHE) do
+        if (v and v.tsmId and v.link and v.count > 0 and not v.hidden and v.name and craftingHandler.IsDestroyable(v.tsmId, v.link) and craftingHandler.HasMinimumCount(v)) then
+            if (not result[v.id]) then
+                result[v.id] = {};
+            end
+            tinsert(result[v.id], v);
+        end
+    end
+end
+
+function BagScanner.GetSendable(result)
+    wipe(result);
+    for i,v in ipairs(ITEM_CACHE) do
+        if (v and v.link and v.count > 0 and not v:IsSoulbound() and not v.hidden and v.name and v:IsFullDurability()) then
             tinsert(result, v);
         end
     end
 end
 
-function BagScanner:GetAuctionable()
-    wipe(auctionItemCache);
-    wipe(stackTracker);
+function BagScanner.GetAuctionable()
+    wipe(AUCTION_CACHE);
+    wipe(STACK_CACHE);
 
-    for i,v in ipairs(self.items) do
-        if (v and v.link and v.bound ~= nil and v.bound == false and v.count > 0 and not v.hidden and v.name and v.fullDurability) then
-            if (not stackTracker[v.link]) then
-                stackTracker[v.link] = v;
+    for i,v in ipairs(ITEM_CACHE) do
+        if (v and v.link and v.count > 0 and not v.hidden and v.name and v:IsFullDurability() and not v:IsSoulbound()) then
+            if (not STACK_CACHE[v.link]) then
+                STACK_CACHE[v.link] = v;
                 if (v.stacks) then
                     wipe(v.stacks);
                 else
                     v.stacks = {};
                 end
                 v.total = v.count;
-                tinsert(auctionItemCache, v);
+                tinsert(AUCTION_CACHE, v);
             else
-                local c = stackTracker[v.link]
+                local c = STACK_CACHE[v.link]
                 c.total = c.total + v.count;
                 tinsert(c.stacks, v);
             end
@@ -126,14 +134,15 @@ function BagScanner:GetAuctionable()
     end
 
 
-    table.sort(auctionItemCache, Sort);
-    return auctionItemCache;
+    wipe(STACK_CACHE);
+
+    table.sort(AUCTION_CACHE, Sort);
+    return AUCTION_CACHE;
 end
 
-function BagScanner:Scan()
+function BagScanner.Scan(self)
     local bag;
     local idx = 1;
-    local items = self.items;
 
     for bag = 0, NUM_BAG_SLOTS do
         local slots = GetContainerNumSlots(bag);
@@ -143,54 +152,40 @@ function BagScanner:Scan()
             local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
             link = GetContainerItemLink(bag, slot);
             local itemSellPrice = 0;
-            local boundType = 0;
-            local fullDurability = self:FullDurability(bag, slot);
             if (link) then itemSellPrice = select(11, GetItemInfo(link)); end
-            if (link) then boundType = select(14, GetItemInfo(link)); end
             
-            if (items[idx]) then
-                -- we always update this on scanning
-                items[idx].fullDurability = fullDurability;
-
+            if (ITEM_CACHE[idx]) then
                 -- different item than last scan
-                if (items[idx].link ~= link or items[idx].count ~= icount or items[idx].id ~= id) then
+                if (ITEM_CACHE[idx].link ~= link or ITEM_CACHE[idx].count ~= icount or ITEM_CACHE[idx].id ~= id) then
 	
-                    items[idx].link = link;
+                    ITEM_CACHE[idx].link = link;
                     if (link) then
-                        items[idx].tsmId = Utils:GetTSMID(link);
+                        ITEM_CACHE[idx].tsmId = Utils.GetID(link);
                     else
-                        items[idx].tsmId = nil;
+                        ITEM_CACHE[idx].tsmId = nil;
                     end
-                    items[idx].count = icount;
-                    items[idx].quality = quality;
-                    items[idx].hidden = false;
-                    items[idx].vendorsell = itemSellPrice or 0;
-
-                    -- if not pet cage then use tooltip soulbound check
-                    -- otherwise cages are never soulbound
-                    if (id ~= 82800) then
-                        items[idx].bound = Utils:IsSoulbound(bag, slot) or boundType == 1 or boundType == 4;
-                    else
-                        items[idx].bound = false;
-                    end
-                    items[idx].bag = bag;
-                    items[idx].slot = slot;
-                    items[idx].tex = _;
-                    items[idx].id = id;
-                    items[idx].children = {};
+                    ITEM_CACHE[idx].count = icount;
+                    ITEM_CACHE[idx].quality = quality;
+                    ITEM_CACHE[idx].hidden = false;
+                    ITEM_CACHE[idx].vendorsell = itemSellPrice or 0;
+                    ITEM_CACHE[idx].bag = bag;
+                    ITEM_CACHE[idx].slot = slot;
+                    ITEM_CACHE[idx].tex = _;
+                    ITEM_CACHE[idx].id = id;
+                    ITEM_CACHE[idx].children = {};
 
                     if (link) then
-                        if (Utils:IsBattlePetLink(link)) then
-                            local pet = Utils:ParseBattlePetLink(link);
-                            items[idx].name = pet.name;
-                            items[idx].iLevel = pet.level;
+                        if (Utils.IsBattlePetLink(link)) then
+                            local pet = Utils.ParseBattlePetLink(link);
+                            ITEM_CACHE[idx].name = pet.name;
+                            ITEM_CACHE[idx].iLevel = pet.level;
                         else
                             local name, _, _, iLevel = GetItemInfo(link);
-                            items[idx].name = name;
-                            items[idx].iLevel = iLevel;
+                            ITEM_CACHE[idx].name = name;
+                            ITEM_CACHE[idx].iLevel = iLevel;
                         end
                     else
-                        items[idx].name = nil;
+                        ITEM_CACHE[idx].name = nil;
                     end
                 end
             else
@@ -200,30 +195,24 @@ function BagScanner:Scan()
                 local iLevel = 0;
                 local _ = nil;
 
-                if (id ~= 82800) then
-                    bound = Utils:IsSoulbound(bag, slot) or boundType == 1 or boundType == 4;
-                end
-
                 if (link) then
-                    tsmId = Utils:GetTSMID(link);
+                    tsmId = Utils.GetID(link);
 
-                    if (Utils:IsBattlePetLink(link)) then
-                        local pet = Utils:ParseBattlePetLink(link);
+                    if (Utils.IsBattlePetLink(link)) then
+                        local pet = Utils.ParseBattlePetLink(link);
                         name = pet.name;
                         iLevel = pet.level;
                     else
-                        name, _, _, iLevel= GetItemInfo(link);
+                        name, _, _, iLevel = GetItemInfo(link);
                     end
                 end
 
-                local item = BagItem:NewFrom({
-                    fullDurability = fullDurability,
+                local item = BagItem:New({
                     link = link,
                     iLevel = iLevel,
                     tsmId = tsmId,
                     count = icount,
                     quality = quality,
-                    bound = bound,
                     bag = bag,
                     slot = slot,
                     tex = _,
@@ -235,7 +224,7 @@ function BagScanner:Scan()
                     hidden = false,
                     children = {}
                 });
-                tinsert(items, item);
+                tinsert(ITEM_CACHE, item);
             end
 
             idx = idx + 1;

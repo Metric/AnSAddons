@@ -1,27 +1,32 @@
 local Ans = select(2, ...);
 local Utils = Ans.Utils;
 local Config = Ans.Config;
-local GoldTracker = { log = {}, name = nil, guildName = nil};
+local GoldTracker = Ans.Object.Register("GoldTracker", Ans.Analytics);
+GoldTracker.log = {};
+
 local guildOpen = false;
 local MAX_TIME_LIMIT = 60 * 24 * 30 * 11;
-local MAX_DATA_LIMIT = 10000;
-
-GoldTracker.__index = GoldTracker;
-Ans.Analytics.GoldTracker = GoldTracker;
+local MAX_DATA_LIMIT = 20000;
 
 local EventManager = Ans.EventManager;
 local Data = Ans.Analytics.Data;
-local GOLD_LOG_TAG = "GOLD_LOG_";
+
+local DEFAULT_GOLD_TAG = "GOLD_LOG_";
+local GOLD_LOG_TAG = DEFAULT_GOLD_TAG;
+local ALL_GOLD_LOGS = {};
 
 function GoldTracker:GetNames(tbl,includeGuilds)
     wipe(tbl);
 
-    for k,v in pairs(self.log) do
-        if (includeGuilds) then
-            tinsert(tbl, k);
-        else
-            if (strmatch(k, " %- ")) then
-                tinsert(tbl, k);     
+    for k,v in pairs(ALL_GOLD_LOGS) do
+        local realm = select(3, strsplit("_", k));
+        for p,_ in pairs(v) do
+            if (includeGuilds) then
+                tinsert(tbl, realm..":"..p);
+            else
+                if (strmatch(p, " %- ")) then
+                    tinsert(tbl, realm..":"..p);     
+                end
             end
         end
     end
@@ -32,6 +37,8 @@ function GoldTracker:OnLoad()
         return;
     end
 
+    MAX_DATA_LIMIT = Config.General().maxDataLimit or 20000;
+    Data:Find(DEFAULT_GOLD_TAG, ALL_GOLD_LOGS);
     GOLD_LOG_TAG = GOLD_LOG_TAG..GetRealmName();
 
     self.log = Data:Get(GOLD_LOG_TAG) or {};
@@ -41,7 +48,7 @@ function GoldTracker:OnLoad()
     if (self.guildName and not self.log[self.guildName]) then self.log[self.guildName] = {ledger = {}, current = 0}; end;
 
     EventManager:On("PLAYER_MONEY", self.OnPlayerMoneyChange);
-	if (not Utils:IsClassic()) then
+	if (not Utils.IsClassic()) then
 		EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
 		EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
 		EventManager:On("GUILDBANK_UPDATE_MONEY", self.OnGuildVaultMoneyChange);
@@ -53,6 +60,10 @@ function GoldTracker:OnLoad()
     if (self.guildName) then
         self:CompactLog(self.log[self.guildName].ledger);
     end
+
+    if (not ALL_GOLD_LOGS[GOLD_LOG_TAG]) then
+        ALL_GOLD_LOGS[GOLD_LOG_TAG] = self.log;
+    end
 end
 
 function GoldTracker.OnPlayerWorld()
@@ -60,20 +71,46 @@ function GoldTracker.OnPlayerWorld()
 end
 
 function GoldTracker:GetGuildLog(name)
-    if (self.guildName and not name) then
-        return self.log[self.guildName];
-    else
+    if (not name) then
+        name = self.guildName;
+    end
+
+    local realm = select(1, strsplit(":", name));
+    local realName = select(2, strsplit(":", name));
+    if (realName) then
+        name = realName;
+    end
+
+    if (not realName) then
         return self.log[name];
+    end
+
+    local logName = DEFAULT_GOLD_TAG..realm;
+    if (ALL_GOLD_LOGS[logName]) then
+        return ALL_GOLD_LOGS[logName][name];
     end
 
     return nil;
 end
 
 function GoldTracker:GetPlayerLog(name)
-    if (self.name and not name) then
-        return self.log[self.name];
-    else
+    if (not name) then
+        name = self.name;
+    end
+
+    local realm = select(1, strsplit(":", name));
+    local realName = select(2, strsplit(":", name));
+    if (realName) then
+        name = realName;
+    end
+
+    if (not realName) then
         return self.log[name];
+    end
+
+    local logName = DEFAULT_GOLD_TAG..realm;
+    if (ALL_GOLD_LOGS[logName]) then
+        return ALL_GOLD_LOGS[logName][name];
     end
 
     return nil;

@@ -1,12 +1,10 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
-local Utils = Ans.Utils;
+local TempTable = Ans.TempTable;
 local Tasker = Ans.Tasker;
 local TASKER_TAG = "LOGGER";
-local Logger = {};
-Logger.__index = Logger;
+local Logger = Ans.Object.Register("Logger");
 Logger.maxLines = 1000;
-Ans.Logger = Logger;
 
 function Logger.Log(tag, msg)
     local showWindow = Config.General().showDebugWindow;
@@ -20,26 +18,26 @@ function Logger.Log(tag, msg)
     if (Logger.Input) then
         local txt = Logger.Input:Get() or "";
         txt = txt.."("..(msg and tag or "UNKNOWN")..")".." "..(msg or tag or "").."\r\n";
-        local lines = Utils:GetTable(strsplit("\r\n", txt));
+        local lines = TempTable:Acquire(strsplit("\r\n", txt));
 
         if (#lines >= Logger.maxLines) then
-            AnsCoreLogWindow.Log.Text:SetText(lines[#lines].."\r\n");
+            AnsLogWindow.Log.Text:SetText(lines[#lines].."\r\n");
         else
-            AnsCoreLogWindow.Log.Text:SetText(txt);
+            AnsLogWindow.Log.Text:SetText(txt);
         end
 
         -- always clear the tasker first
         Tasker.Clear(TASKER_TAG);
 
         Tasker.Delay(GetTime() + 0.01, function()
-            local max = AnsCoreLogWindow.Log:GetVerticalScrollRange();
+            local max = AnsLogWindow.Log:GetVerticalScrollRange();
             if (max > 0) then
                 max = max - 0.01;
             end
-            AnsCoreLogWindow.Log:SetVerticalScroll(max);
+            AnsLogWindow.Log:SetVerticalScroll(max);
         end, TASKER_TAG);
 
-        Utils:ReleaseTable(lines);
+        lines:Release();
     end
 end
 
@@ -47,8 +45,8 @@ function Logger.Update()
     local showWindow = Config.General().showDebugWindow;
 
     if (showWindow) then
-         AnsCoreLogWindow:Show();
+        AnsLogWindow:Show();
     else
-         AnsCoreLogWindow:Hide();
+        AnsLogWindow:Hide();
     end
 end

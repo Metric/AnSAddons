@@ -1,10 +1,8 @@
 local Ans = select(2, ...);
 local Data = Ans.Data;
 local VendorData = Data.Vendor;
-local MerchantTracker = {};
+local MerchantTracker = Ans.Object.Register("MerchantTracker", Ans.Analytics);
 local Config = Ans.Config;
-MerchantTracker.__index = MerchantTracker;
-Ans.Analytics.MerchantTracker = MerchantTracker;
 
 local Sources = Ans.Sources;
 local Utils = Ans.Utils;
@@ -20,10 +18,10 @@ local EventManager = Ans.EventManager;
 
 function MerchantTracker:OnLoad()
     EventManager:On("MERCHANT_UPDATE", self.OnUpdate);
-    Utils:Hook("BuyMerchantItem", self.Buy);
-    Utils:Hook("BuybackItem", self.Buyback);
-    Utils:Hook("RepairAllItems", self.RepairAll);
-    Utils:HookSecure("UseContainerItem", self.Sell);
+    Utils.Hook("BuyMerchantItem", self.Buy);
+    Utils.Hook("BuybackItem", self.Buyback);
+    Utils.Hook("RepairAllItems", self.RepairAll);
+    Utils.HookSecure("UseContainerItem", self.Sell);
 end
 
 function MerchantTracker.Buy(ofn, ...)
@@ -123,7 +121,7 @@ end
 
 function MerchantTracker.Scan()
     for i = 1, GetMerchantNumItems() do
-        local id = Utils:GetTSMID(GetMerchantItemLink(i));
+        local id = Utils.GetID(GetMerchantItemLink(i));
         if (id) then
             local currentValue = VendorData[id];
             local newValue = nil;

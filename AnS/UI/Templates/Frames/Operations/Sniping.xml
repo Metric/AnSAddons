@@ -1,0 +1,124 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsSnipeOpEditorTemplate" virtual="true" hidden="true" mixin="AnsSnipeOperationFrameMixin">
+        <Size x="525" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="168" y="-32" />
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Max Price or Boolean Filter" justifyV="CENTER" name="$parentPriceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-25" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" text="Max Percent" name="$parentPercentLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-174" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" name="$parentLevelLabel" text="Min iLevel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parentPercentLabel" x="5" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" name="$parentPPULabel" text="Max PPU" inherits="AnsGameFontWhiteTrans">
+                    <Size x="125" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentLevelLabel" relativePoint="TOPRIGHT" x="90" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" justifyV="CENTER" name="$parentNameLabel" text="Name Filter" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-214" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <CheckButton parentKey="InheritGlobal" text="Inherit Global Settings" name="$parentInheritGlobal" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="25" />
+                </Anchors>
+            </CheckButton>
+            <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
+                <Size x="435" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+            <ScrollFrame parentKey="Price" enableMouse="true" name="$parentPrice" inherits="AnsScrollFrameTemplate">
+                <Size x="435" y="128" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPriceLabel" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox parentKey="Text" name="$parentText" inherits="AnsEditBoxTemplate">
+                        <Size x="435" y="123" />
+                    </EditBox>
+                </ScrollChild>
+                <Scripts>
+                    <OnLoad>
+                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                    </OnLoad>
+                </Scripts>
+            </ScrollFrame>
+            <EditBox parentKey="MaxPercent" text="0" name="$parentMaxPercent" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPercentLabel" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="MinLevel" text="0" name="$parentMinLevel" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentLevelLabel" />
+                </Anchors>
+            </EditBox>
+            <EditBox parentKey="Search" maxBytes="64" text="" name="$parentSearch" inherits="AnsEditBoxTemplate">
+                <Size x="100" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentNameLabel" />
+                </Anchors>
+            </EditBox>
+            <CheckButton parentKey="ExactMatch" text="Exact ID Match" name="$parentExactMatch" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="25" y="-2" relativePoint="TOPRIGHT" relativeTo="$parentMinLevel" />
+                </Anchors>
+            </CheckButton>
+            <EditBox parentKey="MaxPPU" text="0" name="$parentMaxPPU" inherits="AnsEditBoxTemplate">
+                <Size x="125" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPPULabel" />
+                </Anchors>
+            </EditBox>
+            <CheckButton parentKey="Recalc" text="Recalc Percentage" name="$parentRecalc" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="145" y="0" relativePoint="TOPRIGHT" relativeTo="$parentSearch" />
+                </Anchors>
+            </CheckButton>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

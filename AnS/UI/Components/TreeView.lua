@@ -1,21 +1,18 @@
 local Ans = select(2, ...);
-local TreeView = {};
-TreeView.__index = TreeView;
-
-Ans.UI.TreeView = TreeView;
+local TreeView = Ans.Object.Register("TreeView", Ans.UI);
 
 local PI = 3.14159265358;
 local Deg2Rad = PI / 180;
 
-function TreeView:New(parent, style, selectFn, upFn, downFn, addFn, renderFn)
-    local fv = {};
-    setmetatable(fv, TreeView);
+function TreeView:Acquire(parent, style, selectFn, upFn, downFn, addFn, renderFn)
+    local fv = TreeView:New();
+
     fv.view = {};
     fv.items = {};
 
-    fv.frame = _G[parent:GetName().."TreeView"];
+    fv.frame = parent.ScrollFrame;
     fv.scrollFrame = fv.frame;
-    fv.childFrame = _G[fv.scrollFrame:GetName().."ScrollChildFrame"];
+    fv.childFrame = fv.scrollFrame.ScrollChildFrame;
     fv.childFrame:SetSize(fv.frame:GetWidth(), fv.frame:GetHeight());
 
     fv.parent = parent;
@@ -58,16 +55,21 @@ function TreeView:Show()
     end
 end
 
+function TreeView:SetPoint(point, anchor, x, y, relativeTo)
+    self.frame:ClearAllPoints();
+    self.frame:SetPoint(point, relativeTo and self.parent[relativeTo] or self.parent, anchor, x, y);
+end
+
 function TreeView:CreateRows()
     local fv = self;
     local i;
     for i = 1, self.style.totalRows do
-        local f = CreateFrame("BUTTON", self.frame:GetName().."ItemRow"..i, self.scrollFrame:GetParent(), self.style.template);
+        local f = CreateFrame("BUTTON", nil, self.scrollFrame:GetParent(), self.style.template);
         tinsert(self.rows, f);
 
         f.origTextWidth = 0;
 
-        local txt = _G[f:GetName().."Text"];
+        local txt = f.Text;
 
         if (txt) then
             f.origTextWidth = txt:GetWidth();
@@ -78,19 +80,19 @@ function TreeView:CreateRows()
         f:ClearAllPoints();
         f:SetPoint("TOPLEFT", self.scrollFrame, "TOPLEFT", 0, (i - 1) * -self.style.rowHeight);
 
-        local expander = _G[f:GetName().."Expander"];
+        local expander = f.Expander;
         if (expander) then
             expander:SetScript("OnClick", function() fv:ToggleExpand(f) end);
         end
-        local moveUp = _G[f:GetName().."MoveUp"];
+        local moveUp = f.MoveUp;
         if (moveUp) then
             moveUp:SetScript("OnClick", function() fv:OnUp(f) end);
         end
-        local moveDown = _G[f:GetName().."MoveDown"];
+        local moveDown = f.MoveDown;
         if (moveDown) then
             moveDown:SetScript("OnClick", function() fv:OnDown(f) end);
         end
-        local add = _G[f:GetName().."Add"];
+        local add = f.Add;
         if (add) then
             add:SetScript("OnClick", function() fv:OnAdd(f) end);
         end
@@ -187,7 +189,7 @@ end
 function TreeView:ShowDrag(row)
     local this = self;
     if (not self.ghost and self.style.dragTemplate) then
-        self.ghost = CreateFrame("BUTTON", self.frame:GetName().."Ghost", self.scrollFrame:GetParent(), self.style.dragTemplate);
+        self.ghost = CreateFrame("BUTTON", nil, self.scrollFrame:GetParent(), self.style.dragTemplate);
     end
 
     if (self.ghost) then
@@ -206,10 +208,10 @@ function TreeView:ShowDrag(row)
         ghost:SetFrameLevel(9000);
         ghost:LockHighlight();
 
-        if (_G[ghost:GetName().."Text"]) then
-            _G[ghost:GetName().."Text"]:SetPoint("TOPLEFT", row.item.offset, 0);
-            _G[ghost:GetName().."Text"]:SetWidth(row.origTextWidth - row.item.offset);
-            _G[ghost:GetName().."Text"]:SetText(row.item.name);
+        if (ghost.Text) then
+            ghost.Text:SetPoint("TOPLEFT", row.item.offset, 0);
+            ghost.Text:SetWidth(row.origTextWidth - row.item.offset);
+            ghost.Text:SetText(row.item.name);
         end
 
         if (self.renderFn) then
@@ -233,7 +235,7 @@ function TreeView:UpdateRow(offset, row)
 
         row:SetID(offset);
 
-        local expander = _G[row:GetName().."Expander"];
+        local expander = row.Expander;
         if (expander) then
             if (row.item.children and #row.item.children > 0) then
                 if (row.item.expanded) then
@@ -247,7 +249,7 @@ function TreeView:UpdateRow(offset, row)
             end
         end
 
-        local addButton = _G[row:GetName().."Add"];
+        local addButton = row.Add;
         if (addButton and not row.item.showAddButton) then
             addButton:Hide();
         elseif (addButton) then
@@ -262,10 +264,10 @@ function TreeView:UpdateRow(offset, row)
             row:UnlockHighlight();
         end
 
-        if (_G[row:GetName().."Text"]) then
-            _G[row:GetName().."Text"]:SetPoint("TOPLEFT", row.item.offset, 0);
-            _G[row:GetName().."Text"]:SetWidth(row.origTextWidth - row.item.offset);
-            _G[row:GetName().."Text"]:SetText(row.item.name);
+        if (row.Text) then
+            row.Text:SetPoint("TOPLEFT", row.item.offset, 0);
+            row.Text:SetWidth(row.origTextWidth - row.item.offset);
+            row.Text:SetText(row.item.name);
         end
 
         if (row:GetNormalTexture() and self.style.useNormalTexture) then

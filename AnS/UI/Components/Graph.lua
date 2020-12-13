@@ -1,13 +1,8 @@
 local Ans = select(2, ...);
-local Graph = {};
-Graph.__index = Graph;
+local Graph = Ans.Object.Register("Graph", Ans.UI);
 
-Ans.UI.Graph = Graph;
-
-function Graph:New(name, parent)
-    local g = {};
-    setmetatable(g, Graph);
-
+function Graph:Acquire(name, parent)
+    local g = Graph:New();
     -- predefined holders for textures lines etc
     g.lines = {};
     g.bgLines = {};
@@ -79,16 +74,16 @@ function Graph:Load(x,y,point,anchor,width, height)
     wipe(self.dots);
 
     for i = 1, 12 do
-        local l = _G[f:GetName().."Line"..i]; 
-        local lbg = _G[f:GetName().."LineBg"..i];
+        local l = f["Line"..i]; 
+        local lbg = f["LineBg"..i];
 
-        local fill = _G[f:GetName().."Fill"..i];
-        local tfill = _G[f:GetName().."TFill"..i];
+        local fill = f["Fill"..i];
+        local tfill = f["TFill"..i];
 
-        local yFont = _G[f:GetName().."YAxisLabel"..i];
-        local xFont = _G[f:GetName().."XAxisLabel"..i];
+        local yFont = f["YAxisLabel"..i];
+        local xFont = f["XAxisLabel"..i];
 
-        local dot = _G[f:GetName().."Dot"..i];
+        local dot = f["Dot"..i];
 
         if (dot) then
             tinsert(self.dots, dot);

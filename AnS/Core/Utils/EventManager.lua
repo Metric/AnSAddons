@@ -1,15 +1,6 @@
 local Ans = select(2, ...);
-
-local EventManager = {listeners = {}};
-EventManager.__index = EventManager;
-Ans.EventManager = EventManager;
-
-function EventManager:New()
-    local a = {};
-    setmetatable(a, EventManager);
-    a.listeners = {};
-    return a;
-end
+local EventManager = Ans.Object.Register("EventManager");
+EventManager.listeners = {};
 
 function EventManager:Emit(event, ...)
     local listeners = self.listeners[event];
@@ -31,7 +22,7 @@ function EventManager:On(event, fn)
     self.listeners[event] = listeners;
 end
 
-function EventManager:RemoveListener(event, fn)
+function EventManager:Off(event, fn)
     local listeners = self.listeners[event];
 
     if (listeners) then

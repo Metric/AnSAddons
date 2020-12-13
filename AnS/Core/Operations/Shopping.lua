@@ -1,4 +1,2 @@
 local Ans = select(2, ...);
-local Shopping = {};
-Shopping.__index = Shopping;
-Ans.Operations.Shopping = Shopping;
+local Shopping = Ans.Object.Register("Shopping", Ans.Operations);

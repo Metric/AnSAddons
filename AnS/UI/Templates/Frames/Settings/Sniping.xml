@@ -1,0 +1,144 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsSniperSettingsTemplate" virtual="true" mixin="AnsSniperSettingsFrameMixin">
+        <Size x="555" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="0" />
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Price Source" parentKey="SourceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Default Max Price or Boolean Filter" justifyV="CENTER" parentKey="PriceLabel" inherits="AnsGameFontWhiteTrans">
+                    <Size x="200" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="-45" />
+                    </Anchors>
+                </FontString>
+                <FontString justifyH="LEFT" text="Ding Sound" inherits="AnsGameFontWhiteTrans">
+                    <Size x="100" y="20" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="225" y="0" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button parentKey="TestDing" text="Play" inherits="AnsStandardButtonTemplate">
+                <Size x="42" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="530" y="-20" />
+                </Anchors>
+            </Button>
+            <EditBox parentKey="Source" text="" inherits="AnsEditBoxTemplate">
+                <Size x="200" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.SourceLabel" x="0" y="0" />
+                </Anchors>
+            </EditBox>
+            <ScrollFrame parentKey="Price" enableMouse="true" inherits="AnsScrollFrameTemplate">
+                <Size x="575" y="128" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeKey="$parent.PriceLabel" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.05" />
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <ScrollChild>
+                    <EditBox parentKey="Text" inherits="AnsEditBoxTemplate">
+                        <Size x="575" y="123" />
+                    </EditBox>
+                </ScrollChild>
+                <Scripts>
+                    <OnLoad>
+                        self:SetScript("OnMouseDown", function() self.Text:SetFocus() end);
+                    </OnLoad>
+                </Scripts>
+            </ScrollFrame>
+            <CheckButton parentKey="CommodityConfirm" text="Use Commodity Confirm" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.Price" x="0" y="-10" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="Ding" text="Use Ding Sound" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.CommodityConfirm" x="150" y="0" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="SkipSeenGroup" text="Skip Lowest Seen Group" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.Ding" x="125" y="0" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="FlashWoWIcon" text="Flash WoW Icon" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.SkipSeenGroup" x="150" y="0" />
+                </Anchors>
+            </CheckButton>
+            <CheckButton parentKey="ChatMessageNew" text="Chat Message New (Classic)" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.CommodityConfirm" x="0" y="-10" />
+                </Anchors>
+            </CheckButton>
+             <CheckButton parentKey="SingleStack" text="Ignore Commodity Single Stacks" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.ChatMessageNew" x="150" y="0" />
+                </Anchors>
+            </CheckButton>
+
+            <EditBox parentKey="ItemsUpdate" text="" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.ChatMessageNew" x="0" y="-30" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Items Processed Per Frame" inherits="AnsGameFontWhiteTrans">
+                            <Size x="150" y="20" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="20" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+            <EditBox parentKey="ScanDelay" text="" numeric="true" inherits="AnsEditBoxTemplate">
+                <Size x="64" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.ItemsUpdate" x="100" y="0" />
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString justifyH="LEFT" text="Found Scan Delay" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" y="20" />
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="20" />
+                            </Anchors>
+                        </FontString>
+                        <FontString justifyH="LEFT" text="seconds" inherits="AnsGameFontWhiteTrans">
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="RIGHT" relativeKey="$parent" x="5" y="0" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </EditBox>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

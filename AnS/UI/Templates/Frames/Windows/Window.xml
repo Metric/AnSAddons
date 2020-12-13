@@ -1,0 +1,50 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsWindowTemplate" virtual="true" enableMouse="true" movable="true" frameStrata="HIGH">
+        <Scripts>
+            <OnLoad>
+                self:Init();
+                self:RegisterForDrag("LeftButton");
+                self:Hide();
+            </OnLoad>
+            <OnDragStart>
+                self:StartMoving();
+            </OnDragStart>
+            <OnDragStop>
+                self:StopMovingOrSizing();
+            </OnDragStop>
+            <OnMouseDown>
+                self:Raise();
+            </OnMouseDown>
+        </Scripts>
+        <Anchors>
+            <Anchor point="CENTER" x="0" y="0" />
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="Background" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0.01" g="0.02" b="0.04" />
+                </Texture>
+                <Texture parentKey="TitleBackground" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                    <Size y="24" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="0" />
+                        <Anchor point="TOPRIGHT" x="0" y="0" />
+                    </Anchors>
+                    <Color r="0.2" g="0.2" b="0.52" />
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture parentKey="Icon" file="Interface\AddOns\AnS\Images\ansicon">
+                    <Size x="16" y="16" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="6" y="-4" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+    </Frame>
+</Ui>

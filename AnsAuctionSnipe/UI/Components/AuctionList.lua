@@ -1,14 +1,15 @@
-local Ans = select(2, ...);
-local Config = AnsCore.API.Config;
-local Query = AnsCore.API.Auctions.Query;
+local Core = select(2, ...);
+local Config = Ans.API.Config;
+local Query = Ans.API.Auctions.Query;
+local TempTable = Ans.API.TempTable;
 local AuctionList = {};
 AuctionList.__index = AuctionList;
 
-Ans.AuctionList = AuctionList;
+Core.AuctionList = AuctionList;
 
-local Recycler = AnsCore.API.Auctions.Recycler;
-local Query = AnsCore.API.Auctions.Query;
-local Utils = AnsCore.API.Utils;
+local Recycler = Ans.API.Auctions.Recycler;
+local Query = Ans.API.Auctions.Query;
+local Utils = Ans.API.Utils;
 
 AuctionList.selectedEntry = -1;
 AuctionList.selectedItem = nil;
@@ -51,7 +52,7 @@ end
 local function AddKnown(item)
     local hash = KnownKey(item);
     local auctionId = Hash(item);
-    local known = knownAuctions[hash] or Utils:GetTable();
+    local known = knownAuctions[hash] or TempTable:Acquire();
     knownAuctions[hash] = known;
     known[auctionId] = item;
 end
@@ -172,7 +173,7 @@ end
 function AuctionList:Buy(block, forcePurchase) 
     if (self.frame and block) then
         if (not self.isBuying and self.commodity == nil and self.auction == nil) then
-            if (Utils:IsClassic()) then
+            if (Utils.IsClassic()) then
                 self:ClassicPurchase(block);
             else
                 self:Purchase(block, forcePurchase);
@@ -248,6 +249,8 @@ function AuctionList:SetItems(items)
 end
 
 function AuctionList:Purchase(block, forcePurchaseAuction)
+    local b = block;
+
     if (self.commodity ~= nil) then
         return false, false;
     end
@@ -277,8 +280,8 @@ function AuctionList:Purchase(block, forcePurchaseAuction)
             return true, true;
         elseif (GetMoney() >= block.buyoutPrice) then
             self.isBuying = true;
-            self.auction = block;
             self.commodity = block:Clone();
+            self.auction = block;
             self.commodity.toPurchase = self.commodity.count;
             self:PurchaseCommodity();
             return true, true;
@@ -469,7 +472,7 @@ function AuctionList:Recycle()
     self.selectedItem = nil;
 
     for k,v in pairs(knownAuctions) do
-        Utils:ReleaseTable(v);
+        v:Release();
     end
 
     wipe(knownAuctions);
@@ -484,7 +487,7 @@ function AuctionList:RemoveAuctionAmount(block, count)
         local item = self.items[i];
 
         if (Hash(item) == blockHash and item.link == block.link) then
-            if (not Utils:IsClassic()) then
+            if (not Utils.IsClassic()) then
                 RemoveKnown(item);
                 block.count = block.count - count;
             end
@@ -492,7 +495,7 @@ function AuctionList:RemoveAuctionAmount(block, count)
             item.count = item.count - count;
 
             -- for commodities
-            if (not Utils:IsClassic() and item.count > 0) then
+            if (not Utils.IsClassic() and item.count > 0) then
                 AddKnown(item);
             end
 
@@ -549,7 +552,7 @@ function AuctionList:ShowSelectedItem()
         local color = ITEM_QUALITY_COLORS[quality];
         self.buyNowFrame.Icon:SetTexture(texture);
         self.buyNowFrame.Name:SetText("stack of "..count.." "..color.hex..name);
-        self.buyNowFrame.Price:SetText(Utils:PriceToString(total));
+        self.buyNowFrame.Price:SetText(Utils.PriceToString(total));
 
         self.buyNowFrame:SetWidth(168);
 
@@ -634,7 +637,7 @@ function AuctionList:ShowTip(item)
             local itemLink = auction.link;
             local count = auction.count;
             if (itemLink ~= nil) then
-                Utils:ShowTooltip(item, itemLink, count);
+                Utils.ShowTooltip(item, itemLink, count);
             end
         end
     end
@@ -678,7 +681,7 @@ function AuctionList:UpdateRow(offset, row)
             itemName:SetText("stack of "..count.." "..name);
         end
         itemLevel:SetText(ilevel);
-        itemPrice:SetText(Utils:PriceToString(ppu));    
+        itemPrice:SetText(Utils.PriceToString(ppu));    
         itemPercent:SetText(auction.percent.."%");
 
         if (percent >= 100) then

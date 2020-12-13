@@ -1,14 +1,14 @@
-#@retail@
 ## Interface: 90002
-#@end-retail@
-#@non-retail@
-# ## Interface: 11304
-#@end-non-retail@
 ## Title: AnS
-## Version: 2.1.4
+## Version: 2.2.0
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
 ## SavedVariables: ANS_FILTERS, ANS_CONFIG, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_ANALYTICS_DATA
+
+## Base Utils
+Core\Utils\Object.lua
+Core\Utils\TempTable.lua
+Core\Utils\TooltipScanner.lua
 
 ## Config Settings
 Core\Config.lua
@@ -16,7 +16,7 @@ Core\Config.lua
 ## Components UI Templates
 UI\Templates\Fonts.xml
 
-UI\Templates\Inputs\EditBox.xml
+UI\Templates\Frames\Components\EditBox.xml
 
 UI\Templates\Buttons\FilterRow.xml
 UI\Templates\Buttons\AuctionRow.xml
@@ -28,28 +28,48 @@ UI\Templates\Buttons\RecordRowMin.xml
 UI\Templates\Buttons\RecordRowFull.xml
 UI\Templates\Buttons\AuctionTreeRow.xml
 
-UI\Templates\Frames\RecordsHeadingMin.xml
-UI\Templates\Frames\RecordsHeadingFull.xml
-UI\Templates\Frames\Graph.xml
-UI\Templates\Frames\LedgerListView.xml
-UI\Templates\Frames\ConfirmDialog.xml
+UI\Templates\Frames\Headings\RecordsHeadingMin.xml
+UI\Templates\Frames\Headings\RecordsHeadingFull.xml
+UI\Templates\Frames\Components\Graph.xml
+UI\Templates\Frames\LedgerList.xml
+UI\Templates\Frames\Components\ConfirmDialog.xml
 UI\Templates\Frames\GroupEdit.xml
-UI\Templates\Frames\OperationViews.xml
-UI\Templates\Frames\SettingsViews.xml
-UI\Templates\Frames\Auctioning.xml
-UI\Templates\Frames\Mailing.xml
+
+# Operation Editor Templates
+UI\Templates\Frames\Operations\Auctioning.xml
+UI\Templates\Frames\Operations\Mailing.xml
+UI\Templates\Frames\Operations\Sniping.xml
+
+# Settings Editor Templates
+UI\Templates\Frames\Settings\Crafting.xml
+UI\Templates\Frames\Settings\CustomSources.xml
+UI\Templates\Frames\Settings\General.xml
+UI\Templates\Frames\Settings\Macro.xml
+UI\Templates\Frames\Settings\Sniping.xml
+UI\Templates\Frames\Settings\Blacklists.xml
+
+# Special UI Hook Templates
+UI\Templates\Frames\Hooks\Mailing.xml
+UI\Templates\Frames\Hooks\Posting.xml
+
+# Window Templates
+UI\Templates\Frames\Windows\Window.xml
+UI\Templates\Frames\Windows\Destroy.xml
+UI\Templates\Frames\Windows\Main.xml
 
 ## General Components
 UI\Components\Core.lua
-UI\Components\Common\Dropdown.lua
-UI\Components\Common\TextInput.lua
-UI\Components\Common\ConfirmDialog.lua
-UI\Components\Graph.lua
+UI\Components\TextInput.lua
 UI\Components\TreeView.lua
 UI\Components\ListView.lua
+UI\Components\Dropdown.lua
+UI\Components\Graph.lua
+UI\Components\ConfirmDialog.lua
 
 ## General Utils
 Core\Utils\Core.lua
+Core\Utils\Groups.lua
+Core\Utils\Draggable.lua
 Core\Utils\Minimap.lua
 Core\Utils\EventManager.lua
 Core\Utils\Tasker.lua
@@ -59,8 +79,9 @@ Core\Utils\Exporter.lua
 Core\Utils\FSM.lua
 Core\Utils\BagScanner.lua
 Core\Utils\Macro.lua
+Core\Utils\json.lua
 
-## Data
+## General Data
 Data\Core.lua
 Data\Herbs.lua
 Data\Ore.lua
@@ -73,9 +94,6 @@ Data\Pets.lua
 Data\ClassicVendor.lua
 Data\Vendor.lua
 
-## Special Crafting Data for Recipes
-Data\Crafting.lua
-
 ## Auction Database Sources
 Core\Auction\Database\Core.lua
 Core\Auction\Database\TSM.lua
@@ -85,7 +103,16 @@ Core\Auction\Database\TUJ.lua
 Core\PriceSource.lua
 Core\Sources.lua
 
+## Special Crafting Data for Recipes
+## This must come after Sources.lua
+## Since it relies on it for 
+## Disenchant Values
+Data\Crafting.lua
+
 ## Auction Queries
+Core\Auction\Core.lua
+Core\Auction\Auction.lua
+Core\Auction\Recycler.lua
 Core\Auction\Query.lua
 
 ## Operations
@@ -108,29 +135,44 @@ Core\Analytics\Modules\MailTracker.lua
 Core\Analytics\Modules\TradeTracker.lua
 Core\Analytics\Query.lua
 
-## AnS Core Window
-Core\WindowViews\DashboardView.lua
-Core\WindowViews\LedgerView.lua
-Core\WindowViews\GroupsView.lua
-Core\WindowViews\Subviews\SnipingOpView.lua
-Core\WindowViews\Subviews\AuctionOpView.lua
-Core\WindowViews\Subviews\MailOpView.lua
-Core\WindowViews\OperationsView.lua
-Core\WindowViews\Subviews\SniperSettingsView.lua
-Core\WindowViews\Subviews\GeneralSettingsView.lua
-Core\WindowViews\Subviews\CustomSourcesView.lua
-Core\WindowViews\Subviews\CraftSettingsView.lua
-Core\WindowViews\Subviews\MacroSettingsView.lua
-Core\WindowViews\SettingsView.lua
-Core\WindowViews\ImportExportView.lua
-Core\Window.lua
+## Destroying & Crafting
+Core\Crafting\Core.lua
+Core\Destroy\Core.lua
 
-## Special UI Hooks
-UI\Auctioning\Posting.lua
-UI\Auctioning\AuctionHook.lua
-UI\Crafting\CraftingHook.lua
+## UI Mixins
+UI\Mixins\Dashboard.lua
+UI\Mixins\Ledger\List.lua
+UI\Mixins\Ledger.lua
+UI\Mixins\Groups\Edit.lua
+UI\Mixins\Groups.lua
+UI\Mixins\Operations\Sniping.lua
+UI\Mixins\Operations\Mailing.lua
+UI\Mixins\Operations\Auctioning.lua
+UI\Mixins\Operations.lua
+UI\Mixins\Settings\Sniping.lua
+UI\Mixins\Settings\General.lua
+UI\Mixins\Settings\CustomSources.lua
+UI\Mixins\Settings\Crafting.lua
+UI\Mixins\Settings\Macro.lua
+UI\Mixins\Settings\Blacklists\Characters.lua
+UI\Mixins\Settings\Blacklists\Items.lua
+UI\Mixins\Settings\Blacklists.lua
+UI\Mixins\Settings.lua
+
+## UI Window Mixins
+UI\Mixins\Windows\Main.lua
+UI\Mixins\Windows\DestroyPreview.lua
+UI\Mixins\Windows\Destroy.lua
+
+## UI for Hooks
 UI\Mailing\Send.lua
-UI\Mailing\MailHook.lua
+UI\Auctioning\Posting.lua
+
+## Special Hooks
+UI\Hooks\BagHook.lua
+UI\Hooks\AuctionHook.lua
+UI\Hooks\CraftingHook.lua
+UI\Hooks\MailHook.lua
 
 ## Core Base
 AnS.lua

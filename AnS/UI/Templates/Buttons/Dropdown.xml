@@ -1,5 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-     <Button name="AnsDropdownTemplate" virtual="true" enableMouse="true">
+    <Button name="AnsDropdownTemplate" virtual="true" enableMouse="true">
         <ButtonText justifyH="LEFT" inherits="AnsGameFontNormalDark">
             <Anchors>
                 <Anchor point="LEFT" x="5" y="0" />
@@ -7,14 +7,14 @@
         </ButtonText>
         <NormalFont inherits="AnsGameFontNormalDark" />
         <NormalTexture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
-             <Color r="1" g="1" b="1" a="0.75" />
+            <Color r="1" g="1" b="1" a="0.75" />
         </NormalTexture>
         <HighlightTexture alphaMode="ADD" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
             <Color r="1" g="1" b="1" a="0.05" />
         </HighlightTexture>
         <Layers>
             <Layer level="OVERLAY">
-                <Texture name="$parentArrow" file="Interface\AddOns\AnS\Images\icons">
+                <Texture file="Interface\AddOns\AnS\Images\icons">
                     <Size x="16" y="16" />
                     <Anchors>
                         <Anchor point="TOPRIGHT" x="-4" y="-4" />
@@ -25,22 +25,23 @@
             </Layer>
         </Layers>
         <Frames>
-            <Frame name="$parentList" hidden="true" frameStrata="HIGH" enableMouse="true">
+            <Frame parentKey="List" hidden="true" frameStrata="HIGH" enableMouse="true" frameLevel="120">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" x="0" y="0" />
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent" x="0" y="0" />
                 </Anchors>
                 <Layers>
                     <Layer level="BACKGROUND">
-                        <Texture name="$parentBG" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                        <Texture parentKey="Background" file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
                             <Anchors>
                                 <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
                             </Anchors>
                             <Color r="1" g="1" b="1" a="1" />
                         </Texture>
                     </Layer>
                 </Layers>
                 <Frames>
-                    <ScrollFrame name="$parentScrollFrame" inherits="UIPanelScrollFrameCodeTemplate">
+                    <ScrollFrame parentKey="ScrollFrame" inherits="UIPanelScrollFrameCodeTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
                         </Anchors>
@@ -53,7 +54,7 @@
                             </Frame>
                         </ScrollChild>
                         <Frames>
-                            <Slider name="$parentScrollBar" frameStrata="HIGH" orientation="vertical" parentKey="ScrollBar">
+                            <Slider name="$parentScrollBar" frameStrata="HIGH" frameLevel="129" orientation="vertical" parentKey="ScrollBar">
                                 <Anchors>
                                     <Anchor point="TOPRIGHT" x="0" y="0" />
                                     <Anchor point="BOTTOMRIGHT" x="0" y="0" />
@@ -64,40 +65,19 @@
                                     <Color r="0" g="0" b="0" a="0.75" />
                                 </ThumbTexture>
                                 <Frames>
-                                    <Button hidden="true" name="$parentScrollUpButton">
+                                    <Button hidden="true" parentKey="ScrollUpButton" name="$parentScrollUpButton">
                                     </Button>
-                                    <Button hidden="true" name="$parentScrollDownButton">
+                                    <Button hidden="true" parentKey="ScrollDownButton" name="$parentScrollDownButton">
                                     </Button>
                                 </Frames>
                                 <Scripts>
-			                        <OnValueChanged function="UIPanelScrollBar_OnValueChanged"/>
+                                    <OnValueChanged function="UIPanelScrollBar_OnValueChanged"/>
                                 </Scripts>
                             </Slider>
                         </Frames>
                     </ScrollFrame>
-
-                    <Button name="$parentItem1" frameLevel="999" inherits="AnsDropdownItemTemplate"> 
-                        <Anchors>
-                            <Anchor point="TOPLEFT" x="0" y="0" />
-                        </Anchors>
-                    </Button>
-                    <Button name="$parentItem2" frameLevel="999" inherits="AnsDropdownItemTemplate">
-                        <Anchors>
-                            <Anchor point="TOPLEFT" relativeTo="$parentItem1" relativePoint="BOTTOMLEFT" x="0" y="0" />
-                        </Anchors>
-                    </Button>
-                    <Button name="$parentItem3" frameLevel="999" inherits="AnsDropdownItemTemplate">
-                        <Anchors>
-                            <Anchor point="TOPLEFT"  relativeTo="$parentItem2" relativePoint="BOTTOMLEFT" x="0" y="0" />
-                        </Anchors>
-                    </Button>
-                    <Button name="$parentItem4" frameLevel="999" inherits="AnsDropdownItemTemplate">
-                        <Anchors>
-                            <Anchor point="TOPLEFT" relativeTo="$parentItem3" relativePoint="BOTTOMLEFT" x="0" y="0" />
-                        </Anchors>
-                    </Button>
                 </Frames>
             </Frame>
         </Frames>
-     </Button>
+    </Button>
 </Ui>

@@ -1,11 +1,8 @@
 local Ans = select(2, ...);
-local PriceSource = {};
-PriceSource.__index = PriceSource;
-Ans.PriceSource = PriceSource;
+local PriceSource = Ans.Object.Register("PriceSource");
 
-function PriceSource:New(name,fn,key)
-    local s = {};
-    setmetatable(s, PriceSource);
+function PriceSource:Acquire(name, fn, key)
+    local s = PriceSource:New();
     s.name = name;
     s.fn = fn;
     s.key = key;

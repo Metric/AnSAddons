@@ -1,4 +1,2 @@
 local Ans = select(2, ...);
-local UI = {};
-UI.__index = UI;
-Ans.UI = UI;
+local UI = Ans.Object.Register("UI");

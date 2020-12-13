@@ -1,0 +1,255 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Frame name="AnsGeneralSettingsTemplate" virtual="true" mixin="AnsGeneralSettingsFrameMixin">
+         <Size x="565" y="345" />
+        <Anchors>
+            <Anchor point="TOPLEFT" x="178" y="-16" />
+        </Anchors>
+        <Frames>
+            <Frame parentKey="basicOptions">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="0" y="0" />
+                </Anchors>
+                <Size x="565" y="24" />
+                <Frames>
+                    <CheckButton parentKey="showDressing" text="Show Dressup" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-2" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="useCoinIcons" text="Use Coin Icons" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="175" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.showDressing" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="showId" text="Show Item ID" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.useCoinIcons" />
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="-5" y="5" />
+                                <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Basic Options">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+            <Frame parentKey="tooltipOptions">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.basicOptions" x="0" y="0" />
+                </Anchors>
+                <Size x="565" y="48" />
+                <Frames>
+                    <Frame parentKey="realm">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-35" />
+                        </Anchors>
+                        <Size x="565" y="48" />
+                        <Frames>
+                            <CheckButton parentKey="tooltipRealmRecent" text="Show Recent" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-2" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="tooltipRealmMin" text="Show Min" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRealmRecent" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="tooltipRealm3Day" text="Show 3-Day" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRealmMin" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="tooltipRealmMarket" text="Show Market" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeKey="$parent.tooltipRealmRecent" />
+                                </Anchors>
+                            </CheckButton>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-5" y="5" />
+                                        <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Tooltips Realm">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                    <Frame parentKey="region" hidden="true">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.realm" x="0" y="-35" />
+                        </Anchors>
+                        <Size x="565" y="48" />
+                        <Frames>
+                            <CheckButton parentKey="tooltipRegionRecent" text="Show Recent" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-2" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="tooltipRegionMin" text="Show Min" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRegionRecent" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="tooltipRegion3Day" text="Show 3-Day" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRegionMin" />
+                                </Anchors>
+                            </CheckButton>
+                            <CheckButton parentKey="tooltipRegionMarket" text="Show Market" inherits="AnsCheckboxTemplate">
+                                <Anchors>
+                                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeKey="$parent.tooltipRegionRecent" />
+                                </Anchors>
+                            </CheckButton>
+                        </Frames>
+                        <Layers>
+                            <Layer level="BACKGROUND">
+                                <Texture>
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" x="-5" y="5" />
+                                        <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                                    </Anchors>
+                                    <Color r="1" g="1" b="1" a="0.03" />
+                                </Texture>
+                            </Layer>
+                            <Layer level="ARTWORK">
+                                <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Tooltips Region">
+                                    <Anchors>
+                                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </Frame>
+                </Frames>
+            </Frame>
+            <Frame parentKey="windowOptions">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.tooltipOptions.realm" x="0" y="-35" />
+                </Anchors>
+                <Size x="565" y="48" />
+                <Frames>
+                    <CheckButton parentKey="saveWindowLocations" text="Remember Window Locations" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-2" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="showPostCancel" text="Show AH Post/Cancel" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                             <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.saveWindowLocations" />
+                        </Anchors>
+                    </CheckButton>
+                     <CheckButton parentKey="showMailSend" text="Show Mail Send" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                             <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.showPostCancel" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="showDebugWindow" text="Show Debug Window" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                             <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeKey="$parent.saveWindowLocations" />
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="-5" y="5" />
+                                <Anchor point="BOTTOMRIGHT" x="5" y="-5" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Window Options">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+            <Frame parentKey="analyticOptions">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.windowOptions" x="0" y="-35" />
+                </Anchors>
+                <Size x="565" y="32" />
+                <Frames>
+                    <EditBox parentKey="maxDataLimit" maxBytes="64" numeric="true" text="" inherits="AnsEditBoxTemplate">
+                        <Size x="64" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-12" />
+                        </Anchors>
+                        <Layers>
+                            <Layer level="ARTWORK">
+                                <FontString justifyH="LEFT" text="Max Data Rows Per Character" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                                    <Size x="200" />
+                                    <Anchors>
+                                        <Anchor point="BOTTOMLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="2" />
+                                    </Anchors>
+                                </FontString>
+                            </Layer>
+                        </Layers>
+                    </EditBox>
+                    <CheckButton parentKey="trackDataAnalytics" text="Track Gold, Auctions etc." inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="110" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.maxDataLimit" />
+                        </Anchors>
+                    </CheckButton>
+                </Frames>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture>
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="-5" y="5" />
+                                <Anchor point="BOTTOMRIGHT" x="5" y="-10" />
+                            </Anchors>
+                            <Color r="1" g="1" b="1" a="0.03" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="AnsGameFontWhiteTransTitle" justifyH="LEFT" text="Analytic Options">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="0" y="20"/>
+                            </Anchors>
+                        </FontString>
+                        <FontString justifyH="LEFT" text="Default Time Mode" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                            <Size x="200" />
+                            <Anchors>
+                                <Anchor point="BOTTOMLEFT" relativeKey="$parent.trackDataAnalytics" relativePoint="TOPLEFT" x="185" y="4" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                self:Init();
+            </OnLoad>
+        </Scripts>
+    </Frame>
+</Ui>

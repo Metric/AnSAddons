@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
-    <Button name="AnsDropdownItemTemplate" virtual="true">
-         <ButtonText justifyH="LEFT" inherits="AnsGameFontNormalGray">
+    <Button name="AnsDropdownItemTemplate" virtual="true" frameStrata="HIGH" frameLevel="127">
+         <ButtonText parentKey="Text" justifyH="LEFT" inherits="AnsGameFontNormalGray">
             <Anchors>
                 <Anchor point="LEFT" x="5" y="0" />
             </Anchors>
