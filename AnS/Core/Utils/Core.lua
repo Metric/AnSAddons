@@ -25,7 +25,6 @@ local HOOK_CACHE = TempTable:Acquire();
 local LINK_CACHE = TempTable:Acquire();
 local PET_CACHE = TempTable:Acquire();
 local ID_CACHE = TempTable:Acquire();
-
 --- Standard Utils ---
 
 function Utils.IsClassic()
@@ -35,19 +34,13 @@ function Utils.IsClassic()
 end
 
 function Utils.GSC(val) 
-    local rv = math.floor(val);
+    local g = val / (COPPER_PER_SILVER * SILVER_PER_GOLD);
 
-    local g = math.floor (rv/10000);
+     -- mathmatically speakign this is equal to floor((val - (g * COPPER_PER_SILVER * SILVER_PER_GOLD)) / COPPER_PER_SILVER)
+    local s = mod(val / COPPER_PER_SILVER, COPPER_PER_SILVER);
+    local c = mod(val, COPPER_PER_SILVER);
   
-    rv = rv - g*10000;
-  
-    local s = math.floor (rv/100);
-  
-    rv = rv - s*100;
-  
-    local c = rv;
-  
-    return g, s, c
+    return math.floor(g), math.floor(s), math.floor(c);
 end
 
 function Utils.GetName(link)
@@ -250,17 +243,30 @@ function Utils.ToWowItemString(itemString)
 	return "item:"..itemId.."::::::"..(rand or "").."::"..level..":"..spec..":::"..extraPart..":::";
 end
 
-function Utils.GetLink(itemString)
+function Utils.GetLink(itemString,ignoreDetails)
 	if (not itemString) then return nil; end
 	local link = nil
-	local itemStringType, speciesId, level, quality, health, power, speed, petId = strsplit(":", itemString)
+    local itemStringType, speciesId, level, quality, health, power, speed, petId = strsplit(":", itemString)
 	if itemStringType == "p" then
 		local name, icon, type = C_PetJournal.GetPetInfoBySpeciesID(tonumber(speciesId));
-		local fullItemString = strjoin(":", speciesId, level or "", quality or "", health or "", power or "", speed or "", petId or "")
-		quality = tonumber(quality) or 0
-		local qualityColor = ITEM_QUALITY_COLORS[quality] and ITEM_QUALITY_COLORS[quality].hex or "|cffff0000"
+        local fullItemString = strjoin(":", speciesId, level or "", quality or "", health or "", power or "", speed or "", petId or "")
+        
+        if (quality) then
+            quality = tonumber(quality) or 1
+            if (quality == 0) then
+                quality = 1;
+            end
+        else
+            quality = 1;
+        end
+
+		local qualityColor = ITEM_QUALITY_COLORS[quality] and ITEM_QUALITY_COLORS[quality].hex or "|cffff0000";
 		link = qualityColor.."|Hbattlepet:"..fullItemString.."|h["..name.."]|h|r"
-	else
+    else
+        if (ignoreDetails) then
+            return "|H"..Utils.ToWowItemString(itemString).."|h[UNKNOWN]|h|r";
+        end
+
         local name, _, quality = GetItemInfo(tonumber(speciesId));
         
         if (not name) then
@@ -268,10 +274,66 @@ function Utils.GetLink(itemString)
             return nil;
         end
 
+        if (quality) then
+            quality = tonumber(quality) or 1
+            if (quality == 0) then
+                quality = 1;
+            end
+        else
+            quality = 1;
+        end
+
 		local qualityColor = ITEM_QUALITY_COLORS[quality] and ITEM_QUALITY_COLORS[quality].hex or "|cffff0000"
 		link = qualityColor.."|H"..Utils.ToWowItemString(itemString).."|h["..(name or "UNKNOWN").."]|h|r"
 	end
 	return link
+end
+
+function Utils.BonusID(id,mods)
+    local tmp = TempTable:Acquire(strsplit(":", id));
+    if (tmp[1] ~= "i") then
+        tmp:Release();
+        return id;
+    end
+
+    local bonusCount = tmp[4];
+    if (not bonusCount) then
+        tmp:Release();
+        return id;
+    end
+
+    bonusCount = tonumber(bonusCount) or 0;
+    if (not bonusCount or bonusCount == 0) then
+        tmp:Release();
+        return id;
+    end
+
+    local btemp = TempTable:Acquire();
+    for i = 1, bonusCount do
+        local num = tmp[4+i];
+        if (num) then
+            tinsert(btemp, tonumber(num) or 0);
+        end
+    end
+
+    table.sort(btemp, Utils.SortLowToHigh);
+
+    local extra = "::"..bonusCount..":"..strjoin(":", unpack(btemp));
+    btemp:Release();
+
+    local modifiers = "";
+
+    if (mods) then
+        local sep = ":";
+        local sindex = 4 + bonusCount + 1;
+        for i = sindex, #tmp do
+            modifiers = modifiers..sep..tmp[i];
+        end
+    end
+
+    local fresult = "i:"..tmp[2]..extra..modifiers; 
+    tmp:Release();
+    return fresult;
 end
 
 function Utils.GetID(link)
@@ -297,13 +359,24 @@ function Utils.GetID(link)
         local tbl = TempTable:Acquire(strsplit(":", link));
         local bonusCount = tbl[14];
         local id = tbl[2];
-        local tempBonus = TempTable:Acquire();
+
+        if (id == nil) then
+            return nil;
+        end
+
         local extra = "";
+        local modifiers = "";
+        local modCount = 0;
+        local modCountOffset = 0;
 
         if (bonusCount) then
             bonusCount = tonumber(bonusCount);
 
             if(bonusCount and bonusCount > 0) then
+                local tempBonus = TempTable:Acquire();
+
+                modCountOffset = bonusCount + 1;
+
                 local i;
                 for i = 1, bonusCount do
                     local num = tonumber(tbl[14+i]);
@@ -318,16 +391,44 @@ function Utils.GetID(link)
                 extra = "::"..bonusCount..":"..strjoin(":", unpack(tempBonus));
 
                 tempBonus:Release();
+            else
+                modCountOffset = 1;
+            end
+        else
+            modCountOffset = 1;
+        end
+
+        modCount = tbl[14 + modCountOffset];
+        if (modCount) then
+            modCount = tonumber(modCount);
+            if (modCount and modCount > 0) then
+                local tempMods = TempTable:Acquire();
+                local offset = 14 + modCountOffset;
+
+                for i = 1, modCount do
+                    local id = tbl[offset+i];
+
+                    -- skip 9 as that is just what level the characte was
+                    -- when the item was generated via loot or crafting etc
+                    -- we don't care about that one
+                    if (id and id ~= "9") then
+                        tinsert(tempMods, id);
+                        tinsert(tempMods, tbl[offset+i+1]);
+                    end
+
+                    -- increase i by 1 since modifiers are id:value pairs
+                    i = i + 1;
+                end
+
+                modifiers = ":"..math.floor(#tempMods / 2)..":"..strjoin(":", unpack(tempMods))
+
+                tempMods:Release();
             end
         end
 
         tbl:Release();
 
-        if (id == nil) then
-            return nil;
-        end
-
-        local fresult = "i:"..id..extra;
+        local fresult = "i:"..id..((extra == "" and modifiers ~= "") and "::" or extra)..modifiers;
         ID_CACHE[link] = fresult;
         return fresult;
     end
@@ -391,25 +492,25 @@ function Utils.MoneyStringToCopper(str)
     local g, s2, s, s3, c = string.match(str, "(%d+)g(%s*)(%d+)s(%s*)(%d+)c");
 
     if (g and s and c) then
-        return g.."g"..(s2 or "")..s.."s"..(s3 or "")..c.."c", tonumber(g) * 10000 + tonumber(s) * 100 + tonumber(c);
+        return g.."g"..(s2 or "")..s.."s"..(s3 or "")..c.."c", tonumber(g) * (COPPER_PER_SILVER * SILVER_PER_GOLD) + tonumber(s) * COPPER_PER_SILVER + tonumber(c);
     end
 
     g, s2, s = string.match(str, "(%d+)g(%s*)(%d+)s");
 
     if (g and s) then
-        return g.."g"..(s2 or "")..s.."s", tonumber(g) * 10000 + tonumber(s) * 100;
+        return g.."g"..(s2 or "")..s.."s", tonumber(g) * (COPPER_PER_SILVER * SILVER_PER_GOLD) + tonumber(s) * COPPER_PER_SILVER;
     end
 
     g, s2, c = string.match(str, "(%d+)g(%s*)(%d+)c");
 
     if (g and c) then
-        return g.."g"..(s2 or "")..c.."c", tonumber(g) * 10000 + tonumber(c);
+        return g.."g"..(s2 or "")..c.."c", tonumber(g) * (COPPER_PER_SILVER * SILVER_PER_GOLD) + tonumber(c);
     end
 
     s, s2, c = string.match(str, "(%d+)s(%s*)(%d+)c");
 
     if (s and c) then
-        return s.."s"..(s2 or "")..c.."c", tonumber(s) * 100 + tonumber(c);
+        return s.."s"..(s2 or "")..c.."c", tonumber(s) * COPPER_PER_SILVER + tonumber(c);
     end
 
     c = string.match(str, "(%d+)c");
@@ -421,13 +522,13 @@ function Utils.MoneyStringToCopper(str)
     s = string.match(str, "(%d+)s");
 
     if (s) then
-        return s.."s", tonumber(s) * 100;
+        return s.."s", tonumber(s) * COPPER_PER_SILVER;
     end
 
     g = string.match(str, "(%d+)g");
 
     if (g) then
-        return g.."g", tonumber(g) * 10000;
+        return g.."g", tonumber(g) * (COPPER_PER_SILVER * SILVER_PER_GOLD);
     end
 
     return nil, nil;

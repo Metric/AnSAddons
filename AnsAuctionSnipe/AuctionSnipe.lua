@@ -702,8 +702,8 @@ function AuctionSnipe:BuySelected()
         and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
         -- interrupt current query fsm
         Query.Clear();
-        if ((SniperFSM.current == "ITEMS" and lastItemId and lastItemId == AuctionList.selectedItem.id) or Utils.IsClassic() 
-        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH"  and lastItemId and lastItemId == AuctionList.selectedItem.id)) then
+        if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId)) or Utils.IsClassic() 
+        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH"  and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId))) then
             AuctionList:BuySelected(true);
         else
             AuctionList:BuySelected();
@@ -718,8 +718,8 @@ function AuctionSnipe:BuyFirst()
         and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
         -- interrupt current query fsm
         Query.Clear();
-        if ((SniperFSM.current == "ITEMS" and lastItemId and lastItemId == AuctionList.selectedItem.id) or Utils.IsClassic() 
-        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH"  and lastItemId and lastItemId == AuctionList.selectedItem.id)) then
+        if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId)) or Utils.IsClassic() 
+        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId))) then
             AuctionList:BuyFirst(true);
         else
             AuctionList:BuyFirst();

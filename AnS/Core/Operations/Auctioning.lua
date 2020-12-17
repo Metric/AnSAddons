@@ -181,7 +181,7 @@ end
 function Auctioning:ContainsItem(v)
     -- the item should already be assigned a tsmId here
     local _, id = strsplit(":", v.tsmId);
-    if (self.ids[tsmId] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
+    if (self.ids[v.tsmId] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
         return true;
     end
 

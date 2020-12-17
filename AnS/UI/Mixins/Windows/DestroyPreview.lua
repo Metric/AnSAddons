@@ -45,7 +45,7 @@ function AnsDestroyPreviewFrameMixin:Init()
             end
 
             if (row.TextRight) then
-                row.TextRight:SetText("x"..string.format("%0.2f", item.amount));
+                row.TextRight:SetText("x"..string.format("%0.3f", item.amount));
             end
         end
     );

@@ -184,6 +184,20 @@ function AuctionList:Buy(block, forcePurchase)
     end
 end
 
+function AuctionList:IsSelectedSameAsLastId(id)
+    if (self.frame and self.selectedItem) then
+        return self.selectedItem.id == id;
+    end
+    return false;
+end
+
+function AuctionList:IsFirstSameAsLastId(id)
+    if (self.frame and #self.items > 0) then
+        return self.items[1].id == id;
+    end
+    return false;
+end
+
 function AuctionList:BuyFirst(forcePurchase) 
     if (self.frame and #self.items > 0) then
         self:Buy(self.items[1], forcePurchase);

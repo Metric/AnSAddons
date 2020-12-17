@@ -1,3 +1,7 @@
+## AnS [Auction Sniper] Changes 2.2.1
+
+-   Fixed an issue where an invalid variable check was happening for SnipeFirst
+
 ## AnS [Auction Sniper] Changes 2.2.0
 
 -   Updated to work with latest AnS core changes.

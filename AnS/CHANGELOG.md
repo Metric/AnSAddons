@@ -1,3 +1,11 @@
+## AnS Changes 2.2.1
+
+-   Made min() and max() formula functions work similar to tsm, instead of using the default math.min and math.max functions.
+    -   This should allow proper calculations for crafting profits that line up with TSM crafting profits etc.
+    -   It will also eliminate weird errors that others may have been having when trying to use min and max etc.
+-   Added in vellum calculation into enchanting profits for retail
+-   Optimized the lookup for prospect / mill values and results
+
 ## AnS Changes 2.2.0 (Includes fixes from 2.1.2.2 - 2.1.4)
 
 ## 2.1.2.2 - 2.1.2.6

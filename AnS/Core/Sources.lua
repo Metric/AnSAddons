@@ -74,7 +74,7 @@ local TEMPLATE = [[
         local ifgte, iflte, iflt, ifgt, ifeq, ifneq, check, avg, first, round,
             min, max, mod, 
             abs, ceil, floor, random, log, 
-            log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, math.min, math.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
+            log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, sources.min, sources.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
         local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
         local bonus = function(v1,v2,v3)
@@ -398,6 +398,34 @@ Sources.bonus = function(v1,v2,v3,v4)
     return v4 or false;
 end
 
+Sources.max = function(...)
+    local c = select("#", ...);
+    local lastMax = -math.huge;
+    for i = 1, c do
+        local v = select(i, ...);
+        if (v and type(v) == "number") then
+            if (v ~= 0) then
+                lastMax = math.max(lastMax, v);
+            end
+        end
+    end
+    return lastMax == -math.huge and 0 or lastMax;
+end
+
+Sources.min = function(...)
+    local c = select("#", ...);
+    local lastMin = math.huge;
+    for i = 1, c do
+        local v = select(i, ...);
+        if (v and type(v) == "number") then
+            if (v ~= 0) then
+                lastMin = math.min(lastMin, v);
+            end
+        end
+    end
+    return lastMin == math.huge and 0 or lastMin;
+end
+
 -- This accepts an item id in tsm format, numeric, or an item link
 function Sources:QueryID(q, itemId)
     if (not itemId) then
@@ -517,12 +545,9 @@ function Sources:Validate(q)
     codes.ppu = 0;
     codes.ilevel = 0;
     codes.vendorsell = 0;
-    codes.tsmId = Utils.GetID(itemId);
+    codes.tsmId = itemId;
     codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
-
-    local _, id = strsplit(":", codes.tsmId); 
-
-    codes.id = tonumber(id);
+    codes.id = 2589;
 
     local _, fn, err = false, nil, nil;
     local oq = q;
@@ -571,8 +596,8 @@ function Sources:Validate(q)
     return true;
 end
 
-function Sources:Query(q, item, groupId)
-    local itemId = groupId or item.link or item.id;
+function Sources:Query(q, item)
+    local itemId = item.link or item.id;
     local buyout = item.buyoutPrice;
     local stackSize = item.count;
     local quality = item.quality;
@@ -602,7 +627,6 @@ function Sources:Query(q, item, groupId)
         VALUE_CACHE[itemId] = codes;
         self:GetValues(itemId, codes);
     end
-
 
     codes.buyout = buyout;
     codes.stacksize = stackSize;

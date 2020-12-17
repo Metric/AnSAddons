@@ -9,6 +9,8 @@ local CraftingHook = {};
 local CraftIDCache = {};
 CraftingHook.__index = CraftingHook;
 
+local ENCHANTING_VELLUM_ID = "i:38682";
+
 local TSFrame = nil;
 
 local CRAFT_REFERENCE = {};
@@ -141,7 +143,7 @@ function CraftingHook.SubCost(link)
         numProduced = 1;
     end
 
-    return totalCost / numProduced;
+    return math.floor((totalCost / numProduced) + 0.5);
 end
 
 function CraftingHook.SetUpRecipe(self, textWidth, tradeSkillInfo)
@@ -179,9 +181,15 @@ function CraftingHook.SetUpRecipe(self, textWidth, tradeSkillInfo)
         return;
     end
 
+    local vellumCost = 0;
+
     -- set to 1 for enchants
     if (craftSpecial and isEnchanting) then
         numProduced = 1;
+        
+        if (Config.Crafting().materialCost and Config.Crafting().materialCost:len() > 0) then
+            vellumCost = Sources:QueryID(Config.Crafting().materialCost, ENCHANTING_VELLUM_ID) or 0;
+        end
     end
 
     for i = 1, numReagents do
@@ -221,7 +229,7 @@ function CraftingHook.SetUpRecipe(self, textWidth, tradeSkillInfo)
         end
     end
 
-    local profit = finalWorth - totalCost;
+    local profit = finalWorth - (totalCost + vellumCost);
     local prefix = "";
     local negative = false;
 

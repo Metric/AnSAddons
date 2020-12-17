@@ -272,7 +272,6 @@ function Query:GetAuctionData(group)
     auction.buyoutPrice = auction.ppu;
 
     auction.link = nil;
-    auction.groupId = nil;
 
     local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
 
@@ -308,10 +307,6 @@ function Query:GetAuctionData(group)
         auction.tsmId = "i:"..auction.id;
     end
 
-    if (auction.iLevel > 0 and not auction.isPet and not auction.isCommodity) then
-        auction.groupId = "i:"..auction.id.."("..auction.iLevel..")";
-    end
-
     return auction;
 end
 
@@ -336,16 +331,8 @@ function Query:IsFilteredGroup(auction)
         if (#self.ops == 0) then
             local allowed = 0;
             
-            if (auction.groupId) then
-                allowed = Sources:Query(Config.Sniper().pricing, auction, auction.groupId);
-
-                if (not allowed or allowed == 0) then
-                    allowed = Sources:Query(Config.Sniper().pricing, auction);
-                end
-            else
-                allowed = Sources:Query(Config.Sniper().pricing, auction);
-            end
-
+            allowed = Sources:Query(Config.Sniper().pricing, auction);
+        
             if (type(allowed) == "boolean" or type(allowed) == "number") then
                 if (type(allowed) == "number") then
                     if (auction.ppu <= allowed and self:IsValid(auction)) then
@@ -363,7 +350,7 @@ function Query:IsFilteredGroup(auction)
 
         local tf = #self.ops;
         for k = 1, tf do
-            if (self.ops[k]:IsValid(auction, auction.isPet, true)) then
+            if (self.ops[k]:IsValid(auction, auction.isPet)) then
                 filterAccepted = true;
                 break;
             end
