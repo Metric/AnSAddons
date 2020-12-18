@@ -37,6 +37,7 @@ local miscArmorInventoryTypes = {
 
 if (not Utils.IsClassic()) then
     armorInventoryTypes = {
+        Enum.AuctionHouseFilter.LegendaryCraftedItemOnly,
         Enum.InventoryType.IndexHeadType,
         Enum.InventoryType.IndexShoulderType,
         Enum.InventoryType.IndexChestType,
@@ -60,7 +61,9 @@ end
 
 local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
-    if (inventoryType) then
+    if (not Utils.IsClassic() and inventoryType and inventoryType == Enum.AuctionHouseFilter.LegendaryCraftedItemOnly) then
+        name = "Runecarving" --AUCTION_HOUSE_FILTER_STRINGS[inventoryType];
+    elseif (inventoryType) then
         name = GetItemInventorySlotInfo(inventoryType);
     elseif (classID and subClassID) then
         name = GetItemSubClassInfo(classID, subClassID);

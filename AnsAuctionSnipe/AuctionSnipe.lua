@@ -1192,7 +1192,16 @@ function AuctionSnipe:LoadBaseFilters()
         local item = self.baseFilters[i];
 
         if (item) then
-            tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
+            if (not Utils.IsClassic()) then
+                if (item.inventoryType == Enum.AuctionHouseFilter.LegendaryCraftedItemOnly) then
+                    tinsert(qualityFilters, item.inventoryType);
+                    tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = nil});
+                else
+                    tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
+                end
+            else
+                tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
+            end
         end
     end
 end

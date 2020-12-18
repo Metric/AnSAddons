@@ -1,6 +1,6 @@
 ## Interface: 90002
 ## Title: AnS [Auction Sniper]
-## Version: 2.2.0
+## Version: 2.2.2
 ## Notes: A lightweight addon for auction sniping; Relies on Undermine Journal or TSM for pricing.
 ## License: MIT
 ## Dependencies: AnS

@@ -1,3 +1,7 @@
+## AnS Changes 2.2.2
+
+-   Added in missing Runecarver filter on retail
+
 ## AnS Changes 2.2.1
 
 -   Made min() and max() formula functions work similar to tsm, instead of using the default math.min and math.max functions.
