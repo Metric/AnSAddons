@@ -11,6 +11,7 @@ local EventManager = Ans.EventManager;
 local Data = Ans.Analytics.Data;
 local DEFAULT_ITEMS_TAG = "ITEMS_";
 local ITEMS_TAG = DEFAULT_ITEMS_TAG;
+local ALL_INVENTORIES = {};
 
 local bankFrameOpen = false;
 local guildVaultOpen = false;
@@ -20,6 +21,7 @@ local BANK = "Bank";
 local GUILD = "Guild";
 
 function ItemTracker:OnLoad()
+    Data:Find(DEFAULT_ITEMS_TAG, ALL_INVENTORIES);
     ITEMS_TAG = ITEMS_TAG..GetRealmName();
 
     self.log = Data:Get(ITEMS_TAG) or {};
@@ -49,7 +51,26 @@ function ItemTracker:GetNames(tbl)
 end
 
 function ItemTracker:Get(name)
-    return self.log[name];
+    if (not name) then
+        name = self.name;
+    end
+
+    local realm = select(1, strsplit(":", name));
+    local realName = select(2, strsplit(":", name));
+    if (realName) then
+        name = realName;
+    end
+
+    if (not realName) then
+        return self.log[name];
+    end
+
+    local logName = DEFAULT_ITEMS_TAG..realm;
+    if (ALL_INVENTORIES[logName]) then
+        return ALL_INVENTORIES[logName][name];
+    end
+
+    return nil;
 end
 
 function ItemTracker.OnBankFrameOpened()

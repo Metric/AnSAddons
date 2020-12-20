@@ -5,6 +5,8 @@ local ListView = Ans.UI.ListView;
 local TextInput = Ans.UI.TextInput;
 local Utils = Ans.Utils;
 local DataQuery = Ans.Analytics.Query;
+local Config = Ans.Config;
+local Sources = Ans.Sources;
 
 local tempTbl = {};
 
@@ -14,7 +16,8 @@ local filters = {
     {name = "Expenses", selected = false}, 
     {name = "Income", selected = false},
     {name = "Expired", selected = false},
-    {name = "Cancelled", selected = false}
+    {name = "Cancelled", selected = false},
+    {name = "Inventory", selected = false},
 };
 
 local subfilters = {
@@ -51,8 +54,32 @@ function AnsLedgerFrameMixin:Init()
 
     self.filter = "sales";
 
+    self.priceIndex = 1;
+    self.findPrices = false;
+
     self:SetScript("OnShow", function() this:OnShow(); end);
     EventManager:On("ANS_DATA_READY", function() this:Ready(); end);
+    EventManager:On("UPDATE", function() this:FindPrice(); end);
+end
+
+function AnsLedgerFrameMixin:FindPrice()
+    if (self.findPrices) then
+        if (self.priceIndex > #tempTbl) then
+            self.findPrices = false;
+            self.List:Refresh();
+            self:UpdateTotal("");
+        else
+            for i = 1, Config.Sniper().itemsPerUpdate do
+                tempTbl[self.priceIndex].copper = Sources:Query(Config.Sniper().source, tempTbl[self.priceIndex]);
+                self.priceIndex = self.priceIndex + 1;
+
+                if (self.priceIndex > #tempTbl) then
+                    break;
+                end
+            end
+            self.List:Refresh();
+        end
+    end
 end
 
 function AnsLedgerFrameMixin:Ready()
@@ -163,6 +190,8 @@ function AnsLedgerFrameMixin:Refresh()
 end
 
 function AnsLedgerFrameMixin:LoadData(names)
+    self.findPrices = false;
+
     if (not self:IsShown() or not self.subfilterSelect) then
         return;
     end
@@ -177,7 +206,11 @@ function AnsLedgerFrameMixin:LoadData(names)
 
     self.expenseSelect:Hide();
 
-    if (self.filter == "sales") then
+    if (self.filter == "inventory") then
+        DataQuery:JoinInventory(names, tempTbl, self.searchFilter);
+        self.priceIndex = 1;
+        self.findPrices = true;
+    elseif (self.filter == "sales") then
         DataQuery:JoinSales(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     elseif (self.filter == "purchases") then
         DataQuery:JoinPurchases(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
@@ -196,6 +229,11 @@ function AnsLedgerFrameMixin:LoadData(names)
         DataQuery:JoinExpired(names, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     end
 
+    self:UpdateTotal(neg);
+    self.List:SetItems(tempTbl);
+end
+
+function AnsLedgerFrameMixin:UpdateTotal(neg)
     local total = 0;
     for i,v in ipairs(tempTbl) do
         if (v.quantity == 0) then
@@ -207,5 +245,4 @@ function AnsLedgerFrameMixin:LoadData(names)
 
     self.totalItemsText:SetText("Total Items: "..tostring(#tempTbl));
     self.totalText:SetText("Total Amount: "..neg..Utils.PriceToString(total));
-    self.List:SetItems(tempTbl);
 end

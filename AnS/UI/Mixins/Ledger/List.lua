@@ -33,7 +33,7 @@ function AnsLedgerListFrameMixin:RenderRow(row, record)
     end
 
     typeText:SetText(type);
-    stackText:SetText(record.quantity or "");
+    stackText:SetText(record.quantity or record.count or "");
     amountText:SetText(Utils.PriceToString(record.copper));
     dateText:SetText(date("%D", record.time));
 end

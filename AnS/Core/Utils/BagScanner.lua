@@ -181,6 +181,14 @@ function BagScanner.Scan(self)
                             ITEM_CACHE[idx].iLevel = pet.level;
                         else
                             local name, _, _, iLevel = GetItemInfo(link);
+
+                            if (_G["GetDetailedItemLevelInfo"]) then
+                                local eff, preview, base = GetDetailedItemLevelInfo(link);
+                                if (eff) then
+                                    iLevel = eff;
+                                end
+                            end
+                        
                             ITEM_CACHE[idx].name = name;
                             ITEM_CACHE[idx].iLevel = iLevel;
                         end
@@ -204,6 +212,13 @@ function BagScanner.Scan(self)
                         iLevel = pet.level;
                     else
                         name, _, _, iLevel = GetItemInfo(link);
+                        
+                        if (_G["GetDetailedItemLevelInfo"]) then
+                            local eff, preview, base = GetDetailedItemLevelInfo(link);
+                            if (eff) then
+                                iLevel = eff;
+                            end
+                        end
                     end
                 end
 

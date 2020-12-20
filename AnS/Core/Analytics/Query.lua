@@ -31,13 +31,36 @@ end
 
 function DataQuery:GetInventory(name, type, tbl)
     local inv = ItemTrack:Get(name);
-    if (inv[type]) then
+    if (inv and inv[type]) then
         for k,v in pairs(inv[type]) do
-            local t = tbl[k] or {link = v.link, count = 0};
+            local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(v.link);
+            local _, _, _, itemName = strsplit("|", v.link);
+            local t = tbl[k] or {id = k, quality = itemRarity, type = "", name = itemName, item = v.link, link = v.link, count = 0, quantity = 0, copper = 0, iLevel = itemLevel, ppu = 0, vendorsell = vendorsell or 0, from = ""};
             t.count = t.count + v.count;
+            t.quantity = t.quantity + v.count;
             tbl[k] = t;
         end
     end
+end
+
+function DataQuery:JoinInventory(names, tbl, search)
+    wipe(tbl);
+    wipe(itemHolder);
+
+    for i,v in ipairs(names) do
+        self:GetInventory(v, "Inventory", itemHolder);
+        self:GetInventory(v, "Bank", itemHolder);
+    end
+
+    for k,v in pairs(itemHolder) do
+        if (not search or search:len() == 0) then
+            tinsert(tbl, v);
+        elseif (strfind(v.item:lower(), search)) then
+            tinsert(tbl, v);
+        end
+    end
+
+    table.sort(tbl, function(a,b) return a.name < b.name; end);
 end
 
 function DataQuery:GetAllInventory(tbl, includeBank)
