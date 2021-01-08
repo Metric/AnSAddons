@@ -4,6 +4,16 @@
         <Anchors>
             <Anchor point="TOPLEFT" x="168" y="-32" />
         </Anchors>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString justifyH="LEFT" text="Scan Price By" justifyV="CENTER" inherits="AnsGameFontWhiteTrans">
+                    <Size x="125" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeKey="$parent" relativePoint="TOPLEFT" x="135" y="25" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
         <Frames>
             <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />

@@ -24,6 +24,11 @@ local Actions = {
     "Do Nothing"
 };
 
+local References = {
+    "iLevel",
+    "iLevel+Mods",
+};
+
 AnsAuctionOperationFrameMixin = {};
 
 function AnsAuctionOperationFrameMixin:Init()
@@ -93,6 +98,8 @@ function AnsAuctionOperationFrameMixin:Set(op)
     self.minAction:SetSelected(op.minPriceAction or 4);
     self.maxAction:SetSelected(op.maxPriceAction or 3);
 
+    self.refAction:SetSelected(op.itemReference or 1);
+
     self.selected = op;
     self:Show();
 end
@@ -122,6 +129,8 @@ function AnsAuctionOperationFrameMixin:ValuesChanged()
 
     self.selected.minPriceAction = self.minAction.selected;
     self.selected.maxPriceAction = self.maxAction.selected;
+
+    self.selected.itemReference = self.refAction.selected;
 
     if (self.onEdit) then
         self.onEdit();
@@ -155,5 +164,13 @@ function AnsAuctionOperationFrameMixin:LoadDropdowns()
     for i,v in ipairs(Actions) do
         self.minAction:AddItem(v, self.valueChangeHandler);
         self.maxAction:AddItem(v, self.valueChangeHandler);
+    end
+
+    self.refAction = Dropdown:Acquire(nil, self);
+    self.refAction:SetPoint("TOPLEFT", "TOPLEFT", 210, 30);
+    self.refAction:SetSize(125, 20);
+
+    for i,v in ipairs(References) do
+        self.refAction:AddItem(v, self.valueChangeHandler);
     end
 end

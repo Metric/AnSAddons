@@ -4,6 +4,7 @@ local Scanner = Core.Scanner;
 local Logger = Ans.API.Logger;
 local Config = Ans.API.Config;
 local Realms = Core.Realms;
+local Parser = Core.Parser;
 local TempTable = Ans.API.TempTable;
 
 local stats = Core.Statistics;
@@ -41,11 +42,8 @@ local keyToIndex = {
 };
 
 local keyToRegionIndex = {
-    ["recent"] = 5,
-    ["3day"] = 6,
-    ["market"] = 7,
-    ["min"] = 8,
-    ["count"] = 9
+    ["min"] = 5,
+    ["market"] = 6,
 };
 
 local faction = "";
@@ -100,11 +98,11 @@ local function ShowDataPetFloat(tooltip, pet)
     local realm3Day = AnsAuctionData.GetRealmValue(pid, "3day");
     local realmMarket = AnsAuctionData.GetRealmValue(pid, "market");
 
-    local regionRecent = AnsAuctionData.GetRegionValue(pid, "recent");
+    --local regionRecent = AnsAuctionData.GetRegionValue(pid, "recent");
     local regionMin = AnsAuctionData.GetRegionValue(pid, "min");
-    local region3Day = AnsAuctionData.GetRegionValue(pid, "3day");
+    --local region3Day = AnsAuctionData.GetRegionValue(pid, "3day");
     local regionMarket = AnsAuctionData.GetRegionValue(pid, "market");
-    local regionSeen = AnsAuctionData.GetRegionValue(pid, "count");
+    --local regionSeen = AnsAuctionData.GetRegionValue(pid, "count");
 
     local ltxt = "";
     local rtxt = "";
@@ -134,12 +132,12 @@ local function ShowDataPetFloat(tooltip, pet)
         rtxt = rtxt..p.."\r\n";
     end
     
-    if (Config.General().tooltipRegionRecent and regionRecent > 0) then
-        p = Utils.PriceToString(regionRecent);
+    --if (Config.General().tooltipRegionRecent and regionRecent > 0) then
+    --    p = Utils.PriceToString(regionRecent);
 
-        ltxt = ltxt.."|cFF00BBFFAnS Region Recent\r\n";
-        rtxt = rtxt..p.."\r\n";
-    end
+    --    ltxt = ltxt.."|cFF00BBFFAnS Region Recent\r\n";
+    --    rtxt = rtxt..p.."\r\n";
+    --end
     if (Config.General().tooltipRegionMarket and regionMarket > 0) then
         p = Utils.PriceToString(regionMarket);
 
@@ -152,16 +150,16 @@ local function ShowDataPetFloat(tooltip, pet)
         ltxt = ltxt.."|cFF00BBFFAnS Region Min\r\n";
         rtxt = rtxt..p.."\r\n";
     end
-    if (Config.General().tooltipRegion3Day and region3Day > 0) then
-        p = Utils.PriceToString(region3Day);
+    --if (Config.General().tooltipRegion3Day and region3Day > 0) then
+    --    p = Utils.PriceToString(region3Day);
 
-        ltxt = ltxt.."|cFF00BBFFAnS Region 3-Day\r\n";
-        rtxt = rtxt..p.."\r\n";
-    end
-    if (Config.General().tooltipRegionSeen and regionSeen > 0) then
-        ltxt = ltxt.."|cFF00BBFFAnS Region Seen\r\n";
-        rtxt = rtxt..regionSeen.."\r\n";
-    end
+    --    ltxt = ltxt.."|cFF00BBFFAnS Region 3-Day\r\n";
+    --    rtxt = rtxt..p.."\r\n";
+    --end
+    ---if (Config.General().tooltipRegionSeen and regionSeen > 0) then
+    --    ltxt = ltxt.."|cFF00BBFFAnS Region Seen\r\n";
+    --    rtxt = rtxt..regionSeen.."\r\n";
+    --end
 
     if (Config.General().showId) then
         ltxt = ltxt.."|c4400BBFFPet ID\r\n";
@@ -198,11 +196,11 @@ local function ShowData(tooltip, extra)
         local realm3Day = AnsAuctionData.GetRealmValue(link, "3day");
         local realmMarket = AnsAuctionData.GetRealmValue(link, "market");
 
-        local regionRecent = AnsAuctionData.GetRegionValue(link, "recent");
+        --local regionRecent = AnsAuctionData.GetRegionValue(link, "recent");
         local regionMin = AnsAuctionData.GetRegionValue(link, "min");
-        local region3Day = AnsAuctionData.GetRegionValue(link, "3day");
+        --local region3Day = AnsAuctionData.GetRegionValue(link, "3day");
         local regionMarket = AnsAuctionData.GetRegionValue(link, "market");
-        local regionSeen = AnsAuctionData.GetRegionValue(link, "count");
+        --local regionSeen = AnsAuctionData.GetRegionValue(link, "count");
 
         if (Config.General().tooltipRealmRecent and realmRecent > 0) then
             p = Utils.PriceToString(realmRecent);
@@ -220,10 +218,10 @@ local function ShowData(tooltip, extra)
             p = Utils.PriceToString(realm3Day);
             tooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
         end
-        if (Config.General().tooltipRegionRecent and regionRecent > 0) then
-            p = Utils.PriceToString(regionRecent);
-            tooltip:AddDoubleLine("AnS Region Recent", p, 0, 0.75, 1, 1, 1, 1);
-        end
+        --if (Config.General().tooltipRegionRecent and regionRecent > 0) then
+        --    p = Utils.PriceToString(regionRecent);
+        --    tooltip:AddDoubleLine("AnS Region Recent", p, 0, 0.75, 1, 1, 1, 1);
+        --end
         if (Config.General().tooltipRegionMarket and regionMarket > 0) then
             p = Utils.PriceToString(regionMarket);
             tooltip:AddDoubleLine("AnS Region Market", p, 0, 0.75, 1, 1, 1, 1);
@@ -232,13 +230,13 @@ local function ShowData(tooltip, extra)
             p = Utils.PriceToString(regionMin);
             tooltip:AddDoubleLine("AnS Region Min", p, 0, 0.75, 1, 1, 1, 1);
         end
-        if (Config.General().tooltipRegion3Day and region3Day > 0) then
-            p = Utils.PriceToString(region3Day);
-            tooltip:AddDoubleLine("AnS Region 3-Day", p, 0, 0.75, 1, 1, 1, 1);
-        end
-        if (Config.General().tooltipRegionSeen and regionSeen > 0) then
-            tooltip:AddDoubleLine("AnS Region Seen", regionSeen, 0, 0.75, 1, 1, 1, 1);
-        end
+        --if (Config.General().tooltipRegion3Day and region3Day > 0) then
+        --    p = Utils.PriceToString(region3Day);
+        --    tooltip:AddDoubleLine("AnS Region 3-Day", p, 0, 0.75, 1, 1, 1, 1);
+        --end
+        --if (Config.General().tooltipRegionSeen and regionSeen > 0) then
+        --    tooltip:AddDoubleLine("AnS Region Seen", regionSeen, 0, 0.75, 1, 1, 1, 1);
+        --end
 
         if (Config.General().showId) then
             if (not id or id == "" or id == "i:" or id == "i") then
@@ -295,7 +293,10 @@ function AnsAuctionData:OnLoad(frame)
         frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
     end
 
-    self:Release();
+    if (Realms.F) then
+        Realms.F(region, region.."-"..realmName);
+        Realms.F = nil;
+    end
 end
 
 function AnsAuctionData:OnUpdate()
@@ -304,19 +305,6 @@ end
 
 function AnsAuctionData:EventHandler(frame, event, ...)
     Scanner:EventHandler(frame, event, ...);
-end
-
--- release unnecessary data that
--- is not associated with the current realm
-function AnsAuctionData:Release()
-    local r = Realms[region.."-"..realmName];
-    
-    -- clear unnecessary realms
-    wipe(Realms);
-
-    -- restore current realm
-    Realms[region.."-"..realmName] = r;
-    self:UnpackRaw(Realms[region.."-"..realmName]);
 end
 
 function AnsAuctionData:GetValidID(tsm) 
@@ -351,41 +339,12 @@ function AnsAuctionData:GetValidID(tsm)
         end
     end
 
-    local tmp = TempTable:Acquire();
-
-    local c = 1;
-    for n in string.gmatch(tsm, "%d+") do
-        -- ignore the first number as that is the item id
-        if (c ~= 1) then
-            local nn = tonumber(n);
-            tinsert(tmp, nn);
-        end
-        c = c + 1;
-    end
-
-    if (#tmp > 0) then
-        -- remove first one as that is the bonus count
-        -- we don't rely on bonus counts for AnsAuctionData
-        -- we only care about the bonuses and proper order
-        tremove(tmp, 1);
-
-        if (#tmp > 0) then
-            table.sort(tmp, function(x,y) return x < y end);
-            local bonus = table.concat(tmp, ":");
-            Utils.ReleaseTable(tmp);
-
-            ValidIDCache[tsm] = t..":"..id..":"..bonus;
-            return ValidIDCache[tsm];
-        end
-    end
-
-    tmp:Release();
-    ValidIDCache[tsm] = t..":"..id;
+    ValidIDCache[tsm] = Utils.BonusID(tsm, true);
     return ValidIDCache[tsm];
 end
 
 function AnsAuctionData:CheckFaction() 
-    if (not BattlePetTooltip) then
+    if (Utils.IsClassic()) then
         faction = UnitFactionGroup("player");
         if (not faction) then
             faction = "";
@@ -436,54 +395,6 @@ function AnsAuctionData:ResetRealm()
     ANS_AUCTION_DATA[region.."-"..realmName..faction] = {};
 end
 
-function AnsAuctionData:UnpackRaw(table)
-    if (not table) then
-        return;
-    end
-
-    local data = table["rawdata"];
-    
-    if (not data) then
-        return;
-    end
-
-    local prev = 1;
-    local next = strfind(data, "%|");
-
-    while (next) do
-        local dat = string.sub(data, prev, next-1);
-        local id,value = self:UnpackRawEntry(dat);
-        table[id] = value;
-        prev = next+1;
-        next = strfind(data, "%|", prev);
-    end
-
-    local fdat = string.sub(data, prev);
-    local fid, fv = self:UnpackRawEntry(fdat);
-    table[fid] = fv;
-
-    table["rawdata"] = nil;
-end
-
-function AnsAuctionData:UnpackRawEntry(data)
-    return string.match(data, "%[(.*)%]%{(.*)%}");
-end
-
-function AnsAuctionData:UnpackRawItem(data, id)
-    local cid = gsub(gsub(id, "%(", "%%("), "%)", "%%)");
-    return string.match(data, "%[("..cid..")%]%((%d+,%d+,%d+,%d+,%d+,%d+,%d+,%d+,%d+)%)");
-end
-
-function AnsAuctionData:Unpack(r, id)
-    if (r and r[id] and type(r[id]) == "string") then
-        local values = {strsplit(",", r[id])};
-        for i,v in ipairs(values) do 
-            values[i] = tonumber(v);
-        end
-        r[id] = values;
-    end
-end
-
 function AnsAuctionData.GetRegionValue(link, key)
     if (not link) then
         return 0;
@@ -500,40 +411,47 @@ function AnsAuctionData.GetRegionValue(link, key)
     end
 
     local vid = AnsAuctionData:GetValidID(tsmId);
-    local fvid = "F:"..vid;
+    local fid = "final:"..vid;
     local kindex = keyToRegionIndex[key];
 
     if (kindex) then
         local r = AnsAuctionData:GetRawData();
-        
+        local cid = fid;
+
         if (Utils.IsClassic()) then
-            if (r and r[vid]) then
-                local data = nil;
-                data = r[vid][kindex];
-                return data or 0; 
-            end
+            cid = vid;
+        end
+
+        if (r and r[cid]) then
+            local data = r[cid];
+            data = data and data[kindex] or nil;
+            return data or 0;
         else
-            if (r and r[fvid]) then
-                local data = nil;
-                data = r[fvid][kindex];
-                return data or 0;
-            else
-                local t,id = strsplit(":", vid);
-                local fid = t..":"..id;
-                if (r and r[fid]) then
-                    local row = r[fid];
-                    local oid, value = AnsAuctionData:UnpackRawItem(row, vid);
-                    if (value) then
-                        r[fvid] = value;
-                        AnsAuctionData:Unpack(r, fvid);
-                        if (r and r[fvid]) then
-                            local data = nil;
-                            data = r[fvid][kindex];
-                            return data or 0;
+            local _,base = strsplit(":", vid);
+            local bid = _..":"..base;
+            if (r and r[bid]) then
+				local data = nil;
+                local tmp = TempTable:Acquire(strsplit(",", r[bid]));
+                for i,v in ipairs(tmp) do
+                    if (v == vid) then
+                        local value = tmp[i+1];
+                        if (value) then
+                            data = value;
+                            r[fid] = {}
+                            for i = 1, 6 do
+                                local n, d = Utils.DecodeBase93(data);
+                                tinsert(r[fid], n * 100);
+                                data = d;
+                            end
+                            data = r[fid];
                         end
+                        break;
                     end
                 end
-            end
+				tmp:Release();
+                data = data and data[kindex] or nil;
+                return data or 0;
+            end 
         end
     end
 
@@ -556,39 +474,47 @@ function AnsAuctionData.GetRealmValue(link, key)
     end
 
     local vid = AnsAuctionData:GetValidID(tsmId);
-    local fvid = "F:"..vid;
+    local fid = "final:"..vid;
     local kindex = keyToIndex[key];
 
     if (kindex) then
         local r = AnsAuctionData:GetRawData();
+        local cid = fid;
+
         if (Utils.IsClassic()) then
-            if (r and r[vid]) then
-                local data = nil;
-                data = r[vid][kindex];
-                return data or 0; 
-            end
+            cid = vid;
+        end
+
+        if (r and r[cid]) then
+            local data = r[cid];
+            data = data and data[kindex] or nil;
+            return data or 0;
         else
-            if (r and r[fvid]) then
-                local data = nil;
-                data = r[fvid][kindex];
-                return data or 0;
-            else
-                local t,id = strsplit(":", vid);
-                local fid = t..":"..id;
-                if (r and r[fid]) then
-                    local row = r[fid];
-                    local oid, value = AnsAuctionData:UnpackRawItem(row, vid);
-                    if (value) then
-                        r[fvid] = value;
-                        AnsAuctionData:Unpack(r, fvid);
-                        if (r and r[fvid]) then
-                            local data = nil;
-                            data = r[fvid][kindex];
-                            return data or 0;
+            local _,base = strsplit(":", vid);
+            local bid = _..":"..base;
+            if (r and r[bid]) then
+				local data = nil;
+                local tmp = TempTable:Acquire(strsplit(",", r[bid]));
+                for i,v in ipairs(tmp) do
+                    if (v == vid) then
+                        local value = tmp[i+1];
+                        if (value) then
+                            data = value;
+                            r[fid] = {}
+                            for i = 1, 6 do
+                                local n, d = Utils.DecodeBase93(data);
+                                tinsert(r[fid], n * 100);
+                                data = d;
+                            end
+                            data = r[fid];
                         end
+                        break;
                     end
                 end
-            end
+				tmp:Release();
+                data = data and data[kindex] or nil;
+                return data or 0;
+            end 
         end
     end
 
@@ -598,7 +524,7 @@ end
 function AnsAuctionData.GetValue(id, key)
     local kindex = keyToIndex[key];
     if (kindex) then
-        local r = AnsAuctionData:GetRawData();
+        local r = AnsAuctionData:GetRawData(true);
         if (r and r[id]) then
             local data = nil;
             data = r[id][kindex];
@@ -712,6 +638,37 @@ end
 
 function AnsAuctionData:AddTracking(tsmId, copper)
     tsmId = AnsAuctionData:GetValidID(tsmId);
+
+	local _,i = strsplit(":", tsmId);
+	local base = _..":"..i;
+	local bonus = Utils.BonusID(tsmId);
+
+	if (tsmId ~= base) then
+		if (tracker[base]) then
+			local track = tracker[base];
+			tinsert(track, copper);
+		else
+			local track = {};
+			tinsert(track, copper);
+			tracker[base] = track;
+			tinsert(keys, base);
+			totalItems = #keys;
+		end
+	end
+
+	if (tsmId ~= bonus) then
+		if (tracker[bonus]) then
+			local track = tracker[bonus];
+			tinsert(track, copper);
+		else
+			local track = {};
+			tinsert(track, copper);
+			tracker[bonus] = track;
+			tinsert(keys, bonus);
+			totalItems = #keys;
+		end
+	end
+
 	if (tracker[tsmId]) then
 		local track = tracker[tsmId];
 		tinsert(track, copper);
@@ -721,7 +678,7 @@ function AnsAuctionData:AddTracking(tsmId, copper)
         tracker[tsmId] = track;
         tinsert(keys, tsmId);
         totalItems = #keys;
-	end
+    end
 end
 
 function AnsAuctionData:TotalItemsToProcess()

@@ -98,30 +98,30 @@
                             </Layer>
                         </Layers>
                     </Frame>
-                    <Frame parentKey="region" hidden="true">
+                    <Frame parentKey="region">
                         <Anchors>
                             <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.realm" x="0" y="-35" />
                         </Anchors>
                         <Size x="565" y="48" />
                         <Frames>
-                            <CheckButton parentKey="tooltipRegionRecent" text="Show Recent" inherits="AnsCheckboxTemplate">
+                            <!--<CheckButton parentKey="tooltipRegionRecent" text="Show Recent" inherits="AnsCheckboxTemplate">
                                 <Anchors>
                                     <Anchor point="TOPLEFT" x="0" y="-2" />
                                 </Anchors>
-                            </CheckButton>
+                            </CheckButton>-->
                             <CheckButton parentKey="tooltipRegionMin" text="Show Min" inherits="AnsCheckboxTemplate">
                                 <Anchors>
-                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRegionRecent" />
+                                    <Anchor point="TOPLEFT" x="0" y="-2"  />
                                 </Anchors>
                             </CheckButton>
-                            <CheckButton parentKey="tooltipRegion3Day" text="Show 3-Day" inherits="AnsCheckboxTemplate">
+                            <!--<CheckButton parentKey="tooltipRegion3Day" text="Show 3-Day" inherits="AnsCheckboxTemplate">
                                 <Anchors>
                                     <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRegionMin" />
                                 </Anchors>
-                            </CheckButton>
+                            </CheckButton>-->
                             <CheckButton parentKey="tooltipRegionMarket" text="Show Market" inherits="AnsCheckboxTemplate">
                                 <Anchors>
-                                    <Anchor point="TOPLEFT" x="0" y="-10"  relativePoint="BOTTOMLEFT" relativeKey="$parent.tooltipRegionRecent" />
+                                    <Anchor point="TOPLEFT" x="175" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.tooltipRegionMin" />
                                 </Anchors>
                             </CheckButton>
                         </Frames>
@@ -148,7 +148,7 @@
             </Frame>
             <Frame parentKey="windowOptions">
                 <Anchors>
-                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.tooltipOptions.realm" x="0" y="-35" />
+                    <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.tooltipOptions.region" x="0" y="-35" />
                 </Anchors>
                 <Size x="565" y="48" />
                 <Frames>

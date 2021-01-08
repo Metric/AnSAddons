@@ -24,7 +24,14 @@ ACTIONS.MAX_PRICE = 2;
 ACTIONS.NORMAL_PRICE = 3;
 ACTIONS.NONE = 4;
 
+local ITEM_REF_ILEVEL = 1;
+local ITEM_REF_ILEVELMODS = 2;
+
 Auctioning.ACTIONS = ACTIONS;
+Auctioning.REFERENCES = {
+    ILevel = ITEM_REF_ILEVEL,
+    ILevelMods = ITEM_REF_ILEVELMODS,
+};
 
 local tempTbl = {};
 
@@ -57,6 +64,7 @@ function Auctioning.Config(name)
         applyAll = false,
         minPriceAction = 4,
         maxPriceAction = 3,
+        itemReference = 1,
         groups = {},
         nonActiveGroups = {}
     };
@@ -80,6 +88,7 @@ function Auctioning.PrepareExport(config)
     a.applyAll = config.applyAll;
     a.minPriceAction = config.minPriceAction or 4;
     a.maxPriceAction = config.maxPriceAction or 3;
+    a.itemReference = config.itemReference or 1;
     a.groups = {};
 
     for i,v in ipairs(config.groups) do
@@ -110,6 +119,7 @@ function Auctioning.From(config)
     a.minPriceAction = config.minPriceAction or 4;
     a.maxPriceAction = config.maxPriceAction or 3;
     a.nonActiveGroups = config.nonActiveGroups or {};
+    a.itemReference = config.itemReference or 1;
     a.groups = {};
     a.ids = {};
 
@@ -128,6 +138,14 @@ function Auctioning.From(config)
     return a;
 end
 
+function Auctioning:GetReferenceID(item)
+    if (self.itemReference == ITEM_REF_ILEVEL) then
+        return Utils.BonusID(item.tsmId or Utils.GetID(item), false);
+    else
+        return item.tsmId or item;
+    end
+end
+
 function Auctioning:Track(item)
     if (item.isOwnerItem or item.owner == UnitName("player")) then
         self.totalListed = self.totalListed + item.count;
@@ -138,10 +156,10 @@ function Auctioning:MaxPosted()
     return self.totalListed >= self.maxToPost and self.maxToPost > 0;
 end
 
-function Auctioning:IsValid(ppu, link, ignore, defaultValue)
-    local minValue = Sources:QueryID(self.minPrice, link);
-    local maxValue = Sources:QueryID(self.maxPrice, link);
-    local normalValue = Sources:QueryID(self.normalPrice, link);
+function Auctioning:IsValid(ppu, id, ignore, defaultValue)
+    local minValue = Sources:QueryID(self.minPrice, id);
+    local maxValue = Sources:QueryID(self.maxPrice, id);
+    local normalValue = Sources:QueryID(self.normalPrice, id);
 
     if (ignore or (minValue == 0 and maxValue == 0 and normalValue == 0)) then
         return ppu;
@@ -200,9 +218,9 @@ function Auctioning:GetAvailableItems()
     local auctionable = BagScanner.GetAuctionable();
 
     for i,v in ipairs(auctionable) do
-        local tsmId = Utils.GetID(v.link);
-        local _, id = strsplit(":", tsmId);
-        if (self.ids[tsmId] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
+        local vid = self:GetReferenceID(v);
+        local _, id = strsplit(":", vid);
+        if (self.ids[vid] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
             -- assign op to the items
             v.op = self;
             for k,o in ipairs(v.stacks) do

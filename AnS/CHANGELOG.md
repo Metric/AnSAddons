@@ -1,3 +1,22 @@
+## AnS Changes 2.2.3
+
+-   Fixed issue with Modifiers not being correct for item ids
+-   Fixed issue where vendorbuy was no longer working due to item ids with modifiers
+-   Fixed issue where runecarving replaced finger slot under misc on sniper filter view
+-   Fixed an issue where AnsAuctionData pricing statistics was miscalculated on classic.
+-   Added in Option to Auction Operations to scan pricing by iLevel or iLevel+Mods
+-   Added back in tooltip toggles for Region Min / Region Market
+-   Added back in support for new version of Auctionator
+-   Optimized AnsAuctionData for new AnS auction pricing for retail via the new AnS app.
+-   Ledger now features an Inventory view that includes inventory + bank at the momemnt
+    -   Will add in Owned Auctions later.
+    -   It also shows the total gold worth of the inventory + bank
+    -   You can also filter by individual characters
+    -   Shows how many of each item you have as well
+    -   Works with legendary / crafted items and knows the difference between the item levels / mods
+    -   Total gold may be incorrect for TSM pricing for legendary / crafted item with mods until they solve their issue with ilvl / mods
+    -   Total gold pricing is correct with new AnsAuctionData from AnS app
+
 ## AnS Changes 2.2.2
 
 -   Added in missing Runecarver filter on retail

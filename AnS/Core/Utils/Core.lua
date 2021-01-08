@@ -4,6 +4,33 @@ local TempTable = Ans.TempTable;
 local Config = Ans.Config;
 local TooltipScanner = Ans.TooltipScanner;
 
+local BASE93_CHRS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ !?\"'`^#$%@&*+=/.:;|\\_<>[]{}()~";
+function Utils.DecodeBase93(s)
+    local result = 0;
+    local len = #BASE93_CHRS;
+    local index = 0;
+    
+    local ss = strsplit("-", s);
+    local offset = #ss;
+
+    while (offset > 0) do
+        local c = ss:sub(offset,offset);
+        if (c == "-") then
+            break;
+        end
+        local pow = math.pow(len, index);
+        local ind = string.find(BASE93_CHRS, c, 1, true);
+        
+        result = result + pow * (ind - 1); --ind must be zero based
+
+        offset = offset - 1;
+        index = index + 1;
+    end
+
+    return result, s:sub(index+2);
+end
+
+
 local OP_SIM_HAND = {
     lte = "<=",
     gte = ">=",
@@ -25,6 +52,8 @@ local HOOK_CACHE = TempTable:Acquire();
 local LINK_CACHE = TempTable:Acquire();
 local PET_CACHE = TempTable:Acquire();
 local ID_CACHE = TempTable:Acquire();
+local BONUS_ID_CACHE = TempTable:Acquire();
+
 --- Standard Utils ---
 
 function Utils.IsClassic()
@@ -290,20 +319,31 @@ function Utils.GetLink(itemString,ignoreDetails)
 end
 
 function Utils.BonusID(id,mods)
+    if (not id or type(id) == "number") then
+        return id;
+    end
+
+    if (BONUS_ID_CACHE[id] and not mods) then
+        return BONUS_ID_CACHE[id];
+    end
+
     local tmp = TempTable:Acquire(strsplit(":", id));
     if (tmp[1] ~= "i") then
+        BONUS_ID_CACHE[id] = id;
         tmp:Release();
         return id;
     end
 
     local bonusCount = tmp[4];
     if (not bonusCount) then
+        BONUS_ID_CACHE[id] = id;
         tmp:Release();
         return id;
     end
 
     bonusCount = tonumber(bonusCount) or 0;
     if (not bonusCount or bonusCount == 0) then
+        BONUS_ID_CACHE[id] = id;
         tmp:Release();
         return id;
     end
@@ -323,6 +363,8 @@ function Utils.BonusID(id,mods)
 
     local modifiers = "";
 
+    BONUS_ID_CACHE[id] = "i:"..tmp[2]..extra;
+
     if (mods) then
         local sep = ":";
         local sindex = 4 + bonusCount + 1;
@@ -337,6 +379,10 @@ function Utils.BonusID(id,mods)
 end
 
 function Utils.GetID(link)
+    if (not link) then
+        return link;
+    end
+
     if (ID_CACHE[link]) then
         return ID_CACHE[link];
     end
@@ -359,10 +405,6 @@ function Utils.GetID(link)
         local tbl = TempTable:Acquire(strsplit(":", link));
         local bonusCount = tbl[14];
         local id = tbl[2];
-
-        if (id == nil) then
-            return nil;
-        end
 
         local extra = "";
         local modifiers = "";
@@ -403,24 +445,22 @@ function Utils.GetID(link)
             modCount = tonumber(modCount);
             if (modCount and modCount > 0) then
                 local tempMods = TempTable:Acquire();
-                local offset = 14 + modCountOffset;
+                local offset = 14 + modCountOffset + 1;
 
-                for i = 1, modCount do
-                    local id = tbl[offset+i];
+                for i = 0, modCount - 1 do
+                    local id = tbl[offset+(i * 2)];
 
                     -- skip 9 as that is just what level the characte was
                     -- when the item was generated via loot or crafting etc
                     -- we don't care about that one
                     if (id and id ~= "9") then
                         tinsert(tempMods, id);
-                        tinsert(tempMods, tbl[offset+i+1]);
+                        tinsert(tempMods, tbl[offset+(i * 2)+1]);
                     end
-
-                    -- increase i by 1 since modifiers are id:value pairs
-                    i = i + 1;
                 end
 
-                modifiers = ":"..math.floor(#tempMods / 2)..":"..strjoin(":", unpack(tempMods))
+                modCount = math.floor(#tempMods / 2);
+                modifiers = ":"..modCount..":"..strjoin(":", unpack(tempMods))
 
                 tempMods:Release();
             end
@@ -428,7 +468,13 @@ function Utils.GetID(link)
 
         tbl:Release();
 
-        local fresult = "i:"..id..((extra == "" and modifiers ~= "") and "::" or extra)..modifiers;
+        local fresult = "";
+        if (modCount and modCount > 0) then
+            fresult = "i:"..id..((extra == "" and modifiers ~= "") and "::" or extra)..modifiers;
+        else
+            fresult = "i:"..id..extra;
+        end
+
         ID_CACHE[link] = fresult;
         return fresult;
     end

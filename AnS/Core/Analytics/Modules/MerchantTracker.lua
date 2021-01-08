@@ -121,17 +121,21 @@ end
 
 function MerchantTracker.Scan()
     for i = 1, GetMerchantNumItems() do
-        local id = Utils.GetID(GetMerchantItemLink(i));
-        if (id) then
-            local currentValue = Config.Vendor()[id] or VendorData[id];
-            local newValue = nil;
-            local _, _, price, quantity, _, _, _, extendedCost = GetMerchantItemInfo(i);
-			if (price > 0 and (not extendedCost or GetMerchantItemCostInfo(i) == 0)) then
-                newValue = Sources.round(price / quantity);
-			end
-			if (newValue ~= currentValue) then
-				Config.Vendor()[id] = newValue;
-			end
+        local link = GetMerchantItemLink(i);
+        if (link) then
+            local id = Utils.GetID(link);
+            if (id) then
+                local bonusOnly = Utils.BonusID(id);
+                local currentValue = Config.Vendor()[bonusOnly] or VendorData[bonusOnly];
+                local newValue = nil;
+                local _, _, price, quantity, _, _, _, extendedCost = GetMerchantItemInfo(i);
+                if (price > 0 and (not extendedCost or GetMerchantItemCostInfo(i) == 0)) then
+                    newValue = Sources.round(price / quantity);
+                end
+                if (newValue ~= currentValue) then
+                    Config.Vendor()[bonusOnly] = newValue;
+                end
+            end
         end
     end
 end

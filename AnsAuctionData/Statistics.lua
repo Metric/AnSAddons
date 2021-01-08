@@ -45,7 +45,7 @@ function Statistics:Sum(x)
 end
 
 function Statistics:Calculate(x, prevSum, prevCount)
-	local half = ceil(#x * 0.25);
+	local half = ceil(#x * 0.35);
 	local low = ceil(#x * 0.15);
     local valid = TempTable:Acquire();
 
@@ -58,10 +58,10 @@ function Statistics:Calculate(x, prevSum, prevCount)
 
 	for i = 1, half do
 		if (i <= low or x[i] < prev * 1.2) then
+			prev = x[i];
 			sum = sum + x[i];
 			tinsert(valid, x[i]);
 		end
-		prev = x[i];
 	end 
 	
 	count = #valid;

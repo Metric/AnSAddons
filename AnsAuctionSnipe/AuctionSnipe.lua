@@ -1,5 +1,6 @@
 local Core = select(2, ...);
 local Config = Ans.API.Config;
+local Data = Ans.API.Data;
 local BaseData = Ans.API.BaseData;
 local Query = Ans.API.Auctions.Query;
 local Recycler = Ans.API.Auctions.Recycler;
@@ -1193,8 +1194,8 @@ function AuctionSnipe:LoadBaseFilters()
 
         if (item) then
             if (not Utils.IsClassic()) then
-                if (item.inventoryType == Enum.AuctionHouseFilter.LegendaryCraftedItemOnly) then
-                    tinsert(qualityFilters, item.inventoryType);
+                if (item.inventoryType == Data.RUNECARVING) then
+                    tinsert(qualityFilters, Enum.AuctionHouseFilter.LegendaryCraftedItemOnly);
                     tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = nil});
                 else
                     tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});

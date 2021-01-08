@@ -191,13 +191,14 @@ local function BuildStateMachine()
                 self.item.op:Track(item);
             end
             
-            PostingView.CalcLowest(item);
+            PostingView.CalcLowest(item, self.item.op:GetReferenceID(item));
         end
     end);
     postItemResults:AddEvent("SEARCH_COMPLETE", function(self)
         searchesComplete = searchesComplete + 1;
 
         local v = self.item;
+        local vid = v.op:GetReferenceID(v);
 
         local txt, undercut = Utils.MoneyStringToCopper(v.op.undercut);
 
@@ -205,12 +206,12 @@ local function BuildStateMachine()
             undercut = 0;
         end
 
-        local ppu = bestPrices[v.tsmId] or 0;
+        local ppu = bestPrices[vid] or 0;
 
         if (Utils.IsClassic()) then
-            ppu = v.op:IsValid(ppu, v.link, false);
+            ppu = v.op:IsValid(ppu, vid, false);
         else
-            ppu = v.op:IsValid(ppu, v.link, v.isCommodity and v.op.commodityLow);
+            ppu = v.op:IsValid(ppu, vid, v.isCommodity and v.op.commodityLow);
         end
         
         if (ppu - undercut > 0) then
@@ -368,7 +369,7 @@ local function BuildStateMachine()
                         auction.ownedPPU = auction.ppu;
                         auction.op = op;
                         -- set best price to our owned ppu
-                        bestPrices[auction.tsmId] = auction.ppu;
+                        bestPrices[auction.op:GetReferenceID(auction)] = auction.ppu;
                         tinsert(inventory, auction);
                         break;
                     end
@@ -421,7 +422,7 @@ local function BuildStateMachine()
                     end
 
                     -- set initial best price to our owned auction ppu
-                    bestPrices[v.tsmId] = v.ppu;
+                    bestPrices[op:GetReferenceID(v)] = v.ppu;
                     clone.op = op;
                     tinsert(inventory, clone);
                     break;
@@ -456,19 +457,20 @@ local function BuildStateMachine()
     end);
     cancelItemResults:AddEvent("ITEM_RESULT", function(self, event, item)
         if (item) then
-            PostingView.CalcLowest(item);
+            PostingView.CalcLowest(item, self.item.op:GetReferenceID(item));
         end
     end);
     cancelItemResults:AddEvent("SEARCH_COMPLETE", function(self)
         searchesComplete = searchesComplete + 1;
 
         local v = self.item;
-        local ppu = bestPrices[v.tsmId] or 0;
+        local vid = v.op:GetReferenceID(v);
+        local ppu = bestPrices[vid] or 0;
 
         if (Utils.IsClassic()) then
-            ppu = v.op:IsValid(ppu, v.link, false, v.ownedPPU);
+            ppu = v.op:IsValid(ppu, vid, false, v.ownedPPU);
         else
-            ppu = v.op:IsValid(ppu, v.link, v.isCommodity and v.op.commodityLow, v.ownedPPU);
+            ppu = v.op:IsValid(ppu, vid, v.isCommodity and v.op.commodityLow, v.ownedPPU);
         end
 
         v.ppu = ppu;
@@ -1033,14 +1035,14 @@ function PostingView.OnSearchResult(item)
     end
 end
 
-function PostingView.CalcLowest(item)
+function PostingView.CalcLowest(item, ref)
     local valid = item.ppu;
 
     if (valid > 0) then
-        if (bestPrices[item.tsmId]) then
-            bestPrices[item.tsmId] = math.min(valid, bestPrices[item.tsmId]);
+        if (bestPrices[ref]) then
+            bestPrices[ref] = math.min(valid, bestPrices[ref]);
         else
-            bestPrices[item.tsmId] = valid;
+            bestPrices[ref] = valid;
         end
     end
 

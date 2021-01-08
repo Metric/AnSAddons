@@ -18,9 +18,7 @@ local tooltipRealm = {
 };
 
 local tooltipRegion = {
-    "tooltipRegionRecent",
     "tooltipRegionMin",
-    "tooltipRegion3Day",
     "tooltipRegionMarket"
 };
 

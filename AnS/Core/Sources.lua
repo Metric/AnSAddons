@@ -459,7 +459,10 @@ function Sources:QueryID(q, itemId)
     codes.ilevel = 0;
     codes.vendorsell = 0;
     codes.tsmId = Utils.GetID(itemId);
-    codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
+
+    local idBonusOnly = Utils.BonusID(codes.tsmId);
+
+    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
 
     local _, id = strsplit(":", codes.tsmId); 
 
@@ -546,7 +549,7 @@ function Sources:Validate(q)
     codes.ilevel = 0;
     codes.vendorsell = 0;
     codes.tsmId = itemId;
-    codes.vendorbuy = Config.Vendor()[codes.tsmId] or VendorData[codes.tsmId] or 0;
+    codes.vendorbuy = 0;
     codes.id = 2589;
 
     local _, fn, err = false, nil, nil;
@@ -628,6 +631,12 @@ function Sources:Query(q, item)
         self:GetValues(itemId, codes);
     end
 
+    if (not item.tsmId and item.link) then
+        item.tsmId = Utils.GetID(item.link);
+    end
+
+    local idBonusOnly = Utils.BonusID(item.tsmId or item.link or item.id);
+
     codes.buyout = buyout;
     codes.stacksize = stackSize;
     codes.quality = quality;
@@ -637,7 +646,7 @@ function Sources:Query(q, item)
     codes.vendorsell = item.vendorsell;
     codes.tsmId = item.tsmId;
     codes.id = item.id;
-    codes.vendorbuy = Config.Vendor()[item.tsmId] or VendorData[item.tsmId] or 0;
+    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
 
     local _, fn, err = false, nil, nil;
     local oq = q;

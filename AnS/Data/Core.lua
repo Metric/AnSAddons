@@ -6,6 +6,8 @@ Ans.Data = Data;
 
 Ans.BaseData = { path = "" };
 
+local RUNECARVING = 1000;
+Ans.Data.RUNECARVING = RUNECARVING;
 
 local armorBasicSubtypes = {
     LE_ITEM_ARMOR_PLATE,
@@ -37,7 +39,7 @@ local miscArmorInventoryTypes = {
 
 if (not Utils.IsClassic()) then
     armorInventoryTypes = {
-        Enum.AuctionHouseFilter.LegendaryCraftedItemOnly,
+        RUNECARVING,
         Enum.InventoryType.IndexHeadType,
         Enum.InventoryType.IndexShoulderType,
         Enum.InventoryType.IndexChestType,
@@ -49,6 +51,7 @@ if (not Utils.IsClassic()) then
     };
     
     miscArmorInventoryTypes = {
+        RUNECARVING,
         Enum.InventoryType.IndexNeckType,
         Enum.InventoryType.IndexCloakType,
         Enum.InventoryType.IndexFingerType,
@@ -61,7 +64,7 @@ end
 
 local function AddBaseData(classID, subClassID, parent, inventoryType)
     local name = "";
-    if (not Utils.IsClassic() and inventoryType and inventoryType == Enum.AuctionHouseFilter.LegendaryCraftedItemOnly) then
+    if (inventoryType and inventoryType == RUNECARVING) then
         name = "Runecarving" --AUCTION_HOUSE_FILTER_STRINGS[inventoryType];
     elseif (inventoryType) then
         name = GetItemInventorySlotInfo(inventoryType);

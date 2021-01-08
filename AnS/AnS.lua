@@ -81,13 +81,15 @@ StaticPopupDialogs["ANS_NO_PRICING"] = {
 
 local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
+local AtrOnlyPercentFn = "atrvalue";
 local TUJAndTSMPercentFn = "avg(dbmarket,tujmarket)";
 local AnsOnlyPercentFn = "avg(ansrecent,ansmarket)";
 local TSMMaterialCost = "min(dbmarket, first(vendorbuy, dbminbuyout))";
 local TSMCraftingValue = "first(dbminbuyout, dbmarket)";
 local AnsMaterialCost = "min(ansmarket, first(vendorbuy, ansrecent))";
-local AnsCraftingValue = "first(ansmin, ansmarket)";
-local TujMatCraftValue = "min(tujmarket, vendorbuy)";
+local AnsCraftingValue = "first(vendorbuy, avg(ansrecent, ansmarket))";
+local TujMatCraftValue = "first(vendorbuy, tujmarket)";
+local AtrMatCraftValue = "first(vendorbuy, atrvalue)";
 
 local function AuctionTab_OnClick(self, button, down, index)
     AH_TAB_CLICK(self, button, down, index);
@@ -276,11 +278,11 @@ function Ans:RegisterPriceSources()
     local tujEnabled = false;
     local ansEnabled = false;
     
-    --local auctionatorEnabled = false;
+    local auctionatorEnabled = false;
 
-    -- if (Utils.IsAddonEnabled("Auctionator") and Atr_GetAuctionBuyout) then
-    --    auctionatorEnabled = true; 
-    -- end
+    if (Utils.IsAddonEnabled("Auctionator")) then
+        auctionatorEnabled = true; 
+    end
     
     if (TSM_API or TSMAPI) then
         tsmEnabled = true;
@@ -304,6 +306,9 @@ function Ans:RegisterPriceSources()
     elseif (tsmEnabled and not tujEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default tsm source");
         Config.Sniper().source = TSMOnlyPercentFn;
+    elseif (auctionatorEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
+        print("AnS: setting default auctionator source");
+        Config.Snipe().source = AtrOnlyPercentFn;
     elseif (ansEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default AnsAuctionData source");
         Config.Sniper().source = AnsOnlyPercentFn;
@@ -319,12 +324,15 @@ function Ans:RegisterPriceSources()
     elseif (tsmEnabled and not tujEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
         Config.Crafting().materialCost = TSMMaterialCost;
         Config.Crafting().craftValue = TSMCraftingValue;
+    elseif (auctionatorEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
+        Config.Crafting().materialCost = AtrMatCraftValue;
+        Config.Crafting().craftValue = AtrMatCraftValue;
     elseif (ansEnabled and (not Config.Crafting().materialCost or Config.Crafting().materialCost:len() == 0)) then
         Config.Crafting().materialCost = AnsMaterialCost;
         Config.Crafting().craftValue = AnsCraftingValue;
     end
 
-    if (not tsmEnabled and not tujEnabled and not ansEnabled) then
+    if (not tsmEnabled and not tujEnabled and not ansEnabled and not auctionatorEnabled) then
         StaticPopup_Show("ANS_NO_PRICING");
     end
 
@@ -365,22 +373,31 @@ function Ans:RegisterPriceSources()
         Sources:Register("ANSMarket", AnsAuctionData.GetRealmValue, "market");
         Sources:Register("ANSMin", AnsAuctionData.GetRealmValue, "min");
         Sources:Register("ANS3Day", AnsAuctionData.GetRealmValue, "3day");
-        Sources:Register("ANSRegionRecent", AnsAuctionData.GetRegionValue, "recent");
         Sources:Register("ANSRegionMarket", AnsAuctionData.GetRegionValue, "market");
         Sources:Register("ANSRegionMin", AnsAuctionData.GetRegionValue, "min");
-        Sources:Register("ANSRegion3Day", AnsAuctionData.GetRegionValue, "3day");
     end
 
-    -- if (auctionatorEnabled) then
-    --     print("AnS: found Auctionator pricing source");
-    --     Sources:Register("AtrValue", function(link, key)
-    --         if (strfind(link, "[ip]:%d+%(%d+%)")) then
-    --             return 0;
-    --         end
-            
-    --         return Atr_GetAuctionBuyout(link);
-    --     end, nil);
-    -- end
+    if (auctionatorEnabled) then
+         print("AnS: found Auctionator pricing source");
+
+         if (Atr_GetAuctionBuyout) then
+            Sources:Register("AtrValue", function(link, key)
+                if (strfind(link, "[ip]:")) then
+                    link = Utils.GetLink(link, true);
+                end
+                
+                return Atr_GetAuctionBuyout(link) or 0;
+            end, nil);
+        elseif (Auctionator and Auctionator.API and Auctionator.API.v1 and Auctionator.API.v1.GetAuctionPriceByItemLink) then
+            Sources:Register("AtrValue", function(link, key)
+                if (strfind(link, "[ip]:")) then
+                    link = Utils.GetLink(link, true);
+                end
+                
+                return Auctionator.API.v1.GetAuctionPriceByItemLink("AnS", link) or 0;
+            end, nil);
+        end
+    end
 end
 
 function Ans:Migrate()
