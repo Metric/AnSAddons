@@ -16,7 +16,7 @@ function Logger.Log(tag, msg)
     end
 
     if (Logger.Input) then
-        local txt = Logger.Input:Get() or "";
+        local txt = Logger.Input:Get(true) or "";
         txt = txt.."("..(msg and tag or "UNKNOWN")..")".." "..(msg or tag or "").."\r\n";
         local lines = TempTable:Acquire(strsplit("\r\n", txt));
 

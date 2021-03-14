@@ -1,3 +1,7 @@
+## AnS [Auction Sniper] Changes 2.2.4
+
+-   Fixed a memory leak where tables were added to the recycler when they shouldn't be. And thus they were cached forever until a UI reload.
+
 ## AnS [Auction Sniper] Changes 2.2.1
 
 -   Fixed an issue where an invalid variable check was happening for SnipeFirst

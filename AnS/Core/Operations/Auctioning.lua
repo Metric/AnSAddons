@@ -10,13 +10,13 @@ local TempTable = Ans.TempTable;
 local BagScanner = Ans.BagScanner;
 local Auctioning = Ans.Object.Register("Auctioning", Ans.Operations);
 
-local DEFAULT_MIN_PRICE_ANS = "max(25% avg(ansmarket, ansrecent, ansmin, ans3day), 150% vendorsell)";
-local DEFAULT_NORMAL_PRICE_ANS = "max(avg(ansmarket, ansrecent, ansmin, ans3day), 250% vendorsell)";
-local DEFAULT_MAX_PRICE_ANS = "max(200% avg(ansmarket, ansrecent, ansmin, ans3day), 400% vendorsell)";
+local DEFAULT_MIN_PRICE_ANS = "max(25% avg(ansmarket, ansrecent, ans3day, ansregiomarket), 150% vendorsell)";
+local DEFAULT_NORMAL_PRICE_ANS = "max(avg(ansmarket, ansrecent, ans3day, ansregionmarket), 250% vendorsell)";
+local DEFAULT_MAX_PRICE_ANS = "max(200% avg(ansmarket, ansrecent, ans3day, ansregionmarket), 400% vendorsell)";
 
-local DEFAULT_MIN_PRICE_TSM = "max(25% avg(dbmarket, dbminbuyout), 150% vendorsell)";
-local DEFAULT_NORMAL_PRICE_TSM = "max(avg(dbmarket, dbminbuyout), 250% vendorsell)";
-local DEFAULT_MAX_PRICE_TSM = "max(200% avg(dbmarket, dbminbuyout), 400% vendorsell)";
+local DEFAULT_MIN_PRICE_TSM = "check(first(dbmarket, dbregionmarketavg), max(25% avg(dbmarket, dbregionmarketavg), 150% vendorsell))";
+local DEFAULT_NORMAL_PRICE_TSM = "check(first(dbmarket, dbregionmarketavg), max(avg(dbmarket, dbregionmarketavg), 250% vendorsell))";
+local DEFAULT_MAX_PRICE_TSM = "check(first(dbmarket, dbregionmarketavg), max(200% avg(dbmarket, dbregionmarketavg), 400% vendorsell))";
 
 local ACTIONS = {};
 ACTIONS.MIN_PRICE = 1;

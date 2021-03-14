@@ -56,6 +56,7 @@ local SNIPER_DEFAULT = {
     flashWoWIcon = true,
     soundKitSound = "AUCTION_WINDOW_OPEN",
     ignoreSingleStacks = false,
+    ignoreGroupMaxPercent = false,
 };
 
 local CRAFTING_DEFAULT = {
@@ -65,6 +66,8 @@ local CRAFTING_DEFAULT = {
     destroyMaxQuality = 2,
     disenchantMinValue = "0c",
     autoShowDestroying = false,
+    hideProfit = false,
+    hideCost = false,
 };
 
 local WINDOWS_DEFAULT = {};

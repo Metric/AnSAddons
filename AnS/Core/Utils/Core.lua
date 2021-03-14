@@ -58,8 +58,12 @@ local BONUS_ID_CACHE = TempTable:Acquire();
 
 function Utils.IsClassic()
     local v = GetBuildInfo();
-    local f = v:match("%d");
-    return f == "1" or f == "2" or f == "3";
+    local f,m = v:match("%d");
+    return f == "1" or f == "2" 
+        or f == "3" or f == "4" 
+        or f == "5" or f == "6"
+        or f == "7" 
+        or (f == "8" and m and m == "0");
 end
 
 function Utils.GSC(val) 

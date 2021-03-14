@@ -4,9 +4,12 @@ local Utils = Ans.Utils;
 local Draggable = Utils.Draggable;
 local Config = Ans.Config;
 local Sources = Ans.Sources;
+local Tasker = Ans.Tasker;
 local EventManager = Ans.EventManager;
 local CraftingHook = {};
 local CraftIDCache = {};
+local Logger = Ans.Logger;
+local TASKER_TAG = "CRAFTING";
 CraftingHook.__index = CraftingHook;
 
 local ENCHANTING_VELLUM_ID = "i:38682";
@@ -14,6 +17,10 @@ local ENCHANTING_VELLUM_ID = "i:38682";
 local TSFrame = nil;
 
 local CRAFT_REFERENCE = {};
+local STORED_REFERENCE_CHECK = {};
+local CRAFT_COST_REFERENCE = {};
+
+local madeDraggable = false;
 
 function CraftingHook.MouseLeave(self)
     if self.SubSkillRankBar.currentRank and self.SubSkillRankBar.maxRank then
@@ -33,9 +40,9 @@ function CraftingHook.SetUpHeader(self, textWidth, tradeSkillInfo)
     self:SetSize(500, self:GetHeight());
 end
 
-function CraftingHook.StoreReference(self, id, tradeSkillInfo)
+function CraftingHook.StoreReference(recipeID)
     if (Utils.IsClassic()) then
-        local finalItemLink = GetTradeSkillItemLink(id);
+        local finalItemLink = GetTradeSkillItemLink(recipeID);
 
         if (not finalItemLink) then
             return;
@@ -53,15 +60,15 @@ function CraftingHook.StoreReference(self, id, tradeSkillInfo)
             return;
         end
 
-        local craftSpecial, isEnchanting = CraftingData.Item(id);
+        local craftSpecial, isEnchanting = CraftingData.Item(recipeID);
 
         if (craftSpecial) then
             return;
         end
 
-        CRAFT_REFERENCE[finalItemLink] = id;
+        CRAFT_REFERENCE[finalItemLink] = recipeID;
     else
-        local finalItemLink = C_TradeSkillUI.GetRecipeItemLink(tradeSkillInfo.recipeID);
+        local finalItemLink = C_TradeSkillUI.GetRecipeItemLink(recipeID);
         
         if (not finalItemLink) then
             return;
@@ -79,13 +86,13 @@ function CraftingHook.StoreReference(self, id, tradeSkillInfo)
             return;
         end
 
-        local craftSpecial, isEnchanting = CraftingData.Item(tradeSkillInfo.recipeID);
+        local craftSpecial, isEnchanting = CraftingData.Item(recipeID);
 
         if (craftSpecial) then
             return;
         end
 
-        CRAFT_REFERENCE[finalItemLink] = tradeSkillInfo.recipeID;
+        CRAFT_REFERENCE[finalItemLink] = recipeID;
     end
 end
 
@@ -229,9 +236,12 @@ function CraftingHook.SetUpRecipe(self, textWidth, tradeSkillInfo)
         end
     end
 
+    local cost = (totalCost + vellumCost);
     local profit = finalWorth - (totalCost + vellumCost);
     local prefix = "";
     local negative = false;
+
+    CRAFT_COST_REFERENCE[tradeSkillInfo.recipeID] = cost;
 
     if (profit < 0) then
         profit = math.abs(profit);
@@ -239,7 +249,11 @@ function CraftingHook.SetUpRecipe(self, textWidth, tradeSkillInfo)
         negative = true;
     end
 
-    local txt = Utils.PriceToFormatted(prefix, profit, negative);
+    local txt = "";
+    
+    if (not Config.Crafting().hideProfit) then
+        txt = txt..Utils.PriceToFormatted(prefix, profit, negative);
+    end
 
     if (not self.Profit) then
         self.Profit = self:CreateFontString("AnsProfit", "ARTWORK", "AnsGameFontNormalLight");
@@ -252,17 +266,69 @@ function CraftingHook.SetUpRecipe(self, textWidth, tradeSkillInfo)
     self:SetSize(500, self:GetHeight());
 end
 
+function CraftingHook.StoreRetailReferences()
+    if (not TSFrame) then
+        return;
+    end
+
+    if (Config.Crafting().hideProfit and Config.Crafting().hideCost) then
+        return;
+    end
+    
+    local title = TradeSkillFrameTitleText:GetText();
+    if (STORED_REFERENCE_CHECK[title]) then
+        return;
+    end
+    -- store references for subcrafts 
+    local ids = C_TradeSkillUI.GetAllRecipeIDs();
+    Logger.Log(TASKER_TAG, title.." num recipes: "..#ids);
+    for i,v in ipairs(ids) do
+        CraftingHook.StoreReference(v);
+    end
+    STORED_REFERENCE_CHECK[title] = true;
+end
+
+function CraftingHook.ShowRetailCost(self, id)
+    local ansCost = TSFrame.DetailsFrame.Contents.AnsCost;
+    if (not ansCost) then
+        return;
+    end
+
+    ansCost:SetText("");
+
+    local cost = CRAFT_COST_REFERENCE[id];
+
+    if (not Config.Crafting().hideCost and cost) then
+        ansCost:SetText("Cost: "..Utils.PriceToFormatted("", cost, false));
+    end
+end
+
 function CraftingHook.HookRetail()
+    if (Config.Crafting().hideProfit and Config.Crafting().hideCost) then
+        return false;
+    end
+
     TSFrame:SetSize(870, TSFrame:GetHeight());
     TSFrame.RecipeList:SetSize(500, TSFrame.RecipeList:GetHeight());
     TSFrame.RecipeInset:SetSize(525, TSFrame.RecipeInset:GetHeight());
+    
+    -- add in fontstring for cost in the details view of the tradeskill frame
+    local ansCost = TSFrame.DetailsFrame.Contents:CreateFontString("AnsCost", "BACKGROUND", "AnsGameFontNormalLight");
+    ansCost:ClearAllPoints();
+    ansCost:SetPoint("TOPRIGHT", -5, -60);
+    TSFrame.DetailsFrame.Contents.AnsCost = ansCost;
+
+    -- hook the details frame SetSelectedRecipeID
+    hooksecurefunc(TSFrame.DetailsFrame, "SetSelectedRecipeID", CraftingHook.ShowRetailCost);
 
     for i,b in ipairs(TSFrame.RecipeList.buttons) do
-        hooksecurefunc(b, "SetUpRecipe", CraftingHook.StoreReference);
+        -- hooksecurefunc(b, "SetUpRecipe", CraftingHook.StoreReference);
         hooksecurefunc(b, "SetUpRecipe", CraftingHook.SetUpRecipe);
         hooksecurefunc(b, "SetUpHeader", CraftingHook.SetUpHeader);
         b:HookScript("OnLeave", CraftingHook.MouseLeave);
     end
+
+    return true;
 end
 
 function CraftingHook.SetProfit(self, id)
@@ -337,13 +403,19 @@ function CraftingHook.SetProfit(self, id)
     local prefix = "";
     local negative = false;
 
+    CRAFT_COST_REFERENCE[id] = totalCost;
+
     if (profit < 0) then
         profit = math.abs(profit);
         prefix = "-";
         negative = true;
     end
 
-    local txt = Utils.PriceToFormatted(prefix, profit, negative);
+    local txt = "";
+    
+    if (not Config.Crafting().hideProfit) then
+        txt = txt..Utils.PriceToFormatted(prefix, profit, negative);
+    end
 
     if (not self.Profit) then
         self.Profit = self:CreateFontString("AnsProfit", "ARTWORK", "AnsGameFontNormalLight");
@@ -367,20 +439,98 @@ function CraftingHook.SetID(self, id)
     end
 end
 
+function CraftingHook.ShowClassicCost(id)
+    local detailFrame = _G["TradeSkillDetailScrollChildFrame"];
+
+    if (not detailFrame) then
+        return;
+    end
+
+    local ansCost = detailFrame.AnsCost;
+
+    if (not ansCost) then
+        return;
+    end
+
+    ansCost:SetText("");
+
+    local cost = CRAFT_COST_REFERENCE[id];
+
+    if (not Config.Crafting().hideCost and cost) then
+        ansCost:SetText("Cost: "..Utils.PriceToFormatted("", cost, false));
+    end
+end
+
+function CraftingHook.StoreClassicReferences()
+    if (not TSFrame) then
+        return;
+    end
+    
+    if (Config.Crafting().hideProfit and Config.Crafting().hideCost) then
+        return;
+    end
+
+    local title = TradeSkillFrameTitleText:GetText();
+    if (STORED_REFERENCE_CHECK[title]) then
+        return;
+    end
+    -- store references
+    local totalSkills = GetNumTradeSkills();
+    Logger.Log(TASKER_TAG, title.." num recipes: "..totalSkills);
+    for i = 1, totalSkills do
+        local _, type = GetTradeSkillInfo(i);
+        if (type:lower() ~= "header" and type:lower() ~= "subheader") then
+            CraftingHook.StoreReference(i);
+        end
+    end
+
+    STORED_REFERENCE_CHECK[title] = true;
+end
+
 function CraftingHook.HookClassic()
     local scrollFrame = _G["TradeSkillListScrollFrame"];
+
+    if (Config.Crafting().hideProfit and Config.Crafting().hideCost) then
+        return false;
+    end
+
+    local detailFrame = _G["TradeSkillDetailScrollChildFrame"];
+
+    if (detailFrame) then
+        local ansCost = detailFrame:CreateFontString("AnsCost", "BACKGROUND", "AnsGameFontNormalLight");
+        ansCost:ClearAllPoints();
+        ansCost:SetPoint("TOPRIGHT", -5, -32);
+        detailFrame.AnsCost = ansCost;
+    end
+
+    -- hook the classic TradeSkillFrame_SetSelection
+    hooksecurefunc("TradeSkillFrame_SetSelection", CraftingHook.ShowClassicCost);
 
     for i = 1, 8 do
         local button = _G["TradeSkillSkill"..i];
 
         if (button) then
-            hooksecurefunc(button, "SetID", CraftingHook.StoreReference);
+            -- hooksecurefunc(button, "SetID", CraftingHook.StoreReference);
             hooksecurefunc(button, "SetID", CraftingHook.SetID);
         end
     end
+
+    return true;
 end
 
 local didHook = false;
+
+EventManager:On("TRADE_SKILL_DATA_SOURCE_CHANGED", 
+    function()
+        Tasker.Schedule(CraftingHook.StoreRetailReferences, TASKER_TAG);
+    end
+);
+
+EventManager:On("TRADE_SKILL_UPDATE",
+    function()
+        Tasker.Schedule(CraftingHook.StoreClassicReferences, TASKER_TAG);
+    end
+);
 
 EventManager:On("TRADE_SKILL_SHOW", 
     function()
@@ -393,14 +543,15 @@ EventManager:On("TRADE_SKILL_SHOW",
         end
 
         if (not didHook) then
-            didHook = true;
-
             if (Utils.IsClassic()) then
-                CraftingHook.HookClassic();
+                didHook = CraftingHook.HookClassic();
             else
-                CraftingHook.HookRetail();
+                didHook = CraftingHook.HookRetail();
             end
+        end
 
+        if (not madeDraggable) then
+            madeDraggable = true;
             Draggable:Acquire(TSFrame, "craftWindow");
         end
     end);

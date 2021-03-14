@@ -96,6 +96,11 @@
                     <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.ChatMessageNew" x="150" y="0" />
                 </Anchors>
             </CheckButton>
+            <CheckButton parentKey="IgnoreGroupPercent" text="Ignore Group Max Percent" inherits="AnsCheckboxTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.SingleStack" x="165" y="0" />
+                </Anchors>
+            </CheckButton>
 
             <EditBox parentKey="ItemsUpdate" text="" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />

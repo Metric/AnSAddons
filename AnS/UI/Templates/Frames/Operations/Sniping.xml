@@ -114,6 +114,12 @@
                     <Anchor point="TOPLEFT" x="145" y="0" relativePoint="TOPRIGHT" relativeTo="$parentSearch" />
                 </Anchors>
             </CheckButton>
+            <CheckButton parentKey="IgnoreGroupPercent" text="Ignore Group Max Percent" name="$parentIgnoreGroupPercent" inherits="AnsCheckboxTemplate">
+                <Size x="46" y="20" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="120" y="0" relativePoint="TOPRIGHT" relativeTo="$parentInheritGlobal" />
+                </Anchors>
+            </CheckButton>
         </Frames>
         <Scripts>
             <OnLoad>

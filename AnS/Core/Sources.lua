@@ -274,8 +274,12 @@ Sources.avg = function(...)
     local amt = 0;
 
     for i = 1, totalItems do
-        amt = amt + select(i, ...);
-        t = t + 1;
+        local v = select(i, ...);
+        if (v and type(v) == "number" 
+            and math.floor(v) > 0) then
+                amt = amt + v;
+                t = t + 1;
+        end
     end
 
     if t == 0 then
@@ -286,104 +290,154 @@ Sources.avg = function(...)
 end
 
 Sources.first = function(v1,v2)
-    if (math.floor(v1) > 0) then
-        return v1;
+    if (v1 and type(v1) == "number" 
+        and math.floor(v1) > 0) then
+            return v1 or 0;
     end
 
-    return v2;
+    return v2 or 0;
 end
 
 Sources.check = function(v1,v2,v3)
-    if (math.floor(v1) > 0) then
-        return v2;
+    if (v1 and type(v1) == "number" 
+        and math.floor(v1) > 0) then
+            return v2 or 0;
     end
     
-    return v3;
+    return v3 or 0;
 end
 
 Sources.iflte = function(v1, v2, v3, v4)
+    if (not v1 or type(v1) ~= "number") then
+        return v4 or 0;
+    end
+
+    if (not v2 or type(v2) ~= "number") then
+        return v3 or 0;
+    end
+
     if (v1 <= v2) then
-        return v3;
+        return v3 or 0;
     end
     
-    return v4;
+    return v4 or 0;
 end
 
 Sources.ifgte = function(v1, v2, v3, v4)
+    if (not v1 or type(v1) ~= "number") then
+        return v4 or 0;
+    end
+
+    if (not v2 or type(v2) ~= "number") then
+        return v3 or 0;
+    end
+
     if (v1 >= v2) then
-        return v3;
+        return v3 or 0;
     end
     
-    return v4;
+    return v4 or 0;
 end
 
 Sources.iflt = function(v1, v2, v3, v4)
-    if (v1 < v2) then
-        return v3;
-    else
-        return v4;
+    if (not v1 or type(v1) ~= "number") then
+        return v4 or 0;
     end
+
+    if (not v2 or type(v2) ~= "number") then
+        return v3 or 0;
+    end
+
+    if (v1 < v2) then
+        return v3 or 0;
+    end
+
+    return v4 or 0;
 end
 
 Sources.ifgt = function(v1, v2, v3, v4)
+    if (not v1 or type(v1) ~= "number") then
+        return v4 or 0;
+    end
+
+    if (not v2 or type(v2) ~= "number") then
+        return v3 or 0;
+    end
+
     if (v1 > v2) then
-        return v3;
+        return v3 or 0;
     end
     
-    return v4;
+    return v4 or 0;
 end
 
 Sources.ifeq = function(v1, v2, v3, v4)
     if (v1 == v2) then
-        return v3;
+        return v3 or 0;
     end
     
-    return v4;
+    return v4 or 0;
 end
 
 Sources.ifneq = function(v1, v2, v3, v4)
     if (v1 ~= v2) then
-        return v3;
+        return v3 or 0;
     end
     
-    return v4;
+    return v4 or 0;
 end
 
 Sources.neq = function(v1,v2,v3,v4) 
-    if (v1 ~= v2) then
-        return v3 or true;
+    if (v1 ~= v2) then     
+        return v3 or 0;
     end
 
-    return v4 or false;
+    return v4 or 0;
 end
 
 Sources.eq = function(v1,v2,v3,v4)
     if (v1 == v2) then
-        return v3 or true;
+        return v3 or 0;
     end
 
-    return v4 or false;
+    return v4 or 0;
 end
 
 Sources.startswith = function(v1, v2, v3, v4)
-    if (strsub(v1, 1, #v2) == v2) then
-        return v3 or true;
+    if (not v1 or type(v1) ~= "string") then
+        return v4 or 0;
     end
 
-    return v4 or false;
+    if (not v2 or type(v2) ~= "string") then
+        return v3 or 0;
+    end
+
+    if (strsub(v1, 1, #v2) == v2) then
+        return v3 or 0;
+    end
+
+    return v4 or 0;
 end
 
 Sources.contains = function(v1, v2, v3, v4)
-    if (strfind(v1, v2)) then
-        return v3 or true;
+    if (not v1 or type(v1) ~= "string") then
+        return v4 or 0;
     end
 
-    return v4 or false;
+    if (not v2 or type(v2) ~= "string") then
+        return v3 or 0;
+    end
+
+    if (strfind(v1, v2)) then
+        return v3 or 0;
+    end
+
+    return v4 or 0;
 end
 
 Sources.bonus = function(v1,v2,v3,v4)
     if (not v1) then
-        return v4 or false;
+        return v4 or 0;
     end
     
     local s,e = strfind(v1, ":"..v2..":");
@@ -392,10 +446,10 @@ Sources.bonus = function(v1,v2,v3,v4)
     end
 
     if (s) then
-        return v3 or true; 
+        return v3 or 0; 
     end
 
-    return v4 or false;
+    return v4 or 0;
 end
 
 Sources.max = function(...)

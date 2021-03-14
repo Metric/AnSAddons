@@ -41,6 +41,7 @@ function AnsSnipeOperationFrameMixin:Init()
     self.search.onTextChanged = self.valueChangeHandler;
 
     self.InheritGlobal:SetScript("OnClick", self.valueChangeHandler);
+    self.IgnoreGroupPercent:SetScript("OnClick", self.valueChangeHandler);
 
     self:LoadDropdowns();
 end
@@ -63,6 +64,7 @@ function AnsSnipeOperationFrameMixin:Set(op)
     self.ExactMatch:SetChecked(op.exactMatch);
     self.minQualityDropdown:SetSelected(op.minQuality + 1);
     self.InheritGlobal:SetChecked(op.inheritGlobal);
+    self.IgnoreGroupPercent:SetChecked(op.ignoreGroupMaxPercent or false);
 
     self.selected = op;
     
@@ -96,6 +98,8 @@ function AnsSnipeOperationFrameMixin:ValuesChanged()
     self.selected.minQuality = self.minQualityDropdown.selected - 1;
 
     self.selected.inheritGlobal = self.InheritGlobal:GetChecked();
+
+    self.selected.ignoreGroupMaxPercent = self.IgnoreGroupPercent:GetChecked();
 
     if (self.onEdit) then
         self.onEdit();

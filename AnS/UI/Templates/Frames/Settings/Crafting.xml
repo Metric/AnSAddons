@@ -9,7 +9,7 @@
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>
-                <Size x="555" y="64" />
+                <Size x="555" y="134" />
                 <Frames>
                     <EditBox parentKey="CraftValue" text="" inherits="AnsEditBoxTemplate">
                         <Size x="555" y="20" />
@@ -23,6 +23,18 @@
                             <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.CraftValue" x="0" y="-25" />
                         </Anchors>
                     </EditBox>
+                    <CheckButton parentKey="HideProfit" text="Hide Craft Profit Amount" inherits="AnsCheckboxTemplate">
+                        <Size x="46" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeKey="$parent.MaterialCost" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="HideCost" text="Hide Cost to Craft Amount" inherits="AnsCheckboxTemplate">
+                        <Size x="46" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeKey="$parent.HideProfit" />
+                        </Anchors>
+                    </CheckButton>
                 </Frames>
             </Frame>
             <Frame parentKey="destroying">

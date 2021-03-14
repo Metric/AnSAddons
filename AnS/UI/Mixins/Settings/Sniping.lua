@@ -53,6 +53,8 @@ function AnsSniperSettingsFrameMixin:Init()
     self.ChatMessageNew:SetScript("OnClick", self.valueChangedHandler);
     self.FlashWoWIcon:SetScript("OnClick", self.valueChangedHandler);
     
+    self.IgnoreGroupPercent:SetScript("OnClick", self.valueChangeHandler);
+
     self.itemsUpdate = TextInput:NewFrom(self.ItemsUpdate);
     self.itemsUpdate.onTextChanged = self.valueChangedHandler;
 
@@ -74,6 +76,7 @@ function AnsSniperSettingsFrameMixin:Refresh()
     self.FlashWoWIcon:SetChecked(Config.Sniper().flashWoWIcon);
     self.soundList:SetSelected(soundKitSoundsToIndex[Config.Sniper().soundKitSound]);
     self.SingleStack:SetChecked(Config.Sniper().ignoreSingleStacks);
+    self.IgnoreGroupPercent:SetChecked(Config.Sniper().ignoreGroupMaxPercent or false);
 end
 
 function AnsSniperSettingsFrameMixin:CreateSoundList()
@@ -100,4 +103,5 @@ function AnsSniperSettingsFrameMixin:Save()
     Config.Sniper().scanDelay = tonumber(self.scanDelay:Get()) or 10;
     Config.Sniper().flashWoWIcon = self.FlashWoWIcon:GetChecked();
     Config.Sniper().ignoreSingleStacks = self.SingleStack:GetChecked();
+    Config.Sniper().ignoreGroupMaxPercent = self.IgnoreGroupPercent:GetChecked();
 end

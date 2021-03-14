@@ -13,5 +13,5 @@ function TUJ.GetPrice(id, key)
     end
 
     TUJMarketInfo(id, temp);
-    return temp[key];
+    return temp[key] or 0;
 end

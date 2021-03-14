@@ -178,10 +178,14 @@ function TextInput:Set(txt)
     self.frame:SetText(txt);
 end
 
-function TextInput:Get()
+function TextInput:Get(noTrim)
     if (not self.frame) then 
         return "";
     end
 
-    return strtrim(self.frame:GetText());
+    if (not noTrim) then
+        return strtrim(self.frame:GetText());
+    else
+        return self.frame:GetText();
+    end
 end

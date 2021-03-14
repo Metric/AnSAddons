@@ -33,6 +33,8 @@ function AnsCraftingSettingsFrameMixin:Init()
     self.destroying.AutoDestroy:SetScript("OnClick", self.valueChangedHandler);
     self.disenchantMinValue = TextInput:NewFrom(self.destroying.DisenchantMinValue);
     self.disenchantMinValue.onTextChanged = self.valueChangedHandler;
+    self.values.HideProfit:SetScript("OnClick", self.valueChangedHandler);
+    self.values.HideCost:SetScript("OnClick", self.valueChangedHandler);
 
     self:LoadDropdown();
     self:Hide();
@@ -44,6 +46,8 @@ function AnsCraftingSettingsFrameMixin:Save()
     Config.Crafting().disenchantMinValue = self.disenchantMinValue:Get() or "0c";
     Config.Crafting().autoShowDestroying = self.destroying.AutoDestroy:GetChecked();
     Config.Crafting().destroyMaxQuality = self.destroyMaxQuality.selected - 1;
+    Config.Crafting().hideCost = self.values.HideCost:GetChecked();
+    Config.Crafting().hideProfit = self.values.HideProfit:GetChecked();
 end
 
 function AnsCraftingSettingsFrameMixin:Refresh()
@@ -52,6 +56,8 @@ function AnsCraftingSettingsFrameMixin:Refresh()
     self.disenchantMinValue:Set(Config.Crafting().disenchantMinValue or "0c");
     self.destroying.AutoDestroy:SetChecked(Config.Crafting().autoShowDestroying);
     self.destroyMaxQuality:SetSelected(Config.Crafting().destroyMaxQuality + 1);
+    self.values.HideProfit:SetChecked(Config.Crafting().hideProfit);
+    self.values.HideCost:SetChecked(Config.Crafting().hideCost);
 end
 
 function AnsCraftingSettingsFrameMixin:LoadDropdown()

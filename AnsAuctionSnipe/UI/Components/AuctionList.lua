@@ -228,7 +228,7 @@ function AuctionList:AddItems(items,clearNew)
     end
 
     for i,v in ipairs(items) do
-        local c = v:Clone();
+        local c = v;
         c.isNew = true;
         AddKnown(c);
         tinsert(self.items, c);
@@ -257,7 +257,7 @@ end
 function AuctionList:SetItems(items)
     wipe(self.items);
     for i,v in ipairs(items) do
-        tinsert(self.items, v:Clone());
+        tinsert(self.items, v);
     end 
     self:Sort(self.lastSortMode, true);
 end

@@ -1045,10 +1045,6 @@ function PostingView.CalcLowest(item, ref)
             bestPrices[ref] = valid;
         end
     end
-
-    if (Utils.IsClassic()) then
-        Recycler:Recycle(item);
-    end
 end
 
 function PostingView.OnSearchComplete(item)

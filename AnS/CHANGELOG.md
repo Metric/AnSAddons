@@ -1,3 +1,27 @@
+## AnS Changes 2.2.4
+
+-   Updated TOC number for latest Retail patch
+
+-   Fixed an issue where avg, check, and other formula functions did not properly ignore 0 or did not return 0 incase of nil value.
+
+-   Updated default Auctioning Operation formulas for TSM to be nearer to TSM default.
+
+-   Updated default Auctioning Operation formulas for AnS to be slightly more accurate
+
+-   Fixed a memory leak in Sniper where tables were added to recycler when they shouldn't be. Thus, causing the table to remain in memory until a UI reload.
+
+-   Added new toggle for global Sniper Settings and Sniper Operations to ignore group percent validation check for Retail. By enabling this, it will ignore the percent check on the browse group, but still check the individual search results percent value. Thus, allowing better BOE / Legendary sniping in retail, where in you can now target by min iLevel, percent, and groups / basic formulas again.
+
+-   Added a new Craft Cost in the crafting window. It is only visible when you select the specified craft. It is displayed in the detail area near the top right beneath the item name.
+
+-   Add toggles in Crafting Settings to hide the showing of Craft Profit and Craft Cost in the crafting window.
+
+-   You can now add items directly to the item blacklist in settings by item id strings such as: i:13456 or p:134 (battle pet). You can also just specify the item base number raw: 13456. The battlepet p: is still required for pets.
+
+-   Verified crafting formulas were being filled in properly for AnsAuctionData, if TSM and TUJ was not initially active and only AnsAuctionData was.
+
+-   Fixed an issue where Auctionator support was incomplete.
+
 ## AnS Changes 2.2.3
 
 -   Fixed issue with Modifiers not being correct for item ids

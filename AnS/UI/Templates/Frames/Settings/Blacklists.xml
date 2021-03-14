@@ -61,10 +61,22 @@
                 </Anchors>
                  <Size x="355" y="376" />
                 <Frames>
-                    <ScrollFrame parentKey="ScrollFrame" enableMouse="true" inherits="AnsFauxScrollFrameTemplate">
-                        <Size x="355" y="376" />
+                    <EditBox parentKey="Item" text="" inherits="AnsEditBoxTemplate">
+                        <Size x="150" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
+                        </Anchors>
+                    </EditBox>
+                    <Button parentKey="Add" text="Add" inherits="AnsStandardButtonTemplate">
+                        <Size x="48" y="24" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="5" y="2" relativeKey="$parent.Item" />
+                        </Anchors>
+                    </Button>
+                    <ScrollFrame parentKey="ScrollFrame" enableMouse="true" inherits="AnsFauxScrollFrameTemplate">
+                        <Size x="355" y="340" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-10" relativePoint="BOTTOMLEFT" relativeKey="$parent.Item" />
                         </Anchors>
                     </ScrollFrame>
                 </Frames>
@@ -72,7 +84,7 @@
                     <Layer level="BACKGROUND">
                         <Texture>
                             <Anchors>
-                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="TOPLEFT" x="0" y="-28" />
                                 <Anchor point="BOTTOMRIGHT" x="2" y="0" />
                             </Anchors>
                             <Color r="1" g="1" b="1" a="0.05" />

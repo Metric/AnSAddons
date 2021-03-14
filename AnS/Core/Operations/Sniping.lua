@@ -31,6 +31,7 @@ function Sniping.PrepareExport(snipe)
     n.exactMatch = snipe.exactMatch;
     n.search = snipe.search;
     n.inheritGlobal = snipe.inheritGlobal;
+    n.ignoreGroupMaxPercent = snipe.ignoreGroupMaxPercent;
     n.groups = {};
 
     for i,v in ipairs(snipe.groups) do
@@ -56,6 +57,7 @@ function Sniping.Config(name)
         recalc = false,
         search = "",
         groups = {},
+        ignoreGroupMaxPercent = false,
         inheritGlobal = false,
         nonActiveGroups = {}
     };
@@ -77,6 +79,7 @@ function Sniping.From(snipe)
     n.search = snipe.search;
     n.inheritGlobal = snipe.inheritGlobal;
     n.nonActiveGroups = snipe.nonActiveGroups or {};
+    n.ignoreGroupMaxPercent = snipe.ignoreGroupMaxPercent or false;
     n.groups = {};
     n.ids = {};
 
@@ -111,8 +114,10 @@ function Sniping:UpdatePercent(item, avg)
     item.percent = math.floor(item.ppu / avg * 100);
 end
 
-function Sniping:IsValid(item, exact)
+function Sniping:IsValid(item, exact, isGroup)
     local isExact = false;
+    local ignoreMaxPercent = isGroup and self.ignoreGroupMaxPercent;
+    
     if (exact and self.exactMatch) then
         isExact = true;
     end
@@ -143,7 +148,7 @@ function Sniping:IsValid(item, exact)
         return false;
     end
     local percent = self.maxPercent > 0;
-    if (item.percent > self.maxPercent and self.maxPercent > 0) then
+    if (item.percent > self.maxPercent and self.maxPercent > 0 and not ignoreMaxPercent) then
         return false;
     end
 

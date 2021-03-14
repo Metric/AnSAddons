@@ -167,9 +167,6 @@ end
 
 local function ClearValidAuctions()
     Logger.Log("SNIPER", "Clearing previous valid auctions: "..#validAuctions);
-    --for i,v in ipairs(validAuctions) do
-    --    Recycler:Recycle(v);
-    --end
     wipe(validAuctions);
 end
 
@@ -427,7 +424,6 @@ local function BuildStateMachine()
         if (Utils.IsClassic()) then
             if (not Query:IsLast()) then
                 Logger.Log("SNIPER", "Not last classic page");
-                Recycler:Recycle(item);
                 return nil;
             end
 
@@ -436,7 +432,6 @@ local function BuildStateMachine()
             end
 
             if (not Query:IsFiltered(item)) then
-                Recycler:Recycle(item);
                 return nil;
             end
 
@@ -453,7 +448,7 @@ local function BuildStateMachine()
             end
         
             block.count = block.count + item.count;
-            tinsert(block.auctions, item);
+            tinsert(block.auctions, item:Clone());
         else
             -- we track all current auction ids for the search
             -- so we can remove ones that are no longer there
@@ -506,7 +501,8 @@ local function BuildStateMachine()
                     for i,v in ipairs(validAuctions) do
                         print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF ppu from "..(v.owner or "?"));
                     end
-                end 
+                end
+                ClearValidAuctions(); 
             end
         end
 
@@ -1089,6 +1085,13 @@ function AuctionSnipe:OnAuctionHouseClosed()
         self.filterTreeView:ReleaseView();
         
         Sources:Clear();
+
+        -- clear this data
+        -- as it is no longer
+        -- needed once AH is closed
+        -- free up memory
+        ClearItemsFound();
+        ClearValidAuctions();
 
         -- clear group lowest
         wipe(lastSeenGroupLowest);

@@ -136,6 +136,7 @@ function Query:AssignDefaults(ilevel, buyout, quality, maxPercent)
             v.price = sniperConfig.pricing;
             v.maxPercent = maxPercent;
             v.maxPPU = buyout;
+            v.ignoreGroupMaxPercent = sniperConfig.ignoreGroupMaxPercent;
             v.minQuality = quality;
         end
     end
@@ -149,14 +150,14 @@ function Query:AssignSnipingOps(ops)
     end
 end
 
-function Query:IsValid(item) 
+function Query:IsValid(item, ignoreMaxPercent) 
     if (item.iLevel < self.minILevel and self.minILevel > 0) then
         return false;
     end
     if (item.ppu > self.maxBuyout and self.maxBuyout > 0) then
         return false;
     end
-    if (item.percent > self.maxPercent and self.maxPercent > 0) then
+    if (item.percent > self.maxPercent and self.maxPercent > 0 and not ignoreMaxPercent) then
         return false;
     end
     if (item.quality < self.quality and self.quality > 0) then
@@ -227,22 +228,22 @@ function Query:IsFiltered(auction)
 
             if (type(allowed) == "boolean" or type(allowed) == "number") then
                 if (type(allowed) == "number") then
-                    if (auction.ppu <= allowed and self:IsValid(auction)) then
+                    if (auction.ppu <= allowed and self:IsValid(auction, false)) then
                         filterAccepted = true;
                     end
                 else
-                    if (allowed and self:IsValid(auction)) then
+                    if (allowed and self:IsValid(auction, false)) then
                         filterAccepted = true;
                     end
                 end
             else
-                filterAccepted = self:IsValid(auction);
+                filterAccepted = self:IsValid(auction, false);
             end
         end
 
         local tf = #self.ops;
         for k = 1, tf do
-            if (self.ops[k]:IsValid(auction, true)) then
+            if (self.ops[k]:IsValid(auction, true, false)) then
                 filterAccepted = true;
                 break;
             end
@@ -311,6 +312,8 @@ function Query:GetAuctionData(group)
 end
 
 function Query:IsFilteredGroup(auction)
+    local ignoreMaxPercent = Config.Sniper().ignoreGroupMaxPercent;
+
     if (auction.buyoutPrice > 0) then
         local avg = Sources:Query(Config.Sniper().source, auction);
         if (not avg or avg <= 0) then 
@@ -335,22 +338,22 @@ function Query:IsFilteredGroup(auction)
         
             if (type(allowed) == "boolean" or type(allowed) == "number") then
                 if (type(allowed) == "number") then
-                    if (auction.ppu <= allowed and self:IsValid(auction)) then
+                    if (auction.ppu <= allowed and self:IsValid(auction, ignoreMaxPercent)) then
                         filterAccepted = true;
                     end
                 else
-                    if (allowed and self:IsValid(auction)) then
+                    if (allowed and self:IsValid(auction, ignoreMaxPercent)) then
                         filterAccepted = true;
                     end
                 end
             else
-                filterAccepted = self:IsValid(auction);
+                filterAccepted = self:IsValid(auction, ignoreMaxPercent);
             end
         end
 
         local tf = #self.ops;
         for k = 1, tf do
-            if (self.ops[k]:IsValid(auction, auction.isPet)) then
+            if (self.ops[k]:IsValid(auction, auction.isPet, true)) then
                 filterAccepted = true;
                 break;
             end
@@ -583,6 +586,7 @@ function Query.OnListUpdate()
         local item = Query:Next();
         if (item) then
             EventManager:Emit("QUERY_SEARCH_RESULT", item);
+            Recycler:Recycle(item);
         end
     end
 
@@ -636,23 +640,22 @@ end
 
 -- helper function for Owned Auctions for Retail
 function Query:GetOwnedAuctionRetail(index)
-    local auction = Recycler:Get();
     local info = C_AuctionHouse.GetOwnedAuctionInfo(index);
 
     if (not info) then
-        Recycler:Recycle(auction);
         return nil;
     end
-
-    auction.link = info.itemLink;
-    auction.tsmId = Utils.GetID(auction.link);
 
     local keyInfo = C_AuctionHouse.GetItemKeyInfo(info.itemKey);
 
     if (not keyInfo) then
-        Recycler:Recycle(auction);
         return nil;
     end
+
+    local auction = Recycler:Get();
+
+    auction.link = info.itemLink;
+    auction.tsmId = Utils.GetID(auction.link);
 
     auction.isCommodity = keyInfo.isCommodity;
     auction.isEquipment = keyInfo.isEquipment;
@@ -1048,8 +1051,10 @@ local function BuildStateMachine()
             end
         else
             local results = C_AuctionHouse.GetBrowseResults();
+
             wipe(Query.results);
             wipe(browseResults);
+
             browseIndex = 1;
 
             for i,v in ipairs(results) do

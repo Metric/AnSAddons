@@ -388,22 +388,13 @@ function Ans:RegisterPriceSources()
                 
                 return Atr_GetAuctionBuyout(link) or 0;
             end, nil);
-        elseif (Auctionator and Auctionator.API 
-            and Auctionator.API.v1 
-            and Auctionator.API.v1.GetAuctionPriceByItemLink 
-            and Auctionator.API.v1.GetAuctionPriceByItemID) then
-            
+        elseif (Auctionator and Auctionator.API and Auctionator.API.v1 and Auctionator.API.v1.GetAuctionPriceByItemLink) then
             Sources:Register("AtrValue", function(link, key)
-                if (type(link) == "string" 
-                    and strfind(link, "[ip]:")) then
-                        link = Utils.GetLink(link, true);
+                if (strfind(link, "[ip]:")) then
+                    link = Utils.GetLink(link, true);
                 end
-
-                if (type(link) == "number") then
-                    return Auctionator.API.v1.GetAuctionPriceByItemID("AnS", link) or 0;
-                else
-                    return Auctionator.API.v1.GetAuctionPriceByItemLink("AnS", link) or 0;
-                end
+                
+                return Auctionator.API.v1.GetAuctionPriceByItemLink("AnS", link) or 0;
             end, nil);
         end
     end
