@@ -125,7 +125,7 @@ function Sniping:IsValid(item, exact, isGroup)
     local price = self.price;
     local presult = nil;
     if (price ~= nil and #price > 0) then
-        presult = Sources:Query(price, item);
+        presult = Sources:Query(price, item, isGroup);
         if ((type(presult) == "boolean" and presult == false) or (type(presult) == "number" and item.ppu > presult)) then
             return false;
         end
@@ -159,7 +159,7 @@ function Sniping:IsValid(item, exact, isGroup)
 
     if (self:HasIds()) then
         local t,id = strsplit(":", item.tsmId);
-        return self.ids[item.tsmId] == 1 or (not isExact and self.ids[t..":"..id] == 1);
+        return self.ids[item.tsmId] == 1 or ((not isExact or isGroup) and self.ids[t..":"..id] == 1);
     end
 
     return (price ~= nil and #price > 0 and not self:HasIds()) 

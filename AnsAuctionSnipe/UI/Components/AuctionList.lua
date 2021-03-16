@@ -42,11 +42,14 @@ local clickTime = time();
 local knownAuctions = {};
 
 local function Hash(item)
-    return item.auctionId and tostring(item.auctionId) or (item.ppu.."."..item.count.."."..item.id);
+    if (item.auctionId) then
+        return tostring(item.auctionId);
+    end
+    return item.ppu.."."..item.count.."."..item.tsmId.."."..item.iLevel;
 end
 
 local function KnownKey(item)
-    return item.id.."."..item.iLevel.."."..item.itemKey.battlePetSpeciesID;
+    return item.tsmId.."."..item.iLevel.."."..item.suffix;
 end
 
 local function AddKnown(item)
@@ -122,8 +125,12 @@ function AuctionList:CheckAndPurchase(auction)
     if (auction and not auction.sniped) then
         local index = auction.itemIndex;
 
-        if (not index) then
-            return false;
+        if (not index 
+            or not auction.name 
+            or not auction.link
+            or not auction.buyoutPrice
+            or not auction.count) then
+                return false;
         end
 
         local link = GetAuctionItemLink("list", index);
@@ -163,7 +170,9 @@ function AuctionList:ClassicPurchase(block)
     if (self:CheckAndPurchase(auction)) then
         tremove(block.auctions, 1);
         self:RemoveAuctionAmount(block, auction.count);
-        Recycler:Recycle(auction);
+        if (Utils.IsClassic()) then
+            Recycler:Recycle(auction);
+        end
         return true;
     end
 
@@ -473,13 +482,15 @@ function AuctionList:CancelCommoditiesPurchase()
 end
 
 function AuctionList:Recycle()
-    for i,v in ipairs(self.items) do
-        if (v.auctions) then
-            for k,c in ipairs(v.auctions) do
-                Recycler:Recycle(c);
+    if (Utils.IsClassic()) then
+        for i,v in ipairs(self.items) do
+            if (v.auctions) then
+                for k,c in ipairs(v.auctions) do
+                    Recycler:Recycle(c);
+                end
+            else
+                Recycler:Recycle(v);
             end
-        else
-            Recycler:Recycle(v);
         end
     end
 
@@ -514,7 +525,11 @@ function AuctionList:RemoveAuctionAmount(block, count)
             end
 
             if (item.count <= 0) then
-                Recycler:Recycle(tremove(self.items, i));
+                if (Utils.IsClassic()) then
+                    Recycler:Recycle(tremove(self.items, i));
+                else
+                    tremove(self.items, i);
+                end
 
                 if (self.selectedEntry == i or item == self.selectedItem) then
                     self.selectedEntry = -1;
@@ -536,7 +551,11 @@ function AuctionList:RemoveAuction(block)
         if (Hash(item) == blockHash and item.link == block.link) then
             RemoveKnown(item);
 
-            Recycler:Recycle(tremove(self.items, i));
+            if (Utils.IsClassic()) then
+                Recycler:Recycle(tremove(self.items, i));
+            else
+                tremove(self.items, i);
+            end
 
             if (self.selectedEntry == i or item == self.selectedItem) then
                 self.selectedEntry = -1;
@@ -601,7 +620,11 @@ function AuctionList:Click(row, button, down)
                 Query:Blacklist(block);
             end
             
-            Recycler:Recycle(table.remove(self.items, id));
+            if (Utils.IsClassic()) then
+                Recycler:Recycle(table.remove(self.items, id));
+            else
+                table.remove(self.items, id);
+            end
         end
 
         self.selectedEntry = -1;
@@ -612,7 +635,12 @@ function AuctionList:Click(row, button, down)
 
         if (block) then
             Config.Sniper().itemBlacklist[block.tsmId] = block.link;
-            Recycler:Recycle(table.remove(self.items, id));
+            
+            if (Utils.IsClassic()) then
+                Recycler:Recycle(table.remove(self.items, id));
+            else
+                table.remove(self.items, id);
+            end
         end
 
         self.selectedEntry = -1;
@@ -659,9 +687,13 @@ end
 
 function AuctionList:UpdateRow(offset, row)
     if (offset <= #self.items) then
-        if (not self.items[offset]) then
-            row:Hide();
-            return;
+        if (not self.items[offset] 
+            or not self.items[offset].name
+            or not self.items[offset].count
+            or not self.items[offset].id
+            or not self.items[offset].ppu) then
+                row:Hide();
+                return;
         end
 
         row:SetID(offset);

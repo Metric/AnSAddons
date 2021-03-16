@@ -1,3 +1,19 @@
+## AnS Changes 2.2.5
+
+- Fixed an issue in Sniper where results would disappear from the list on retail when it shouldn't or not be added at all on retail. This one was a tricky one to figure out how to fix. It was several problems combined causing this issue. First, known items / groups was being cleared too early. Second, the hashing method was not taking into account the retail itemKey.itemSuffix properly. Thus, things were being overwritten in the known lookup table, because it was only looking at the itemLevel and itemID for the general grouping. Hence, items disappearing from the list for no reason, or not being included at all. It now takes into account the proper itemSuffix for general grouping. 
+
+- Fixed an issue where if Skip Lowest Seen Group was checked for Sniping settings, it would miss groups for items that share a common itemLevel and itemID but differing itemSuffix. It now takes into account the itemSuffix as well. 
+
+- Fixed an issue in retail for Sniper, where scanning for battle pets could cause an nil exception to be thrown.
+
+- Fixed an issue where there was still a memory leak on both classic and retail in Sniper. Should see a pretty big decrease in memory gain rate on both. As well as the memory properly clearing after a bit of closing the AH.
+
+- Fixed the issue where bonus() formula function would not ignore browse query groups on retail. 
+
+- Fixed an issue from last build where bonus(), startswith(), and contains() formula functions would not return true or false if only the first argument was provided.
+
+- Added a new formula variable called: isgroup. isgroup = true if it is a browse group query calling the formula on retail. Otherwise it is false.
+
 ## AnS Changes 2.2.4
 
 -   Updated TOC number for latest Retail patch

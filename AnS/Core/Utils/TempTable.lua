@@ -2,8 +2,18 @@ local Ans = select(2, ...);
 local TempTable = Ans.Object.Register("TempTable");
 local tbls = {};
 
+function TempTable.Reset()
+    wipe(tbls);
+end
+
 function TempTable:Acquire(...)
     local t = nil;
+    
+    -- free up memory
+    if (#tbls > 800) then
+        wipe(tbls);
+    end
+
     if (#tbls == 0) then
         t = TempTable:New({});
     else

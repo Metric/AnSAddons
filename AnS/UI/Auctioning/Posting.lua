@@ -1032,6 +1032,10 @@ end
 function PostingView.OnSearchResult(item)
     if (PostingFSM) then
         PostingFSM:Process('ITEM_RESULT', item);
+        
+        if (Utils.IsClassic()) then
+            Recycler:Recycle(item);
+        end
     end
 end
 

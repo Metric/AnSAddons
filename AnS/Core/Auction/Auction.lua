@@ -27,35 +27,37 @@ function Auction:Acquire(o)
     a.auctionId = nil;
     a.avg = 1;
     a.op = nil;
+    a.suffix = 0;
     return a;
 end
 
 function Auction:Clone()
     return Auction:New({
-        id = self.id;
-        itemKey = self.itemKey;
-        name = self.name;
-        hash = self.hash;
-        texture = self.texture;
-        quality = self.quality;
-        count = self.count;
-        level = self.level;
-        ppu = self.ppu;
-        buyoutPrice = self.buyoutPrice;
-        owner = self.owner;
-        link = self.link;
-        sniped = self.sniped;
-        tsmId = self.tsmId;
-        percent = self.percent;
-        iLevel = self.iLevel;
-        vendorsell = self.vendorsell;
-        isCommodity = self.isCommodity;
-        isPet = self.isPet;
-        auctionId = self.auctionId;
-        itemIndex = self.itemIndex;
-        avg = self.avg;
-        auctions = self.auctions;
-        op = self.op;
-        isEquipment = self.isEquipment;
+        id = self.id,
+        itemKey = self.itemKey,
+        name = self.name,
+        hash = self.hash,
+        texture = self.texture,
+        quality = self.quality,
+        count = self.count,
+        level = self.level,
+        ppu = self.ppu,
+        buyoutPrice = self.buyoutPrice,
+        owner = self.owner,
+        link = self.link,
+        sniped = self.sniped,
+        tsmId = self.tsmId,
+        percent = self.percent,
+        iLevel = self.iLevel,
+        vendorsell = self.vendorsell,
+        isCommodity = self.isCommodity,
+        isPet = self.isPet,
+        auctionId = self.auctionId,
+        itemIndex = self.itemIndex,
+        avg = self.avg,
+        auctions = self.auctions,
+        op = self.op,
+        isEquipment = self.isEquipment,
+        suffix = self.suffix
     });
 end

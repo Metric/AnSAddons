@@ -13,6 +13,10 @@ function Recycler:Recycle(auction)
 end
 
 function Recycler:Get()
+    -- free up a memory at this point
+    if (#self.auctions > 800) then
+        wipe(self.auctions);
+    end
     if (#self.auctions > 0) then
         return Auction:Acquire(tremove(self.auctions, 1));
     end

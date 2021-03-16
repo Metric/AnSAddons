@@ -58,6 +58,7 @@ function OpCodes:Acquire()
     op.maxbuy = 0;
     op.destroy = 0;
     op.numinventory = 0;
+    op.isgroup = false;
     return op;
 end
 
@@ -76,8 +77,16 @@ local TEMPLATE = [[
             abs, ceil, floor, random, log, 
             log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, sources.min, sources.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
+        local isgroup = ops.isgroup;
         local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
         local bonus = function(v1,v2,v3)
+            local noArgs = v2 == nil and v3 == nil;
+            if (isgroup) then
+                if (noArgs) then
+                    return true;
+                end
+                return v2 or 0;
+            end
             return sources.bonus(ops.tsmId, v1, v2, v3);
         end
 
@@ -387,7 +396,7 @@ Sources.ifneq = function(v1, v2, v3, v4)
     return v4 or 0;
 end
 
-Sources.neq = function(v1,v2,v3,v4) 
+Sources.neq = function(v1,v2,v3,v4)
     if (v1 ~= v2) then     
         return v3 or 0;
     end
@@ -404,51 +413,90 @@ Sources.eq = function(v1,v2,v3,v4)
 end
 
 Sources.startswith = function(v1, v2, v3, v4)
+    local noArgs = v3 == nil and v4 == nil;
+
     if (not v1 or type(v1) ~= "string") then
+        if (noArgs) then
+            return false;
+        end
         return v4 or 0;
     end
 
     if (not v2 or type(v2) ~= "string") then
-        return v3 or 0;
+        if (noArgs) then
+            return false;
+        end
+        return v4 or 0;
     end
 
     if (strsub(v1, 1, #v2) == v2) then
+        if (noArgs) then
+            return true;
+        end
         return v3 or 0;
     end
 
+    if (noArgs) then
+        return false;
+    end
     return v4 or 0;
 end
 
 Sources.contains = function(v1, v2, v3, v4)
+    local noArgs = v3 == nil and v4 == nil;
+
     if (not v1 or type(v1) ~= "string") then
+        if (noArgs) then
+            return false;
+        end
         return v4 or 0;
     end
 
     if (not v2 or type(v2) ~= "string") then
+        if (noArgs) then
+            return true;
+        end
         return v3 or 0;
     end
 
     if (strfind(v1, v2)) then
+        if (noArgs) then
+            return true;
+        end
         return v3 or 0;
     end
 
+    if (noArgs) then
+        return false;
+    end
     return v4 or 0;
 end
 
 Sources.bonus = function(v1,v2,v3,v4)
+    local noArgs = v3 == nil and v4 == nil;
+
     if (not v1) then
+        if (noArgs) then
+            return false;
+        end
         return v4 or 0;
     end
-    
+
     local s,e = strfind(v1, ":"..v2..":");
     if (not s) then
         s,e = strfind(v1, ":"..v2.."$");
     end
 
     if (s) then
+        if (noArgs) then
+            return true;
+        end
         return v3 or 0; 
     end
 
+    if (noArgs) then
+        return false;
+    end
     return v4 or 0;
 end
 
@@ -513,6 +561,7 @@ function Sources:QueryID(q, itemId)
     codes.ilevel = 0;
     codes.vendorsell = 0;
     codes.tsmId = Utils.GetID(itemId);
+    codes.isgroup = false;
 
     local idBonusOnly = Utils.BonusID(codes.tsmId);
 
@@ -605,6 +654,7 @@ function Sources:Validate(q)
     codes.tsmId = itemId;
     codes.vendorbuy = 0;
     codes.id = 2589;
+    codes.isgroup = false;
 
     local _, fn, err = false, nil, nil;
     local oq = q;
@@ -653,7 +703,7 @@ function Sources:Validate(q)
     return true;
 end
 
-function Sources:Query(q, item)
+function Sources:Query(q, item, isGroup)
     local itemId = item.link or item.id;
     local buyout = item.buyoutPrice;
     local stackSize = item.count;
@@ -701,6 +751,7 @@ function Sources:Query(q, item)
     codes.tsmId = item.tsmId;
     codes.id = item.id;
     codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
+    codes.isgroup = isGroup;
 
     local _, fn, err = false, nil, nil;
     local oq = q;

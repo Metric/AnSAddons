@@ -234,8 +234,10 @@ local function BuildStateMachine()
 
         ClearItemsFound();
         ClearValidAuctions();
+
         wipe(browseResults);
         wipe(blocks);
+        wipe(currentAuctionIds);
 
         Query.Clear();
 
@@ -267,8 +269,6 @@ local function BuildStateMachine()
         elseif (#browseResults == 0 and not Query.fullBrowseResults) then
             return "BROWSE_MORE";
         end
-
-        ClearItemsFound();
 
         for i,v in ipairs(browseResults) do
             tinsert(itemsFound, v);
@@ -405,7 +405,6 @@ local function BuildStateMachine()
                 -- to ensure proper continuation
                 return "ITEMS";
             else
-                wipe(currentAuctionIds);
                 lastItemId = currentItemScan.id;
                 Logger.Log("SNIPER", "Searching for: "..currentItemScan.id.."."..currentItemScan.iLevel);
                 Query.SearchForItem(currentItemScan:Clone());
@@ -432,11 +431,13 @@ local function BuildStateMachine()
             end
 
             if (not Query:IsFiltered(item)) then
+                Recycler:Recycle(item);
                 return nil;
             end
 
+            local itemCount = item.count;
             if (not blocks[item.hash]) then
-                blocks[item.hash] = item:Clone();
+                blocks[item.hash] = item;
                 blocks[item.hash].count = 0;
                 tinsert(validAuctions, blocks[item.hash]);
             end
@@ -447,8 +448,8 @@ local function BuildStateMachine()
                 block.auctions = {};
             end
         
-            block.count = block.count + item.count;
-            tinsert(block.auctions, item:Clone());
+            block.count = block.count + itemCount;
+            tinsert(block.auctions, item);
         else
             -- we track all current auction ids for the search
             -- so we can remove ones that are no longer there
@@ -967,12 +968,9 @@ function AuctionSnipe.BrowseFilter(item)
 
     local filtered = Query:GetAuctionData(item);
 
-    if (Config.Sniper().skipSeenGroup) then
-        local id = filtered.id;
-        local itemLevel = filtered.iLevel;
-        local battlePetId = item.itemKey.battlePetSpeciesID;
-        local ppu = item.minPrice;
-        local hash = id.."."..itemLevel.."."..battlePetId;
+    if (filtered and Config.Sniper().skipSeenGroup) then
+        local hash = filtered.tsmId.."."..filtered.iLevel.."."..filtered.suffix;
+        local ppu = filtered.ppu;
 
         if (lastSeenGroupLowest[hash]) then
             if (lastSeenGroupLowest[hash] == ppu) then
@@ -1086,6 +1084,9 @@ function AuctionSnipe:OnAuctionHouseClosed()
         
         Sources:Clear();
 
+        -- clear known auction ids
+        wipe(currentAuctionIds);
+
         -- clear this data
         -- as it is no longer
         -- needed once AH is closed
@@ -1124,8 +1125,6 @@ function AuctionSnipe:Close()
     if (Utils.IsClassic()) then
         AuctionList:SetItems({});
     end 
-
-    Recycler:Reset();
 end
 
 --- 
@@ -1228,6 +1227,9 @@ function AuctionSnipe:Start()
 
     ClearItemsFound();
     ClearValidAuctions();
+    
+    wipe(blocks);
+
     Sources:Clear();
 
     DEFAULT_BROWSE_QUERY.searchString = search;
@@ -1261,7 +1263,6 @@ function AuctionSnipe:Stop()
     ClearValidAuctions(); 
     ClearItemsFound();
     
-    wipe(currentAuctionIds);
     wipe(lastSeenGroupLowest);
     wipe(browseResults);
     wipe(blocks);

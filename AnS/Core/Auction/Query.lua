@@ -209,7 +209,7 @@ function Query:IsFiltered(auction)
     end
 
     if (auction.buyoutPrice > 0) then
-        local avg = Sources:Query(Config.Sniper().source, auction);
+        local avg = Sources:Query(Config.Sniper().source, auction, false);
         if (not avg or avg <= 0) then avg = auction.vendorsell or 1; end;
 
         if (avg <= 1) then
@@ -268,6 +268,7 @@ function Query:GetAuctionData(group)
     auction.iLevel = group.itemKey.itemLevel or 0;
     auction.id = group.itemKey.itemID;
     auction.count = group.totalQuantity;
+    auction.suffix = group.itemKey.itemSuffix or 0;
 
     auction.ppu = group.minPrice;
     auction.buyoutPrice = auction.ppu;
@@ -312,6 +313,10 @@ function Query:GetAuctionData(group)
 end
 
 function Query:IsFilteredGroup(auction)
+    if (not auction) then
+        return nil, false;
+    end
+
     local ignoreMaxPercent = Config.Sniper().ignoreGroupMaxPercent;
 
     if (auction.buyoutPrice > 0) then
@@ -334,7 +339,7 @@ function Query:IsFilteredGroup(auction)
         if (#self.ops == 0) then
             local allowed = 0;
             
-            allowed = Sources:Query(Config.Sniper().pricing, auction);
+            allowed = Sources:Query(Config.Sniper().pricing, auction, true);
         
             if (type(allowed) == "boolean" or type(allowed) == "number") then
                 if (type(allowed) == "number") then
@@ -586,7 +591,6 @@ function Query.OnListUpdate()
         local item = Query:Next();
         if (item) then
             EventManager:Emit("QUERY_SEARCH_RESULT", item);
-            Recycler:Recycle(item);
         end
     end
 
