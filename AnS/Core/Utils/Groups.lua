@@ -68,7 +68,6 @@ function Groups.ParseItem(item, result, noBase)
         result[item] = 1;
         return true;
     else
-
         local tn = tonumber(_);
         if (tn) then
             result["i:"..tn] = 1;

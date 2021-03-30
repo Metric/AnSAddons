@@ -60,6 +60,9 @@ function Tasker.Update()
                 local fn = next.fn;
                 next:Release();
                 fn();
+            elseif (next) then
+                next:Release();
+                tremove(v, 1);
             else
                 tremove(v, 1);
             end

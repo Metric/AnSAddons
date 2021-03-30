@@ -1,12 +1,17 @@
+## AnS [Auction Sniper] Changes 2.2.6
+
+-   Fixed an issue in classic, where it became impossible to buy from a group when it was several stacks grouped together.
+-   Fixed an issue in classic, where New Chat Message alert could throw a nil exception.
+
 ## AnS [Auction Sniper] Changes 2.2.5
 
-- Fixed an issue in Sniper where results would disappear from the list on retail when it shouldn't or not be added at all on retail. This one was a tricky one to figure out how to fix. It was several problems combined causing this issue. First, known items / groups was being cleared too early. Second, the hashing method was not taking into account the retail itemKey.itemSuffix properly. Thus, things were being overwritten in the known lookup table, because it was only looking at the itemLevel and itemID for the general grouping. Hence, items disappearing from the list for no reason, or not being included at all. It now takes into account the proper itemSuffix for general grouping. 
+-   Fixed an issue in Sniper where results would disappear from the list on retail when it shouldn't or not be added at all on retail. This one was a tricky one to figure out how to fix. It was several problems combined causing this issue. First, known items / groups was being cleared too early. Second, the hashing method was not taking into account the retail itemKey.itemSuffix properly. Thus, things were being overwritten in the known lookup table, because it was only looking at the itemLevel and itemID for the general grouping. Hence, items disappearing from the list for no reason, or not being included at all. It now takes into account the proper itemSuffix for general grouping.
 
-- Fixed an issue where if Skip Lowest Seen Group was checked for Sniping settings, it would miss groups for items that share a common itemLevel and itemID but differing itemSuffix. It now takes into account the itemSuffix as well. 
+-   Fixed an issue where if Skip Lowest Seen Group was checked for Sniping settings, it would miss groups for items that share a common itemLevel and itemID but differing itemSuffix. It now takes into account the itemSuffix as well.
 
-- Fixed an issue in retail for Sniper, where scanning for battle pets could cause an nil exception to be thrown.
+-   Fixed an issue in retail for Sniper, where scanning for battle pets could cause an nil exception to be thrown.
 
-- Fixed an issue where there was still a memory leak on both classic and retail in Sniper. Should see a pretty big decrease in memory gain rate on both. As well as the memory properly clearing after a bit of closing the AH.
+-   Fixed an issue where there was still a memory leak on both classic and retail in Sniper. Should see a pretty big decrease in memory gain rate on both. As well as the memory properly clearing after a bit of closing the AH.
 
 ## AnS [Auction Sniper] Changes 2.2.4
 

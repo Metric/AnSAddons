@@ -8,6 +8,7 @@ local Groups = Utils.Groups;
 local Exporter = Ans.Exporter;
 local TempTable = Ans.TempTable;
 local BagScanner = Ans.BagScanner;
+local Logger = Ans.Logger;
 local Auctioning = Ans.Object.Register("Auctioning", Ans.Operations);
 
 local DEFAULT_MIN_PRICE_ANS = "max(25% avg(ansmarket, ansrecent, ans3day, ansregiomarket), 150% vendorsell)";
@@ -23,6 +24,7 @@ ACTIONS.MIN_PRICE = 1;
 ACTIONS.MAX_PRICE = 2;
 ACTIONS.NORMAL_PRICE = 3;
 ACTIONS.NONE = 4;
+ACTIONS.MATCH = 5;
 
 local ITEM_REF_ILEVEL = 1;
 local ITEM_REF_ILEVELMODS = 2;
@@ -134,8 +136,32 @@ function Auctioning.From(config)
 
     a.totalListed = 0;
     a.config = config;
-    a.idCount = Groups.ParseGroups(a.groups, a.ids);
+    a.idCount = Groups.ParseGroups(a.groups, a.ids, true);
+
+    -- must parse out the proper id format
+    -- from group provided ids
+    -- so that the incoming auction reference ids
+    -- will match for canceling, posting, and max to post on retail
+    -- and also pick up the correct inventory items for posting
+
+    local ids = a.ids;
+    local realIds = {};
+
+    for k,v in pairs(ids) do
+        realIds[a:GetReferenceIDFromID(k)] = v;
+    end
+
+    a.ids = realIds;
+
     return a;
+end
+
+function Auctioning:GetReferenceIDFromID(id)
+    if (self.itemReference == ITEM_REF_ILEVEL) then
+        return Utils.BonusID(id, false);
+    end
+
+    return id;
 end
 
 function Auctioning:GetReferenceID(item)
@@ -147,13 +173,14 @@ function Auctioning:GetReferenceID(item)
 end
 
 function Auctioning:Track(item)
-    if (item.isOwnerItem or item.owner == UnitName("player")) then
-        self.totalListed = self.totalListed + item.count;
+    if (self:ContainsItem(item) 
+        and (item.isOwnerItem or item.owner == UnitName("player"))) then
+            self.totalListed = self.totalListed + item.count;
     end
 end
 
 function Auctioning:MaxPosted()
-    return self.totalListed >= self.maxToPost and self.maxToPost > 0;
+    return self.totalListed > self.maxToPost and self.maxToPost > 0;
 end
 
 function Auctioning:IsValid(ppu, id, ignore, defaultValue)
@@ -166,7 +193,9 @@ function Auctioning:IsValid(ppu, id, ignore, defaultValue)
     end
 
     if (ppu < minValue and ppu > 0) then
-        if (self.minPriceAction == ACTIONS.MIN_PRICE) then
+        if (self.minPriceAction == ACTIONS.MATCH) then
+            return ppu;
+        elseif (self.minPriceAction == ACTIONS.MIN_PRICE) then
             return minValue;
         elseif (self.minPriceAction == ACTIONS.MAX_PRICE) then
             return maxValue;
@@ -176,7 +205,9 @@ function Auctioning:IsValid(ppu, id, ignore, defaultValue)
             return 0;
         end
     elseif (ppu > maxValue) then
-        if (self.maxPriceAction == ACTIONS.MIN_PRICE) then
+        if (self.maxPriceAction == ACTIONS.MATCH) then
+            return ppu;
+        elseif (self.maxPriceAction == ACTIONS.MIN_PRICE) then
             return minValue;
         elseif (self.maxPriceAction == ACTIONS.MAX_PRICE) then
             return maxValue;
@@ -197,9 +228,9 @@ function Auctioning:IsValid(ppu, id, ignore, defaultValue)
 end
 
 function Auctioning:ContainsItem(v)
-    -- the item should already be assigned a tsmId here
-    local _, id = strsplit(":", v.tsmId);
-    if (self.ids[v.tsmId] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
+    local vid = self:GetReferenceID(v);
+
+    if (self.ids[vid] or (self.applyAll and v.quality > 0)) then
         return true;
     end
 
@@ -218,9 +249,7 @@ function Auctioning:GetAvailableItems()
     local auctionable = BagScanner.GetAuctionable();
 
     for i,v in ipairs(auctionable) do
-        local vid = self:GetReferenceID(v);
-        local _, id = strsplit(":", vid);
-        if (self.ids[vid] or self.ids[_..":"..id] or (self.applyAll and v.quality > 0)) then
+        if (self:ContainsItem(v)) then
             -- assign op to the items
             v.op = self;
             for k,o in ipairs(v.stacks) do
@@ -237,6 +266,7 @@ end
 -- items should have had a .ppu assigned to them at this point
 function Auctioning:ApplyPost(item, queue)
     if (self:MaxPosted()) then
+        Logger.Log("AUCTION OP", "Max posted reached for this item: "..self:GetReferenceID(item));
         return;
     end
 
@@ -247,8 +277,8 @@ function Auctioning:ApplyPost(item, queue)
     end
 end
 
-function Auctioning:ApplyCancel(v, queue)
-    if (v.ppu < v.ownedPPU) then
+function Auctioning:ApplyCancel(v, queue, cancelByTime)
+    if (v.ppu < v.ownedPPU or cancelByTime) then
         tinsert(queue, v);
     end
 end
@@ -263,6 +293,7 @@ function Auctioning:ApplyPostRetail(v, queue)
     end
 
     if (total > 0) then
+        self.totalListed = self.totalListed + total;
         v.toSell = total;
         tinsert(queue, v);
     end
@@ -278,6 +309,7 @@ function Auctioning:ApplyPostClassic(v, queue)
     end
 
     if (total > 0) then
+        self.totalListed = self.totalListed + total;
         local prevTotal = total;
         
         for i,o in ipairs(v.stacks) do

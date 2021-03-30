@@ -53,6 +53,7 @@ local LINK_CACHE = TempTable:Acquire();
 local PET_CACHE = TempTable:Acquire();
 local ID_CACHE = TempTable:Acquire();
 local BONUS_ID_CACHE = TempTable:Acquire();
+local BONUS_ID_NUMS_CACHE = {};
 
 --- Standard Utils ---
 
@@ -66,7 +67,12 @@ function Utils.IsClassic()
         or (f == "8" and m and m == "0");
 end
 
-function Utils.GSC(val) 
+function Utils.GSC(val)
+    -- prevent nil exception 
+    if (not val) then
+        val = 0;
+    end
+
     local g = val / (COPPER_PER_SILVER * SILVER_PER_GOLD);
 
      -- mathmatically speakign this is equal to floor((val - (g * COPPER_PER_SILVER * SILVER_PER_GOLD)) / COPPER_PER_SILVER)
@@ -141,6 +147,11 @@ function Utils.PriceToFormatted(prefix, val, negative)
 end
 
 function Utils.PriceToString(val, override, noFormatting)
+    -- prevent nil exception from happening
+    if (not val) then
+        val = 0;
+    end
+
     if (Config.General().useCoinIcons and not override) then
         return GetMoneyString(val, true);
     end
@@ -259,8 +270,13 @@ function Utils.IsAddonEnabled(name)
 end
 
 function Utils.ClearCache()
+    LINK_CACHE:Release();
+    LINK_CACHE = TempTable:Acquire();
     ID_CACHE:Release();
     ID_CACHE = TempTable:Acquire();
+    BONUS_ID_CACHE:Release();
+    BONUS_ID_CACHE = TempTable:Acquire();
+    wipe(BONUS_ID_NUMS_CACHE);
 end
 
 function Utils.SortLowToHigh(x,y) 
@@ -322,12 +338,21 @@ function Utils.GetLink(itemString,ignoreDetails)
 	return link
 end
 
-function Utils.BonusID(id,mods)
+function Utils.BonusID(id,mods,tbl)
+    if (tbl) then
+        wipe(tbl);
+    end
+
     if (not id or type(id) == "number") then
         return id;
     end
-
     if (BONUS_ID_CACHE[id] and not mods) then
+        local nums = BONUS_ID_NUMS_CACHE[id];
+        if (tbl and nums) then
+            for i,v in ipairs(nums) do
+                tbl[v] = 1;
+            end
+        end
         return BONUS_ID_CACHE[id];
     end
 
@@ -339,35 +364,49 @@ function Utils.BonusID(id,mods)
     end
 
     local bonusCount = tmp[4];
-    if (not bonusCount) then
-        BONUS_ID_CACHE[id] = id;
+    if (not bonusCount and not mods) then
+        BONUS_ID_CACHE[id] = tmp[1]..":"..tmp[2];
         tmp:Release();
-        return id;
+        return BONUS_ID_CACHE[id];
     end
 
-    bonusCount = tonumber(bonusCount) or 0;
-    if (not bonusCount or bonusCount == 0) then
-        BONUS_ID_CACHE[id] = id;
+    bonusCount = bonusCount and tonumber(bonusCount) or 0;
+    if ((not bonusCount or bonusCount == 0) and not mods) then
+        BONUS_ID_CACHE[id] = tmp[1]..":"..tmp[2];
         tmp:Release();
-        return id;
+        return BONUS_ID_CACHE[id];
     end
 
-    local btemp = TempTable:Acquire();
-    for i = 1, bonusCount do
-        local num = tmp[4+i];
-        if (num) then
-            tinsert(btemp, tonumber(num) or 0);
+    local extra = "";
+    if (bonusCount and bonusCount > 0) then
+        local btemp = BONUS_ID_NUMS_CACHE[id] or {};
+        wipe(btemp);
+
+        for i = 1, bonusCount do
+            local num = tmp[4+i];
+            if (num) then
+                num = tonumber(num) or 0;
+                
+                if (tbl) then
+                    tbl[num] = 1;
+                end
+
+                tinsert(btemp, num);
+            end
         end
+
+        table.sort(btemp, Utils.SortLowToHigh);
+
+        extra = "::"..bonusCount..":"..strjoin(":", unpack(btemp));
+        BONUS_ID_CACHE[id] = tmp[1]..":"..tmp[2]..extra;
+        BONUS_ID_NUMS_CACHE[id] = btemp; 
     end
 
-    table.sort(btemp, Utils.SortLowToHigh);
-
-    local extra = "::"..bonusCount..":"..strjoin(":", unpack(btemp));
-    btemp:Release();
+    if (not bonusCount) then
+        bonusCount = 0;
+    end
 
     local modifiers = "";
-
-    BONUS_ID_CACHE[id] = "i:"..tmp[2]..extra;
 
     if (mods) then
         local sep = ":";
@@ -377,7 +416,9 @@ function Utils.BonusID(id,mods)
         end
     end
 
-    local fresult = "i:"..tmp[2]..extra..modifiers; 
+    extra = (modifiers ~= "" and extra == "") and "::" or extra;
+
+    local fresult = tmp[1]..":"..tmp[2]..extra..modifiers; 
     tmp:Release();
     return fresult;
 end

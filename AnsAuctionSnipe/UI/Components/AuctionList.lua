@@ -154,7 +154,7 @@ function AuctionList:ClassicPurchase(block)
         return false;
     end
 
-    if (block.count <= 0) then
+    if (block.total and block.total <= 0) then
         return false;
     end
 
@@ -169,8 +169,10 @@ function AuctionList:ClassicPurchase(block)
 
     if (self:CheckAndPurchase(auction)) then
         tremove(block.auctions, 1);
+        
         self:RemoveAuctionAmount(block, auction.count);
-        if (Utils.IsClassic()) then
+
+        if (auction ~= block) then
             Recycler:Recycle(auction);
         end
         return true;
@@ -508,29 +510,40 @@ end
 
 function AuctionList:RemoveAuctionAmount(block, count)
     local blockHash = Hash(block);
+
+    -- finding block
     for i = 1, #self.items do
         local item = self.items[i];
 
         if (Hash(item) == blockHash and item.link == block.link) then
             if (not Utils.IsClassic()) then
                 RemoveKnown(item);
-                block.count = block.count - count;
             end
         
-            item.count = item.count - count;
+            if (Utils.IsClassic()) then
+                item.total = item.total - count;
+            else
+                item.count = item.count - count;
+
+                -- ensure block counts match on retail
+                block.count = item.count;
+            end
 
             -- for commodities
             if (not Utils.IsClassic() and item.count > 0) then
                 AddKnown(item);
             end
 
-            if (item.count <= 0) then
-                if (Utils.IsClassic()) then
-                    Recycler:Recycle(tremove(self.items, i));
-                else
-                    tremove(self.items, i);
-                end
+            local isRecycled = false;
+            if (Utils.IsClassic() and item.total <= 0) then
+                isRecycled = true;
+                Recycler:Recycle(tremove(self.items, i));
+            elseif (not Utils.IsClassic() and item.count <= 0) then
+                isRecycled = true;
+                tremove(self.items, i);
+            end
 
+            if (isRecycled) then
                 if (self.selectedEntry == i or item == self.selectedItem) then
                     self.selectedEntry = -1;
                     self.selectedItem = nil;
@@ -546,6 +559,8 @@ end
 
 function AuctionList:RemoveAuction(block) 
     local blockHash = Hash(block);
+
+    -- finding block
     for i = 1, #self.items do
         local item = self.items[i];
         if (Hash(item) == blockHash and item.link == block.link) then
@@ -707,7 +722,7 @@ function AuctionList:UpdateRow(offset, row)
         local itemID = auction.id;
         local ilevel = auction.iLevel;
         local percent = auction.percent;
-        local count = auction.count;
+        local count = auction.total or auction.count;
 
         local texture = auction.texture;
         local quality = auction.quality;

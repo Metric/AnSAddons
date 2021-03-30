@@ -43,6 +43,7 @@ local ops = {};
 local treeViewItems = {};
 local inventory = {};
 local bestPrices = {};
+local firstAuctionMatch = nil;
 local postQueue = {};
 local cancelQueue = {};
 local searchesComplete = 0;
@@ -77,6 +78,8 @@ local function BuildStateMachine()
         wipe(inventory);
         wipe(cancelQueue);
         wipe(postQueue);
+
+        firstAuctionMatch = nil;
 
         Query.Clear();
 
@@ -337,6 +340,8 @@ local function BuildStateMachine()
         wipe(bestPrices);
         wipe(inventory);
 
+        firstAuctionMatch = nil;
+
         Query.Clear();
 
         searchesComplete = 0;
@@ -439,7 +444,7 @@ local function BuildStateMachine()
         PostingView.post:Disable();
         PostingView.cancel:Disable();
         PostingView.cancel:SetText("Scanning 1 of "..#inventory);
-        Query.SearchForItem(next:Clone(), next.isEquipment, true);
+        Query.SearchForItem(next:Clone(), next.isEquipment);
 
         return "CANCEL_ITEM_RESULTS", next;
     end);
@@ -457,6 +462,11 @@ local function BuildStateMachine()
     end);
     cancelItemResults:AddEvent("ITEM_RESULT", function(self, event, item)
         if (item) then
+            if (not Utils.IsClassic() and firstAuctionMatch == nil) then
+                if (self.item.op:ContainsItem(item)) then
+                    firstAuctionMatch = item:Clone();
+                end
+            end
             PostingView.CalcLowest(item, self.item.op:GetReferenceID(item));
         end
     end);
@@ -475,8 +485,12 @@ local function BuildStateMachine()
 
         v.ppu = ppu;
 
-        if (v.ppu > 0) then
-            v.op:ApplyCancel(v, cancelQueue);
+        local cancelByTime = not Utils.IsClassic() 
+                                and firstAuctionMatch 
+                                and not firstAuctionMatch.isOwnerItem; 
+
+        if (v.ppu > 0 or cancelByTime) then
+            v.op:ApplyCancel(v, cancelQueue, cancelByTime);
         end
 
         if (searchesComplete >= #inventory) then
@@ -487,6 +501,7 @@ local function BuildStateMachine()
                 return "IDLE";
             end
         else
+            firstAuctionMatch = nil;
             local nextItem = inventory[searchesComplete + 1];
             self.item = nextItem;
             if (Utils.IsClassic()) then
@@ -494,7 +509,7 @@ local function BuildStateMachine()
                 Query.page = 0;
                 Query:Search(DEFAULT_BROWSE_QUERY, true);
             else
-                Query.SearchForItem(nextItem:Clone(), nextItem.isEquipment, true);
+                Query.SearchForItem(nextItem:Clone(), nextItem.isEquipment);
             end
             PostingView.cancel:SetText("Scanning "..(searchesComplete + 1).." of "..#inventory);
         end

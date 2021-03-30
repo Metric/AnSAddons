@@ -21,7 +21,10 @@ local throttleTime = GetTime();
 
 local EVENTS_TO_REGISTER = {};
 
-local DEFAULT_ITEM_SORT = { sortOrder = 0, reverseSort = false };
+local DEFAULT_ITEM_SORT = {
+    { sortOrder = 0, reverseSort = false },
+    { sortOrder = 4, reverseSort = false },
+};
 
 local ownedAuctions = {};
 
@@ -253,6 +256,14 @@ function Query:IsFiltered(auction)
     end
 
     return false;
+end
+
+function Query:GetGroupHash(group)
+    if (not group) then
+        return nil;
+    end
+
+    return group.itemKey.itemID.."."..group.itemKey.itemLevel.."."..group.itemKey.itemSuffix.."."..group.itemKey.battlePetSpeciesID;
 end
 
 -- used for retail auction group data
@@ -671,6 +682,7 @@ function Query:GetOwnedAuctionRetail(index)
     auction.ppu = info.buyoutAmount;
     auction.bidder = info.bidder;
     auction.iLevel = info.itemKey.itemLevel;
+    auction.suffix = info.itemKey.itemSuffix;
 
     if (info.itemKey.battlePetSpeciesID > 0 
         and keyInfo.battlePetLink 
@@ -993,6 +1005,9 @@ local function BuildStateMachine()
 
     fsm:Add(idle);
 
+    local tryBrowseFunc = function()
+        QueryFSM:Process("TRY_BROWSE");
+    end
     local browse = FSMState:Acquire("BROWSE");
     browse:SetOnEnter(function(self, filter)
         Query.filter = filter;
@@ -1002,9 +1017,7 @@ local function BuildStateMachine()
 
         Logger.Log("QUERY", "browse on enter");
 
-        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            QueryFSM:Process("TRY_BROWSE");
-        end, TASKER_TAG);
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, tryBrowseFunc, TASKER_TAG);
         return nil;
     end);
     browse:AddEvent("TRY_BROWSE");
@@ -1024,11 +1037,12 @@ local function BuildStateMachine()
         C_AuctionHouse.SendBrowseQuery(filter);
         return nil;
     end);
+    local browseResultsFunc = function()
+        EventManager:Emit("QUERY_BROWSE_RESULTS");
+    end
     tryBrowse:SetOnExit(function(self, next) 
         if (next == "IDLE") then
-            Tasker.Schedule(function()
-                EventManager:Emit("QUERY_BROWSE_RESULTS");
-            end, TASKER_TAG);
+            Tasker.Schedule(browseResultsFunc, TASKER_TAG);
         end
     end);
     tryBrowse:AddEvent("IDLE");
@@ -1081,9 +1095,7 @@ local function BuildStateMachine()
     fsmbrowseResults:SetOnExit(function(self, next)
         Logger.Log("QUERY", "browse result complete");
         if (next == "IDLE") then
-            Tasker.Schedule(function()
-                EventManager:Emit("QUERY_BROWSE_RESULTS");
-            end, TASKER_TAG);
+            Tasker.Schedule(browseResultsFunc, TASKER_TAG);
         end
     end);
     fsmbrowseResults:AddEvent("IDLE");
@@ -1091,12 +1103,13 @@ local function BuildStateMachine()
 
     fsm:Add(fsmbrowseResults);
 
+    local tryBrowseMoreFunc = function()
+        QueryFSM:Process("TRY_BROWSE_MORE");
+    end
     local browseMore = FSMState:Acquire("BROWSE_MORE");
     browseMore:SetOnEnter(function(self)
         Query.lastQueryType = "BROWSE";
-        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            QueryFSM:Process("TRY_BROWSE_MORE");
-        end, TASKER_TAG);
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, tryBrowseMoreFunc, TASKER_TAG);
         return nil;
     end);
     browseMore:AddEvent("TRY_BROWSE_MORE");
@@ -1121,6 +1134,9 @@ local function BuildStateMachine()
 
     fsm:Add(tryBrowseMore);
 
+    local trySearchFunc = function()
+        QueryFSM:Process("TRY_SEARCH");
+    end
     local search = FSMState:Acquire("SEARCH");
     search:SetOnEnter(function(self, item, sell, first)
         if (Query.filter) then
@@ -1135,9 +1151,7 @@ local function BuildStateMachine()
             };
         end
 
-        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            QueryFSM:Process("TRY_SEARCH");
-        end, TASKER_TAG);    
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, trySearchFunc, TASKER_TAG);    
     end);
     search:AddEvent("TRY_SEARCH");
     search:AddEvent("IDLE");
@@ -1181,11 +1195,12 @@ local function BuildStateMachine()
 
         return "SEARCH", Query.filter.item, Query.filter.sell, Query.filter.first;
     end);
+    local searchCompleteFunc = function()
+        EventManager:Emit("QUERY_SEARCH_COMPLETE");
+    end
     trySearch:SetOnExit(function(self, next)
         if (next == "IDLE") then
-            Tasker.Schedule(function()
-                EventManager:Emit("QUERY_SEARCH_COMPLETE");
-            end, TASKER_TAG);
+            Tasker.Schedule(searchCompleteFunc, TASKER_TAG);
         end
     end);
     trySearch:AddEvent("IDLE");
@@ -1206,9 +1221,7 @@ local function BuildStateMachine()
     itemResults:SetOnExit(function(self, next)
         self.item = nil;
         Logger.Log("QUERY", "item results complete");
-        Tasker.Schedule(function()
-            EventManager:Emit("QUERY_SEARCH_COMPLETE");
-        end, TASKER_TAG);
+        Tasker.Schedule(searchCompleteFunc, TASKER_TAG);
     end);
     itemResults:AddEvent("IDLE");
     itemResults:AddEvent("MORE_ITEMS", function(self)
@@ -1242,6 +1255,9 @@ local function BuildStateMachine()
             end
         end, TASKER_TAG);
     end);
+    local moreItemsFunc = function()
+        QueryFSM:Process("MORE_ITEMS");
+    end
     itemResults:AddEvent("ITEM_RESULT", function(self, event, itemKey)
         if (not self.item) then
             return nil;
@@ -1263,9 +1279,7 @@ local function BuildStateMachine()
             and Query.filter 
             and not Query.filter.first) then
                 Logger.Log("QUERY", "Querying more items");
-                Tasker.Schedule(function()
-                    QueryFSM:Process("MORE_ITEMS");
-                end, TASKER_TAG);
+                Tasker.Schedule(moreItemsFunc, TASKER_TAG);
                 return nil;
         end
 
@@ -1298,6 +1312,9 @@ local function BuildStateMachine()
 
         return nil;
     end);
+    local moreCommoditiesFunc = function()
+        QueryFSM:Process("MORE_COMMODITIES");
+    end
     itemResults:AddEvent("COMMODITY_RESULT", function(self, event, itemID)
         if (not self.item) then
             return nil;
@@ -1305,9 +1322,7 @@ local function BuildStateMachine()
 
         if (itemID == self.item.id and not C_AuctionHouse.HasFullCommoditySearchResults(itemID) and Query.filter and not Query.filter.first) then
             Logger.Log("QUERY", "Querying more commodities");
-            Tasker.Schedule(function()
-                QueryFSM:Process("MORE_COMMODITIES");
-            end, TASKER_TAG);
+            Tasker.Schedule(moreCommoditiesFunc, TASKER_TAG);
             return nil;
         end
 
@@ -1334,11 +1349,12 @@ local function BuildStateMachine()
     fsm:Add(FSMState:Acquire("MORE_COMMODITIES"));
     fsm:Add(FSMState:Acquire("COMMODITY_RESULT"));
 
+    local tryOwnedFunc = function()
+        QueryFSM:Process("TRY_OWNED");
+    end
     local owned = FSMState:Acquire("OWNED");
     owned:SetOnEnter(function(self)
-        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-           QueryFSM:Process("TRY_OWNED");
-        end, TASKER_TAG);
+        Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, tryOwnedFunc, TASKER_TAG);
         return nil;
     end);
     owned:AddEvent("TRY_OWNED");

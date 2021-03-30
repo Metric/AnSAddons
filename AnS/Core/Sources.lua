@@ -11,6 +11,7 @@ local PriceSource = Ans.PriceSource;
 local NAME_CACHE = "";
 local SOURCE_CACHE = "";
 local CVAR_CACHE = "";
+local BONUS_CACHE = {};
 
 local OpCodes = Ans.Object.Register("OpCodes", Sources);
 
@@ -59,6 +60,7 @@ function OpCodes:Acquire()
     op.destroy = 0;
     op.numinventory = 0;
     op.isgroup = false;
+    op.bonuses = BONUS_CACHE;
     return op;
 end
 
@@ -79,6 +81,7 @@ local TEMPLATE = [[
 
         local isgroup = ops.isgroup;
         local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
+        local bonuses = ops.bonuses;
         local bonus = function(v1,v2,v3)
             local noArgs = v2 == nil and v3 == nil;
             if (isgroup) then
@@ -87,7 +90,7 @@ local TEMPLATE = [[
                 end
                 return v2 or 0;
             end
-            return sources.bonus(ops.tsmId, v1, v2, v3);
+            return sources.bonus(bonuses, v1, v2, v3);
         end
 
         local percent = ops.percent;
@@ -126,11 +129,15 @@ local TEMPLATE = [[
 
 
 function Sources:Clear()
+    Utils.ClearCache();
+
     NAME_CACHE = "";
     SOURCE_CACHE = "";
     CVAR_CACHE = "";
+    
     wipe(VALUE_CACHE);
     wipe(OP_CACHE);
+    wipe(BONUS_CACHE);
 end
 
 function Sources:ClearValues()
@@ -475,19 +482,16 @@ end
 Sources.bonus = function(v1,v2,v3,v4)
     local noArgs = v3 == nil and v4 == nil;
 
-    if (not v1) then
+    if (not v1 or not v2) then
         if (noArgs) then
             return false;
         end
         return v4 or 0;
     end
 
-    local s,e = strfind(v1, ":"..v2..":");
-    if (not s) then
-        s,e = strfind(v1, ":"..v2.."$");
-    end
+    local b = v1[v2];
 
-    if (s) then
+    if (b) then
         if (noArgs) then
             return true;
         end
@@ -563,7 +567,7 @@ function Sources:QueryID(q, itemId)
     codes.tsmId = Utils.GetID(itemId);
     codes.isgroup = false;
 
-    local idBonusOnly = Utils.BonusID(codes.tsmId);
+    local idBonusOnly = Utils.BonusID(codes.tsmId, false, codes.bonuses);
 
     codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
 
@@ -739,7 +743,7 @@ function Sources:Query(q, item, isGroup)
         item.tsmId = Utils.GetID(item.link);
     end
 
-    local idBonusOnly = Utils.BonusID(item.tsmId or item.link or item.id);
+    local idBonusOnly = Utils.BonusID(item.tsmId or item.link or item.id, false, codes.bonuses);
 
     codes.buyout = buyout;
     codes.stacksize = stackSize;

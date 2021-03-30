@@ -438,7 +438,7 @@ local function BuildStateMachine()
             local itemCount = item.count;
             if (not blocks[item.hash]) then
                 blocks[item.hash] = item;
-                blocks[item.hash].count = 0;
+                blocks[item.hash].total = 0;
                 tinsert(validAuctions, blocks[item.hash]);
             end
         
@@ -448,7 +448,7 @@ local function BuildStateMachine()
                 block.auctions = {};
             end
         
-            block.count = block.count + itemCount;
+            block.total = block.total + itemCount;
             tinsert(block.auctions, item);
         else
             -- we track all current auction ids for the search
@@ -500,7 +500,9 @@ local function BuildStateMachine()
                 AuctionList:SetItems(validAuctions);
                 if (Config.Sniper().chatMessageNew) then
                     for i,v in ipairs(validAuctions) do
-                        print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF ppu from "..(v.owner or "?"));
+                        if (v.link and v.count and v.ppu and v.count > 0) then
+                            print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF ppu from "..(v.owner or "?")); 
+                        end
                     end
                 end
                 ClearValidAuctions(); 
@@ -966,15 +968,12 @@ function AuctionSnipe.BrowseFilter(item)
         self.snipeStatusText:SetText("Filtering Group "..browseItem);
     end
 
-    local filtered = Query:GetAuctionData(item);
+    local hash = Query:GetGroupHash(item);
+    local ppu = item.minPrice;
 
-    if (filtered and Config.Sniper().skipSeenGroup) then
-        local hash = filtered.tsmId.."."..filtered.iLevel.."."..filtered.suffix;
-        local ppu = filtered.ppu;
-
+    if (hash and ppu and Config.Sniper().skipSeenGroup) then
         if (lastSeenGroupLowest[hash]) then
             if (lastSeenGroupLowest[hash] == ppu) then
-                Recycler:Recycle(filtered);
                 return nil;
             end
 
@@ -984,6 +983,7 @@ function AuctionSnipe.BrowseFilter(item)
         end
     end
 
+    local filtered = Query:GetAuctionData(item);
     return Query:IsFilteredGroup(filtered);
 end
 
@@ -1081,8 +1081,6 @@ function AuctionSnipe:OnAuctionHouseClosed()
         
         self.baseTreeView:ReleaseView();
         self.filterTreeView:ReleaseView();
-        
-        Sources:Clear();
 
         -- clear known auction ids
         wipe(currentAuctionIds);

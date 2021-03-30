@@ -23,6 +23,8 @@ function Auction:Acquire(o)
     a.vendorsell = 0;
     a.isCommodity = false;
     a.isEquipment = false;
+    a.isOwnerItem = false;
+
     a.isPet = false;
     a.auctionId = nil;
     a.avg = 1;
@@ -51,6 +53,7 @@ function Auction:Clone()
         iLevel = self.iLevel,
         vendorsell = self.vendorsell,
         isCommodity = self.isCommodity,
+        isOwnerItem = self.isOwnerItem,
         isPet = self.isPet,
         auctionId = self.auctionId,
         itemIndex = self.itemIndex,

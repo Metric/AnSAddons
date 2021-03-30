@@ -21,7 +21,8 @@ local Actions = {
     "Use Min Price",
     "Use Max Price",
     "Use Normal Price",
-    "Do Nothing"
+    "Do Nothing",
+    "Match Price",
 };
 
 local References = {
