@@ -28,6 +28,7 @@ local Actions = {
 local References = {
     "iLevel",
     "iLevel+Mods",
+    "Base Only",
 };
 
 AnsAuctionOperationFrameMixin = {};

@@ -426,7 +426,7 @@ function AnsAuctionData.GetRegionValue(link, key)
             local data = r[cid];
             data = data and data[kindex] or nil;
             return data or 0;
-        else
+        elseif (not Utils.IsClassic()) then
             local _,base = strsplit(":", vid);
             local bid = _..":"..base;
             if (r and r[bid]) then
@@ -489,7 +489,7 @@ function AnsAuctionData.GetRealmValue(link, key)
             local data = r[cid];
             data = data and data[kindex] or nil;
             return data or 0;
-        else
+        elseif (not Utils.IsClassic()) then
             local _,base = strsplit(":", vid);
             local bid = _..":"..base;
             if (r and r[bid]) then

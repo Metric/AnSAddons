@@ -26,6 +26,7 @@ ACTIONS.NORMAL_PRICE = 3;
 ACTIONS.NONE = 4;
 ACTIONS.MATCH = 5;
 
+local ITEM_REF_BASE = 3;
 local ITEM_REF_ILEVEL = 1;
 local ITEM_REF_ILEVELMODS = 2;
 
@@ -33,6 +34,7 @@ Auctioning.ACTIONS = ACTIONS;
 Auctioning.REFERENCES = {
     ILevel = ITEM_REF_ILEVEL,
     ILevelMods = ITEM_REF_ILEVELMODS,
+    BaseOnly = ITEM_REF_BASE,
 };
 
 local tempTbl = {};
@@ -159,6 +161,9 @@ end
 function Auctioning:GetReferenceIDFromID(id)
     if (self.itemReference == ITEM_REF_ILEVEL) then
         return Utils.BonusID(id, false);
+    elseif (self.itemReference == ITEM_REF_BASE) then
+        local _,i = strsplit(":", id);
+        return _..":"..i;
     end
 
     return id;
@@ -167,6 +172,10 @@ end
 function Auctioning:GetReferenceID(item)
     if (self.itemReference == ITEM_REF_ILEVEL) then
         return Utils.BonusID(item.tsmId or Utils.GetID(item), false);
+    elseif (self.itemReference == ITEM_REF_BASE) then
+        local id = item.tsmId or Utils.GetID(item);
+        local _,i = strsplit(":", id);
+        return _..":"..i;
     else
         return item.tsmId or item;
     end

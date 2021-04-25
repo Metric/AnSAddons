@@ -1,3 +1,9 @@
+## AnS Changes 2.2.6.1
+
+-   Fixed an issue where AnsAuctionData would throw an exception on WoW Classic in some cases.
+-   Fixed an issue where retail AH Search Query would skip items when messages were throttled.
+    -   This also fixed the issue where items would not cancel properly in some cases
+
 ## AnS Changes 2.2.6
 
 -   Added a new option for Auctioning operation for matching the lowest price for Max Value and Min Value

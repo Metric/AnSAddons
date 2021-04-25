@@ -968,10 +968,15 @@ function AuctionSnipe.BrowseFilter(item)
         self.snipeStatusText:SetText("Filtering Group "..browseItem);
     end
 
+    local info = Query:GetGroupInfo(item);
     local hash = Query:GetGroupHash(item);
     local ppu = item.minPrice;
 
-    if (hash and ppu and Config.Sniper().skipSeenGroup) then
+    if (not info or not hash or not ppu) then
+        return nil;
+    end
+
+    if (info and hash and ppu and Config.Sniper().skipSeenGroup) then
         if (lastSeenGroupLowest[hash]) then
             if (lastSeenGroupLowest[hash] == ppu) then
                 return nil;
@@ -983,7 +988,7 @@ function AuctionSnipe.BrowseFilter(item)
         end
     end
 
-    local filtered = Query:GetAuctionData(item);
+    local filtered = Query:GetAuctionData(item, info);
     return Query:IsFilteredGroup(filtered);
 end
 

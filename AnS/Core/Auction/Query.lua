@@ -266,8 +266,12 @@ function Query:GetGroupHash(group)
     return group.itemKey.itemID.."."..group.itemKey.itemLevel.."."..group.itemKey.itemSuffix.."."..group.itemKey.battlePetSpeciesID;
 end
 
+function Query:GetGroupInfo(group)
+    return C_AuctionHouse.GetItemKeyInfo(group.itemKey);
+end
+
 -- used for retail auction group data
-function Query:GetAuctionData(group)
+function Query:GetAuctionData(group, info)
     local auction = Recycler:Get();
 
     auction.name = nil;
@@ -286,24 +290,22 @@ function Query:GetAuctionData(group)
 
     auction.link = nil;
 
-    local groupInfo = C_AuctionHouse.GetItemKeyInfo(group.itemKey);
+    local groupInfo = info or C_AuctionHouse.GetItemKeyInfo(group.itemKey);
+
+    if (not groupInfo) then
+        Recycler:Recycle(auction);
+        return nil, false;
+    end
 
     if (group.itemKey.battlePetSpeciesID > 0) then
-        if (not groupInfo) then
-            Recycler:Recycle(auction);
-            return nil, false;
-        end
-
         auction.link = groupInfo.battlePetLink;
         auction.isPet = true;
     end
     
-    if (groupInfo) then
-        auction.quality = groupInfo.quality;
-        auction.texture = groupInfo.iconFileID;
-        auction.name = groupInfo.itemName;
-        auction.isCommodity = groupInfo.isCommodity;
-    end
+    auction.quality = groupInfo.quality;
+    auction.texture = groupInfo.iconFileID;
+    auction.name = groupInfo.itemName;
+    auction.isCommodity = groupInfo.isCommodity;
 
     auction.type = 0;
     auction.subtype = 0;
@@ -1230,6 +1232,9 @@ local function BuildStateMachine()
         end
 
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
+            if (not self.item) then
+                return;
+            end
             C_AuctionHouse.RequestMoreItemSearchResults(self.item.itemKey);
         end, TASKER_TAG);
     end);
@@ -1239,8 +1244,11 @@ local function BuildStateMachine()
         end
 
         Tasker.Delay(throttleTime + MAX_THROTTLE_WAIT, function()
-            C_AuctionHouse.RequestMoreCommoditySearchResults(self.item.id);
-        end);
+            if (not self.item) then
+                return;
+            end
+            C_AuctionHouse.RequestMoreCommoditySearchResults(self.item.itemKey);
+        end, TASKER_TAG);
     end);
     itemResults:AddEvent("DROPPED", function(self)
         if (not self.item) then
@@ -1248,6 +1256,9 @@ local function BuildStateMachine()
         end
 
         Tasker.Schedule(function()
+            if (not self.item) then
+                return;
+            end
             if (self.item.isCommodity) then
                 QueryFSM:Process("MORE_COMMODITIES");
             else
@@ -1275,7 +1286,7 @@ local function BuildStateMachine()
 
         if (itemKey.itemID == self.item.id 
             and itemKey.battlePetSpeciesID == self.item.itemKey.battlePetSpeciesID 
-            and not C_AuctionHouse.HasFullItemSearchResults(itemKey) 
+            and not C_AuctionHouse.HasFullItemSearchResults(self.item.itemKey) 
             and Query.filter 
             and not Query.filter.first) then
                 Logger.Log("QUERY", "Querying more items");
@@ -1302,12 +1313,8 @@ local function BuildStateMachine()
         end
 
         if (needsProcessing) then
-            Query.ProcessItem(self.item, itemKey);
-        end
-
-        if (itemKey.itemID == self.item.id 
-            and itemKey.battlePetSpeciesID == self.item.itemKey.battlePetSpeciesID) then
-                return "IDLE";
+            Query.ProcessItem(self.item, self.item.itemKey);
+            return "IDLE";
         end
 
         return nil;
