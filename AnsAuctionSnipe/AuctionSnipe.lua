@@ -1259,7 +1259,12 @@ function AuctionSnipe:Start()
     Query.page = 0;
     Query:AssignDefaults(ilevel, maxBuyout, quality, maxPercent);
 
-    SniperFSM:Process("START");
+    if (SniperFSM) then
+        SniperFSM:Process("START");
+    else
+        BuildStateMachine(); --ensure state machine is built
+        SniperFSM:Process("START");
+    end
 end
 
 function AuctionSnipe:Stop()

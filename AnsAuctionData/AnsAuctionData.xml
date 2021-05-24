@@ -1,4 +1,7 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <GameTooltip name="AnsAuctionDataTooltip" inherits="GameTooltipTemplate" parent="UIParent" hidden="true">
+    </GameTooltip>
+
     <!-- Frame to handle all core events -->
     <Frame name="AnsAuctionDataCore">
         <Scripts>

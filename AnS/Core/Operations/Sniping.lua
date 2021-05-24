@@ -38,6 +38,8 @@ function Sniping.PrepareExport(snipe)
         local g = Groups.GetGroupFromId(v);
         if (g) then
             tinsert(n.groups, g.path);
+        else
+            tremove(snipe.groups. i);
         end
     end
 
@@ -88,6 +90,8 @@ function Sniping.From(snipe)
             local g = Groups.GetGroupFromId(v);
             if (g) then
                 tinsert(n.groups, g);
+            else
+                tremove(snipe.groups, i);
             end
         end
     end

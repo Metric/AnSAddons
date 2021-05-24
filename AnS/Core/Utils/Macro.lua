@@ -105,7 +105,7 @@ function Macro.Create(commands, modifiers, up, down)
         SetBinding(modifierStr.."MOUSEWHEELUP", BINDING_NAME, mode);
     end
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassic() and not Utils.IsTBC()) then
         AttemptToSaveBindings(CHARACTER_BINDING_SET);
     else
         SaveBindings(CHARACTER_BINDING_SET);

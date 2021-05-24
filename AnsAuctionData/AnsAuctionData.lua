@@ -54,36 +54,13 @@ local CraftIDCache = {};
 
 local hooked = false;
 
-local petTipLines = {};
-
 local tracker = {};
 
-local function InitPetLines(tooltip)
-    if (not petTipLines[tooltip:GetName()]) then
-        local l,r = tooltip:CreateFontString(tooltip:GetName().."Left", "ARTWORK", "GameFontHighlightSmall"), tooltip:CreateFontString(tooltip:GetName().."Right", "ARTWORK", "GameFontHighlightSmall");
-        petTipLines[tooltip:GetName()] = {l, r, tooltip:GetHeight()};
-        l:SetPoint("BOTTOMLEFT", tooltip, "BOTTOMLEFT", 12, 4);
-        l:SetJustifyH("LEFT");
-        r:SetPoint("BOTTOMRIGHT", tooltip, "BOTTOMRIGHT", -12, 4);
-        r:SetJustifyH("RIGHT");
-    end
-end
-
-local function HandlePetTip(tooltip)
-    local l,r,height = unpack(petTipLines[tooltip:GetName()]);
-
-    local txt = l:GetText();
-    if (txt and txt:len() > 0) then
-        tooltip:SetHeight(height + 64);
-    else
-        tooltip:SetHeight(height + 16);
-    end
-end
-
 local function ShowDataPetFloat(tooltip, pet)
-    InitPetLines(tooltip);
-
-    local l,r,height = unpack(petTipLines[tooltip:GetName()]);
+    AnsAuctionDataTooltip:ClearAllPoints();
+    AnsAuctionDataTooltip:ClearLines();
+    AnsAuctionDataTooltip:SetClampedToScreen(false);
+    AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_TOP");
 
     local plevel = pet.level;
 
@@ -91,7 +68,9 @@ local function ShowDataPetFloat(tooltip, pet)
         plevel = 1;
     end
 
-    local pid = "p:"..pet.speciesID..":"..plevel;
+    local dataAdded = false;
+
+    local pid = "p:"..pet.speciesID..":"..plevel..":"..pet.breedQuality;
 
     local realmRecent = AnsAuctionData.GetRealmValue(pid, "recent");
     local realmMin = AnsAuctionData.GetRealmValue(pid, "min");
@@ -103,83 +82,56 @@ local function ShowDataPetFloat(tooltip, pet)
     --local region3Day = AnsAuctionData.GetRegionValue(pid, "3day");
     local regionMarket = AnsAuctionData.GetRegionValue(pid, "market");
     --local regionSeen = AnsAuctionData.GetRegionValue(pid, "count");
-
-    local ltxt = "";
-    local rtxt = "";
-
-    if (Config.General().tooltipRealmRecent and realmRecent > 0) then
-        p = Utils.PriceToString(realmRecent);
-
-        ltxt = ltxt.."|cFF00BBFFAnS Recent\r\n";
-        rtxt = rtxt..p.."\r\n";
-    end
     if (Config.General().tooltipRealmMarket and realmMarket > 0) then
+        dataAdded = true;
         p = Utils.PriceToString(realmMarket);
-
-        ltxt = ltxt.."|cFF00BBFFAnS Market\r\n";
-        rtxt = rtxt..p.."\r\n";
+        AnsAuctionDataTooltip:AddDoubleLine("AnS Market", p, 0, 0.75, 1, 1, 1, 1);
     end
     if (Config.General().tooltipRealmMin and realmMin > 0) then
+        dataAdded = true;
         p = Utils.PriceToString(realmMin);
-
-        ltxt = ltxt.."|cFF00BBFFAnS Min\r\n";
-        rtxt = rtxt..p.."\r\n";
+        AnsAuctionDataTooltip:AddDoubleLine("AnS Min", p, 0, 0.75, 1, 1, 1, 1);
     end
     if (Config.General().tooltipRealm3Day and realm3Day > 0) then
+        dataAdded = true;
         p = Utils.PriceToString(realm3Day);
-
-        ltxt = ltxt.."|cFF00BBFFAnS 3-Day\r\n";
-        rtxt = rtxt..p.."\r\n";
+        AnsAuctionDataTooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
     end
-    
-    --if (Config.General().tooltipRegionRecent and regionRecent > 0) then
-    --    p = Utils.PriceToString(regionRecent);
-
-    --    ltxt = ltxt.."|cFF00BBFFAnS Region Recent\r\n";
-    --    rtxt = rtxt..p.."\r\n";
-    --end
+    if (Config.General().tooltipRealmRecent and realmRecent > 0) then
+        dataAdded = true;
+        p = Utils.PriceToString(realmRecent);
+        AnsAuctionDataTooltip:AddDoubleLine("AnS Recent", p, 0, 0.75, 1, 1, 1, 1);
+    end
     if (Config.General().tooltipRegionMarket and regionMarket > 0) then
+        dataAdded = true;
         p = Utils.PriceToString(regionMarket);
-
-        ltxt = ltxt.."|cFF00BBFFAnS Region Market\r\n";
-        rtxt = rtxt..p.."\r\n";
+        AnsAuctionDataTooltip:AddDoubleLine("AnS Region Market", p, 0, 0.75, 1, 1, 1, 1);
     end
     if (Config.General().tooltipRegionMin and regionMin > 0) then
+        dataAdded = true;
         p = Utils.PriceToString(regionMin);
-
-        ltxt = ltxt.."|cFF00BBFFAnS Region Min\r\n";
-        rtxt = rtxt..p.."\r\n";
+        AnsAuctionDataTooltip:AddDoubleLine("AnS Region Min", p, 0, 0.75, 1, 1, 1, 1);
     end
-    --if (Config.General().tooltipRegion3Day and region3Day > 0) then
-    --    p = Utils.PriceToString(region3Day);
-
-    --    ltxt = ltxt.."|cFF00BBFFAnS Region 3-Day\r\n";
-    --    rtxt = rtxt..p.."\r\n";
-    --end
-    ---if (Config.General().tooltipRegionSeen and regionSeen > 0) then
-    --    ltxt = ltxt.."|cFF00BBFFAnS Region Seen\r\n";
-    --    rtxt = rtxt..regionSeen.."\r\n";
-    --end
 
     if (Config.General().showId) then
-        ltxt = ltxt.."|c4400BBFFPet ID\r\n";
-        rtxt = rtxt..pid.."\r\n";
+        dataAdded = true;
+        AnsAuctionDataTooltip:AddDoubleLine("Pet ID", pid, 0, 0.75, 1, 1, 1, 1);
     end
 
-    if (ltxt:len() > 0) then
-        l:Show();
-        r:Show();
-        l:SetText(ltxt);
-        r:SetText(rtxt);
+    if (dataAdded) then
+        AnsAuctionDataTooltip:Show();
     else
-        l:SetText("");
-        r:SetText("");
-        l:Hide();
-        r:Hide();
+        AnsAuctionDataTooltip:Hide();
     end
 end
 
 local function ShowData(tooltip, extra)
+    AnsAuctionDataTooltip:ClearLines();
+    AnsAuctionDataTooltip:ClearAllPoints();
+    AnsAuctionDataTooltip:SetClampedToScreen(false);
+
+    AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_TOP");
+
     local name, link = tooltip:GetItem();
     
     if (CraftIDCache[link]) then
@@ -187,6 +139,8 @@ local function ShowData(tooltip, extra)
     end
 
     link = extra or link;
+
+    local dataAdded = false;
 
     if (link) then
         local id = Utils.GetID(link);
@@ -202,33 +156,40 @@ local function ShowData(tooltip, extra)
         local regionMarket = AnsAuctionData.GetRegionValue(link, "market");
         --local regionSeen = AnsAuctionData.GetRegionValue(link, "count");
 
-        if (Config.General().tooltipRealmRecent and realmRecent > 0) then
-            p = Utils.PriceToString(realmRecent);
-            tooltip:AddDoubleLine("AnS Recent", p, 0, 0.75, 1, 1, 1, 1);
-        end
         if (Config.General().tooltipRealmMarket and realmMarket > 0) then
+            dataAdded = true;
             p = Utils.PriceToString(realmMarket);
-            tooltip:AddDoubleLine("AnS Market", p, 0, 0.75, 1, 1, 1, 1);
+            AnsAuctionDataTooltip:AddDoubleLine("AnS Market", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRealmMin and realmMin > 0) then
+            dataAdded = true;
             p = Utils.PriceToString(realmMin);
-            tooltip:AddDoubleLine("AnS Min", p, 0, 0.75, 1, 1, 1, 1);
+            AnsAuctionDataTooltip:AddDoubleLine("AnS Min", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRealm3Day and realm3Day > 0) then
+            dataAdded = true;
             p = Utils.PriceToString(realm3Day);
-            tooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
+            AnsAuctionDataTooltip:AddDoubleLine("AnS 3-Day", p, 0, 0.75, 1, 1, 1, 1);
         end
+        if (Config.General().tooltipRealmRecent and realmRecent > 0) then
+            dataAdded = true;
+            p = Utils.PriceToString(realmRecent);
+            AnsAuctionDataTooltip:AddDoubleLine("AnS Recent", p, 0, 0.75, 1, 1, 1, 1);
+        end
+        
         --if (Config.General().tooltipRegionRecent and regionRecent > 0) then
         --    p = Utils.PriceToString(regionRecent);
         --    tooltip:AddDoubleLine("AnS Region Recent", p, 0, 0.75, 1, 1, 1, 1);
         --end
         if (Config.General().tooltipRegionMarket and regionMarket > 0) then
+            dataAdded = true;
             p = Utils.PriceToString(regionMarket);
-            tooltip:AddDoubleLine("AnS Region Market", p, 0, 0.75, 1, 1, 1, 1);
+            AnsAuctionDataTooltip:AddDoubleLine("AnS Region Market", p, 0, 0.75, 1, 1, 1, 1);
         end
         if (Config.General().tooltipRegionMin and regionMin > 0) then
+            dataAdded = true;
             p = Utils.PriceToString(regionMin);
-            tooltip:AddDoubleLine("AnS Region Min", p, 0, 0.75, 1, 1, 1, 1);
+            AnsAuctionDataTooltip:AddDoubleLine("AnS Region Min", p, 0, 0.75, 1, 1, 1, 1);
         end
         --if (Config.General().tooltipRegion3Day and region3Day > 0) then
         --    p = Utils.PriceToString(region3Day);
@@ -239,12 +200,17 @@ local function ShowData(tooltip, extra)
         --end
 
         if (Config.General().showId) then
-            if (not id or id == "" or id == "i:" or id == "i") then
-                return;
+            if (id and id ~= "" and id ~= "i:" and id ~= "i") then
+                dataAdded = true;
+                AnsAuctionDataTooltip:AddDoubleLine("Item ID", id, 0, 0.75, 1, 1, 1, 1);
             end
-
-            tooltip:AddDoubleLine("Item ID", id, 0, 0.75, 1, 1, 1, 1);
         end
+    end
+
+    if (dataAdded) then
+        AnsAuctionDataTooltip:Show();
+    else
+        AnsAuctionDataTooltip:Hide();
     end
 end
 
@@ -262,13 +228,16 @@ local function HookTooltip()
     if (not hooked) then
         hooked = true;
 
+        GameTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
         GameTooltip:HookScript("OnTooltipSetItem", ShowData);
         ItemRefTooltip:HookScript("OnTooltipSetItem", ShowData);
 
 		if (BattlePetToolTip_Show and BattlePetTooltipTemplate_SetBattlePet and FloatingBattlePet_Show) then
+            
+            BattlePetTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
+            FloatingBattlePetTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
+
 			hooksecurefunc(_G, "BattlePetTooltipTemplate_SetBattlePet", ShowDataPetFloat);
-			hooksecurefunc(_G, "BattlePetToolTip_Show", function() HandlePetTip(BattlePetTooltip) end);
-            hooksecurefunc(_G, "FloatingBattlePet_Show", function() HandlePetTip(FloatingBattlePetTooltip) end);
             hooksecurefunc(GameTooltip, "SetRecipeReagentItem", 
                 function(self, recipeID, reagentIndex) 
                     ShowData(self, C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, reagentIndex));
@@ -361,7 +330,7 @@ function AnsAuctionData:GetRawData(localOnly)
     if (not localOnly) then
         r = Realms[region.."-"..realmName];
     end
-    if (not r) then
+    if (not r or Utils.IsClassic()) then
         r = ANS_AUCTION_DATA[region.."-"..realmName..faction];
         if (not r) then
             r = ANS_AUCTION_DATA[realmName];

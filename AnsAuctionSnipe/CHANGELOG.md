@@ -1,3 +1,7 @@
+## AnS [Auction Sniper] Changes 2.2.6.3
+
+-   Fixed a nil reference exception that could happen in certain cases when trying to start sniper.
+
 ## AnS [Auction Sniper] Changes 2.2.6
 
 -   Fixed an issue in classic, where it became impossible to buy from a group when it was several stacks grouped together.

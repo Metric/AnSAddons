@@ -1,3 +1,17 @@
+## AnS Changes 2.2.6.3
+
+-   Fixed an issue where battle pets would not be processed properly from purchased auction mail. And thus their links would not show in the transaction log properly.
+
+-   Reworked tooltip in AnsAuctionData to work with other tooltip addons such as TSM / TUJ better.
+
+-   Fixed a nil reference exception that could happen in certain cases when starting sniper.
+
+-   Fixed TBC classic keybinding not saving properly.
+
+-   Updated Auction Operation UI Time listing for TBC classic.
+
+-   Added in vendor buy for pet ids. The price return for them may be gold or pet token amount. Just check for vendorbuy > 0 to determine if it is a pet bought from a vendor.
+
 ## AnS Changes 2.2.6.1
 
 -   Fixed an issue where AnsAuctionData would throw an exception on WoW Classic in some cases.

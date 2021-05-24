@@ -67,6 +67,12 @@ function Utils.IsClassic()
         or (f == "8" and m and m == "0");
 end
 
+function Utils.IsTBC()
+    local v = GetBuildInfo();
+    local f,m = v:match("%d");
+    return f == "2";
+end
+
 function Utils.GSC(val)
     -- prevent nil exception 
     if (not val) then
@@ -237,10 +243,9 @@ end
 function Utils.HideTooltip()
     GameTooltip:Hide();
 	
-	-- take into account wow classic not having this
-	if BattlePetTooltip then
-		BattlePetTooltip:Hide();
-	end
+    if (not Utils.IsClassic()) then
+        BattlePetTooltip:Hide();
+    end
 end
 
 function Utils.ShowTooltipText(f, txt)
@@ -251,14 +256,11 @@ function Utils.ShowTooltipText(f, txt)
 end
 
 function Utils.ShowBattlePetTip(link)
-	if BattlePetTooltip then
-		local pet = Utils.ParseBattlePetLink(link);
-		BattlePetTooltipTemplate_SetBattlePet(BattlePetTooltip, pet);
-		BattlePetTooltip:SetSize(260,136);
-		BattlePetTooltip:Show();
-		BattlePetTooltip:ClearAllPoints();
-		BattlePetTooltip:SetPoint(GameTooltip:GetPoint());
-	end
+    if (Utils.IsClassic()) then
+        return;
+    end
+
+	BattlePetToolTip_ShowLink(link);
 end
 
 function Utils.IsAddonInstalled(name)

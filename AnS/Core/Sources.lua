@@ -569,9 +569,13 @@ function Sources:QueryID(q, itemId)
 
     local idBonusOnly = Utils.BonusID(codes.tsmId, false, codes.bonuses);
 
-    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
+    local t, id = strsplit(":", codes.tsmId); 
 
-    local _, id = strsplit(":", codes.tsmId); 
+    if (t == "p") then
+        idBonusOnly = t..":"..id;
+    end
+
+    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
 
     codes.id = tonumber(id);
 
@@ -744,6 +748,14 @@ function Sources:Query(q, item, isGroup)
     end
 
     local idBonusOnly = Utils.BonusID(item.tsmId or item.link or item.id, false, codes.bonuses);
+
+    if (item.tsmId) then
+        local t, id = strsplit(":", item.tsmId); 
+
+        if (t == "p") then
+            idBonusOnly = t..":"..id;
+        end
+    end
 
     codes.buyout = buyout;
     codes.stacksize = stackSize;

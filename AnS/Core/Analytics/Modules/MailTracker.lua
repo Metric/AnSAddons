@@ -200,6 +200,16 @@ function MailTracker:ProcessMail(idx, itemIndex)
 
         if (itemIndex) then
             local link = GetInboxItemLink(idx, itemIndex);
+
+            if (not Utils.IsClassic()) then
+                local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
+                if(speciesID and speciesID > 0) then
+                    local pid = "p:"..speciesID..":"..level..":"..breedQuality;
+                    link = Utils.GetLink(pid);
+                end
+                GameTooltip:Hide();
+            end
+
             if (link) then
                 local ppu = Sources.round(bid / quantity);
                 Transactions:InsertBuy("auction", quantity, ppu, link, buyer, buyTime);
@@ -207,6 +217,16 @@ function MailTracker:ProcessMail(idx, itemIndex)
         else
             for i = 1, ATTACHMENTS_MAX_RECEIVE do
                 local link = GetInboxItemLink(idx, i);
+                
+                if (not Utils.IsClassic()) then
+                    local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, i);
+                    if(speciesID and speciesID > 0) then
+                        local pid = "p:"..speciesID..":"..level..":"..breedQuality;
+                        link = Utils.GetLink(pid);
+                    end
+                    GameTooltip:Hide();
+                end
+
                 if (link) then
                     local ppu = Sources.round(bid / quantity);
                     Transactions:InsertBuy("auction", quantity, ppu, link, buyer, buyTime);
@@ -218,6 +238,15 @@ function MailTracker:ProcessMail(idx, itemIndex)
         if (itemIndex) then
             local link = GetInboxItemLink(idx, itemIndex);
             local count = select(4, GetInboxItem(idx, itemIndex)) or 0;
+
+            if (not Utils.IsClassic()) then
+                local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
+                if(speciesID and speciesID > 0) then
+                    local pid = "p:"..speciesID..":"..level..":"..breedQuality;
+                    link = Utils.GetLink(pid);
+                end
+                GameTooltip:Hide();
+            end
 
             if (link and count and count > 0) then
                 local ppu = Sources.round(codAmount / count);
@@ -232,6 +261,15 @@ function MailTracker:ProcessMail(idx, itemIndex)
             local link = GetInboxItemLink(idx, itemIndex);
             local qty = select(4, GetInboxItem(idx, itemIndex)) or 0;
 
+            if (not Utils.IsClassic()) then
+                local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
+                if(speciesID and speciesID > 0) then
+                    local pid = "p:"..speciesID..":"..level..":"..breedQuality;
+                    link = Utils.GetLink(pid);
+                end
+                GameTooltip:Hide();
+            end
+
             if (link and qty and qty > 0) then
                 Transactions:InsertExpire(qty, link, expiredTime);
             end
@@ -242,6 +280,15 @@ function MailTracker:ProcessMail(idx, itemIndex)
         if (itemIndex) then
             local link = GetInboxItemLink(idx, itemIndex);
             local qty = select(4, GetInboxItem(idx, itemIndex)) or 0;
+
+            if (not Utils.IsClassic()) then
+                local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
+                if (speciesID and speciesID > 0) then
+                    local pid = "p:"..speciesID..":"..level..":"..breedQuality;
+                    link = Utils.GetLink(pid);
+                end
+                GameTooltip:Hide();
+            end
 
             if (link and qty and qty > 0) then
                 Transactions:InsertCancel(qty, link, cancelTime);
