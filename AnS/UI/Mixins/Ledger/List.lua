@@ -10,6 +10,7 @@ function AnsLedgerListFrameMixin:ShowTooltip(row, record)
     end
 end
 
+local EXPENSE_TYPES = {"buy", "cod", "expense", "postage", "repair"};
 function AnsLedgerListFrameMixin:RenderRow(row, record)
     local dash = self;
     local nameText = row.Name; --_G[row:GetName().."Name"];
@@ -25,6 +26,7 @@ function AnsLedgerListFrameMixin:RenderRow(row, record)
     nameText:SetText(record.item);
     whoText:SetText(record.from);
 
+    local neg = "";
     local type = "";
     if (record.subtype) then
         type = record.subtype:upper();
@@ -32,9 +34,13 @@ function AnsLedgerListFrameMixin:RenderRow(row, record)
         type = record.type:upper();
     end
 
+    if (tContains(EXPENSE_TYPES, record.type)) then
+        neg = "-";
+    end
+
     typeText:SetText(type);
     stackText:SetText(record.quantity or record.count or "");
-    amountText:SetText(Utils.PriceToString(record.copper));
+    amountText:SetText(neg..Utils.PriceToString(record.copper));
     dateText:SetText(date("%D", record.time));
 end
 

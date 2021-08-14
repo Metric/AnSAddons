@@ -184,7 +184,7 @@
                         </Anchors>
                         <Layers>
                             <Layer level="ARTWORK">
-								<FontString inherits="GameFontHighlight" text="Min Quality" justifyH="RIGHT">
+								<FontString inherits="GameFontHighlight" text="Quality" justifyH="RIGHT">
 									<Anchors>
 										<Anchor point="LEFT" relativePoint="LEFT" x="24" y="15"/>
 									</Anchors>

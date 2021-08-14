@@ -1,3 +1,11 @@
+## AnS [Auction Sniper] Changes 2.2.6.4
+
+-   Sniper window quality selection on retail is no longer just min quality. You can now select individual qualities to use or not use. Classic is still min quality based.
+
+-   Implemented some delays for classic to try and help with the internal auction house error. Which is due to blizz adding in a hidden wait time between certain actions.
+
+-   On classic, if the sniper does not receive a list update response after 5 seconds, it will now reset itself and try again. Previously it would get stuck and require a manual restart.
+
 ## AnS [Auction Sniper] Changes 2.2.6.3
 
 -   Fixed a nil reference exception that could happen in certain cases when trying to start sniper.

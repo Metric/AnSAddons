@@ -21,6 +21,7 @@ local EVENTS_TO_REGISTER = {};
 
 local TASKER_TAG = "SNIPER";
 local TASKER_PURCHASE_TAG = "SNIPER_PURCHASE";
+local TASKER_TAG_QUERY = "SNIPER_QUERY";
 local PURCHASE_WAIT_TIME = 10;
 
 local AHFrame = nil;
@@ -81,6 +82,7 @@ AnsQualityToAuctionEnum[4] = 8;
 AnsQualityToAuctionEnum[5] = 9;
 
 local qualityFilters = {};
+local qualityQueryFilters = {};
 local classFilters = {};
 
 local browseResults = {};
@@ -171,16 +173,31 @@ local function ClearValidAuctions()
 end
 
 local function QualitySelected(self, arg1, arg2, checked)
-    Config.Sniper().minQuality = arg1;
-    if (AuctionSnipe.qualityInput ~= nil) then
-        UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+    local qualities = Config.Sniper().qualities;
+    if (not Utils.IsClassic()) then
+        if (checked) then
+            Config.Sniper().minQuality = arg1;
+            if (AuctionSnipe.qualityInput ~= nil) then
+                UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+            end
+        end
+        qualities[arg1] = checked;
+    else
+        Config.Sniper().minQuality = arg1;
+        if (AuctionSnipe.qualityInput ~= nil) then
+            UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+        end
     end
-    CloseDropDownMenus();
+
+    if (Utils.IsClassic()) then
+        CloseDropDownMenus();
+    end
 end
 
 local function BuildQualityDropDown(frame, level, menuList)
     local i;
 
+    local qualities = Config.Sniper().qualities;
     for i = 1, 5 do
         local info = UIDropDownMenu_CreateInfo();
         info.func = QualitySelected;
@@ -188,6 +205,12 @@ local function BuildQualityDropDown(frame, level, menuList)
         local c = ITEM_QUALITY_COLORS[i];
         local text = c.hex..AnsQualityToText[i];
         info.text, info.arg1 = text, i;
+        if (not Utils.IsClassic()) then
+            info.keepShownOnClick = true;
+            info.checked = qualities[i];
+            info.isNotRadio = true;
+            info.value = i;
+        end
         UIDropDownMenu_AddButton(info);
     end
 end
@@ -410,10 +433,17 @@ local function BuildStateMachine()
                 Query.SearchForItem(currentItemScan:Clone());
             end
         end
+        Tasker.Delay(GetTime() + 4, function()
+            if (fsm.current == "SEARCH") then
+                fsm:Process("SEARCH_COMPLETE");
+            end
+        end, TASKER_TAG_QUERY);
         return nil;
     end);
 
     fsmSearch:AddEvent("ITEM_RESULT", function(self, event, item)
+        Tasker.Clear(TASKER_TAG_QUERY);
+
         Logger.Log("SNIPER", "item result");
 
         if (item == nil) then
@@ -428,6 +458,11 @@ local function BuildStateMachine()
 
             if (AuctionSnipe.snipeStatusText) then
                 AuctionSnipe.snipeStatusText:SetText("Filtering "..Query.itemIndex.." of "..Query:Count());
+            end
+
+            if (item.isOwnerItem) then
+                Recycler:Recycle(item);
+                return nil;
             end
 
             if (not Query:IsFiltered(item)) then
@@ -476,6 +511,7 @@ local function BuildStateMachine()
         return nil;
     end);
     fsmSearch:AddEvent("SEARCH_COMPLETE", function(self)
+        Tasker.Clear(TASKER_TAG_QUERY);
         Logger.Log("SNIPER", "search complete");
         if (not Utils.IsClassic()) then
             AuctionList:ClearMissing(currentItemScan, currentAuctionIds);
@@ -487,6 +523,7 @@ local function BuildStateMachine()
         return "ITEMS";
     end);
     fsmSearch:SetOnExit(function(self, next)
+        Tasker.Clear(TASKER_TAG_QUERY);
         -- handle displaying items that have already been processed
         -- when the FSM was interrupted
         if (validAuctions and #validAuctions > 0) then
@@ -690,7 +727,9 @@ function AuctionSnipe:StartBuyState()
                     SniperFSM:Process("CANCEL_AUCTION");
                 end, TASKER_PURCHASE_TAG);
             else
-                SniperFSM:Process("CONFIRMED_AUCTION");
+                Tasker.Delay(GetTime() + 0.5, function()
+                    SniperFSM:Process("CONFIRMED_AUCTION");
+                end, TASKER_TAG);
             end
         end
     end
@@ -1183,16 +1222,28 @@ function AuctionSnipe:LoadCLevelFilter()
 end
 
 function AuctionSnipe:LoadBaseFilters()
-    local quality = Config.Sniper().minQuality;
+    local quality = Config.Sniper().qualities;
 
-    DEFAULT_BROWSE_QUERY.quality = quality;
+    if (Utils.IsClassic()) then
+        quality[Config.Sniper().minQuality] = true;
+    end
+
+    DEFAULT_BROWSE_QUERY.quality = Config.Sniper().minQuality;
 
     wipe(classFilters);
     wipe(qualityFilters);
+    wipe(qualityQueryFilters);
 
-    for i = quality, 5 do
-        tinsert(qualityFilters, AnsQualityToAuctionEnum[i]);
+    for i,v in pairs(quality) do
+        if (v) then
+            tinsert(qualityQueryFilters, i);
+            tinsert(qualityFilters, AnsQualityToAuctionEnum[i]);
+        end
     end
+
+    table.sort(qualityQueryFilters, function(a,b) 
+        return a > b;
+    end);
 
     for i = 1, #self.baseFilters do
         local item = self.baseFilters[i];
@@ -1218,7 +1269,6 @@ function AuctionSnipe:Start()
 
     local maxBuyout = MoneyInputFrame_GetCopper(self.maxBuyoutInput) or 0;
     local ilevel = tonumber(self.minLevelInput:GetText()) or 0;
-    local quality = Config.Sniper().minQuality;
     local maxPercent = tonumber(self.maxPercentInput:GetText()) or 100;
 
     local search = self.searchInput:GetText();
@@ -1257,7 +1307,7 @@ function AuctionSnipe:Start()
 
     scanIndex = 1;
     Query.page = 0;
-    Query:AssignDefaults(ilevel, maxBuyout, quality, maxPercent);
+    Query:AssignDefaults(ilevel, maxBuyout, qualityQueryFilters, maxPercent);
 
     if (SniperFSM) then
         SniperFSM:Process("START");

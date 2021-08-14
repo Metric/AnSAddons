@@ -19,12 +19,15 @@ Requires AnS
 Must have at least one of the below for retail:
 * Undermine Journal
 * TSM
+* AnsAuctionData with data from the (AnS App)[https://github.com/Metric/AnS/releases] (only supports US and EU at the moment)
 
 In 2.1 Settings Have Moved!
 ======================
 Settings are no longer under Esc -> Interface -> Addons -> AnS
 
 Instead use the new Minimap button to access all stuff AnS related.
+
+or use \/ans in the chat window to toggle the main AnS window.
 
 Billis String in 2.1 for Classic
 ========================
@@ -44,41 +47,48 @@ In the global Max Price / Boolean Filter or in a Sniper Operation Max Price / Bo
 max(ifgte(ItemQuality, 1, minprice * ifgte(minprice, 250g, 80, ifgte(minprice, 100g, (minprice - 100g) * (80 - 70) / (250g - 100g) + 70, ifgte(minprice, 50g, (minprice - 50g) * (70 - 60) / (100g - 50g) + 60, ifgte(minprice, 10g, (minprice - 10g) * (60 - 40) / (50g - 10g) + 50, ifgte(minprice, 5g, (minprice - 5g) * (40 - 30) / (10g - 5g) + 30, ifgte(minprice, 1g, (minprice - 1g) * (30 - 10) / (5g - 1g) + 10, 0)))))) / 100, 0), VendorSell - 1c)
 ```
 
-Note for 2.x Regarding Retail Max Percent
+Note for 2.x Regarding Retail Max Percent and Browse Groups
 ==================================================
-Max percent may need to be adjusted higher than necessary if looking for equipment with the same id and varying levels of iLevels. Since, the initial browse query filtering is based on the base item id in pricing in TSM / TUJ / Auctionator. However, the final filtering is based on the item id + bonus ids, but only if the initial browse group is considered. You can combat cases of this by using a operation that will override the percent check in the final case and filter out the lower ilevels that are not really deals.
+Check Ignore Group Max Percent and use isgroup in your formula to ignore browse group data
 
-
-Features
-===============
-* Sniper Operations must be set before starting a sniping session
-* Changes to sniper operations during a running sniping session has no effect.
-* To update sniper operations stop and restart the session.
-
-* Pre-built Groups for:
-    * Herbs
-    * Ores
-    * Fish
-    * Cloth
-    * Leather
-    * Enchanting
-    * Pets
-    * Mounts
-
- * Allows for quick settings of:
-    * Max Percent
-    * Max Buyout
-    * Min iLevel
-    * Min Quality
-    * CLevel Range
-    * Name filter for further refinement
-
+Example:
+```
+ifeq(isgroup,true,ppu,<your actual item formula here>)
+```
 
 How to Buy & Other Controls
 ==============
-Double click an auction list item, and ba da bing, ba da boom. It will purchase it if it can.
+- Double click to buy an item
+- Action / Mouse wheel macro creation under Ans Minimap Button -> Settings -> Macro
+	- Buy will only buy the currently selected item
+	- Buy First will always buy the first item in the list
 
-Or use the new mouse wheel macro creation under Ans Minimap Button -> Settings -> Macro
+- Blacklist an Item until AH is Closed: Shift + Left Click
+- Permanently Blacklist an Item: Shift + Ctrl + Left Click
+	- Note you can manually add or remove from permanent blacklist under Ans Minimap Button -> Settings -> Blacklist
+		- Adding an item can be done via an item id or item string. E.g. 12345, i:12345::2:32, p:32 etc.
+
+Chat Commands
+==============
+Toggle Main Window
+
+\/ans
+
+Reset Window Positions
+
+\/ans resetwindows
+
+Toggle Destroy Window
+
+\/ans destroy
+
+Toggle Minimap Button
+
+\/ansminimap
+
+Reposition Minimap Button (number is in degrees 0-359)
+
+\/ansminimap 45
 
 Settings -> Sniper -> Price Source
 ======================
@@ -109,7 +119,7 @@ first, check, iflte, iflt, ifgte, ifgt, ifeq, ifneq, avg, min, max, mod, abs, ce
 Predefined Item Variables:
 
 ```
-vendorsell, vendorbuy, percent, ppu, stacksize, buyout, ilevel, quality, tsmId, id
+vendorsell, vendorbuy, percent, ppu, stacksize, buyout, ilevel, quality, tsmId, id, isgroup
 ```
 
 Predefined TUJ Variables:
@@ -130,8 +140,10 @@ Most variants on TSM variables are also available such as DBRegionMarketAvg, Ite
 Predefined AnsAuctionData Variables:
 
 ```
-ansmin, ansrecent, ansmarket, ans3day
+ansmin, ansrecent, ansmarket, ans3day, ansregionmarket, ansregionmin
 ```
+
+ansregionmarket and ansregionmin are only available for retail via the AnS App. They do nothing on classic.
 
 Using Predefined bonus function in 2.1
 =================================
@@ -150,6 +162,12 @@ The function parameters:
 bonus(id,value1,value2)
 ```
 
+bonus does not work on browse groups. Check isgroup first before trying to use it.
+
+Example:
+```
+ifeq(isgroup,true,ppu,bonus(100,110g,0))
+```
 
 Settings -> Custom Sources (Previously called Custom VARS)
 =================================

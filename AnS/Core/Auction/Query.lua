@@ -140,7 +140,7 @@ function Query:AssignDefaults(ilevel, buyout, quality, maxPercent)
             v.maxPercent = maxPercent;
             v.maxPPU = buyout;
             v.ignoreGroupMaxPercent = sniperConfig.ignoreGroupMaxPercent;
-            v.minQuality = quality;
+            v.minQuality = quality[1] or 0;
         end
     end
 end
@@ -157,14 +157,26 @@ function Query:IsValid(item, ignoreMaxPercent)
     if (item.iLevel < self.minILevel and self.minILevel > 0) then
         return false;
     end
+    
     if (item.ppu > self.maxBuyout and self.maxBuyout > 0) then
         return false;
     end
+    
     if (item.percent > self.maxPercent and self.maxPercent > 0 and not ignoreMaxPercent) then
         return false;
     end
-    if (item.quality < self.quality and self.quality > 0) then
-        return false;
+
+    if (Utils.IsClassic()) then
+        local minquality = self.quality[1] or 0;
+        if (item.quality < minquality and minquality > 0) then
+            return false;
+        end
+    else
+        if (#self.quality > 0) then
+            if (not tContains(self.quality, item.quality)) then
+                return false;
+            end
+        end
     end
 
     return true;
@@ -527,6 +539,7 @@ function Query:Next(auction)
     auction.iLevel = 0;
     auction.vendorsell = 0;
     auction.itemIndex = self.itemIndex;
+    auction.isOwnerItem = auction.owner == UnitName("player");
 
     self.itemIndex = self.itemIndex + 1;
 
@@ -719,7 +732,15 @@ function Query:GetOwnedAuctionRetail(index)
 end
 
 function Query.OnOwnedUpdate()
-    QueryFSM:Process("OWNED_RESULTS");
+    if (QueryFSM) then
+        if (not Utils.IsClassic() and QueryFSM.current ~= "IDLE" 
+            and QueryFSM.current ~= "TRY_OWNED"
+            and QueryFSM.current ~= "OWNED") then
+                QueryFSM:Process("DROPPED");
+        else
+            QueryFSM:Process("OWNED_RESULTS");
+        end
+    end
 end
 
 -- throttle related for retail
@@ -1298,7 +1319,7 @@ local function BuildStateMachine()
 
         if (itemKey.itemID ~= self.item.id 
             or itemKey.battlePetSpeciesID ~= self.item.itemKey.battlePetSpeciesID 
-            or (iLevel ~= self.item.iLevel and iLevel > 0 and self.item.iLevel > 0)
+            or (iLevel ~= self.item.iLevel and iLevel > 0 and self.item.iLevel > 0 and itemKey.battlePetSpeciesID <= 0)
             or self.item.isCommodity) then
 
             Logger.Log("QUERY", "item id match: "..tostring(itemKey.itemID == self.item.id));

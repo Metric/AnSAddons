@@ -9,6 +9,7 @@ local FSM = Ans.FSM;
 local FSMState = Ans.FSMState;
 local Tasker = Ans.Tasker;
 local TASKER_TAG = "POSTING";
+local TASKER_TAG_POST = "POSTING_POST";
 
 local AuctionOp = Ans.Operations.Auctioning;
 
@@ -617,11 +618,13 @@ function PostingView.OnClassicOwnedUpdate()
                 if (a) then
                     if (a.link == item.link and a.count == item.count and a.ppu == item.ppu) then
                         PostingFSM:Process("SUCCESS");
+                        Tasker.Clear(TASKER_TAG_POST);
                         return;
                     end
                 end
             end
 
+            Tasker.Clear(TASKER_TAG_POST);
             PostingFSM:Process("FAILURE");
         elseif (state and state.item and state.name == "CANCEL_CONFIRM") then
             local item = state.item;
@@ -632,12 +635,14 @@ function PostingView.OnClassicOwnedUpdate()
                 if (a) then
                     if (a.link == item.link and a.count == item.count and a.ppu == item.ppu) then
                         PostingFSM:Process("FAILURE");
+                        Tasker.Clear(TASKER_TAG_POST);
                         return;
                     end
                 end
             end
 
             PostingFSM:Process("SUCCESS");
+            Tasker.Clear(TASKER_TAG_POST);
         end
     end
 end
@@ -1134,10 +1139,18 @@ function PostingView:Cancel()
                 if (Utils.IsClassic()) then
                     if (not PostingView.CancelItemClassic(state.item)) then
                         PostingFSM:Process("DROPPED");
+                    else 
+                        Tasker.Delay(GetTime() + 2, function()
+                            PostingFSM:Process("FAILURE");
+                        end, TASKER_TAG_POST);
                     end
                 else
                     if (not PostingView.CancelItemRetail(state.item)) then
                         PostingFSM:Process("DROPPED");
+                    else
+                        Tasker.Delay(GetTime() + 2, function()
+                            PostingFSM:Process("FAILURE");
+                        end, TASKER_TAG_POST);
                     end
                 end
             end
@@ -1167,10 +1180,18 @@ function PostingView:Post()
                 if (Utils.IsClassic()) then
                     if (not PostingView.PostItemClassic(state.item)) then
                         PostingFSM:Process("DROPPED");
+                    else
+                        Tasker.Delay(GetTime() + 2, function()
+                            PostingFSM:Process("FAILURE");
+                        end, TASKER_TAG_POST);
                     end
                 else
                     if (not PostingView.PostItemRetail(state.item)) then
                         PostingFSM:Process("DROPPED");
+                    else
+                        Tasker.Delay(GetTime() + 2, function()
+                            PostingFSM:Process("FAILURE");
+                        end, TASKER_TAG_POST);
                     end
                 end
             end

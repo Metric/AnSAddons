@@ -196,8 +196,6 @@ function AnsLedgerFrameMixin:LoadData(names)
         return;
     end
 
-    local neg = "";
-
     local subtypeSelected = self.subfilterSelect.selected;
     local subtype = nil;
     if (subtypeSelected > 1) then
@@ -214,33 +212,46 @@ function AnsLedgerFrameMixin:LoadData(names)
         DataQuery:JoinSales(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     elseif (self.filter == "purchases") then
         DataQuery:JoinPurchases(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
-        neg = "-";
     elseif (self.filter == "expenses") then
         local expenseSelected = self.expenseSelect.selected;
         DataQuery:JoinExpenses(names, expenseFilters[expenseSelected].types, subtype, tempTbl, self.searchFilter, 
             {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
         self.expenseSelect:Show();
-        neg = "-";
     elseif (self.filter == "income") then
-        DataQuery:JoinIncome(names, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
+        local expenseSelected = self.expenseSelect.selected;
+        DataQuery:JoinIncome(names, expenseFilters[expenseSelected].types, subtype, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
+        self.expenseSelect:Show();
     elseif (self.filter == "cancelled") then
         DataQuery:JoinCancelled(names, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     elseif (self.filter == "expired") then
         DataQuery:JoinExpired(names, tempTbl, self.searchFilter, {key = self.lastSortMode, reversed = self.sortMode[self.lastSortMode]});
     end
 
-    self:UpdateTotal(neg);
+    self:UpdateTotal();
     self.List:SetItems(tempTbl);
 end
 
-function AnsLedgerFrameMixin:UpdateTotal(neg)
+function AnsLedgerFrameMixin:UpdateTotal()
     local total = 0;
     for i,v in ipairs(tempTbl) do
-        if (v.quantity == 0) then
-            total = total + v.copper;
-        else
-            total = total + (v.copper * v.quantity);
+        if (tContains(expenseFilters[1].types, v.type)) then
+            if (v.quantity == 0) then
+                total = total - v.copper;
+            else
+                total = total - (v.copper * v.quantity);
+            end
+        else 
+            if (v.quantity == 0) then
+                total = total + v.copper;
+            else
+                total = total + (v.copper * v.quantity);
+            end
         end
+    end
+
+    local neg = total < 0 and "-" or "";
+    if (total < 0) then
+        total = math.abs(total);
     end
 
     self.totalItemsText:SetText("Total Items: "..tostring(#tempTbl));

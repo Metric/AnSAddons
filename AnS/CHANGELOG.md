@@ -1,3 +1,25 @@
+## AnS Changes 2.2.6.4
+
+-   Fixed issue where Fonts for other languages were not taken into account properly. All provided fonts by blizz are now used as expected for the languages they support: Russian, Simplified Chinese, Traditional Chinese, Korean, and Roman based languages.
+
+-   Fixed an issue where Expenses were not included properly in the Income tab calculation on Ledger.
+
+-   Fixed and issue where Posting / Cancelling could get stuck in situations. It now just skips the problem item and continues on after 2 seconds.
+
+-   Fixed issue where shorthand percent would be incorrect in some cases
+
+-   Implemented a special check to prevent interruption of sniper if one of your auctions is sold and you are running TSM.
+
+-   Fixed an issue where battle pets could not be posted / cancelled.
+
+-   Sniper window quality selection on retail is no longer just min quality. You can now select individual qualities to use or not use. Classic is still min quality based.
+
+-   Implemented some delays for classic to try and help with the internal auction house error. Which is due to blizz adding in a hidden wait time between certain actions.
+
+-   On classic, if the sniper does not receive a list update response after 5 seconds, it will now reset itself and try again. Previously it would get stuck and require a manual restart.
+
+-   Added in TBC vendor data
+
 ## AnS Changes 2.2.6.3
 
 -   Fixed an issue where battle pets would not be processed properly from purchased auction mail. And thus their links would not show in the transaction log properly.

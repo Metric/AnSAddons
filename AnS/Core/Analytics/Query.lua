@@ -176,10 +176,11 @@ function DataQuery:JoinExpenses(names, types, subtype, tbl, search, sortMode)
     self:Sort(tbl, sortMode);
 end
 
-function DataQuery:JoinIncome(names, subtype, tbl, search, sortMode)
+function DataQuery:JoinIncome(names, types, subtype, tbl, search, sortMode)
     wipe(tbl);
     for i,v in ipairs(names) do
         self:GetAllIncome(v, subtype, tbl, search);
+        self:GetAllExpenses(v, types, subtype, tbl, search);
     end
     self:Sort(tbl, sortMode);
 end

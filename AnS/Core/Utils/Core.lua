@@ -81,7 +81,7 @@ function Utils.GSC(val)
 
     local g = val / (COPPER_PER_SILVER * SILVER_PER_GOLD);
 
-     -- mathmatically speakign this is equal to floor((val - (g * COPPER_PER_SILVER * SILVER_PER_GOLD)) / COPPER_PER_SILVER)
+     -- mathmatically speaking this is equal to floor((val - (g * COPPER_PER_SILVER * SILVER_PER_GOLD)) / COPPER_PER_SILVER)
     local s = mod(val / COPPER_PER_SILVER, COPPER_PER_SILVER);
     local c = mod(val, COPPER_PER_SILVER);
   
@@ -570,7 +570,7 @@ function Utils.ReplaceShortHandPercent(str)
 
         if (num) then
             local perc = num / 100;
-            str = string.gsub(str, s.."%%", perc.." *");
+            str = string.gsub(str, s.."%%", perc.." *", 1);
         else
             break;
         end
