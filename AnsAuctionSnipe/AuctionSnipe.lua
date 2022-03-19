@@ -10,35 +10,17 @@ local TreeView = Ans.API.UI.TreeView;
 local Utils = Ans.API.Utils;
 local Groups = Utils.Groups;
 local EventManager = Ans.API.EventManager;
+
 local SnipingOp = Ans.API.Operations.Sniping;
-local FSM = Ans.API.FSM;
-local FSMState = Ans.API.FSMState;
+
 local Tasker = Ans.API.Tasker;
 local Logger = Ans.API.Logger;
-local SniperFSM = nil;
 
-local EVENTS_TO_REGISTER = {};
-
-local TASKER_TAG = "SNIPER";
-local TASKER_PURCHASE_TAG = "SNIPER_PURCHASE";
-local TASKER_TAG_QUERY = "SNIPER_QUERY";
+local TASKER_TAG = "SNIPER_WINDOW";
 local PURCHASE_WAIT_TIME = 10;
 
 local AHFrame = nil;
 local AHFrameDisplayMode = nil;
-
-if (not Utils.IsClassic()) then
-    EVENTS_TO_REGISTER = {
-        "COMMODITY_PRICE_UPDATED",
-        "COMMODITY_PRICE_UNAVAILABLE",
-        "COMMODITY_PURCHASED",
-        "COMMODITY_PURCHASE_FAILED",
-        "COMMODITY_PURCHASE_SUCCEEDED",
-        "ITEM_KEY_ITEM_INFO_RECEIVED",
-        "GET_ITEM_INFO_RECEIVED",
-        "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED"
-    };
-end
 
 local ERRORS = {
     ERR_ITEM_NOT_FOUND,
@@ -46,6 +28,10 @@ local ERRORS = {
 };
 
 local rootFrame = nil;
+
+local STATES = {};
+STATES.NONE = 0;
+STATES.RUNNING = 1;
 
 local DEFAULT_BROWSE_QUERY = {};
 DEFAULT_BROWSE_QUERY.searchString = "";
@@ -56,13 +42,12 @@ DEFAULT_BROWSE_QUERY.itemClassFilters = {};
 DEFAULT_BROWSE_QUERY.sorts = {};
 DEFAULT_BROWSE_QUERY.quality = 1;
 
-local DEFAULT_ITEM_SORT = { sortOrder = 0, reverseSort = false };
-
 AuctionSnipe = {};
 AuctionSnipe.__index = AuctionSnipe;
 AuctionSnipe.isInited = false;
 AuctionSnipe.activeOps = {};
 AuctionSnipe.baseFilters = {};
+AuctionSnipe.state = STATES.NONE;
 
 local opTreeViewItems = {};
 local baseTreeViewItems = {};
@@ -81,37 +66,25 @@ AnsQualityToAuctionEnum[3] = 7;
 AnsQualityToAuctionEnum[4] = 8;
 AnsQualityToAuctionEnum[5] = 9;
 
+AuctionSnipe.AnsQualityToText = AnsQualityToText;
+AuctionSnipe.AnsQualityToAuctionEnum = AnsQualityToAuctionEnum;
+
+-- holders for quality filters etc
 local qualityFilters = {};
 local qualityQueryFilters = {};
 local classFilters = {};
 
-local browseResults = {};
-local itemsFound = {};
-local lastItemId = nil;
-local currentItemScan = nil;
-local validAuctions = {};
-local infoKey = nil;
+-- last known item for stuff
+local currentItem = nil;
 
-local scanIndex = 1;
+-- counters and flags for 
+-- search results
 local totalResultsFound = 0;
-local totalValidAuctionsFound = 0;
-
-local lastSeenGroupLowest = {};
-local throttleMessageReceived = true;
-local throttleWaitingForSend = false;
-local throttleTime = time();
-
-local lastSuccessScan = time();
-local blocks = {};
-local blockList = {};
-local browseItem = 0;
+local totalGroups = 0;
+local last = 0;
 local clearNew = true;
 
-local currentAuctionIds = {};
-
-local scanCount = 0;
-
-local ERR_AUCTION_WON = gsub(ERR_AUCTION_WON_S or "", "%%s", "");
+-- local ERR_AUCTION_WON = gsub(ERR_AUCTION_WON_S or "", "%%s", "");
 
 -- this dialog is used when in browse query
 -- and you try to buy an auction
@@ -122,85 +95,49 @@ StaticPopupDialogs["ANSCONFIRMAUCTION"] = {
     text = "Purchase %s for %s?",
     button1 = "Yes",
     button2 = "No",
-    OnAccept = function()
-        AuctionList:PurchaseAuction();
-        Tasker.Delay(GetTime() + PURCHASE_WAIT_TIME, function()                    
-            SniperFSM:Process("CANCEL_AUCTION");
-        end, TASKER_PURCHASE_TAG);
+    OnAccept = function(self)
+        local auction = self.data.auction;
+        AuctionList:Purchase(auction);
     end,
     OnCancel = function()
-        SniperFSM:Process("CANCEL_AUCTION");
+        
     end,
     timeout = 0,
     whileDead = false,
     hideOnEscape = true,
     preferredIndex = 3
-  };
+};
 
-local function RegisterEvents(frame, events) 
-    for i,v in ipairs(events) do
-        frame:RegisterEvent(v);
-    end
-end
+-- local function QualitySelected(self, arg1, arg2, checked)
+--    local qualities = Config.Sniper().qualities;
+--    if (not Utils.IsClassic()) then
+--        if (checked) then
+--            Config.Sniper().minQuality = arg1;
+--            if (AuctionSnipe.qualityInput ~= nil) then
+--                UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+--            end
+--        end
+--        qualities[arg1] = checked;
+--    else
+--        Config.Sniper().minQuality = arg1;
+--        if (AuctionSnipe.qualityInput ~= nil) then
+--            UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
+--        end
+--    end
 
-local function UnregisterEvents(frame, events)
-    for i,v in ipairs(events) do
-        frame:UnregisterEvent(v);
-    end
-end
-
-local function GetOwners(result)
-    if (#result.owners == 0) then
-        return "";
-    elseif (#result.owners == 1) then
-        return result.owners[1];
-    else
-        return result.owners;
-    end
-end
-
-local function ClearItemsFound()
-    Logger.Log("SNIPER", "Clearing previous items found: "..#itemsFound);
-    for i,v in ipairs(itemsFound) do
-        Recycler:Recycle(v);
-    end
-    wipe(itemsFound);
-end
-
-local function ClearValidAuctions()
-    Logger.Log("SNIPER", "Clearing previous valid auctions: "..#validAuctions);
-    wipe(validAuctions);
-end
-
-local function QualitySelected(self, arg1, arg2, checked)
-    local qualities = Config.Sniper().qualities;
-    if (not Utils.IsClassic()) then
-        if (checked) then
-            Config.Sniper().minQuality = arg1;
-            if (AuctionSnipe.qualityInput ~= nil) then
-                UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
-            end
-        end
-        qualities[arg1] = checked;
-    else
-        Config.Sniper().minQuality = arg1;
-        if (AuctionSnipe.qualityInput ~= nil) then
-            UIDropDownMenu_SetText(AuctionSnipe.qualityInput, ITEM_QUALITY_COLORS[arg1].hex..AnsQualityToText[arg1]);
-        end
-    end
-
-    if (Utils.IsClassic()) then
-        CloseDropDownMenus();
-    end
-end
+--    if (Utils.IsClassic()) then
+--        CloseDropDownMenus();
+--    end
+-- end
 
 local function BuildQualityDropDown(frame, level, menuList)
     local i;
 
+    local module = AuctionSnipe.module;
     local qualities = Config.Sniper().qualities;
     for i = 1, 5 do
         local info = UIDropDownMenu_CreateInfo();
-        info.func = QualitySelected;
+        info.func = module.QualitySelected;
 
         local c = ITEM_QUALITY_COLORS[i];
         local text = c.hex..AnsQualityToText[i];
@@ -215,556 +152,48 @@ local function BuildQualityDropDown(frame, level, menuList)
     end
 end
 
-local function BuildStateMachine()
-    local fsm = FSM:Acquire("SniperFSM");
-    local scanDelay = 0;
-
-    local none = FSMState:Acquire("NONE");
-    none:AddEvent("START_BUYING", function(self, event, previous)
-        -- we return the real previous state
-        -- before we switch to BUYING
-        -- so it can be restored once
-        -- the buying state is over
-        Logger.Log("SNIPER", "trying to start buying");
-        return "BUYING", previous;
-    end);
-    none:AddEvent("BUYING");
-
-
-    fsm:Add(none);
-    fsm:Add(FSMState:Acquire("START_BUYING"));
-
-    local idle = FSMState:Acquire("IDLE");
-    idle:AddEvent("START");
-    idle:AddEvent("START_BUYING", function(self, event, previous)
-        Logger.Log("SNIPER", "trying to start buying from idle");
-        return "BUYING", previous;
-    end);
-    
-    idle:AddEvent("BUYING");
-
-    fsm:Add(idle);
-
-    local start = FSMState:Acquire("START");
-    start:SetOnEnter(function(self)
-        currentItemScan = nil;
-        totalResultsFound = 0;
-        scanIndex = 1;
-        browseItem = 0;
-        totalValidAuctionsFound = 0;
-        scanDelay = 0;
-        clearNew = true;
-
-        ClearItemsFound();
-        ClearValidAuctions();
-
-        wipe(browseResults);
-        wipe(blocks);
-        wipe(currentAuctionIds);
-
-        Query.Clear();
-
-        if (not Utils.IsClassic()) then
-            Query.results = browseResults;
-            Query.browseFilter = AuctionSnipe.BrowseFilter;
-
-            if (AuctionSnipe.snipeStatusText) then
-                AuctionSnipe.snipeStatusText:SetText("Waiting for Results");
-            end
-
-            Query.Browse(DEFAULT_BROWSE_QUERY);
-        else
-            AuctionList:Recycle();
-            return "SEARCH";
-        end
-
-        return nil;
-    end);
-    start:AddEvent("FINDING");
-    start:AddEvent("SEARCH");
-
-    fsm:Add(start);
-
-    local finding = FSMState:Acquire("FINDING");
-    finding:SetOnEnter(function(self)
-        if (#browseResults == 0 and Query.fullBrowseResults) then
-            return "START";
-        elseif (#browseResults == 0 and not Query.fullBrowseResults) then
-            return "BROWSE_MORE";
-        end
-
-        for i,v in ipairs(browseResults) do
-            tinsert(itemsFound, v);
-        end
-
-        if (AuctionSnipe.snipeStatusText) then
-            AuctionSnipe.snipeStatusText:SetText("Gathering Auctions");
-        end
-
-        scanIndex = 1;
-        totalResultsFound = totalResultsFound + #browseResults;
-        wipe(browseResults);
-
-        return "ITEMS";
-    end);
-    finding:AddEvent("START");
-    finding:AddEvent("BROWSE_MORE");
-    finding:AddEvent("ITEMS");
-
-    fsm:Add(finding);
-
-    local fsmbrowseMore = FSMState:Acquire("BROWSE_MORE");
-    fsmbrowseMore:SetOnEnter(function(self)
-        -- reset scan delay here as well
-        -- otherwise there will be a delay
-        -- even if no items found in the next
-        -- browse page
-        scanDelay = 0;
-        clearNew = true;
-        Query.BrowseMore();
-        return nil;
-    end);
-    fsmbrowseMore:AddEvent("FINDING");
-
-    fsm:Add(fsmbrowseMore);
-
-    local items = FSMState:Acquire("ITEMS");
-    items:SetOnEnter(function(self)
-        Logger.Log("SNIPER", "on items");
-        
-        if (not Utils.IsClassic()) then
-            if (validAuctions and #validAuctions > 0) then
-                totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
-                AuctionList:AddItems(validAuctions, clearNew);
-                clearNew = false;
-                ClearValidAuctions();
-            end
-            if (scanIndex <= #itemsFound and #itemsFound > 0) then
-                if (AuctionSnipe.snipeStatusText) then
-                    AuctionSnipe.snipeStatusText:SetText("Gathering Auctions "..scanIndex.." of "..#itemsFound..' out of '..totalResultsFound);
-                end
-
-                Logger.Log("SNIPER", "Next Scan Index: "..scanIndex);
-
-                currentItemScan = itemsFound[scanIndex];
-                scanIndex = scanIndex + 1;
-
-                return "SEARCH";
-            end
-        end
-
-        ClearItemsFound();
-        
-        scanIndex = 1;
-
-        if (totalValidAuctionsFound > 0) then
-            scanDelay = Config.Sniper().scanDelay;
-            if (Config.Sniper().flashWoWIcon) then
-                FlashClientIcon();
-            end
-        end
-
-        if (totalValidAuctionsFound > 0 and Config.Sniper().dingSound) then
-            PlaySound(SOUNDKIT[Config.Sniper().soundKitSound], "Master");
-        end
-
-        totalValidAuctionsFound = 0;
-        
-        if (Utils.IsClassic()) then
-            wipe(blocks);
-            Query:Last();
-        end
-
-        if (AuctionSnipe.snipeStatusText) then
-            AuctionSnipe.snipeStatusText:SetText("Waiting to Query");
-        end
-
-        if (not Query.fullBrowseResults and not Utils.IsClassic()) then
-            Tasker.Delay(GetTime() + scanDelay, function()
-                SniperFSM:Process("BROWSE_MORE");
-            end, TASKER_TAG);
-            return nil;
-        end
-
-        Tasker.Delay(GetTime() + scanDelay, function()
-            SniperFSM:Process("START");
-        end, TASKER_TAG);
-        return nil;
-    end);
-    items:SetOnExit(function(self, next)
-        if (not next) then
-            scanIndex = scanIndex - 1;
-            currentItemScan = itemsFound[scanIndex];
-        end
-    end);
-    items:AddEvent("SEARCH");
-    items:AddEvent("START");
-    items:AddEvent("BROWSE_MORE");
-
-    fsm:Add(items);
-
-    local fsmSearch = FSMState:Acquire("SEARCH");
-
-    fsmSearch:SetOnEnter(function(self)
-        if (Utils.IsClassic()) then
-            
-            Logger.Log("SNIPER", "Sending classic search query");
-
-            scanCount = scanCount + 1;
-
-            if (scanCount > 9999) then scanCount = 1; end
-
-            if (AuctionSnipe.snipeStatusText) then
-                AuctionSnipe.snipeStatusText:SetText("Query: "..scanCount.." Page: "..Query.page.." - Query Sent...");
-            end
-
-            Query:Search(DEFAULT_BROWSE_QUERY);
-        else
-            if (#itemsFound == 0) then
-                -- we have cleared items found
-                -- which means current item scan
-                -- has no values in it really
-                -- go back to the ITEMS state
-                -- to ensure proper continuation
-                return "ITEMS";
-            else
-                lastItemId = currentItemScan.id;
-                Logger.Log("SNIPER", "Searching for: "..currentItemScan.id.."."..currentItemScan.iLevel);
-                Query.SearchForItem(currentItemScan:Clone());
-            end
-        end
-        Tasker.Delay(GetTime() + 4, function()
-            if (fsm.current == "SEARCH") then
-                fsm:Process("SEARCH_COMPLETE");
-            end
-        end, TASKER_TAG_QUERY);
-        return nil;
-    end);
-
-    fsmSearch:AddEvent("ITEM_RESULT", function(self, event, item)
-        Tasker.Clear(TASKER_TAG_QUERY);
-
-        Logger.Log("SNIPER", "item result");
-
-        if (item == nil) then
-            return nil;
-        end
-
-        if (Utils.IsClassic()) then
-            if (not Query:IsLast()) then
-                Logger.Log("SNIPER", "Not last classic page");
-                return nil;
-            end
-
-            if (AuctionSnipe.snipeStatusText) then
-                AuctionSnipe.snipeStatusText:SetText("Filtering "..Query.itemIndex.." of "..Query:Count());
-            end
-
-            if (item.isOwnerItem) then
-                Recycler:Recycle(item);
-                return nil;
-            end
-
-            if (not Query:IsFiltered(item)) then
-                Recycler:Recycle(item);
-                return nil;
-            end
-
-            local itemCount = item.count;
-            if (not blocks[item.hash]) then
-                blocks[item.hash] = item;
-                blocks[item.hash].total = 0;
-                tinsert(validAuctions, blocks[item.hash]);
-            end
-        
-            local block = blocks[item.hash];
-        
-            if(not block.auctions) then
-                block.auctions = {};
-            end
-        
-            block.total = block.total + itemCount;
-            tinsert(block.auctions, item);
-        else
-            -- we track all current auction ids for the search
-            -- so we can remove ones that are no longer there
-            -- on search complete
-            currentAuctionIds[AuctionList:Hash(item)] = true;
-
-            local preventResult = AuctionList:IsKnown(item);
-            
-            if (Config.Sniper().ignoreSingleStacks and not item.auctionId) then
-                if (item.count == 1) then
-                    Logger.Log("SNIPER", "Ignoring single stack for commodity");
-                    return nil;
-                end
-            end
-
-            if (not preventResult and not item.isOwnerItem) then
-                if (Query:IsFiltered(item)) then
-                    tinsert(validAuctions, item:Clone());
-                    return nil;
-                end
-            end
-        end
-
-        return nil;
-    end);
-    fsmSearch:AddEvent("SEARCH_COMPLETE", function(self)
-        Tasker.Clear(TASKER_TAG_QUERY);
-        Logger.Log("SNIPER", "search complete");
-        if (not Utils.IsClassic()) then
-            AuctionList:ClearMissing(currentItemScan, currentAuctionIds);
-        else
-            if (AuctionSnipe.snipeStatusText) then
-                AuctionSnipe.snipeStatusText:SetText("Query: "..scanCount.." Complete");
-            end
-        end
-        return "ITEMS";
-    end);
-    fsmSearch:SetOnExit(function(self, next)
-        Tasker.Clear(TASKER_TAG_QUERY);
-        -- handle displaying items that have already been processed
-        -- when the FSM was interrupted
-        if (validAuctions and #validAuctions > 0) then
-            totalValidAuctionsFound = totalValidAuctionsFound + #validAuctions;
-
-            if (not Utils.IsClassic()) then
-                AuctionList:AddItems(validAuctions, clearNew);
-                clearNew = false;
-                ClearValidAuctions();
-            else
-                AuctionList:SetItems(validAuctions);
-                if (Config.Sniper().chatMessageNew) then
-                    for i,v in ipairs(validAuctions) do
-                        if (v.link and v.count and v.ppu and v.count > 0) then
-                            print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF ppu from "..(v.owner or "?")); 
-                        end
-                    end
-                end
-                ClearValidAuctions(); 
-            end
-        end
-
-        if (not next and not Utils.IsClassic()) then
-            scanIndex = scanIndex - 1;
-            currentItemScan = itemsFound[scanIndex];
-        end
-    end);
-    fsmSearch:AddEvent("ITEMS");
-    
-    fsm:Add(fsmSearch);
-    fsm:Add(FSMState:Acquire("DROPPED"));
-
-    fsm:Add(FSMState:Acquire("SEARCH_COMPLETE"));
-    fsm:Add(FSMState:Acquire("ITEM_RESULT"));
-
-    local buying = FSMState:Acquire("BUYING");
-    buying:SetOnEnter(function(self, previous)
-        Logger.Log("SNIPER", "initating buying");
-        if (AuctionSnipe.processingFrame) then
-            AuctionSnipe.processingFrame:Show();
-        end
-
-        self.innerState = nil;
-        self.previous = previous;
-        Logger.Log("SNIPER", "Previous state before buy: "..self.previous);
-        return nil;
-    end);
-    buying:AddEvent("CONFIRM_COMMODITY", function(self)
-        self.innerState = "CONFIRM_COMMODITY";
-        if (not AuctionList:ConfirmCommoditiesPurchase()) then
-            AuctionList:CancelCommoditiesPurchase();
-            return "BUY_FINISH", self.previous;
-        end
-        return nil;
-    end);
-    buying:AddEvent("CONFIRM_AUCTION", function(self)
-        Logger.Log("SNIPER", "confirm auction");
-        self.innerState = "CONFIRM_AUCTION";
-
-        if (AuctionList.auction) then
-            Logger.Log("SNIPER", "interrupting query and sending search");
-            Query.Clear();
-            lastItemId = AuctionList.auction.id;
-            Query.SearchForItem(AuctionList.auction:Clone(), false, true);
-            return nil;
-        else
-            return "BUY_FINISH", self.previous;
-        end
-    end)
-    buying:AddEvent("SEARCH_COMPLETE", function(self)
-        if (self.innerState == "CONFIRM_AUCTION") then
-            self.innerState = "SEARCH_COMPLETE";
-            StaticPopup_Show ("ANSCONFIRMAUCTION", AuctionList.auction.link, Utils.PriceToString(AuctionList.auction.buyoutPrice));
-        end
-        return nil;
-    end);
-    buying:AddEvent("CONFIRMED_AUCTION", function(self)
-        if (not Utils.IsClassic() and (self.innerState == "SEARCH_COMPLETE" or self.innerState == nil)) then
-            self.innerState = "CONFIRMED_AUCTION";
-            Tasker.Clear(TASKER_PURCHASE_TAG);
-            AuctionList:ConfirmAuctionPurchase();
-            Logger.Log("SNIPER", "Item Purchase Successful");
-            return "BUY_FINISH", self.previous;
-        elseif (Utils.IsClassic()) then
-            return "BUY_FINISH", self.previous;
-        end
-        return nil;
-    end);
-    buying:AddEvent("CANCEL_AUCTION", function(self)
-        self.innerState = "CANCEL_AUCTION";
-        Logger.Log("SNIPER", "Purchase Canceled");
-        return "BUY_FINISH", self.previous;
-    end);
-    buying:AddEvent("CANCEL_COMMODITY", function(self)
-        self.innerState = "CANCEL_COMMODITY";
-        AuctionList:CancelCommoditiesPurchase();
-        return "BUY_FINISH", self.previous;
-    end);
-    buying:AddEvent("CONFIRMED_COMMODITY", function(self)
-        self.innerState = "CONFIRMED_COMMODITY";
-        return "BUY_FINISH", self.previous;
-    end);
-    buying:AddEvent("DROPPED", function(self)
-        -- we test for this inner state
-        -- since the QueryFSM will automatically retry
-        -- the SearchForItem until it can do it
-        -- otherwise if it dropped during another part
-        -- of a commodity buy then cancel the commodity
-        if (self.innerState ~= "CONFIRM_AUCTION" and self.innerState ~= nil) then
-            return "BUY_FINISH", self.previous;
-        end
-        return nil;
-    end);
-    buying:SetOnExit(function(self, next)
-        if (not next or next == "BUY_FINISH") then
-            Logger.Log("SNIPER", "exiting buy mode");
-            if (AuctionSnipe.processingFrame) then
-                AuctionSnipe.processingFrame:Hide();
-            end
-            AuctionList.commodity = nil;
-            AuctionList.auction = nil;
-            AuctionList.isBuying = false;
-        end
-    end);
-    buying:AddEvent("BUY_FINISH");
-
-    fsm:Add(buying);
-    fsm:Add(FSMState:Acquire("CONFIRM_COMMODITY"));
-    fsm:Add(FSMState:Acquire("CONFIRM_AUCTION"));
-    fsm:Add(FSMState:Acquire("CONFIRMED_AUCTION"));
-    fsm:Add(FSMState:Acquire("CANCEL_COMMODITY"));
-    fsm:Add(FSMState:Acquire("CANCEL_AUCTION"));
-    fsm:Add(FSMState:Acquire("CONFIRMED_COMMODITY"));
-
-    local buyFinish = FSMState:Acquire("BUY_FINISH");
-    buyFinish:SetOnEnter(function(self, previous)
-        self.previous = previous;
-        if (previous) then
-            self:AddEvent(previous);
-        end
-
-        return previous;
-    end);
-
-    buyFinish:SetOnExit(function(self)
-        if (self.previous) then
-            Logger.Log("SNIPER", "Buy finished returning to previous state: "..self.previous);
-            self:RemoveEvent(self.previous);
-        end
-    end);
-
-    fsm:Add(buyFinish);
-
-    fsm:Start("IDLE");
-
-    return fsm;
-end
-
-function AuctionSnipe:StartBuyState()
-    if (SniperFSM and AuctionList.auction and SniperFSM.current ~= "NONE" 
-        and SniperFSM.current ~= "START_BUYING" and SniperFSM.current ~= "BUYING") then
-        
-        Logger.Log("SNIPER", "interrupting for buying");
-        -- have to adjust previous state based
-        -- on whether we are buying from items or idle
-        -- so the buy state will return to the proper place
-        -- afterward
-        local previous = SniperFSM.previous;
-        if (SniperFSM.current == "ITEMS") then
-            -- ensure previous as ITEMS
-            previous = "ITEMS";
-        elseif (SniperFSM.current == "IDLE") then
-            -- ensure previous as IDLE
-            previous = "IDLE";
-        end
-
-        Logger.Log("SNIPER", "Starting buying with previous: "..previous);
-
-        -- clear tasker of sniper tasks
-        Tasker.Clear(TASKER_TAG);
-        -- interrupt fsm
-        SniperFSM:Interrupt();
-
-        -- set fsm to none
-        -- so we can start buying
-        -- without any other state
-        -- possibly trying to interrupt
-        SniperFSM.current = "NONE";
-        SniperFSM:Process("START_BUYING", previous);
-
-        -- it is just an item auction with a search needed
-        if (AuctionList.waitingForSearch and not AuctionList.commodity) then
-            Logger.Log("SNIPER", "confirming auction with search");
-            SniperFSM:Process("CONFIRM_AUCTION");
-        -- we purchased the auction without a search required
-        -- go ahead wait for success or timeout
-        elseif (not AuctionList.waitingForSearch and not AuctionList.commodity) then
-            Logger.Log("SNIPER", "confirming auction");
-            if (not Utils.IsClassic()) then
-                Tasker.Delay(GetTime() + PURCHASE_WAIT_TIME, function()                    
-                    SniperFSM:Process("CANCEL_AUCTION");
-                end, TASKER_PURCHASE_TAG);
-            else
-                Tasker.Delay(GetTime() + 0.5, function()
-                    SniperFSM:Process("CONFIRMED_AUCTION");
-                end, TASKER_TAG);
-            end
-        end
-    end
-end
-
 function AuctionSnipe:BuySelected()
-    if (AuctionList and SniperFSM and AuctionList.selectedItem
-        and SniperFSM and SniperFSM.current ~= "NONE" and SniperFSM.current ~= "START_BUYING"
-        and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
-        -- interrupt current query fsm
-        Query.Clear();
-        if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId)) or Utils.IsClassic() 
-        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH"  and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId))) then
-            AuctionList:BuySelected(true);
-        else
-            AuctionList:BuySelected();
-        end
-        self:StartBuyState();
+    if (not self.isInited or not AuctionList) then
+        return;
     end
+
+    AuctionList:BuySelected();
+
+    -- if (AuctionList and SniperFSM and AuctionList.selectedItem
+    --    and SniperFSM and SniperFSM.current ~= "NONE" and SniperFSM.current ~= "START_BUYING"
+    --    and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
+        -- interrupt current query fsm
+    --    Query.Clear();
+    --    if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId)) or Utils.IsClassic() 
+    --    or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH"  and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId))) then
+    --        AuctionList:BuySelected(true);
+    --    else
+    --        AuctionList:BuySelected();
+    --    end
+    --    self:StartBuyState();
+    -- end
 end
 
 function AuctionSnipe:BuyFirst()
-    if (AuctionList and SniperFSM and #AuctionList.items > 0 
-        and SniperFSM and SniperFSM.current ~= "NONE" and SniperFSM.current ~= "START_BUYING"
-        and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
-        -- interrupt current query fsm
-        Query.Clear();
-        if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId)) or Utils.IsClassic() 
-        or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId))) then
-            AuctionList:BuyFirst(true);
-        else
-            AuctionList:BuyFirst();
-        end
-        self:StartBuyState();
+    if (not self.isInited or not AuctionList) then
+        return;
     end
+
+    AuctionList:BuyFirst();
+
+    -- if (AuctionList and SniperFSM and #AuctionList.items > 0 
+    --    and SniperFSM and SniperFSM.current ~= "NONE" and SniperFSM.current ~= "START_BUYING"
+    --    and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
+        -- interrupt current query fsm
+    --    Query.Clear();
+    --    if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId)) or Utils.IsClassic() 
+    --    or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId))) then
+    --        AuctionList:BuyFirst(true);
+    --    else
+    --        AuctionList:BuyFirst();
+    --    end
+    --    self:StartBuyState();
+    -- end
 end
 
 function AuctionSnipe:Init()
@@ -772,6 +201,17 @@ function AuctionSnipe:Init()
     if (self.isInited) then
         return;
     end;
+
+    -- bug fix for qualities if you switch between classic and retail
+    -- sadly your last qualities will be lost on this for the moment
+    -- will change this eventually to separate quality configs
+    -- for classic / retail
+    if (Config.Sniper().classicMode ~= Utils.IsClassic()) then
+        Config.Sniper().qualities = {};
+        Config.Sniper().minQuality = 1;
+    end
+
+    Config.Sniper().classicMode = Utils.IsClassic();
 
     local snipeTemplate = "AnsSnipeBuyTemplate";
     local snipeFilterTemplate = "AnsFilterRowTemplate";
@@ -801,6 +241,7 @@ function AuctionSnipe:Init()
     AHFrameDisplayMode.Snipe = {"AnsSnipeMainPanel"};
 
     AuctionList:OnLoad(frame);
+    AuctionList.module = self.module;
 
     Ans:AddAHTab("Snipe", AHFrameDisplayMode.Snipe);
 
@@ -951,105 +392,208 @@ function AuctionSnipe:Sort(type)
     AuctionList:Sort(type);
 end
 
-function AuctionSnipe.OnQuerySearchResult(item)
-    SniperFSM:Process("ITEM_RESULT", item);
+function AuctionSnipe.OnPreviousComplete()
+    if (AuctionSnipe.state == STATES.NONE) then
+        return;
+    end
+    
+    current = nil;
+    AuctionSnipe:NextPriceScan(0, last);
 end
 
-function AuctionSnipe.OnCommodityDialogCancel()
-    SniperFSM:Process("CONFIRMED_AUCTION");
+function AuctionSnipe.OnPurchaseConfirm(remove, auction, count)
+    AuctionList:OnPurchaseConfirm(remove, auction, count);
 end
 
-function AuctionSnipe.OnQuerySearchComplete()
-    Logger.Log("SNIPER", "query search complete");
-    SniperFSM:Process("SEARCH_COMPLETE");
+function AuctionSnipe.OnPurchaseStart()
+    AuctionList:OnPurchaseStart();
 end
 
-function AuctionSnipe.OnQueryBrowseResults()
-    SniperFSM:Process("FINDING");
-end
+function AuctionSnipe.OnGroupScan(count)
+    local module = AuctionSnipe.module;
 
-function AuctionSnipe.OnChatMessage(msg)
-    if (not SniperFSM or not AuctionSnipe.frame or not AuctionSnipe.frame:IsShown()) then
+    totalGroups = count;
+    last = totalGroups;
+
+    if (count <= 0) then
+        AuctionSnipe:NextGroupScan(0);
         return;
     end
 
-    if (strfind(msg, ERR_AUCTION_BID_PLACED) or strfind(msg, ERR_AUCTION_WON)) then
-        Logger.Log("SNIPER", "Received BID PLACED Message");
-        SniperFSM:Process("CONFIRMED_AUCTION");
-    end
+    AuctionSnipe:NextPriceScan(0, last);
 end
 
---- handle errors for buying ---
-function AuctionSnipe.OnErrorMessage(type, msg)
-    if (not SniperFSM or not AuctionSnipe.frame or not AuctionSnipe.frame:IsShown() or not AuctionList) then
+function AuctionSnipe.PrintResults(results)
+    local isAllowed = Config.Sniper().chatMessageNew;
+    if (not isAllowed) then
         return;
     end
-    if (SniperFSM.current == "BUYING" and Utils.InTable(ERRORS, msg)) then
-        Logger.Log("SNIPER", "Item Purchased Failed with: "..msg);
-        AuctionList:ConfirmAuctionPurchase();
-        SniperFSM:Process("CANCEL_AUCTION");
-    end
-end
-
-function AuctionSnipe.BrowseFilter(item)
-    local self = AuctionSnipe;
-
-    -- if we are not even in the proper state
-    -- don't bother to try and filter
-    -- just return nil
-    if (SniperFSM.current ~= "BROWSE_MORE" and SniperFSM.current ~= "START") then
-        return nil;
-    end
-
-    browseItem = browseItem + 1;
-
-    if (self.snipeStatusText) then
-        self.snipeStatusText:SetText("Filtering Group "..browseItem);
-    end
-
-    local info = Query:GetGroupInfo(item);
-    local hash = Query:GetGroupHash(item);
-    local ppu = item.minPrice;
-
-    if (not info or not hash or not ppu) then
-        return nil;
-    end
-
-    if (info and hash and ppu and Config.Sniper().skipSeenGroup) then
-        if (lastSeenGroupLowest[hash]) then
-            if (lastSeenGroupLowest[hash] == ppu) then
-                return nil;
-            end
-
-            lastSeenGroupLowest[hash] = ppu;
-        else
-            lastSeenGroupLowest[hash] = ppu;
+    for i,v in ipairs(results) do
+        local isOkay = v.link and v.count and v.ppu and v.count > 0;
+        if (isOkay) then
+            print("AnS - New Snipe Available: "..v.link.." x "..v.count.." for "..Utils.PriceToString(v.ppu).."|cFFFFFFFF ppu from "..(v.owner or "?")); 
         end
     end
-
-    local filtered = Query:GetAuctionData(item, info);
-    return Query:IsFilteredGroup(filtered);
 end
 
-function AuctionSnipe:RegisterQueryEvents()
-    EventManager:On("QUERY_SEARCH_RESULT", AuctionSnipe.OnQuerySearchResult);
-    EventManager:On("QUERY_SEARCH_COMPLETE", AuctionSnipe.OnQuerySearchComplete);
-    EventManager:On("QUERY_BROWSE_RESULTS", AuctionSnipe.OnQueryBrowseResults);
-    EventManager:On("COMMODITY_DIALOG_CANCEL", AuctionSnipe.OnCommodityDialogCancel);
-    EventManager:On("CHAT_MSG_SYSTEM", AuctionSnipe.OnChatMessage);
-    EventManager:On("UI_ERROR_MESSAGE", AuctionSnipe.OnErrorMessage);
+function AuctionSnipe.OnPriceScan(results, left)
+    local wait = Config.Sniper().scanDelay;
+    local module = AuctionSnipe.module;
+    local t = #results;
+
+    totalResultsFound = totalResultsFound + t;
+
+    if (t > 0) then
+        if (not Utils.IsClassic()) then
+            AuctionList:AddItems(results, clearNew);
+            clearNew = false;
+        else
+            AuctionList:SetItems(results);
+            AuctionSnipe.PrintResults(results);
+        end
+    else
+        wait = 0;
+    end
+
+    if (not Utils.IsClassic()) then
+        AuctionList:ClearMissing(currentItem, module.known);
+    end
+
+    last = left;
+
+    if (left > 0) then
+        if (Utils.IsClassic()) then
+            AuctionSnipe.FoundNotification(t);
+        else
+            wait = 0;
+        end
+
+        AuctionSnipe:NextPriceScan(wait, left);
+        return;
+    end
+
+    AuctionSnipe.FoundNotification(totalResultsFound);
+    AuctionSnipe:NextGroupScan(wait);
 end
 
-function AuctionSnipe:UnregisterQueryEvents()
-    EventManager:Off("QUERY_SEARCH_RESULT", AuctionSnipe.OnQuerySearchResult);
-    EventManager:Off("QUERY_SEARCH_COMPLETE", AuctionSnipe.OnQuerySearchComplete);
-    EventManager:Off("QUERY_BROWSE_RESULTS", AuctionSnipe.OnQueryBrowseResults);
-    EventManager:Off("COMMODITY_DIALOG_CANCEL", AuctionSnipe.OnCommodityDialogCancel);
-    EventManager:Off("CHAT_MSG_SYSTEM", AuctionSnipe.OnChatMessage);
-    EventManager:Off("UI_ERROR_MESSAGE", AuctionSnipe.OnErrorMessage);
+function AuctionSnipe.FoundNotification(count)
+    if (count <= 0) then
+        return;
+    end
+
+    local flash = Config.Sniper().flashWoWIcon;
+    local ding = Config.Sniper().dingSound;
+    local sound = Config.Sniper().soundKitSound;
+    if (ding) then
+        PlaySound(SOUNDKIT[sound], "Master");
+    end
+    if (flash) then
+        FlashClientIcon();
+    end
 end
 
-function AuctionSnipe:OnUpdate(frame, elapsed)  
+function AuctionSnipe:UpdateScanStatus(left, total)
+     local c = (total - left) + 1;
+     local module = self.module;
+     local text = module.GetScanText(c, total);
+     self.snipeStatusText:SetText(text);
+end
+
+function AuctionSnipe:NextPriceScan(wait, left)
+    local this = self;
+    if (self.state == STATES.NONE) then
+        return;
+    end
+
+    self.snipeStatusText:SetText("Waiting...");
+
+    local module = self.module;
+    Tasker.Delay(GetTime() + wait, function()
+        this:UpdateScanStatus(left, totalGroups);
+        local item = module:PriceScan(AuctionList.IsKnown);
+        
+        if (not item) then
+            this:NextGroupScan(0);
+            return;
+        end
+
+        currentItem = item:Clone();
+    end, TASKER_TAG);
+end
+
+function AuctionSnipe:NextGroupScan(wait)
+    if (self.state == STATES.NONE) then
+        return;
+    end
+
+    currentItem = nil;
+    clearNew = true;
+    totalResultsFound = 0;
+    totalGroups = 0;
+    last = 0;
+
+    self.snipeStatusText:SetText("Waiting...");
+
+    local module = self.module;
+    Tasker.Delay(GetTime() + wait, function()
+        self.snipeStatusText:SetText("Querying...");
+        module:GroupScan(DEFAULT_BROWSE_QUERY);
+    end, TASKER_TAG);
+end
+
+-- function AuctionSnipe.OnCommodityDialogCancel()
+--    SniperFSM:Process("CONFIRMED_AUCTION");
+-- end
+
+-- function AuctionSnipe.OnChatMessage(msg)
+--    Logger.Log("SNIPER", "OnChatMessage: "..msg);
+--    if (not SniperFSM or not AuctionSnipe.frame or not AuctionSnipe.frame:IsShown()) then
+--        Logger.Log("SNIPER", "OnChatMessage: no frame / FSM");
+--        return;
+--    end
+
+--    if (strfind(msg, ERR_AUCTION_BID_PLACED) or strfind(msg, ERR_AUCTION_WON)) then
+--        Logger.Log("SNIPER", "Received BID PLACED Message");
+--        SniperFSM:Process("CONFIRMED_AUCTION");
+--    end
+-- end
+
+--- handle errors for buying ---
+-- function AuctionSnipe.OnErrorMessage(type, msg)
+--    Logger.Log("SNIPER", "OnErrorMessage: "..msg);
+--    if (not SniperFSM or not AuctionSnipe.frame or not AuctionSnipe.frame:IsShown() or not AuctionList) then
+--        Logger.Log("SNIPER", "OnErrorMessage: no frame / FSM");
+--        return;
+--    end
+--    if (SniperFSM.current == "BUYING" and Utils.InTable(ERRORS, msg)) then
+--        Logger.Log("SNIPER", "Item Purchased Failed with: "..msg);
+--        AuctionList:ConfirmAuctionPurchase();
+--        SniperFSM:Process("CANCEL_AUCTION");
+--    end
+-- end
+
+function AuctionSnipe:RegisterSniperEvents()
+    EventManager:On("SNIPER_PRICE_SCAN", AuctionSnipe.OnPriceScan);
+    EventManager:On("SNIPER_GROUP_SCAN", AuctionSnipe.OnGroupScan);
+    EventManager:On("PURCHASE_COMPLETE", AuctionSnipe.OnPurchaseConfirm);
+    EventManager:On("PURCHASE_START", AuctionSnipe.OnPurchaseStart);
+    EventManager:On("QUERY_PREVIOUS_COMPLETED", AuctionSnipe.OnPreviousComplete);
+end
+
+function AuctionSnipe:UnregisterSniperEvents()
+    EventManager:Off("SNIPER_PRICE_SCAN", AuctionSnipe.OnPriceScan);
+    EventManager:Off("SNIPER_GROUP_SCAN", AuctionSnipe.OnGroupScan);
+    EventManager:Off("PURCHASE_COMPLETE", AuctionSnipe.OnPurchaseConfirm);
+    EventManager:Off("PURCHASE_START", AuctionSnipe.OnPurchaseStart);
+    EventManager:Off("QUERY_PREVIOUS_COMPLETED", AuctionSnipe.OnPreviousComplete);
+end
+
+function AuctionSnipe:OnUpdate(frame, elapsed)
+    local module = self.module;
+    if (not module) then
+        return;
+    end  
+    module:Process();
 end
 
 
@@ -1058,37 +602,13 @@ end
 ---
 function AuctionSnipe:RegisterEvents(frame)
     rootFrame = frame;
-
     frame:RegisterEvent("ADDON_LOADED");
     frame:RegisterEvent("AUCTION_HOUSE_SHOW");
     frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
-    --frame:RegisterEvent("PLAYER_MONEY");
 end
 
 function AuctionSnipe:EventHandler(frame, event, ...)
     if (event == "ADDON_LOADED") then self:OnAddonLoaded(...) end;
-
-    if(event == "AUCTION_HOUSE_THROTTLED_MESSAGE_DROPPED") then
-        -- cancel purchase screen if the throttle message is dropped
-        SniperFSM:Process("DROPPED");
-    end
-
-    if (event == "COMMODITY_PURCHASE_FAILED" or event == "COMMODITY_PURCHASED" or event == "COMMODITY_PURCHASE_SUCCEEDED") then
-        AuctionList:OnCommondityPurchased(event == "COMMODITY_PURCHASE_FAILED");
-        SniperFSM:Process("CONFIRMED_COMMODITY");
-    end 
-    if (event == "COMMODITY_PRICE_UPDATED") then
-        local unit, total = ...;
-        AuctionList.removeListing = true;
-        AuctionList.commodityTotal = total;
-        AuctionList.commodityPPU = unit;
-        SniperFSM:Process("CONFIRM_COMMODITY");
-    end
-    if (event == "COMMODITY_PRICE_UNAVAILABLE") then
-        AuctionList.removeListing = false;
-        SniperFSM:Process("CANCEL_COMMODITY");
-    end
-
     if (event == "AUCTION_HOUSE_SHOW") then self:OnAuctionHouseShow(); end;
     if (event == "AUCTION_HOUSE_CLOSED") then self:OnAuctionHouseClosed(); end;
 end
@@ -1106,39 +626,26 @@ function AuctionSnipe:OnAuctionHouseShow()
 end   
 
 function AuctionSnipe:OnAuctionHouseClosed()
-    if (self.isInited) then
-        if(self.frame) then
-            UnregisterEvents(rootFrame, EVENTS_TO_REGISTER);
-        end
-
-        self:Stop();
-
-        Query.ClearThrottle();
-        
-        if (not Utils.IsClassic()) then
-            AuctionList:CancelCommoditiesPurchase();
-        end
-        
-        Query.page = 0;
-        Query:ClearBlacklist();
-        AuctionList:Recycle();
-        
-        self.baseTreeView:ReleaseView();
-        self.filterTreeView:ReleaseView();
-
-        -- clear known auction ids
-        wipe(currentAuctionIds);
-
-        -- clear this data
-        -- as it is no longer
-        -- needed once AH is closed
-        -- free up memory
-        ClearItemsFound();
-        ClearValidAuctions();
-
-        -- clear group lowest
-        wipe(lastSeenGroupLowest);
+    if (not self.isInited) then
+        return;
     end
+
+    self:UnregisterSniperEvents();
+
+    self:Stop();
+    
+    -- clear any confirmation views
+    -- in the list view
+    AuctionList:ClearConfirms();
+
+    Query.ClearTempBlacklist();
+    AuctionList:Recycle();
+    
+    self.baseTreeView:ReleaseView();
+    self.filterTreeView:ReleaseView();
+
+    local module = self.module;
+    module.Wipe();
 end
 
 ---
@@ -1146,17 +653,22 @@ end
 ---
 
 function AuctionSnipe:Close()
-    if(self.frame and self.isInited) then
-        UnregisterEvents(rootFrame, EVENTS_TO_REGISTER);
-        self:UnregisterQueryEvents();
+    if (not self.frame or not self.isInited) then
+        return;
     end
 
-    StaticPopup_Hide("ANSCONFIRMAUCTION");
-    AuctionList.auction = nil;
-    AuctionList.commodity = nil;
-    AuctionList.isBuying = nil;
+    self:UnregisterSniperEvents();
+
+    -- StaticPopup_Hide("ANSCONFIRMAUCTION");
+    -- AuctionList.auction = nil;
+    -- AuctionList.commodity = nil;
+    -- AuctionList.isBuying = nil;
 
     self:Stop();
+
+    -- clear any confirmation views
+    -- in the list view
+    AuctionList:ClearConfirms();
 
     wipe(opTreeViewItems);
     wipe(baseTreeViewItems);
@@ -1165,7 +677,7 @@ function AuctionSnipe:Close()
     self.filterTreeView:ReleaseView();
 
     if (Utils.IsClassic()) then
-        AuctionList:SetItems({});
+        AuctionList:Recycle();
     end 
 end
 
@@ -1174,12 +686,11 @@ end
 ---
 
 function AuctionSnipe:Show()
-    if (self.frame and self.isInited) then
-        RegisterEvents(rootFrame, EVENTS_TO_REGISTER);
-        self:RegisterQueryEvents();
+    if (not self.frame or not self.isInited) then
+        return;
     end
 
-    SniperFSM = BuildStateMachine();
+    self:RegisterSniperEvents();
 
     self:BuildTreeViewFilters();
     self.filterTreeView.items = opTreeViewItems;
@@ -1190,7 +701,6 @@ function AuctionSnipe:Show()
     self.baseTreeView:Refresh();
 
     self.clevelRange:SetText(Config.Sniper().clevel);
-
     self.minLevelInput:SetText(Config.Sniper().ilevel);
 end
 
@@ -1225,6 +735,7 @@ function AuctionSnipe:LoadBaseFilters()
     local quality = Config.Sniper().qualities;
 
     if (Utils.IsClassic()) then
+        wipe(quality);
         quality[Config.Sniper().minQuality] = true;
     end
 
@@ -1249,21 +760,25 @@ function AuctionSnipe:LoadBaseFilters()
         local item = self.baseFilters[i];
 
         if (item) then
-            if (not Utils.IsClassic()) then
+            if (Utils.IsClassic()) then
+                tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
+            else
                 if (item.inventoryType == Data.RUNECARVING) then
                     tinsert(qualityFilters, Enum.AuctionHouseFilter.LegendaryCraftedItemOnly);
                     tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = nil});
                 else
                     tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
                 end
-            else
-                tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
             end
         end
     end
 end
 
 function AuctionSnipe:Start()
+    if (not self.isInited) then
+        return;
+    end
+
     self.startButton:Disable();
     self.stopButton:Enable();
 
@@ -1272,16 +787,12 @@ function AuctionSnipe:Start()
     local maxPercent = tonumber(self.maxPercentInput:GetText()) or 100;
 
     local search = self.searchInput:GetText();
+    local module = self.module;
 
     Config.Sniper().ilevel = ilevel;
 
     self:LoadCLevelFilter();
     self:LoadBaseFilters();
-
-    ClearItemsFound();
-    ClearValidAuctions();
-    
-    wipe(blocks);
 
     Sources:Clear();
 
@@ -1289,54 +800,40 @@ function AuctionSnipe:Start()
     DEFAULT_BROWSE_QUERY.filters = qualityFilters;
     DEFAULT_BROWSE_QUERY.itemClassFilters = classFilters;
 
+    local module = self.module;
+
     -- apply classic sort to get 
     -- item sorted by most recent time
     -- posted
-    if (Utils.IsClassic()) then
-        SortAuctionClearSort("list");
-        SortAuctionApplySort("list");
-    end
+    -- if (Utils.IsClassic()) then
+    --    SortAuctionClearSort("list");
+    --    SortAuctionApplySort("list");
+    -- end
 
-    local realOps = {};
+    local ops = {};
 
     for i,v in ipairs(self.activeOps) do
-        tinsert(realOps, SnipingOp.From(v));
+        tinsert(ops, SnipingOp.From(v));
     end
 
-    Query:AssignSnipingOps(realOps);
-
-    scanIndex = 1;
-    Query.page = 0;
-    Query:AssignDefaults(ilevel, maxBuyout, qualityQueryFilters, maxPercent);
-
-    if (SniperFSM) then
-        SniperFSM:Process("START");
-    else
-        BuildStateMachine(); --ensure state machine is built
-        SniperFSM:Process("START");
-    end
+    Query:AssignDefaults(ops);
+    module.SetOptions(ilevel, maxBuyout, qualityQueryFilters, maxPercent);
+    
+    self.state = STATES.RUNNING;
+    self:NextGroupScan(0);
 end
 
 function AuctionSnipe:Stop()
-    ClearValidAuctions(); 
-    ClearItemsFound();
-    
-    wipe(lastSeenGroupLowest);
-    wipe(browseResults);
-    wipe(blocks);
-
-    Tasker.Clear(TASKER_TAG);
-
-    if (SniperFSM) then
-        SniperFSM:Interrupt();
-
-        -- reset both previous and current
-        -- after interrupt
-        SniperFSM.previous = "IDLE";
-        SniperFSM.current = "IDLE";
+    if (not self.isInited) then
+        return;
     end
 
-    Query.Clear();
+    self.state = STATES.NONE;
+
+    local module = self.module;
+    module:Interrupt();
+
+    Tasker.Clear(TASKER_TAG);
 
     self.startButton:Enable();
     self.stopButton:Disable();

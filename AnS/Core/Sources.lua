@@ -7,13 +7,30 @@ Sources.items = {};
 
 local Utils = Ans.Utils;
 local PriceSource = Ans.PriceSource;
+local IsSocketBonus = Ans.Data.SocketBonus;
+local IsSocketCrafted = Ans.Data.SocketCrafted;
 
 local NAME_CACHE = "";
-local SOURCE_CACHE = "";
 local CVAR_CACHE = "";
 local BONUS_CACHE = {};
 
 local OpCodes = Ans.Object.Register("OpCodes", Sources);
+
+local timingEnabled = false;
+local timing = GetTime();
+local function Timestamp(stop, tag)
+    if (not timingEnabled) then
+        return;
+    end
+
+    if (not stop) then
+        timing = GetTime();
+        return;
+    end
+
+    local diff = GetTime() - timing;
+    print("Ans - Timestamp: "..diff.." | "..tag);
+end
 
 function OpCodes:Acquire() 
     local op = {};
@@ -23,7 +40,7 @@ function OpCodes:Acquire()
     op.buyout = 0;
     op.ilevel = 0;
     op.vendorsell = 0;
-    op.vendorBuy = 0;
+    op.vendorbuy = 0;
     op.quality = 1;
     op.dbmarket = 0;
     op.dbminbuyout = 0; 
@@ -34,12 +51,6 @@ function OpCodes:Acquire()
     op.dbregionsaleavg = 0; 
     op.dbregionsalerate = 0; 
     op.dbregionsoldperday = 0;
-    op.dbglobalminbuyoutavg = 0;
-    op.dbglobalmarketavg = 0;
-    op.dbglobalhistorical = 0;
-    op.dbglobalsaleavg = 0;
-    op.dbglobalsalerate = 0;
-    op.dbglobalsoldperday = 0;
     op.tujmarket = 0; 
     op.tujrecent = 0; 
     op.tujglobalmedian = 0; 
@@ -53,6 +64,8 @@ function OpCodes:Acquire()
     op.ansmarket = 0;
     op.ansmin = 0;
     op.ans3day = 0;
+    op.ansregionmarket = 0;
+    op.ansregionmin = 0;
     op.avgsell = 0;
     op.avgbuy = 0;
     op.maxsell = 0;
@@ -61,6 +74,7 @@ function OpCodes:Acquire()
     op.numinventory = 0;
     op.isgroup = false;
     op.bonuses = BONUS_CACHE;
+    op.socket = false;
     return op;
 end
 
@@ -69,7 +83,6 @@ local VAR_CACHE = {};
 local OP_CACHE = {};
 local VALUE_CACHE = {};
 
-local SOURCE_TEMPLATE = "local %s = ops.%s or 0; ";
 local VAR_TEMPLATE = "local %s = %s or 0; ";
 
 local TEMPLATE = [[
@@ -79,7 +92,8 @@ local TEMPLATE = [[
             abs, ceil, floor, random, log, 
             log10, exp, sqrt = sources.ifgte, sources.iflte, sources.iflt, sources.ifgt, sources.ifeq, sources.ifneq, sources.check, sources.avg, sources.first, sources.round, sources.min, sources.max, math.fmod, math.abs, math.ceil, math.floor, math.random, math.log, math.log10, math.exp, math.sqrt;
 
-        local isgroup = ops.isgroup;
+        local isgroup, isGroup = ops.isgroup, ops.isgroup;
+        local Socket, socket = ops.socket, ops.socket;
         local eq, neq, startswith, contains = sources.eq, sources.neq, sources.startswith, sources.contains;
         local bonuses = ops.bonuses;
         local bonus = function(v1,v2,v3)
@@ -93,33 +107,46 @@ local TEMPLATE = [[
             return sources.bonus(bonuses, v1, v2, v3);
         end
 
-        local percent = ops.percent;
-        local ppu = ops.ppu;
-        local stacksize = ops.stacksize;
-        local buyout = ops.buyout;
-        local avgBuy, AvgBuy, Avgbuy = ops.avgbuy, ops.avgbuy, ops.avgbuy;
-        local avgSell, AvgSell, Avgsell = ops.avgsell, ops.avgsell, ops.avgsell;
-        local Destroy = ops.destroy;
-        local maxSell, MaxSell, Maxsell = ops.maxsell, ops.maxsell, ops.maxsell;
-        local maxBuy, MaxBuy, Maxbuy = ops.maxbuy, ops.maxbuy, ops.maxbuy;
-        local ilevel, itemLevel, ItemLevel, itemlevel, Itemlevel = ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel;
+        local percent, Percent = ops.percent, ops.percent;
+        local ppu, Ppu, PPU = ops.ppu, ops.ppu, ops.ppu;
+        local stacksize, StackSize = ops.stacksize, ops.stacksize;
+        local buyout, Buyout = ops.buyout, ops.buyout;
+        local avgbuy, avgBuy, AvgBuy, Avgbuy = ops.avgbuy, ops.avgbuy, ops.avgbuy, ops.avgbuy;
+        local avgsell, avgSell, AvgSell, Avgsell = ops.avgsell, ops.avgsell, ops.avgsell, ops.avgsell;
+        local destroy, Destroy = ops.destroy, ops.destroy;
+        local maxsell, maxSell, MaxSell, Maxsell = ops.maxsell, ops.maxsell, ops.maxsell, ops.maxsell;
+        local maxbuy, maxBuy, MaxBuy, Maxbuy = ops.maxbuy, ops.maxbuy, ops.maxbuy, ops.maxbuy;
+        local ilevel, ilevel, itemLevel, ItemLevel, itemlevel, Itemlevel = ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel, ops.ilevel;
         local quality, itemquality, itemQuality, ItemQuality, Itemquality = ops.quality, ops.quality, ops.quality, ops.quality, ops.quality;
         local vendorsell, vendorSell, Vendorsell, VendorSell = ops.vendorsell, ops.vendorsell, ops.vendorsell, ops.vendorsell;
         local vendorbuy, vendorBuy, VendorBuy, Vendorbuy = ops.vendorbuy, ops.vendorbuy, ops.vendorbuy, ops.vendorbuy;
-        local tsmId = ops.tsmId;
-        local id = ops.id;
+        local tsmId, tsmid, tsmID = ops.tsmId, ops.tsmId, ops.tsmId;
+        local id, Id, ID = ops.id, ops.ids, ops.id;
 
-        local DBMarket, Dbmarket = ops.dbmarket, ops.dbmarket;
-        local DBMinBuyout, Dbminbuyout = ops.dbminbuyout, ops.dbminbuyout;
-        local DBHistorical, Dbhistorical = ops.dbhistorical, ops.dbhistorical;
+        local dbmarket, DBMarket, Dbmarket = ops.dbmarket, ops.dbmarket, ops.dbmarket;
+        local dbminbuyout, DBMinBuyout, Dbminbuyout = ops.dbminbuyout, ops.dbminbuyout, ops.dbminbuyout;
+        local dbhistorical, DBHistorical, Dbhistorical = ops.dbhistorical, ops.dbhistorical, ops.dbhistorical;
 
-        local DBRegionMinBuyoutAvg, Dbregionminbuyoutavg = ops.dbregionminbuyoutavg, ops.dbregionminbuyoutavg;
-        local DBRegionMarketAvg, Dbregionmarketavg = ops.dbregionmarketavg, ops.dbregionmarketavg;
-        local DBRegionHistorical, Dbregionhistorical = ops.dbregionhistorical, ops.dbregionhistorical;
-        local DBRegionSaleAvg, Dbregionsaleavg = ops.dbregionsaleavg, ops.dbregionsaleavg;
-        local NumInventory, Numinventory, numInventory = ops.numinventory, ops.numinventory, ops.numinventory;
+        local dbregionminbuyoutavg, DBRegionMinBuyoutAvg, Dbregionminbuyoutavg = ops.dbregionminbuyoutavg, ops.dbregionminbuyoutavg, ops.dbregionminbuyoutavg;
+        local dbregionmarketavg, DBRegionMarketAvg, Dbregionmarketavg = ops.dbregionmarketavg, ops.dbregionmarketavg, ops.dbregionmarketavg;
+        local dbregionhistorical, DBRegionHistorical, Dbregionhistorical = ops.dbregionhistorical, ops.dbregionhistorical, ops.dbregionhistorical;
+        local dbregionsaleavg, DBRegionSaleAvg, Dbregionsaleavg = ops.dbregionsaleavg, ops.dbregionsaleavg, ops.dbregionsaleavg, ops.dbregionsaleavg;
+        local dbregionsalerate, DBRegionSaleRate, Dbregionsalerate = ops.dbregionsalerate, ops.dbregionsalerate, ops.dbregionsalerate;
+        local dbregionsoldperday, DBRegionSoldPerDay, Dbregionsoldperday = ops.dbregionsoldperday, ops.dbregionsoldperday, ops.dbregionsoldperday; 
+        local numinventory, NumInventory, Numinventory, numInventory = ops.numinventory, ops.numinventory, ops.numinventory, ops.numinventory;
 
-        %s
+        local atrvalue, AtrValue, Atrvalue = ops.atrvalue, ops.atrvalue, ops.atrvalue;
+        
+        local ansmin, Ansmin, ANSmin, ANSMin, AnsMin = ops.ansmin, ops.ansmin, ops.ansmin, ops.ansmin, ops.ansmin;
+        local ansmarket, Ansmarket, ANSmarket, ANSMarket, AnsMarket = ops.ansmarket, ops.ansmarket, ops.ansmarket, ops.ansmarket, ops.ansmarket;
+        local ans3day, Ans3day, Ans3Day, ANS3day, ANS3Day = ops.ans3day, ops.ans3day, ops.ans3day, ops.ans3day, ops.ans3day;
+        local ansrecent, Ansrecent, ANSrecent, ANSRecent, AnsRecent = ops.ansrecent, ops.ansrecent, ops.ansrecent, ops.ansrecent, ops.ansrecent;
+        local ansregionmin, AnsRegionMin, ANSRegionMin, ansRegionMin = ops.ansregionmin, ops.ansregionmin, ops.ansregionmin, ops.ansregionmin;
+        local ansregionmarket, AnsRegionMarket, ANSRegionMarket, ansRegionMarket = ops.ansregionmarket, ops.ansregionmarket, ops.ansregionmarket, ops.ansregionmarket;
+
+        local tujmarket, tujMarket, TUJMarket, TUJmarket = ops.tujmarket, ops.tujmarket, ops.tujmarket, ops.tujmarket;
+        local tujglobalmean, tujGlobalMean, TUJGlobalMean, TUJglobalmean = ops.tujglobalmean, ops.tujglobalmean, ops.tujglobalmean, ops.tujglobalmean;
+        local tujdays, tujDays, TUJDays, TUJdays = ops.tujdays, ops.tujdays, ops.tujdays, ops.tujdays;
 
         %s
 
@@ -132,7 +159,6 @@ function Sources:Clear()
     Utils.ClearCache();
 
     NAME_CACHE = "";
-    SOURCE_CACHE = "";
     CVAR_CACHE = "";
     
     wipe(VALUE_CACHE);
@@ -160,7 +186,8 @@ function Sources:LoadCVars()
 end
 
 function Sources:Register(name, fn, key)
-    local source = PriceSource:Acquire(name:lower(),fn,key);
+    local n = name:lower();
+    local source = PriceSource:Acquire(n,fn,key);
     tinsert(self.items, source);
 end
 
@@ -182,7 +209,7 @@ function Sources:GetNameString()
     end
 
     -- cache for future lookups
-    NameStringCache = str;
+    NAME_CACHE = str;
 
     return str;
 end
@@ -204,29 +231,6 @@ function Sources:GetCVarString()
     end
 
     CVAR_CACHE = str;
-
-    return str;
-end
-
-function Sources:GetVarString()
-    local str = "";
-    local i;
-    local total = #self.items;
-
-    if (SOURCE_CACHE and SOURCE_CACHE:len() > 0) then
-        return SOURCE_CACHE;
-    end
-
-    for i = 1, total do
-        local s = self.items[i];
-        if (s.fn ~= nil) then
-            local name = s.name;
-            local nstr = string.format(SOURCE_TEMPLATE, name, name);
-            str = str..nstr;
-        end
-    end
-
-    SOURCE_CACHE = str;
 
     return str;
 end
@@ -305,13 +309,20 @@ Sources.avg = function(...)
     return Sources.round(amt / t);
 end
 
-Sources.first = function(v1,v2)
-    if (v1 and type(v1) == "number" 
-        and math.floor(v1) > 0) then
-            return v1 or 0;
+Sources.first = function(...)
+    local totalItems = select("#", ...);
+
+    local i;
+
+    for i = 1, totalItems do
+        local v = select(i, ...);
+        if (v and type(v) == "number") 
+            and math.floor(v) > 0 then
+                return v or 0;
+        end
     end
 
-    return v2 or 0;
+    return 0;
 end
 
 Sources.check = function(v1,v2,v3)
@@ -567,7 +578,7 @@ function Sources:QueryID(q, itemId)
     codes.tsmId = Utils.GetID(itemId);
     codes.isgroup = false;
 
-    local idBonusOnly = Utils.BonusID(codes.tsmId, false, codes.bonuses);
+    local idBonusOnly, socket = Utils.BonusID(codes.tsmId, false, codes.bonuses, IsSocketBonus);
 
     local t, id = strsplit(":", codes.tsmId); 
 
@@ -578,6 +589,7 @@ function Sources:QueryID(q, itemId)
     codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
 
     codes.id = tonumber(id);
+    codes.socket = socket or IsSocketCrafted(codes.id);
 
     local _, fn, err = false, nil, nil;
     local oq = q;
@@ -595,7 +607,7 @@ function Sources:QueryID(q, itemId)
             return 0;
         end
 
-        local pstr = string.format(TEMPLATE, self:GetVarString(), self:GetCVarString(), q);
+        local pstr = string.format(TEMPLATE, self:GetCVarString(), q);
 
         fn, err = loadstring(pstr);
 
@@ -679,7 +691,7 @@ function Sources:Validate(q)
             return false;
         end
 
-        local pstr = string.format(TEMPLATE, self:GetVarString(), self:GetCVarString(), q);
+        local pstr = string.format(TEMPLATE, self:GetCVarString(), q);
 
         fn, err = loadstring(pstr);
 
@@ -747,9 +759,9 @@ function Sources:Query(q, item, isGroup)
         item.tsmId = Utils.GetID(item.link);
     end
 
-    local idBonusOnly = Utils.BonusID(item.tsmId or item.link or item.id, false, codes.bonuses);
+    local idBonusOnly, socket = Utils.BonusID(item.tsmId or item.link or item.id, false, codes.bonuses, IsSocketBonus);
 
-    if (item.tsmId) then
+    if (item.tsmId and item.isPet) then
         local t, id = strsplit(":", item.tsmId); 
 
         if (t == "p") then
@@ -768,6 +780,7 @@ function Sources:Query(q, item, isGroup)
     codes.id = item.id;
     codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
     codes.isgroup = isGroup;
+    codes.socket = socket or IsSocketCrafted(codes.id);
 
     local _, fn, err = false, nil, nil;
     local oq = q;
@@ -785,7 +798,7 @@ function Sources:Query(q, item, isGroup)
             return 0;
         end
 
-        local pstr = string.format(TEMPLATE, self:GetVarString(), self:GetCVarString(), q);
+        local pstr = string.format(TEMPLATE, self:GetCVarString(), q);
 
         fn, err = loadstring(pstr);
 

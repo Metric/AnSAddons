@@ -44,7 +44,7 @@ local SNIPER_DEFAULT = {
     characterBlacklist = {},
     useCommodityConfirm = true, -- set to true as default, as I could see someone new accidentally buying more than they expected without it
     dingSound = true,
-    itemsPerUpdate = 20,
+    itemsPerUpdate = 50,
     itemBlacklist = {},
     scanDelay = 2,
     skipSeenGroup = false,
@@ -58,6 +58,7 @@ local SNIPER_DEFAULT = {
     soundKitSound = "AUCTION_WINDOW_OPEN",
     ignoreSingleStacks = false,
     ignoreGroupMaxPercent = false,
+    classicMode = false,
 };
 
 local CRAFTING_DEFAULT = {

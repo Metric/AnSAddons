@@ -10,6 +10,7 @@ local TempTable = Ans.API.TempTable;
 local stats = Core.Statistics;
 
 local MAX_DAYS_TO_TRACK = 7;
+local rawDataFromNet = false;
 
 ANS_AUCTION_DATA = {};
 AnsAuctionData = {};
@@ -60,7 +61,7 @@ local function ShowDataPetFloat(tooltip, pet)
     AnsAuctionDataTooltip:ClearAllPoints();
     AnsAuctionDataTooltip:ClearLines();
     AnsAuctionDataTooltip:SetClampedToScreen(false);
-    AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_TOP");
+    AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_BOTTOMLEFT");
 
     local plevel = pet.level;
 
@@ -120,6 +121,7 @@ local function ShowDataPetFloat(tooltip, pet)
 
     if (dataAdded) then
         AnsAuctionDataTooltip:Show();
+        AnsAuctionDataTooltip:SetPoint("TOPRIGHT", tooltip, "TOPLEFT");
     else
         AnsAuctionDataTooltip:Hide();
     end
@@ -129,8 +131,7 @@ local function ShowData(tooltip, extra)
     AnsAuctionDataTooltip:ClearLines();
     AnsAuctionDataTooltip:ClearAllPoints();
     AnsAuctionDataTooltip:SetClampedToScreen(false);
-
-    AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_TOP");
+    AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_BOTTOMLEFT");
 
     local name, link = tooltip:GetItem();
     
@@ -209,6 +210,7 @@ local function ShowData(tooltip, extra)
 
     if (dataAdded) then
         AnsAuctionDataTooltip:Show();
+        AnsAuctionDataTooltip:SetPoint("TOPRIGHT", tooltip, "TOPLEFT");
     else
         AnsAuctionDataTooltip:Hide();
     end
@@ -255,25 +257,18 @@ function AnsAuctionData:OnLoad(frame)
 
     self.frame = frame;
 
-    frame:RegisterEvent("AUCTION_HOUSE_SHOW");
-    frame:RegisterEvent("AUCTION_HOUSE_CLOSED");
-
-    if (Utils.IsClassic()) then
-        frame:RegisterEvent("AUCTION_ITEM_LIST_UPDATE");
-    end
-
-    if (Realms.F) then
+    if (Realms and Realms.F) then
+        rawDataFromNet = true;
         Realms.F(region, region.."-"..realmName);
         Realms.F = nil;
+    else
+        rawDataFromNet = false;
+        Realms = {};
     end
 end
 
 function AnsAuctionData:OnUpdate()
     Scanner:OnUpdate();
-end
-
-function AnsAuctionData:EventHandler(frame, event, ...)
-    Scanner:EventHandler(frame, event, ...);
 end
 
 function AnsAuctionData:GetValidID(tsm) 
@@ -369,10 +364,6 @@ function AnsAuctionData.GetRegionValue(link, key)
         return 0;
     end
 
-    if (not AnsAuctionData:HasData()) then
-        return 0;
-    end
-
     local tsmId = Utils.GetID(link);
 
     if (not tsmId) then
@@ -384,10 +375,10 @@ function AnsAuctionData.GetRegionValue(link, key)
     local kindex = keyToRegionIndex[key];
 
     if (kindex) then
-        local r = AnsAuctionData:GetRawData();
+        local r = AnsAuctionData:GetRawData(not rawDataFromNet);
         local cid = fid;
 
-        if (Utils.IsClassic()) then
+        if (Utils.IsClassic() or not rawDataFromNet) then
             cid = vid;
         end
 
@@ -395,7 +386,7 @@ function AnsAuctionData.GetRegionValue(link, key)
             local data = r[cid];
             data = data and data[kindex] or nil;
             return data or 0;
-        elseif (not Utils.IsClassic()) then
+        elseif (not Utils.IsClassic() and rawDataFromNet) then
             local _,base = strsplit(":", vid);
             local bid = _..":"..base;
             if (r and r[bid]) then
@@ -432,10 +423,6 @@ function AnsAuctionData.GetRealmValue(link, key)
         return 0;
     end
 
-    if (not AnsAuctionData:HasData()) then
-        return 0;
-    end
-
     local tsmId = Utils.GetID(link);
 
     if (not tsmId) then
@@ -447,10 +434,10 @@ function AnsAuctionData.GetRealmValue(link, key)
     local kindex = keyToIndex[key];
 
     if (kindex) then
-        local r = AnsAuctionData:GetRawData();
+        local r = AnsAuctionData:GetRawData(not rawDataFromNet);
         local cid = fid;
 
-        if (Utils.IsClassic()) then
+        if (Utils.IsClassic() or not rawDataFromNet) then
             cid = vid;
         end
 
@@ -458,7 +445,7 @@ function AnsAuctionData.GetRealmValue(link, key)
             local data = r[cid];
             data = data and data[kindex] or nil;
             return data or 0;
-        elseif (not Utils.IsClassic()) then
+        elseif (not Utils.IsClassic() and rawDataFromNet) then
             local _,base = strsplit(":", vid);
             local bid = _..":"..base;
             if (r and r[bid]) then
@@ -605,12 +592,14 @@ function AnsAuctionData:StopTracking()
     totalItems = 0;
 end
 
+local BONUS_TEMP_TABLE = {};
 function AnsAuctionData:AddTracking(tsmId, copper)
     tsmId = AnsAuctionData:GetValidID(tsmId);
 
 	local _,i = strsplit(":", tsmId);
 	local base = _..":"..i;
-	local bonus = Utils.BonusID(tsmId);
+	local bonus = Utils.BonusID(tsmId, false, BONUS_TEMP_TABLE);
+    local mods = Utils.BonusID(tsmId, true, BONUS_TEMP_TABLE);
 
 	if (tsmId ~= base) then
 		if (tracker[base]) then
@@ -637,6 +626,19 @@ function AnsAuctionData:AddTracking(tsmId, copper)
 			totalItems = #keys;
 		end
 	end
+
+    if (tsmId ~= mods and bonus ~= mods) then
+        if (tracker[mods]) then
+			local track = tracker[mods];
+			tinsert(track, copper);
+		else
+			local track = {};
+			tinsert(track, copper);
+			tracker[mods] = track;
+			tinsert(keys, mods);
+			totalItems = #keys;
+		end
+    end
 
 	if (tracker[tsmId]) then
 		local track = tracker[tsmId];

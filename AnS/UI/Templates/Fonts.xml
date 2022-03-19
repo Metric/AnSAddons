@@ -55,7 +55,7 @@
 		</Font>
 	</Member>
 	<Member alphabet="traditionalchinese">
-		<Font font="Fonts\arheiuhk_bd.TTF">
+		<Font font="Fonts\blei00d.TTF">
 			<Color r="0.4" g="0.4" b="0.4" />
 			<FontHeight>
 			  <AbsValue val="10" />
@@ -112,7 +112,7 @@
 		</Font>
 	</Member>
 	<Member alphabet="traditionalchinese">
-		<Font font="Fonts\arheiuhk_bd.TTF">
+		<Font font="Fonts\blei00d.TTF">
 			<Color r="0" g="0" b="0" a="1" />
 			<FontHeight>
 			  <AbsValue val="10" />
@@ -169,7 +169,7 @@
 		</Font>
 	</Member>
 	<Member alphabet="traditionalchinese">
-		<Font font="Fonts\arheiuhk_bd.TTF">
+		<Font font="Fonts\blei00d.TTF">
 			<Color r="1" g="1" b="1" a="1" />
 			<FontHeight>
 			  <AbsValue val="10" />
@@ -226,7 +226,7 @@
 		</Font>
 	</Member>
 	<Member alphabet="traditionalchinese">
-		<Font font="Fonts\arheiuhk_bd.TTF">
+		<Font font="Fonts\blei00d.TTF">
 			<Color r="1" g="1" b="1" a="1" />
 			<FontHeight>
 			  <AbsValue val="24" />
@@ -283,7 +283,7 @@
 		</Font>
 	</Member>
 	<Member alphabet="traditionalchinese">
-		<Font font="Fonts\arheiuhk_bd.TTF">
+		<Font font="Fonts\blei00d.TTF">
 			<Color r="0.01" g="0.75" b="1" />
 			<FontHeight>
 			  <AbsValue val="10" />
@@ -340,7 +340,7 @@
 			</Font>
 		</Member>
 		<Member alphabet="traditionalchinese">
-			<Font font="Fonts\arheiuhk_bd.TTF">
+			<Font font="Fonts\blei00d.TTF">
 				<Color r="1" g="1" b="1" a="0.75" />
 				<FontHeight>
 				  <AbsValue val="10" />
@@ -397,7 +397,7 @@
 			</Font>
 		</Member>
 		<Member alphabet="traditionalchinese">
-			<Font font="Fonts\arheiuhk_bd.TTF">
+			<Font font="Fonts\blei00d.TTF">
 				<Color r="1" g="1" b="1" a="0.75" />
 				<FontHeight>
 				  <AbsValue val="12" />
@@ -430,7 +430,7 @@
 			<Font font="Fonts\ARKai_C.ttf" height="8" />
 		</Member>
 		<Member alphabet="traditionalchinese">
-			<Font font="Fonts\arheiuhk_bd.TTF" height="8" />
+			<Font font="Fonts\blei00d.TTF" height="8" />
 		</Member>
 		<Member alphabet="russian">
 			<Font font="Fonts\FRIZQT___CYR.TTF" height="8" />
@@ -447,7 +447,7 @@
 			<Font font="Fonts\ARKai_C.ttf" height="11.5" />
 		</Member>
 		<Member alphabet="traditionalchinese">
-			<Font font="Fonts\arheiuhk_bd.TTF" height="11.5" />
+			<Font font="Fonts\blei00d.TTF" height="11.5" />
 		</Member>
 		<Member alphabet="russian">
 			<Font font="Fonts\FRIZQT___CYR.TTF" height="11.5" />

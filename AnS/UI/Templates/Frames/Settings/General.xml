@@ -196,7 +196,7 @@
                 <Anchors>
                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.windowOptions" x="0" y="-35" />
                 </Anchors>
-                <Size x="565" y="32" />
+                <Size x="565" y="56" />
                 <Frames>
                     <EditBox parentKey="maxDataLimit" maxBytes="64" numeric="true" text="" inherits="AnsEditBoxTemplate">
                         <Size x="64" y="20" />
@@ -219,6 +219,12 @@
                             <Anchor point="TOPLEFT" x="110" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.maxDataLimit" />
                         </Anchors>
                     </CheckButton>
+                     <Button parentKey="clearAuctionData" text="Clear Auction Data" inherits="AnsStandardButtonTemplate">
+                        <Size x="128" y="20" />
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="0" y="-6" relativePoint="BOTTOMLEFT" relativeKey="$parent.maxDataLimit" />
+                        </Anchors>
+                    </Button>
                 </Frames>
                 <Layers>
                     <Layer level="BACKGROUND">
@@ -244,6 +250,12 @@
                         </FontString>
                     </Layer>
                 </Layers>
+            </Frame>
+             <Frame parentKey="ConfirmDelete" inherits="AnsConfirmDialogTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT" x="-8" y="20" />
+                    <Anchor point="BOTTOMRIGHT" x="16" y="-32" />
+                </Anchors>
             </Frame>
         </Frames>
         <Scripts>

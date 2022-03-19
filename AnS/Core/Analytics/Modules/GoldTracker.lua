@@ -48,11 +48,9 @@ function GoldTracker:OnLoad()
     if (self.guildName and not self.log[self.guildName]) then self.log[self.guildName] = {ledger = {}, current = 0}; end;
 
     EventManager:On("PLAYER_MONEY", self.OnPlayerMoneyChange);
-	if (not Utils.IsClassic()) then
-		EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
-		EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
-		EventManager:On("GUILDBANK_UPDATE_MONEY", self.OnGuildVaultMoneyChange);
-	end
+    EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
+    EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
+    EventManager:On("GUILDBANK_UPDATE_MONEY", self.OnGuildVaultMoneyChange);
     EventManager:On("PLAYER_ENTERING_WORLD", self.OnPlayerWorld);
 
     self:CompactLog(self.log[self.name].ledger);

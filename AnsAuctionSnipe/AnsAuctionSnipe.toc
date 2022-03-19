@@ -1,13 +1,16 @@
-## Interface: 90005
+## Interface: 90200
 ## Title: AnS [Auction Sniper]
-## Version: 2.2.6.4
+## Version: 2.2.7
 ## Notes: A lightweight addon for auction sniping; Relies on Undermine Journal or TSM for pricing.
 ## License: MIT
 ## Dependencies: AnS
 
 UI\Components\Spinner.lua
 UI\Components\AuctionList.lua
-UI\Components\CommodityInput.lua
+UI\Components\CommodityDialog.lua
 
 AuctionSnipe.lua
+Modules\Retail.lua
+Modules\Classic.lua
+
 AuctionSnipe.xml

@@ -1,9 +1,14 @@
-## Interface: 90005
+## Interface: 90200
 ## Title: AnS
-## Version: 2.2.6.4
+## Version: 2.2.7
 ## Notes: Core library for Auction Snipe etc.
 ## License: MIT
 ## SavedVariables: ANS_FILTERS, ANS_CONFIG, ANS_CUSTOM_VARS, ANS_GLOBAL_SETTINGS, ANS_ANALYTICS_DATA
+
+# External libraries
+External\EmbeddedLibs\LibStub\LibStub.lua
+External\EmbeddedLibs\LibDeflate\LibDeflate.lua
+External\EmbeddedLibs\LibSerialize\LibSerialize.lua
 
 ## Base Utils
 Core\Utils\Object.lua
@@ -93,6 +98,7 @@ Data\Mounts.lua
 Data\Pets.lua
 Data\ClassicVendor.lua
 Data\Vendor.lua
+Data\Sockets.lua
 
 ## Auction Database Sources
 Core\Auction\Database\Core.lua
@@ -102,6 +108,9 @@ Core\Auction\Database\TUJ.lua
 ## Price Sources
 Core\PriceSource.lua
 Core\Sources.lua
+
+## Event State Helper
+Core\EventState.lua
 
 ## Special Crafting Data for Recipes
 ## This must come after Sources.lua
@@ -113,7 +122,9 @@ Data\Crafting.lua
 Core\Auction\Core.lua
 Core\Auction\Auction.lua
 Core\Auction\Recycler.lua
-Core\Auction\Query.lua
+Core\Auction\Query\Core.lua
+Core\Auction\Query\Modules\Retail.lua
+Core\Auction\Query\Modules\Classic.lua
 
 ## Operations
 Core\Operations\Core.lua
@@ -167,6 +178,8 @@ UI\Mixins\Windows\Destroy.lua
 ## UI for Hooks
 UI\Mailing\Send.lua
 UI\Auctioning\Posting.lua
+UI\Auctioning\Modules\Retail.lua
+UI\Auctioning\Modules\Classic.lua
 
 ## Special Hooks
 UI\Hooks\BagHook.lua

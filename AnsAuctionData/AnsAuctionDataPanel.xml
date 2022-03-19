@@ -2,7 +2,7 @@
     <Frame name="AnsAuctionDataPanelTemplate" virtual="true" inherits="TooltipBorderedFrameTemplate">
         <size x="300" y="32" />
         <Anchors>
-            <Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" x="0" y="-12"/>
+            <Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" x="0" y="0"/>
         </Anchors>
         <Frames>
             <Frame name="$parentBottomBar">

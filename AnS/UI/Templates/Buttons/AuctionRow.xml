@@ -27,7 +27,7 @@
       </Frame>
 
       <Frame>
-        <Size x="16" y="16" />
+        <Size x="32" y="16" />
         <Anchors>
           <Anchor point="LEFT" relativeTo="$parentPPU" relativePoint="RIGHT" x="2" y="0" />
         </Anchors>
@@ -36,6 +36,15 @@
             <Texture name="$parentItemIcon">
                 <Size x="16" y="16"/>
                 <TexCoords left="0" right="1" top="0" bottom="1"/>
+                <Anchors>
+                  <Anchor point="LEFT" x="16" y="0" />
+                </Anchors>
+            </Texture>
+            <Texture name="$parentItemSocket" file="Interface\ItemSocketingFrame\UI-EmptySocket-Prismatic">
+              <Size x="16" y="16"/>
+              <Anchors>
+                <Anchor point="LEFT" x="0" y="0" />
+              </Anchors>
             </Texture>
           </Layer>
         </Layers>

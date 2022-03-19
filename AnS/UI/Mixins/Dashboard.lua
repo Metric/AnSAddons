@@ -334,16 +334,10 @@ function AnsDashboardFrameMixin:UpdateGraph()
         else
             -- round to gold only
             local gold = math.floor(totalY / 10000);
-			if (gold > 10000000000) then
-				tinsert(t3, string.format("%.0f", gold / 10000000000).."B");
-			elseif (gold > 1000000000) then
+			if (gold > 1000000000) then
 				tinsert(t3, string.format("%.2f", gold / 1000000000).."B");
-			elseif (gold > 10000000) then
-				tinsert(t3, string.format("%.0f", gold / 10000000).."M");
             elseif (gold > 1000000) then
                 tinsert(t3, string.format("%.2f", gold / 1000000).."M");
-            elseif (gold > 10000) then
-                tinsert(t3, string.format("%.0f", gold / 1000).."K");
             elseif (gold > 1000) then
                 tinsert(t3, string.format("%.2f", gold / 1000).."K");
             else

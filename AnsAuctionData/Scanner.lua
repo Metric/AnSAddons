@@ -2,10 +2,14 @@ local Core = select(2, ...);
 local Query = Ans.API.Auctions.Query;
 local Recycler = Ans.API.Auctions.Recycler;
 local Utils = Ans.API.Utils;
+local Config = Ans.API.Config;
+local EventManager = Ans.API.EventManager;
 
 ANS_LAST_DATA_SCAN = 0;
 
 local MIN_WAIT_TIME = (60 * 15);
+local query = Query:Acquire(0,0,{0},0);
+local itemIndex = 1;
 
 local STATES = {};
 STATES.NONE = 0;
@@ -51,13 +55,11 @@ function Scanner:Init()
         return;
     end
 
+    local AHFrame = AuctionHouseFrame or AuctionFrame;
+
     self.inited = true;
 
-    if (not Utils.IsClassic()) then
-        return;
-    end
-
-    local frame = CreateFrame("FRAME", "AnsAuctionDataPanel", AuctionFrame, "AnsAuctionDataPanelTemplate");
+    local frame = CreateFrame("FRAME", "AnsAuctionDataPanel", AHFrame, "AnsAuctionDataPanelTemplate");
     self.frame = frame;
 
     self.statusText = _G[frame:GetName().."BottomBarStatus"];
@@ -72,24 +74,77 @@ end
 
 function Scanner:Toggle()
     if (self.frame and self.state == STATES.NONE) then
-        if (Query:IsAllReady()) then
-            self.state = STATES.INIT;
-            self.startButton:SetText("Cancel Data Scan");
-            self.statusText:SetText("Gathering Data...");
-        else
-            self.statusText:SetText("Must wait at least 15 minutes");    
+        local ready, allReady = query:IsReady();
+
+        if (Utils.IsClassic() and not allReady) then
+            return;
+        elseif (ANS_LAST_DATA_SCAN + MIN_WAIT_TIME > time()) then
+            return;
         end
+
+        self.state = STATES.INIT;
+        self.startButton:SetText("Cancel Data Scan");
+        self.statusText:SetText("Gathering Data...");
+
     elseif (self.frame and self.state ~= STATES.NONE) then
        self:Stop();
     end
 end
 
 function Scanner:Stop()
+    query:Interrupt();
+
     self.state = STATES.NONE;
 
     if (self.frame) then
         AnsAuctionData:StopTracking();
         self.startButton:SetText("Start Data Scan");
+    end
+end
+
+function Scanner:Start()
+    self.state = STATES.WAITING;
+    itemIndex = 1;
+    ANS_LAST_DATA_SCAN = time();
+    AnsAuctionData:StartTracking();
+    query:All();
+end
+
+function Scanner:Track()
+    local count = 0;
+    local auction = Recycler:Get();
+    local perFrame = Config.Sniper().itemsPerUpdate;
+    local total = query:AllCount();
+
+    while (itemIndex <= total and count < perFrame) do
+        self.statusText:SetText("Scanning "..itemIndex.." of "..total);
+
+        auction = query:Next(auction, itemIndex);
+        if (auction) then
+            AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
+        end
+
+        itemIndex = itemIndex + 1;
+        count = count + 1;
+    end
+
+    if (itemIndex > total) then
+        self.state = STATES.PROCESSING;
+    end
+end
+
+function Scanner:Process()
+    local count = 0;
+    local perFrame = Config.Sniper().itemsPerUpdate;
+
+    while (not AnsAuctionData:IsProcessingComplete() and count < perFrame) do
+        local step = AnsAuctionData:CurrentProcessingStep();
+        local maxStep = AnsAuctionData:TotalItemsToProcess();
+
+        self.statusText:SetText("Processing "..step.." of "..maxStep);
+
+        AnsAuctionData:ProcessNext();
+        count = count + 1;
     end
 end
 
@@ -99,32 +154,12 @@ function Scanner:OnUpdate()
     end
 
     if (self.state == STATES.INIT) then
-        if (Query:IsAllReady()) then
-            self.state = STATES.WAITING;
-            ANS_LAST_DATA_SCAN = time();
-            AnsAuctionData:StartTracking();
-            Query:All();
-        end
+        self:Start();
     elseif (self.state == STATES.ITEMS) then
-        local count = 0;
-        local auction = Recycler:Get();
-        while (Query:HasNext() and count <= 50) do
-            self.statusText:SetText("Scanning "..Query.itemIndex.." of "..Query:Count());
-            if (Query:Next(auction)) then
-                AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
-            else
-                auction = Recycler:Get();
-            end
-            count = count + 1;
-        end
-
-        if (not Query:HasNext()) then
-            self.state = STATES.PROCESSING;
-        end
+        self:Track();
     elseif (self.state == STATES.PROCESSING) then
         if (not AnsAuctionData:IsProcessingComplete()) then
-            self.statusText:SetText("Processing "..AnsAuctionData:CurrentProcessingStep().." of "..AnsAuctionData:TotalItemsToProcess());
-            AnsAuctionData:ProcessNext();
+            self:Process();
         else
             self.statusText:SetText("Complete");
             self:Stop();
@@ -136,15 +171,10 @@ function Scanner:OnUpdate()
     end
 end
 
-function Scanner:EventHandler(frame, event, ...)
-    if (event == "AUCTION_ITEM_LIST_UPDATE") then
-        if (self.state == STATES.WAITING) then
-            self.state = STATES.ITEMS;
-        end
+function Scanner:TryProcess()
+    if (self.state == STATES.WAITING) then
+        self.state = STATES.ITEMS;
     end
-
-    if (event == "AUCTION_HOUSE_SHOW") then self:Show(); end;
-    if (event == "AUCTION_HOUSE_CLOSED") then self:Close(); end;
 end
 
 function Scanner:Show()
@@ -154,3 +184,16 @@ end
 function Scanner:Close()
     self:Stop();
 end
+
+EventManager:On("AUCTION_HOUSE_SHOW", function()
+    Scanner:Show();
+end);
+EventManager:On("AUCTION_HOUSE_CLOSED", function()
+    Scanner:Close();
+end);
+EventManager:On("AUCTION_ITEM_LIST_UPDATE", function()
+    Scanner:TryProcess();
+end);
+EventManager:On("REPLICATE_ITEM_LIST_UPDATE", function()
+    Scanner:TryProcess();
+end);

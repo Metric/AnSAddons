@@ -1,4 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <Include file="UI/Templates/Frames/CommodityDialog.xml" />
+    <Include file="UI/Templates/Frames/Spinner.xml" />
     <Include file="UI/Templates/Frames/Buy.xml" />
 
     <!-- Frame to handle all core events -->

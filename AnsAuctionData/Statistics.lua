@@ -15,6 +15,31 @@ local function SorthMethod(a,b)
 	return a < b;
 end
 
+local function Min(a,b)
+	if (a <= b) then
+		 return a;
+	end
+
+	return b;
+end
+
+--- note: before usage ensure the x table has values
+--- as this function does not check for length
+--- and can throw an error otherwise
+local function AvgSumMinimumPrev(x, prevSum, prevCount)
+	local n = #x;
+	local sum = 0;
+	local m = x[1];
+
+	for i = 1, n do
+		local v = x[i];
+		m = Min(m, v);
+		sum = sum + v;
+	end
+
+	return RoundToInt((sum + prevSum) / math.max(1, n + prevCount)), sum, m;
+end
+
 local function Sum(x)
     local n = #x;
     local sum = 0;
@@ -45,6 +70,21 @@ function Statistics:Sum(x)
 end
 
 function Statistics:Calculate(x, prevSum, prevCount)
+	
+	-- this is a fix to ensure we
+	-- still include auctions that there
+	-- are very few of overall
+
+	local count = #x;
+
+	if (count <= 0) then
+		local avg = RoundToInt(prevSum / math.max(1, prevCount));
+		return 0, avg, prevSum, prevCount;
+	elseif (count <= 5) then
+		local avg, sum, amin = AvgSumMinimumPrev(x, prevSum, prevCount);
+		return amin, avg, sum, count; 
+	end
+
 	local half = ceil(#x * 0.35);
 	local low = ceil(#x * 0.15);
     local valid = TempTable:Acquire();
@@ -54,7 +94,7 @@ function Statistics:Calculate(x, prevSum, prevCount)
     local prev = 0;
 	local sum = 0;
 	local mina = x[1];
-	local count = 0;
+
 
 	for i = 1, half do
 		if (i <= low or x[i] < prev * 1.2) then
@@ -69,7 +109,10 @@ function Statistics:Calculate(x, prevSum, prevCount)
 	-- exit early if nothing
 	-- though we should have atleast one
 	if (count == 0) then
-		return 0, 0, 0, 0;
+		valid:Release(); -- ensure table is released
+
+		local avg = RoundToInt(prevSum / math.max(1, prevCount));
+		return 0, avg, prevSum, prevCount;
 	end
 		
 	local avg = RoundToInt(sum / count);

@@ -1,6 +1,7 @@
 local Ans = select(2, ...);
 local Config = Ans.Config;
 local TextInput = Ans.UI.TextInput;
+local ConfirmDialog = Ans.UI.ConfirmDialog;
 
 AnsGeneralSettingsFrameMixin = {};
 
@@ -72,6 +73,17 @@ function AnsGeneralSettingsFrameMixin:Init()
 
     self.maxDataLimit = TextInput:NewFrom(self.analyticOptions.maxDataLimit);
     self.maxDataLimit.onTextChanged = self.valueChangedHandler;
+
+    local clearAuctionData = self.analyticOptions.clearAuctionData;
+    clearAuctionData:SetScript("OnClick", function()
+        ConfirmDialog:Show(this.ConfirmDelete, "Delete realm auction data?", "DELETE",
+            function(data)
+                if (AnsAuctionData) then
+                    AnsAuctionData:ResetRealm();
+                end
+            end
+        );
+    end);
 
     AnsDashboardFrameMixin:LoadTimeScaleDropdown(self, self.analyticOptions, self.valueChangedHandler);
 

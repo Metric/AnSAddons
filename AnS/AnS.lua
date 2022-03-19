@@ -169,10 +169,7 @@ function Ans:RegisterEvents(frame)
     frame:RegisterEvent("VARIABLES_LOADED");
     frame:RegisterEvent("ADDON_LOADED");
 
-    Crafting:RegisterEvents(frame);
-    Analytics:RegisterEvents(frame);
-    AuctionQuery:RegisterEvents(frame);
-    Destroy:RegisterEvents(frame);
+    EventManager:Register(frame);
 end
 
 function Ans:AddOnLoaded(...)
@@ -183,15 +180,16 @@ function Ans:AddOnLoaded(...)
 end
 
 function Ans:EventHandler(frame, event, ...)
-    EventManager:Emit(event, ...);
+    if (event == "VARIABLES_LOADED") then 
+        self:OnLoad();
+        return;
+    end
 
     if (event == "ADDON_LOADED") then
         self:AddOnLoaded(...);
     end
 
-    if (event == "VARIABLES_LOADED") then 
-        self:OnLoad();
-    end
+    EventManager:Emit(event, ...);
 end
 
 function Ans:OnUpdate(elapsed)
@@ -229,6 +227,7 @@ function Ans:OnLoad()
 
     Groups.BuildGroupPaths(DefaultGroups);
     Groups.BuildGroupPaths(Config.Groups());
+
     EventManager:Emit("ANS_DATA_READY");
 end
 
@@ -338,15 +337,15 @@ function Ans:RegisterPriceSources()
 
     if (tsmEnabled) then
         print("AnS: found TSM pricing source");
-        Sources:Register("DBMarket", TSMDB.GetPrice, "marketValue");
-        Sources:Register("DBMinBuyout", TSMDB.GetPrice, "minBuyout");
-        Sources:Register("DBHistorical", TSMDB.GetPrice, "historical");
-        Sources:Register("DBRegionMinBuyoutAvg", TSMDB.GetPrice, "regionMinBuyout");
-        Sources:Register("DBRegionMarketAvg", TSMDB.GetPrice, "regionMarketValue");
-        Sources:Register("DBRegionHistorical", TSMDB.GetPrice, "regionHistorical");
-        Sources:Register("DBRegionSaleAvg", TSMDB.GetPrice, "regionSale");
-        Sources:Register("DBRegionSaleRate", TSMDB.GetSaleInfo, "regionSalePercent");
-        Sources:Register("DBRegionSoldPerDay", TSMDB.GetSaleInfo, "regionSoldPerDay");
+        Sources:Register("DBMarket", TSMDB.GetPrice, "DBMarket");
+        Sources:Register("DBMinBuyout", TSMDB.GetPrice, "DBMinBuyout");
+        Sources:Register("DBHistorical", TSMDB.GetPrice, "DBHistorical");
+        Sources:Register("DBRegionMinBuyoutAvg", TSMDB.GetPrice, "DBRegionMinBuyoutAvg");
+        Sources:Register("DBRegionMarketAvg", TSMDB.GetPrice, "DBRegionMarketAvg");
+        Sources:Register("DBRegionHistorical", TSMDB.GetPrice, "DBRegionHistorical");
+        Sources:Register("DBRegionSaleAvg", TSMDB.GetPrice, "DBRegionSaleAvg");
+        Sources:Register("DBRegionSaleRate", TSMDB.GetSaleInfo, "DBRegionSaleRate");
+        Sources:Register("DBRegionSoldPerDay", TSMDB.GetSaleInfo, "DBRegionSoldPerDay");
         Sources:Register("AvgSell", TSMDB.GetPrice, "AvgSell");
         Sources:Register("AvgBuy", TSMDB.GetPrice, "AvgBuy");
         Sources:Register("Destroy", TSMDB.GetPrice, "Destroy");

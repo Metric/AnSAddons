@@ -340,7 +340,9 @@ function Utils.GetLink(itemString,ignoreDetails)
 	return link
 end
 
-function Utils.BonusID(id,mods,tbl)
+function Utils.BonusID(id,mods,tbl,isSocketBonus)
+    local socket = false;
+
     if (tbl) then
         wipe(tbl);
     end
@@ -353,9 +355,12 @@ function Utils.BonusID(id,mods,tbl)
         if (tbl and nums) then
             for i,v in ipairs(nums) do
                 tbl[v] = 1;
+                if (isSocketBonus and isSocketBonus(v)) then
+                    socket = true;
+                end
             end
         end
-        return BONUS_ID_CACHE[id];
+        return BONUS_ID_CACHE[id], socket;
     end
 
     local tmp = TempTable:Acquire(strsplit(":", id));
@@ -391,6 +396,9 @@ function Utils.BonusID(id,mods,tbl)
                 
                 if (tbl) then
                     tbl[num] = 1;
+                    if (isSocketBonus and isSocketBonus(num)) then
+                        socket = true;
+                    end
                 end
 
                 tinsert(btemp, num);
@@ -422,7 +430,7 @@ function Utils.BonusID(id,mods,tbl)
 
     local fresult = tmp[1]..":"..tmp[2]..extra..modifiers; 
     tmp:Release();
-    return fresult;
+    return fresult, socket;
 end
 
 function Utils.GetID(link)

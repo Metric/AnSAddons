@@ -1,7 +1,7 @@
-## Interface: 90005
+## Interface: 90200
 ## Title: AnS [Auction Data]
 ## License: MIT
-## Version: 2.2.6.3
+## Version: 2.2.7
 ## Dependencies: AnS
 ## Notes: A library for tracking auction prices and showing via tooltip
 ## SavedVariables: ANS_AUCTION_DATA, ANS_LAST_DATA_SCAN

@@ -1,0 +1,76 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+   <Frame name="CommodityDialogTemplate" mixin="CommodityDialogMixin" enableMouse="true" virtual="true" inherits="PortraitFrameTemplate" hidden="true">
+        <Size x="256" y="100" />
+        <Anchors>
+            <Anchor point="CENTER" x="0" y="0" />
+        </Anchors>
+        <KeyValues>         
+            <KeyValue key="layoutType" value="InsetFrameTemplate" type="string"/>
+            <KeyValue key="backgroundYOffset" value="-4" type="number"/>
+        </KeyValues>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString inherits="GameFontHighlight" parentKey="ItemName" name="$parentItemName" text="" justifyH="LEFT">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPLEFT" x="8" y="-5" />
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+             <EditBox parentKey="Total" name="$parentTotal" text="1" letters="22" numeric="true" autoFocus="true" inherits="InputBoxTemplate">
+                <Size x="64" y="24" />
+                <Anchors>
+                    <Anchor point="CENTER" x="-15" y="0"/>
+                </Anchors>
+                <Layers>
+                    <Layer level="ARTWORK">
+                        <FontString inherits="GameFontHighlight" text="Total" justifyH="RIGHT">
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="LEFT" x="0" y="15" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEnterPressed>
+                        self:ClearFocus();
+                    </OnEnterPressed>
+                    <OnEscapePressed>
+                        self:ClearFocus();
+                    </OnEscapePressed>
+                </Scripts>
+            </EditBox>
+             <Button parentKey="MaxButton" name="$parentMax" text="Max" inherits="UIPanelButtonTemplate">
+                <Size x="32" y="24" />
+                <Anchors>
+                    <Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parentTotal" x="5" y="0"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        self.parent:Max();
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button parentKey="ConfirmButton" name="$parentConfirm" text="Purchase" inherits="UIPanelButtonTemplate">
+                <Size x="100" y="24" />
+                <Anchors>
+                    <Anchor point="CENTER" relativePoint="CENTER" x="0" y="-32"/>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        self.parent:Purchase();
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnShow>
+                self:OnShow();
+            </OnShow>
+            <OnHide>
+                self:OnHide();
+            </OnHide>
+        </Scripts>
+    </Frame>
+</Ui>

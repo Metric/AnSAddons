@@ -31,11 +31,9 @@ function ItemTracker:OnLoad()
     --if (self.guildName and not self.log[self.guildName]) then self.log[self.guildName] = {}; end;
 
     EventManager:On("BAG_UPDATE_DELAYED", self.OnBagUpdate);
-	if (not Utils.IsClassic()) then
-		EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
-		EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
-		EventManager:On("REAGENTBANK_UPDATE", self.OnReagentUpdate);
-    end
+    EventManager:On("GUILDBANKFRAME_OPENED", self.OnGuildVaultOpened);
+    EventManager:On("GUILDBANKFRAME_CLOSED", self.OnGuildVaultClosed)
+    EventManager:On("REAGENTBANK_UPDATE", self.OnReagentUpdate);
     EventManager:On("BANKFRAME_OPENED", self.OnBankFrameOpened);
     EventManager:On("BANKFRAME_CLOSED", self.OnBankFrameClosed);
 
