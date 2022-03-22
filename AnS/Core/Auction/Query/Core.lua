@@ -2,6 +2,7 @@ local Ans = select(2, ...);
 local Logger = Ans.Logger;
 local Config = Ans.Config;
 local Sources = Ans.Sources;
+local Utils = Ans.Utils;
 local Query = Ans.Object.Register("Query", Ans.Auctions);
 
 Query.DEFAULT_ITEM_SORT = {
