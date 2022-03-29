@@ -24,7 +24,6 @@ Retail.state = nil;
 Retail.validAuctions = {};
 Retail.lastSeenGroups = {};
 Retail.known = {};
-Retail.list = {};
 
 local validAuctions = Retail.validAuctions;
 local lastSeenGroups = Retail.lastSeenGroups;
@@ -150,6 +149,8 @@ function Retail:PriceScan(isKnown)
                 return false;
             end
 
+            Logger.Log("SNIPER", "Search Result");
+
             local hash = Query.ItemHash(v);
             known[hash] = true;
 
@@ -172,7 +173,8 @@ function Retail:PriceScan(isKnown)
         
             return false;
         elseif (name == "QUERY_SEARCH_COMPLETE") then
-            Logger.Log("POSTING", "Search Complete");
+            Logger.Log("SNIPER", "Search Complete");
+            Logger.Log("SNIPER", "Total Valid Found: "..#validAuctions);
 
             Recycler:Recycle(item);
             tremove(inventory, 1); 
@@ -204,7 +206,7 @@ function Retail:PriceScan(isKnown)
     self.priceScanFn = fn;
 
     self.state = EventState:Acquire(fn, "QUERY_SEARCH_COMPLETE", "QUERY_SEARCH_RESULT");
-    return inventory[1];
+    return item;
 end
 
 function Retail.GetScanText(current,total)
@@ -212,7 +214,7 @@ function Retail.GetScanText(current,total)
 end
 
 function Retail:Recycle(items)
-
+    
 end
 
 function Retail:TempBlacklist(items, index, auction)
@@ -269,9 +271,10 @@ function Retail:RemoveAmount(items, auction, count, removeKnown, addKnown)
 
             if (item.count <= 0) then
                 tremove(items, i);
+                return i;
             end
 
-            return i;
+            break;
         end
     end
 

@@ -30,7 +30,42 @@ function Auction:Acquire(o)
     a.avg = 1;
     a.op = nil;
     a.suffix = 0;
+
+    -- must be nil by default
+    a.total = nil;
+
     return a;
+end
+
+function Auction:Copy(o)
+    self.itemKey = o.itemKey;
+    self.itemIndex = o.itemIndex;
+    self.id = o.id;
+    self.name = o.name;
+    self.texture = o.texture;
+    self.hash = o.hash;
+    self.count = o.count;
+    self.level = o.level;
+    self.ppu = o.ppu;
+    self.owner = o.owner;
+    self.link = o.link;
+    self.sniped = o.sniped;
+    self.tsmId = o.tsmId;
+    self.percent = o.percent;
+    self.quality = o.quality;
+    
+    self.iLevel = o.iLevel;
+    self.vendorsell = o.vendorsell;
+    self.isCommodity = o.isCommodity;
+    self.isEquipment = o.isEquipment;
+    self.isOwnerItem = o.isOwnerItem;
+
+    self.isPet = o.isPet;
+    self.auctionId = o.auctionId;
+    self.avg = o.avg;
+    self.op = o.op;
+    self.suffix = o.suffix;
+    self.total = o.total;
 end
 
 function Auction:Clone()
@@ -61,6 +96,7 @@ function Auction:Clone()
         auctions = self.auctions,
         op = self.op,
         isEquipment = self.isEquipment,
-        suffix = self.suffix
+        suffix = self.suffix,
+        total = self.total
     });
 end

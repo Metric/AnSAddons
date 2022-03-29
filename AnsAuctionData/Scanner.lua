@@ -10,6 +10,7 @@ ANS_LAST_DATA_SCAN = 0;
 local MIN_WAIT_TIME = (60 * 15);
 local query = Query:Acquire(0,0,{0},0);
 local itemIndex = 1;
+local realIndex = 1;
 
 local STATES = {};
 STATES.NONE = 0;
@@ -23,6 +24,8 @@ Scanner.__index = Scanner;
 Scanner.state = STATES.NONE;
 
 Core.Scanner = Scanner;
+
+local queue = {};
 
 local function GetFormattedTime()
     local diff = time() - ANS_LAST_DATA_SCAN;
@@ -103,8 +106,10 @@ function Scanner:Stop()
 end
 
 function Scanner:Start()
+    wipe(queue);
     self.state = STATES.WAITING;
     itemIndex = 1;
+    realIndex = 1;
     ANS_LAST_DATA_SCAN = time();
     AnsAuctionData:StartTracking();
     query:All();
@@ -112,15 +117,19 @@ end
 
 function Scanner:Track()
     local count = 0;
+    local wait = false;
     local auction = Recycler:Get();
     local perFrame = Config.Sniper().itemsPerUpdate;
     local total = query:AllCount();
 
     while (itemIndex <= total and count < perFrame) do
-        self.statusText:SetText("Scanning "..itemIndex.." of "..total);
+        self.statusText:SetText("Scanning "..realIndex.." of "..total);
 
-        auction = query:Next(auction, itemIndex);
-        if (auction) then
+        auction, wait = query:Next(auction, itemIndex);
+        if (wait) then
+            tinsert(queue, itemIndex);
+        elseif (auction) then
+            realIndex = realIndex + 1;
             AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
         end
 
@@ -128,7 +137,24 @@ function Scanner:Track()
         count = count + 1;
     end
 
-    if (itemIndex > total) then
+    count = 0;
+    local queueCount = #queue;
+    while (queueCount > 0 and count < perFrame) do
+        self.statusText:SetText("Scanning "..realIndex.." of "..total);
+
+        local idx = tremove(queue, 1);
+        auction, wait = query:Next(auction, idx);
+        if (wait) then
+            tinsert(queue, idx);
+        elseif (auction) then
+            realIndex = realIndex + 1;
+            AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
+        end
+        queueCount = queueCount - 1;
+        count = count + 1; 
+    end
+
+    if (realIndex > total) then
         self.state = STATES.PROCESSING;
     end
 end

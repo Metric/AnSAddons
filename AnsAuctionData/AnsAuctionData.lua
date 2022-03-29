@@ -232,6 +232,7 @@ local function HookTooltip()
 
         GameTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
         GameTooltip:HookScript("OnTooltipSetItem", ShowData);
+        ItemRefTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
         ItemRefTooltip:HookScript("OnTooltipSetItem", ShowData);
 
 		if (BattlePetToolTip_Show and BattlePetTooltipTemplate_SetBattlePet and FloatingBattlePet_Show) then
@@ -669,11 +670,12 @@ function AnsAuctionData:ProcessNext()
         local id = keys[processingIndex];
         local values = tracker[id];
         if (id and values) then
+
+            local prevMin = AnsAuctionData.GetValue(id, "min");
             local prevSum = AnsAuctionData.GetValue(id, "sum");
             local prevCount = AnsAuctionData.GetValue(id, "count");
 
-            local mina, avg, sum, count = stats:Calculate(values, prevSum, prevCount);
-
+            local mina, avg, sum, count = stats:Calculate(values, prevSum, prevCount, prevMin);
             AnsAuctionData.SetValue(id, mina, avg, sum, count);
         end
 

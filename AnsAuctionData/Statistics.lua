@@ -56,9 +56,9 @@ local function StdDev(x, avg)
 	if (count <= 1) then return 0; end
 
 	for i = 1, count do
-		stdev = stdev + (x[i] - avg) ^ 2;
+		stdev = stdev + ((x[i] - avg) ^ 2);
 	end
-	return math.sqrt(stdev / (count - 1));
+	return math.sqrt(stdev / count);
 end
 
 function Statistics:RoundToInt(x)
@@ -69,7 +69,7 @@ function Statistics:Sum(x)
     return Sum(x);
 end
 
-function Statistics:Calculate(x, prevSum, prevCount)
+function Statistics:Calculate(x, prevSum, prevCount, prevMin)
 	
 	-- this is a fix to ensure we
 	-- still include auctions that there
@@ -79,14 +79,14 @@ function Statistics:Calculate(x, prevSum, prevCount)
 
 	if (count <= 0) then
 		local avg = RoundToInt(prevSum / math.max(1, prevCount));
-		return 0, avg, prevSum, prevCount;
+		return prevMin, avg, prevSum, prevCount;
 	elseif (count <= 5) then
 		local avg, sum, amin = AvgSumMinimumPrev(x, prevSum, prevCount);
 		return amin, avg, sum, count; 
 	end
 
-	local half = ceil(#x * 0.35);
-	local low = ceil(#x * 0.15);
+	local half = math.ceil(count * 0.35);
+	local low = math.ceil(count * 0.15);
     local valid = TempTable:Acquire();
 
     table.sort(x, SorthMethod);
@@ -95,14 +95,13 @@ function Statistics:Calculate(x, prevSum, prevCount)
 	local sum = 0;
 	local mina = x[1];
 
-
 	for i = 1, half do
-		if (i <= low or x[i] < prev * 1.2) then
+		if (i <= low or x[i] <= prev * 1.2) then
 			prev = x[i];
 			sum = sum + x[i];
 			tinsert(valid, x[i]);
 		end
-	end 
+	end
 	
 	count = #valid;
 	
@@ -112,7 +111,7 @@ function Statistics:Calculate(x, prevSum, prevCount)
 		valid:Release(); -- ensure table is released
 
 		local avg = RoundToInt(prevSum / math.max(1, prevCount));
-		return 0, avg, prevSum, prevCount;
+		return mina, avg, prevSum, prevCount;
 	end
 		
 	local avg = RoundToInt(sum / count);

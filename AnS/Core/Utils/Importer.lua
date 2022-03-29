@@ -145,7 +145,7 @@ function Importer:Import(str, group)
     for i = 1, #str do
         local c = str:sub(i,i);
         if (c == ",") then
-            group = self.ParseGroupItem(tmp, group, rootGroup.children, group == rootGroup);
+            group = self:ParseGroupItem(tmp, group, rootGroup.children, group == rootGroup);
             tmp = "";
         elseif (c == "\r" or c == "\n" or c == "\t") then
             -- ignore
@@ -155,7 +155,7 @@ function Importer:Import(str, group)
     end
 
     if (#tmp > 0) then
-        group = self.ParseGroupItem(tmp, group, rootGroup.children, group == rootGroup);
+        group = self:ParseGroupItem(tmp, group, rootGroup.children, group == rootGroup);
     end
 
     return group;

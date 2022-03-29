@@ -17,15 +17,9 @@ local Tasker = Ans.API.Tasker;
 local Logger = Ans.API.Logger;
 
 local TASKER_TAG = "SNIPER_WINDOW";
-local PURCHASE_WAIT_TIME = 10;
 
 local AHFrame = nil;
 local AHFrameDisplayMode = nil;
-
-local ERRORS = {
-    ERR_ITEM_NOT_FOUND,
-    ERR_AUCTION_DATABASE_ERROR
-};
 
 local rootFrame = nil;
 
@@ -91,22 +85,22 @@ local clearNew = true;
 -- when this is displayed we are out of 
 -- then browse state and have entered
 -- a viable search state to purchase
-StaticPopupDialogs["ANSCONFIRMAUCTION"] = {
-    text = "Purchase %s for %s?",
-    button1 = "Yes",
-    button2 = "No",
-    OnAccept = function(self)
-        local auction = self.data.auction;
-        AuctionList:Purchase(auction);
-    end,
-    OnCancel = function()
+-- StaticPopupDialogs["ANSCONFIRMAUCTION"] = {
+--    text = "Purchase %s for %s?",
+--    button1 = "Yes",
+--    button2 = "No",
+--    OnAccept = function(self)
+--        local auction = self.data.auction;
+--        AuctionList:Purchase(auction);
+--    end,
+--    OnCancel = function()
         
-    end,
-    timeout = 0,
-    whileDead = false,
-    hideOnEscape = true,
-    preferredIndex = 3
-};
+--    end,
+--    timeout = 0,
+--    whileDead = false,
+--    hideOnEscape = true,
+--    preferredIndex = 3
+-- };
 
 -- local function QualitySelected(self, arg1, arg2, checked)
 --    local qualities = Config.Sniper().qualities;
@@ -388,8 +382,8 @@ function AuctionSnipe:BuildTreeViewBase()
     end
 end
 
-function AuctionSnipe:Sort(type)
-    AuctionList:Sort(type);
+function AuctionSnipe:Sort(t)
+    AuctionList:Sort(t);
 end
 
 function AuctionSnipe.OnPreviousComplete()
@@ -397,8 +391,19 @@ function AuctionSnipe.OnPreviousComplete()
         return;
     end
     
+    local itemWasActive = current ~= nil;
     current = nil;
-    AuctionSnipe:NextPriceScan(0, last);
+
+    -- test for retail vs. classic
+    -- retail should in theory have an itemWasActive
+    -- unless it had just finished the last price scan
+    -- and was waiting for group scan
+    -- for classic itemWasActive will always be false
+    if (itemWasActive) then
+        AuctionSnipe:NextPriceScan(0, last);
+    else
+        AuctionSnipe:NextGroupScan(0);
+    end
 end
 
 function AuctionSnipe.OnPurchaseConfirm(remove, auction, count)
@@ -406,7 +411,12 @@ function AuctionSnipe.OnPurchaseConfirm(remove, auction, count)
 end
 
 function AuctionSnipe.OnPurchaseStart()
+    Tasker.Clear(TASKER_TAG);
     AuctionList:OnPurchaseStart();
+end
+
+function AuctionSnipe.OnGroupScanUpdate(current, total)
+    AuctionSnipe:UpdateGroupScanStatus(current, total);
 end
 
 function AuctionSnipe.OnGroupScan(count)
@@ -414,6 +424,12 @@ function AuctionSnipe.OnGroupScan(count)
 
     totalGroups = count;
     last = totalGroups;
+
+    -- recycle the items in the auction list
+    -- if we are classic only
+    if (Utils.IsClassic()) then
+        AuctionList:Recycle();
+    end
 
     if (count <= 0) then
         AuctionSnipe:NextGroupScan(0);
@@ -462,9 +478,7 @@ function AuctionSnipe.OnPriceScan(results, left)
     last = left;
 
     if (left > 0) then
-        if (Utils.IsClassic()) then
-            AuctionSnipe.FoundNotification(t);
-        else
+        if (not Utils.IsClassic()) then
             wait = 0;
         end
 
@@ -492,6 +506,10 @@ function AuctionSnipe.FoundNotification(count)
     end
 end
 
+function AuctionSnipe:UpdateGroupScanStatus(current, total)
+    self.snipeStatusText:SetText("Filtering Group "..(current + 1).." of "..total);
+end
+
 function AuctionSnipe:UpdateScanStatus(left, total)
      local c = (total - left) + 1;
      local module = self.module;
@@ -517,7 +535,15 @@ function AuctionSnipe:NextPriceScan(wait, left)
             return;
         end
 
-        currentItem = item:Clone();
+        -- check to validate classic vs. retail
+        -- classic does not return an item
+        -- object from :PriceScan()
+        -- instead it just returns true
+        -- however retail can return an item
+        -- object
+        if (item ~= true) then
+            currentItem = item:Clone();
+        end
     end, TASKER_TAG);
 end
 
@@ -577,6 +603,7 @@ function AuctionSnipe:RegisterSniperEvents()
     EventManager:On("SNIPER_GROUP_SCAN", AuctionSnipe.OnGroupScan);
     EventManager:On("PURCHASE_COMPLETE", AuctionSnipe.OnPurchaseConfirm);
     EventManager:On("PURCHASE_START", AuctionSnipe.OnPurchaseStart);
+    EventManager:On("QUERY_BROWSE_UPDATE", AuctionSnipe.OnGroupScanUpdate);
     EventManager:On("QUERY_PREVIOUS_COMPLETED", AuctionSnipe.OnPreviousComplete);
 end
 
@@ -585,6 +612,7 @@ function AuctionSnipe:UnregisterSniperEvents()
     EventManager:Off("SNIPER_GROUP_SCAN", AuctionSnipe.OnGroupScan);
     EventManager:Off("PURCHASE_COMPLETE", AuctionSnipe.OnPurchaseConfirm);
     EventManager:Off("PURCHASE_START", AuctionSnipe.OnPurchaseStart);
+    EventManager:Off("QUERY_BROWSE_UPDATE", AuctionSnipe.OnGroupScanUpdate);
     EventManager:Off("QUERY_PREVIOUS_COMPLETED", AuctionSnipe.OnPreviousComplete);
 end
 
@@ -678,7 +706,7 @@ function AuctionSnipe:Close()
 
     if (Utils.IsClassic()) then
         AuctionList:Recycle();
-    end 
+    end
 end
 
 --- 
@@ -735,8 +763,9 @@ function AuctionSnipe:LoadBaseFilters()
     local quality = Config.Sniper().qualities;
 
     if (Utils.IsClassic()) then
+        local min = Config.Sniper().minQuality;
         wipe(quality);
-        quality[Config.Sniper().minQuality] = true;
+        quality[min] = min;
     end
 
     DEFAULT_BROWSE_QUERY.quality = Config.Sniper().minQuality;
@@ -805,10 +834,10 @@ function AuctionSnipe:Start()
     -- apply classic sort to get 
     -- item sorted by most recent time
     -- posted
-    -- if (Utils.IsClassic()) then
-    --    SortAuctionClearSort("list");
-    --    SortAuctionApplySort("list");
-    -- end
+    if (Utils.IsClassic()) then
+        SortAuctionClearSort("list");
+        SortAuctionApplySort("list");
+    end
 
     local ops = {};
 
@@ -832,6 +861,7 @@ function AuctionSnipe:Stop()
 
     local module = self.module;
     module:Interrupt();
+    module.Wipe();
 
     Tasker.Clear(TASKER_TAG);
 

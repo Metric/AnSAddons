@@ -45,7 +45,7 @@ local knownAuctions = {};
 local Hash = Query.ItemHash;
 
 local function KnownKey(item)
-    return item.tsmId.."."..item.iLevel.."."..item.suffix;
+    return item.id.."."..item.iLevel.."."..item.suffix;
 end
 
 local function AddKnown(item)
@@ -311,7 +311,7 @@ function AuctionList:AddItems(items,clearNew)
 end
 
 function AuctionList:ClearMissing(item, current)
-    if (not item or not current) then
+    if (not current or not item) then
         return;
     end
 
@@ -406,7 +406,7 @@ end
 --    self:Refresh();
 -- end
 
-local function SortMethod(t, x, y) 
+local function SortMethod(t, x, y, asc) 
     local xnew = x.isNew and 1 or 0;
     local ynew = y.isNew and 1 or 0;
 
@@ -425,7 +425,11 @@ local function SortMethod(t, x, y)
             yvalue = "Multiple";
         end
 
-        return xvalue > yvalue;
+        if (asc) then
+            return xvalue < yvalue;
+        else
+            return xvalue > yvalue;
+        end
     end
     
     return xnew > ynew;
@@ -433,7 +437,7 @@ end
 
 function AuctionList:Sort(t, noFlip)
     table.sort(self.items, function(x,y)
-        SortMethod(t, x, y);
+        return SortMethod(t, x, y, self.sortMode[t]);
     end);
     if (not noFlip) then
         self.sortMode[t] = not self.sortMode[t];
@@ -559,7 +563,7 @@ function AuctionList:RemoveAmount(auction, count)
     
     if (self.selectedEntry == recycled) then
         self:ClearSelected();
-    elseif (recycled) then
+    else
         self:Refresh();
     end
 end
@@ -570,7 +574,7 @@ function AuctionList:Remove(auction)
 
     if (self.selectedEntry == recycled) then
         self:ClearSelected();
-    elseif (recycled) then
+    else
         self:Refresh();
     end
 end

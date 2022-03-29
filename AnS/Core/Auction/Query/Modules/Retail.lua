@@ -297,20 +297,20 @@ function Retail:Next(auction, index)
     auction.vendorsell = 0;
     auction.isOwnerItem = auction.owner == UnitName("player");
 
-    if (not auction.link) then
+    if (not auction.link or not auction.hasAll) then
         Recycler:Recycle(auction);
-        return nil;
+        return nil, true;
+    end
+
+    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0) then
+        Recycler:Recycle(auction);
+        return nil, false;
     end
 
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
     if (itemName) then
         auction.iLevel = itemLevel;
         auction.vendorsell = vendorsell or 0;
-    end
-
-    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0 or not auction.hasAll) then
-        Recycler:Recycle(auction);
-        return nil;
     end
 
     auction.tsmId = Utils.GetID(auction.link);
@@ -326,7 +326,7 @@ function Retail:Next(auction, index)
 
     auction.hash = Query.ItemHash(auction);
 
-    return auction;
+    return auction, false;
 end
 
 function Retail:NextOwned(auction, index)
@@ -517,6 +517,7 @@ function Retail:Browse(filter, groupFilter)
             end
 
             self.full = C_AuctionHouse.GetBrowseResults();
+            Logger.Log("QUERY", "Total Browse Groups: "..#self.full);
         end
 
         if (self.requested and self.full) then  
@@ -528,6 +529,8 @@ function Retail:Browse(filter, groupFilter)
 
             while (offset <= count and i < perFrame) do
                 local group = results[offset];
+
+                EventManager:Emit("QUERY_BROWSE_UPDATE", offset, count)
 
                 if (group and groupFilter) then
                     local auction = groupFilter(group);
@@ -546,6 +549,7 @@ function Retail:Browse(filter, groupFilter)
                 return true;
             end
 
+            Logger.Log("QUERY", "Total Valid Browse Groups: "..#this.results);
             Tasker.Schedule(function()
                 EventManager:Emit("QUERY_BROWSE_COMPLETE");
             end, TASKER_TAG);
@@ -599,9 +603,6 @@ function Retail:Search(item, sell, first)
         end
 
         self.eventReceived = true;
-
-        Logger.Log("QUERY", "Search Event: "..name);
-
         if (item.isCommodity) then
             if (not C_AuctionHouse.HasFullCommoditySearchResults(item.id)) then
                 return false;
@@ -647,8 +648,10 @@ function Retail:Search(item, sell, first)
             Logger.Log("QUERY", "Processing Item");
             Timestamp();
             if (item.isCommodity) then
+                Logger.Log("QUERY", "Total Search Commodities: "..C_AuctionHouse.GetNumCommoditySearchResults(item.id));
                 this:ProcessCommodity(item, item.id, first);
             else
+                Logger.Log("QUERY", "Total Search Items: "..C_AuctionHouse.GetNumItemSearchResults(item.itemKey));
                 this:ProcessItem(item, item.itemKey, first);
             end
             Timestamp(true, "Search Process");
@@ -900,11 +903,16 @@ function Retail:PurchaseItem(auction)
             return true;
         elseif (name == "AUCTION_HOUSE_SHOW_ERROR") then
             if (notif == Enum.AuctionHouseError.ItemNotFound
-                or notif == Enum.AuctionHouseError.Unavailable) then
+                or notif == Enum.AuctionHouseError.Unavailable
+                or notif == Enum.AuctionHouseError.NotEnoughItems
+                or notif == Enum.AuctionHouseError.DatabaseError
+                or notif == Enum.AuctionHouseError.ItemHasQuote
+                or notif == Enum.AuctionHouseError.HasRestriction
+                or notif == Enum.AuctionHouseError.IsBusy) then
                 Logger.Log("SNIPER", "Item Not Found Event");
                 EventManager:Emit("PURCHASE_COMPLETE", true, self.auction);
             else
-                Logger.Log("SNIPER", "Auction Error Event: "..v);
+                Logger.Log("SNIPER", "Auction Error Event: "..notif);
                 EventManager:Emit("PURCHASE_COMPLETE", false, self.auction);
             end   
 

@@ -79,7 +79,7 @@ function Classic:IsValid(auction, ignorePercent)
     end
 
     local q = quality[1] or 0;
-    if (auction.quality < q and q > 0) then
+    if (auction.quality <= q and q > 0) then
         return false;
     end
 
@@ -154,20 +154,20 @@ function Classic:Next(auction, index)
     auction.itemIndex = index;
     auction.isOwnerItem = auction.owner == UnitName("player");
 
-    if (not auction.link) then
+    if (not auction.link or not auction.hasAll) then
         Recycler:Recycle(auction);
-        return nil;
+        return nil, true;
+    end
+
+    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0) then
+        Recycler:Recycle(auction);
+        return nil, false;
     end
 
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
     if (itemName) then
         auction.iLevel = itemLevel;
         auction.vendorsell = vendorsell or 0;
-    end
-
-    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0 or not auction.hasAll) then
-        Recycler:Recycle(auction);
-        return nil;
     end
 
     auction.tsmId = Utils.GetID(auction.link);
@@ -183,7 +183,7 @@ function Classic:Next(auction, index)
 
     auction.hash = Query.ItemHash(auction);
 
-    return auction;
+    return auction, false;
 end
 
 function Classic:NextOwned(auction, index)
@@ -216,14 +216,14 @@ function Classic:NextOwned(auction, index)
     auction.itemIndex = index;
     auction.isOwnerItem = true;
 
-    if (not auction.link) then
+    if (not auction.link or not auction.hasAll) then
         Recycler:Recycle(auction);
-        return nil;
+        return nil, true;
     end
 
-    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0 or not auction.hasAll) then
+    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0) then
         Recycler:Recycle(auction);
-        return nil;
+        return nil, false;
     end
 
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, stackSize, _, _, vendorsell  = GetItemInfo(auction.link);
@@ -245,7 +245,7 @@ function Classic:NextOwned(auction, index)
 
     auction.hash = Query.ItemHash(auction);
 
-    return auction;
+    return auction, false;
 end
 
 function Classic:Owned()
@@ -275,8 +275,8 @@ function Classic:ProcessAuctions(state, filter, autoPage)
     if (last ~= self.page and autoPage) then
         self.page = last;
         Tasker.Schedule(function()
-            this:Search(filter, autoPage);
-        end);
+            EventManager:Emit("QUERY_SEARCH_COMPLETE");
+        end, TASKER_TAG);
         return;
     end
 
@@ -375,13 +375,14 @@ function Classic:Process()
     end
 end
 
+-- return values: success, wait, bidPlaced
 function Classic:PurchaseItem(auction)
     if (not self:IsReady()) then
-        return false, true;
+        return false, true, false;
     end
 
     if (not auction or auction.sniped) then
-        return false, false;
+        return true, false, false;
     end
 
     local index = auction.itemIndex;
@@ -390,25 +391,34 @@ function Classic:PurchaseItem(auction)
         or not auction.link
         or not auction.buyoutPrice
         or not auction.count) then
-            return false, false;
+            return true, false, false;
     end
 
     local link = GetAuctionItemLink("list", index);
     if (auction.link ~= link) then
-        return false, false;
+        return true, false, false;
     end
 
     local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
     _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
-    if (not hasAllInfo or count ~= auction.count or not buyoutPrice
-        or buyoutPrice > auction.buyoutPrice or GetMoney() < buyoutPrice) then
     
-        return false, false;
+    if (not hasAllInfo) then
+        return false, true, false;
+    end
+
+    if (count ~= auction.count or not buyoutPrice
+        or buyoutPrice > auction.buyoutPrice) then
+        return true, false, false;
+    end
+
+    if (GetMoney() < buyoutPrice) then
+        print("Ans - Not enough gold to buy");
+        return false, false, false;
     end
 
     PlaceAuctionBid("list", index, buyoutPrice);
     auction.sniped = true;
-    return true, false;
+    return true, false, true;
 end
 
 function Classic:PostAuction(v, duration, bidPercent)

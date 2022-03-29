@@ -12,13 +12,21 @@ function Recycler:Recycle(auction)
     tinsert(self.auctions, auction);
 end
 
-function Recycler:Get()
+function Recycler:Get(c)
     -- free up a memory at this point
     if (#self.auctions > 800) then
         wipe(self.auctions);
     end
+    local n = nil;
     if (#self.auctions > 0) then
-        return Auction:Acquire(tremove(self.auctions, 1));
+        n = Auction:Acquire(tremove(self.auctions, 1));
+    else
+        n = Auction:Acquire();
     end
-    return Auction:Acquire();
+    
+    if (c) then
+        n:Copy(c);
+    end
+
+    return n;
 end
