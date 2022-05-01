@@ -171,7 +171,7 @@
                     <Button name="$parentStart" text="Start" inherits="UIPanelButtonTemplate">
                         <Size x="78" y="22" />
                         <Anchors>
-                            <Anchor point="RIGHT" relativePoint="RIGHT" x="-40" y="0"/>
+                            <Anchor point="RIGHT" relativePoint="RIGHT" x="72" y="0"/>
                         </Anchors>
                         <Scripts>
                             <OnClick>
@@ -188,6 +188,18 @@
                         <Scripts>
                             <OnClick>
                                 AuctionSnipe:Stop();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
+
+                    <Button name="AnsSnipeIgnore" text="Ignore Item" inherits="UIPanelButtonTemplate">
+                        <Size x="88" y="22" />
+                        <Anchors>
+                            <Anchor point="RIGHT" relativeTo="$parentStop" relativePoint="LEFT" x="0" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:IgnoreItem();
                             </OnClick>
                         </Scripts>
                     </Button>
@@ -553,6 +565,31 @@
                     </Layer>
                 </Layers>
             </Frame>
+            <Frame name="$parentModalInfo" hidden="true" frameLevel="999">
+                <Size x="168" y="64" />
+                <Anchors>
+                    <Anchor x="0" y="0" point="BOTTOMRIGHT" relativeTo="$parentResults" relativePoint="BOTTOMRIGHT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="0" g="0" b="0" a="0.95" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="Message" inherits="AnsGameFontNormalLight" justifyV="CENTER" justifyH="CENTER">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+            </Frame>
         </Frames>
     </Frame>
 
@@ -787,6 +824,18 @@
                             </OnClick>
                         </Scripts>
                     </Button>
+
+                    <Button name="AnsSnipeIgnore" text="Ignore Item" inherits="UIPanelButtonTemplate">
+                        <Size x="88" y="22" />
+                        <Anchors>
+                            <Anchor point="LEFT" relativeTo="$parentStart" relativePoint="RIGHT" x="0" y="0" />
+                        </Anchors>
+                        <Scripts>
+                            <OnClick>
+                                AuctionSnipe:IgnoreItem();
+                            </OnClick>
+                        </Scripts>
+                    </Button>
                 </Frames>
             </Frame>
 
@@ -977,18 +1026,18 @@
                 </Frames>
             </Frame>
 
-          <Button name="AnsSnipeFirst" hidden="true" text="">
-           <Size x="1" y="1" />
-            <Anchors>
-                <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0" />
-            </Anchors>
-            <Scripts>
-                <OnClick>
-                    AuctionSnipe:BuyFirst();
-                </OnClick>
-            </Scripts>
-          </Button>
-          <Button name="AnsSnipeBuy" hidden="true" text="PURCHASE">
+            <Button name="AnsSnipeFirst" hidden="true" text="">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:BuyFirst();
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="AnsSnipeBuy" hidden="true" text="PURCHASE">
                 <Size x="1" y="394" />
                 <Anchors>
                     <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="-20" />
@@ -1101,6 +1150,32 @@
                         </Scripts>
                     </Button>
                 </Frames>
+            </Frame>
+        
+            <Frame name="$parentModalInfo" hidden="true" frameLevel="999">
+                <Size x="168" y="64" />
+                <Anchors>
+                    <Anchor x="0" y="0" point="BOTTOMRIGHT" relativeTo="$parentResults" relativePoint="BOTTOMRIGHT" />
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture file="Interface\Buttons\WHITE8X8" horizTile="true" vertTile="true">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                            <Color r="0" g="0" b="0" a="0.95" />
+                        </Texture>
+                    </Layer>
+                    <Layer level="ARTWORK">
+                        <FontString parentKey="Message" inherits="AnsGameFontNormalLight" justifyV="CENTER" justifyH="CENTER">
+                            <Anchors>
+                                <Anchor point="TOPLEFT" x="0" y="0" />
+                                <Anchor point="BOTTOMRIGHT" x="0" y="0" />
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
             </Frame>
         </Frames>
     </Frame>

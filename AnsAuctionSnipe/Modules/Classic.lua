@@ -80,6 +80,7 @@ end
 
 function Classic:PriceScan()
     wipe(validAuctions);
+    wipe(blocks);
 
     local this = self;
     local filter = self.filter;
@@ -146,6 +147,7 @@ function Classic:PriceScan()
         end
 
         wipe(validAuctions);
+        wipe(blocks);
 
         self.requested = true;
         query:Search(filter, true);
@@ -245,100 +247,48 @@ function Classic:RemoveAmount(items, auction, count, removeKnown, addKnown)
     return nil;
 end
 
-function Classic:StartPurchaseState(block, count)
-    EventManager:Emit("PURCHASE_START", block);
-
-    local this = self;
-    local fn = self.purchaseFn or {};
-    wipe(fn);
-    fn.event = function(self, state, name, msg)
-        if (strfind(msg, ERR_AUCTION_WON)) then
-            self.eventReceived = true;
-        elseif (strfind(msg, ERR_AUCTION_BID_PLACED)) then
-            self.eventReceived = true;
-        elseif (Utils.InTable(ERRORS, msg)) then
-            self.eventReceived = true;
-            Logger.Log("SNIPER", "Item Purchased Failed with: "..msg);
-        end
-
-        if (self.eventReceived) then
-            EventManager:Emit("PURCHASE_COMPLETE", true, self.block, self.count);
-            EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
-        end
-
-        return self.eventReceived;
-    end
-    fn.process = function(self, state)
-        if (self.eventReceived) then
-            return false;
-        end
-
-        -- this delay is here to prevent
-        -- the AH error in Classic for purchasing too fast
-        -- if we did not detect the event within the delay
-        -- period
-        if (GetTime() >= self.timestamp) then
-            -- make sure we are interrupted
-            -- in order to remove the events
-            this:Interrupt();
-            EventManager:Emit("PURCHASE_COMPLETE", true, self.block, self.count);
-            EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
-            return false;
-        end
-
-        return true;
-    end
-    fn.eventReceived = false;
-    fn.count = count;
-    fn.block = block;
-    fn.timestamp = GetTime() + 0.5;
-    fn.result = function(self, state)
-        return nil;
-    end
-    self.purchaseFn = fn;
-
-    self.state = EventState:Acquire(fn, "CHAT_MSG_SYSTEM", "UI_INFO_MESSAGE", "UI_ERROR_MESSAGE");
-end
-
 function Classic:Purchase(block, count)
     if (self:IsActive()) then
+        print("Ans - waiting for inactive state");
         return;
     end
 
     if (not block) then
+        print("Ans - no block");
         return;
     end
 
     if (block.total and block.total <= 0) then
+        print("Ans - nothing left in block");
         return;
     end
 
     local group = block.auctions;
     if (group and #group <= 0) then
+        print("Ans - no groups left in block");
         return;
     end
 
     local auction = group[1];
     if (not auction) then
+        print("Ans - no auction available in group");
         return;
     end
 
+    EventManager:Emit("PURCHASE_START", block);
+
+    print("Ans - trying to buy: "..auction.link.." x "..auction.count .." for "..Utils.PriceToString(auction.buyoutPrice));
     local success, wait, bidPlaced = query:PurchaseItem(auction);
     
     if (wait) then
+        print("Ans - waiting to purchase");
         return;
     end
 
     if (success) then
-        if (bidPlaced) then
-            print("Ans - trying to buy: "..auction.link.." x "..auction.count .." for "..Utils.PriceToString(auction.buyoutPrice));
-            self:StartPurchaseState(block, auction.count);
-        end
-
-        local removed = tremove(group, 1);
-        if (removed ~= block) then
-            Recycler:Recycle(removed);
-        end
+        tremove(group, 1);
+        EventManager:Emit("PURCHASE_COMPLETE", true, block, auction.count);
+        EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
     end
 end
 
@@ -362,10 +312,12 @@ function Classic:IsQueryActive()
     return query:IsActive();
 end
 
-function Classic:IsActive()
-    local activeQuery = query:IsActive();
-    if (activeQuery) then
-        return true;
+function Classic:IsActive(ignoreQuery)
+    if (not ignoreQuery) then
+        local activeQuery = query:IsActive();
+        if (activeQuery) then
+            return true;
+        end
     end
 
     local state = self.state;

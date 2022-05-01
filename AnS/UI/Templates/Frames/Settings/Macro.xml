@@ -93,9 +93,14 @@
                             <Anchor point="TOPLEFT" x="120" y="0"  relativePoint="TOPRIGHT" relativeKey="$parent.ansSniper" />
                         </Anchors>
                     </CheckButton>
-                    <CheckButton parentKey="ansDestroy" text="AnS Destroy" inherits="AnsCheckboxTemplate">
+                    <CheckButton parentKey="ansIgnore" text="AnS Sniper Ignore Item" inherits="AnsCheckboxTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="-10" relativePoint="BOTTOMLEFT" relativeKey="$parent.ansPost" />
+                        </Anchors>
+                    </CheckButton>
+                    <CheckButton parentKey="ansDestroy" text="AnS Destroy" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" x="120" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.ansIgnore" />
                         </Anchors>
                     </CheckButton>
                 </Frames>

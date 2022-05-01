@@ -4,6 +4,8 @@ local Utils = Ans.Utils;
 local Config = Ans.Config;
 
 local EventState = Ans.EventState;
+local EventManager = Ans.EventManager;
+
 local Tasker = Ans.Tasker;
 local TASKER_TAG = "QUERY";
 
@@ -159,7 +161,7 @@ function Classic:Next(auction, index)
         return nil, true;
     end
 
-    if (auction.buyoutPrice <= 0 or auction.saleStatus ~= 0) then
+    if (not auction.buyoutPrice or auction.buyoutPrice <= 0 or auction.saleStatus ~= 0) then
         Recycler:Recycle(auction);
         return nil, false;
     end
@@ -333,7 +335,7 @@ function Classic:Search(filter, autoPage)
 end
 
 function Classic:All()
-    local ready, allReady = this:IsReady();
+    local ready, allReady = self:IsReady();
     if (not allReady) then
         return false;
     end
@@ -343,7 +345,8 @@ function Classic:All()
 end
 
 function Classic:AllCount()
-    return GetNumAuctionItems("list");
+    local c, t = GetNumAuctionItems("list");
+    return t;
 end
 
 function Classic:IsActive()
@@ -382,6 +385,7 @@ function Classic:PurchaseItem(auction)
     end
 
     if (not auction or auction.sniped) then
+        print("Ans - auction is already sniped??");
         return true, false, false;
     end
 
@@ -391,23 +395,29 @@ function Classic:PurchaseItem(auction)
         or not auction.link
         or not auction.buyoutPrice
         or not auction.count) then
+            print("Ans - auction block is invalid for some reason");
+            print("Ans - auction debug: "..index.. " | "..auction.name.." | "..auction.buyoutPrice.." | "..auction.count.." | "..auction.link);
             return true, false, false;
     end
 
     local link = GetAuctionItemLink("list", index);
-    if (auction.link ~= link) then
-        return true, false, false;
-    end
-
     local _,_, count,_,_,_,_,_,_,buyoutPrice, _,_, _, _,
     _, _, _, hasAllInfo = GetAuctionItemInfo("list", index);
-    
-    if (not hasAllInfo) then
+
+
+    if (not link or not hasAllInfo) then
+        print("Ans - auction does not have all info yet");
         return false, true, false;
+    end
+
+    if (link and auction.link ~= link) then
+        print("Ans - auction does not match link");
+        return true, false, false;
     end
 
     if (count ~= auction.count or not buyoutPrice
         or buyoutPrice > auction.buyoutPrice) then
+        print("Ans - price or count does not match");
         return true, false, false;
     end
 
@@ -434,7 +444,7 @@ function Classic:PostAuction(v, duration, bidPercent)
         return false, false;
     elseif (v:IsLocked()) then
         return false, false;
-    elseif (v:IsFullDurability()) then
+    elseif (not v:IsFullDurability()) then
         return false, false;
     end
 

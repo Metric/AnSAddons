@@ -255,16 +255,22 @@ end
 
 function AnsAuctionData:OnLoad(frame)
     HookTooltip();
-
+    self:CheckFaction();
     self.frame = frame;
+    frame:RegisterEvent("VARIABLES_LOADED");
+end
 
+function AnsAuctionData:OnVarLoad()
+    self:CheckFaction();
     if (Realms and Realms.F) then
         rawDataFromNet = true;
         Realms.F(region, region.."-"..realmName);
-        Realms.F = nil;
+        Realms = Realms[region.."-"..realmName] or {};
     else
+        local regionString = region.."-"..realmName..faction;
         rawDataFromNet = false;
-        Realms = {};
+        Realms = ANS_AUCTION_DATA[regionString] or {};
+        ANS_AUCTION_DATA[regionString] = Realms;
     end
 end
 
@@ -319,45 +325,15 @@ function AnsAuctionData:CheckFaction()
     end
 end
 
-function AnsAuctionData:GetRawData(localOnly)
+function AnsAuctionData:GetRawData()
     self:CheckFaction();
-
-    local r = nil;
-    if (not localOnly) then
-        r = Realms[region.."-"..realmName];
-    end
-    if (not r or Utils.IsClassic()) then
-        r = ANS_AUCTION_DATA[region.."-"..realmName..faction];
-        if (not r) then
-            r = ANS_AUCTION_DATA[realmName];
-            if (r) then
-                ANS_AUCTION_DATA[region..'-'..realmName..faction] = r;
-                ANS_AUCTION_DATA[realmName] = nil;
-            end
-        end
-    end
-    return r;
-end
-
-function AnsAuctionData:HasData()
-    self:CheckFaction();
-
-    if (not ANS_AUCTION_DATA[region.."-"..realmName..faction] 
-        and not ANS_AUCTION_DATA[realmName] and not Realms[region.."-"..realmName]) then
-        return false;
-    end
-
-    return true;
+    return Realms;
 end
 
 function AnsAuctionData:ResetRealm()
     self:CheckFaction();
-
-    if (ANS_AUCTION_DATA[realmName]) then
-        ANS_AUCTION_DATA[realmName] = nil;
-    end
-
-    ANS_AUCTION_DATA[region.."-"..realmName..faction] = {};
+    Realms = {};
+    ANS_AUCTION_DATA[region.."-"..realmName..faction] = Realms;
 end
 
 function AnsAuctionData.GetRegionValue(link, key)
@@ -376,7 +352,7 @@ function AnsAuctionData.GetRegionValue(link, key)
     local kindex = keyToRegionIndex[key];
 
     if (kindex) then
-        local r = AnsAuctionData:GetRawData(not rawDataFromNet);
+        local r = AnsAuctionData:GetRawData();
         local cid = fid;
 
         if (Utils.IsClassic() or not rawDataFromNet) then
@@ -435,7 +411,7 @@ function AnsAuctionData.GetRealmValue(link, key)
     local kindex = keyToIndex[key];
 
     if (kindex) then
-        local r = AnsAuctionData:GetRawData(not rawDataFromNet);
+        local r = AnsAuctionData:GetRawData();
         local cid = fid;
 
         if (Utils.IsClassic() or not rawDataFromNet) then
@@ -481,7 +457,7 @@ end
 function AnsAuctionData.GetValue(id, key)
     local kindex = keyToIndex[key];
     if (kindex) then
-        local r = AnsAuctionData:GetRawData(true);
+        local r = AnsAuctionData:GetRawData();
         if (r and r[id]) then
             local data = nil;
             data = r[id][kindex];
@@ -492,10 +468,11 @@ function AnsAuctionData.GetValue(id, key)
 end
 
 function AnsAuctionData.SetValue(id, min, avg, sum, count)
-    local r = AnsAuctionData:GetRawData(true);
+    local r = AnsAuctionData:GetRawData();
     if (not r) then
         r = {};
-        ANS_AUCTION_DATA[region.."-"..realmName..faction] = r;
+        Realms = r;
+        ANS_AUCTION_DATA[region.."-"..realmName..faction] = Realms;
     end
 
     if (r[id]) then

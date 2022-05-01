@@ -17,6 +17,8 @@ local Tasker = Ans.API.Tasker;
 local Logger = Ans.API.Logger;
 
 local TASKER_TAG = "SNIPER_WINDOW";
+local MODAL_TASKER_TAG = "SNIPER_MODAL";
+local MODAL_DELAY = 5;
 
 local AHFrame = nil;
 local AHFrameDisplayMode = nil;
@@ -276,6 +278,8 @@ function AuctionSnipe:Init()
     self.processingFrame = _G[frame:GetName().."ResultsProcessing"];
     self.processingFrame:Hide();
 
+    self.modalFrame = _G[frame:GetName().."ModalInfo"];
+
     self.searchInput = _G[frame:GetName().."SearchBarSearch"];
     self.snipeStatusText = _G[frame:GetName().."BottomBarStatus"];
 
@@ -386,6 +390,20 @@ function AuctionSnipe:Sort(t)
     AuctionList:Sort(t);
 end
 
+function AuctionSnipe.OnModalMessage(msg)
+    if (not AuctionSnipe.isInited) then
+        return;
+    end
+
+    AuctionSnipe.modalFrame.Message:SetText(msg);
+    AuctionSnipe.modalFrame:Show();
+
+    Tasker.Clear(MODAL_TASKER_TAG);
+    Tasker.Delay(GetTime() + MODAL_DELAY, function()
+        AuctionSnipe.modalFrame:Hide();
+    end, MODAL_TASKER_TAG);
+end
+
 function AuctionSnipe.OnPreviousComplete()
     if (AuctionSnipe.state == STATES.NONE) then
         return;
@@ -399,10 +417,15 @@ function AuctionSnipe.OnPreviousComplete()
     -- unless it had just finished the last price scan
     -- and was waiting for group scan
     -- for classic itemWasActive will always be false
-    if (itemWasActive) then
+    if (itemWasActive or last > 0) then
         AuctionSnipe:NextPriceScan(0, last);
     else
-        AuctionSnipe:NextGroupScan(0);
+        -- it is classic based
+        -- so we need to just extend the wait more
+        -- since the previous tasker was canceled
+        -- in some fashion
+        local wait = Config.Sniper().scanDelay;
+        AuctionSnipe:NextGroupScan(wait);
     end
 end
 
@@ -551,6 +574,8 @@ function AuctionSnipe:NextGroupScan(wait)
     if (self.state == STATES.NONE) then
         return;
     end
+    
+    local module = self.module;
 
     currentItem = nil;
     clearNew = true;
@@ -558,9 +583,13 @@ function AuctionSnipe:NextGroupScan(wait)
     totalGroups = 0;
     last = 0;
 
-    self.snipeStatusText:SetText("Waiting...");
+    if (Utils.IsClassic()) then
+        local text = module.GetScanText(c, total);
+        self.snipeStatusText:SetText(text.." Waiting...");
+    else
+        self.snipeStatusText:SetText("Waiting...");
+    end
 
-    local module = self.module;
     Tasker.Delay(GetTime() + wait, function()
         self.snipeStatusText:SetText("Querying...");
         module:GroupScan(DEFAULT_BROWSE_QUERY);
@@ -605,6 +634,7 @@ function AuctionSnipe:RegisterSniperEvents()
     EventManager:On("PURCHASE_START", AuctionSnipe.OnPurchaseStart);
     EventManager:On("QUERY_BROWSE_UPDATE", AuctionSnipe.OnGroupScanUpdate);
     EventManager:On("QUERY_PREVIOUS_COMPLETED", AuctionSnipe.OnPreviousComplete);
+    EventManager:On("PURCHASE_MODAL_MSG", AuctionSnipe.OnModalMessage);
 end
 
 function AuctionSnipe:UnregisterSniperEvents()
@@ -614,6 +644,7 @@ function AuctionSnipe:UnregisterSniperEvents()
     EventManager:Off("PURCHASE_START", AuctionSnipe.OnPurchaseStart);
     EventManager:Off("QUERY_BROWSE_UPDATE", AuctionSnipe.OnGroupScanUpdate);
     EventManager:Off("QUERY_PREVIOUS_COMPLETED", AuctionSnipe.OnPreviousComplete);
+    EventManager:Off("PURCHASE_MODAL_MSG", AuctionSnipe.OnModalMessage);
 end
 
 function AuctionSnipe:OnUpdate(frame, elapsed)
@@ -674,6 +705,10 @@ function AuctionSnipe:OnAuctionHouseClosed()
 
     local module = self.module;
     module.Wipe();
+end
+
+function AuctionSnipe:IgnoreItem()
+    AuctionList:IgnoreItem();
 end
 
 ---

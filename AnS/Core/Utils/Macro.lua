@@ -20,6 +20,7 @@ local BUTTONS = {
     ["ansSniper"] = "/click AnsSnipeBuy",
     ["ansSniperFirst"] = "/click AnsSnipeFirst",
     ["ansDestroy"] = "/click AnsDestroy",
+    ["ansIgnore"] = "/click AnsSnipeIgnore",
 };
 local MODIFIERS = {
     ["ctrl"] = "CTRL-",

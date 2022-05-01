@@ -53,6 +53,8 @@ function Auction:Copy(o)
     self.tsmId = o.tsmId;
     self.percent = o.percent;
     self.quality = o.quality;
+    self.ppu = o.ppu;
+    self.buyoutPrice = o.buyoutPrice;
     
     self.iLevel = o.iLevel;
     self.vendorsell = o.vendorsell;
@@ -62,6 +64,7 @@ function Auction:Copy(o)
 
     self.isPet = o.isPet;
     self.auctionId = o.auctionId;
+    self.auctions = o.auctions;
     self.avg = o.avg;
     self.op = o.op;
     self.suffix = o.suffix;

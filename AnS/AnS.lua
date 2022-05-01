@@ -35,6 +35,248 @@ Ans.__index = Ans;
 
 Ans.API = Core;
 
+-- note: recopy from other site that always has latest
+-- fun fact blizzard still has not fixed this fucking issue on TBC
+-- so we will fix it for them, since the function is global
+local function FixTBCAuctionHouseUpdate()
+    if (Utils.IsTBC()) then
+        print("Ans - Applying TBC AuctionHouseUpdate Fix");
+        local originalBrowseUpdate = _G["AuctionFrameBrowse_Update"];
+        _G["AuctionFrameBrowse_Update"] = function()
+            if (not AuctionFrame_DoesCategoryHaveFlag("WOW_TOKEN_FLAG", AuctionFrameBrowse.selectedCategoryIndex)) then
+                local numBatchAuctions, totalAuctions = GetNumAuctionItems("list");
+                local button, buttonName, buttonHighlight, iconTexture, itemName, color, itemCount, moneyFrame, yourBidText, buyoutFrame, buyoutMoney;
+                local offset = FauxScrollFrame_GetOffset(BrowseScrollFrame);
+                local index;
+                local isLastSlotEmpty;
+                local name, texture, count, quality, canUse, level, levelColHeader, minBid, minIncrement, buyoutPrice, duration, bidAmount, highBidder, bidderFullName, owner, ownerFullName, saleStatus, itemId, hasAllInfo;
+                local displayedPrice, requiredBid;
+                local link;
+
+                BrowseBidButton:Show();
+                BrowseBuyoutButton:Show();
+                BrowseBidButton:Disable();
+                BrowseBuyoutButton:Disable();
+                -- Update sort arrows
+                AuctionFrameBrowse_UpdateArrows();
+        
+                -- Show the no results text if no items found
+                if ( numBatchAuctions == 0 ) then
+                    BrowseNoResultsText:Show();
+                else
+                    BrowseNoResultsText:Hide();
+                end
+        
+                -- why the fuck are you recalculating this in the for loop blizz?
+                local startIndex = NUM_AUCTION_ITEMS_PER_PAGE * AuctionFrameBrowse.page;
+                local endIndex = startIndex + numBatchAuctions;
+
+                for i=1, NUM_BROWSE_TO_DISPLAY do
+                    index = offset + i + startIndex;
+                    button = _G["BrowseButton"..i];
+                    local shouldHide = index > endIndex;
+                    if ( not shouldHide ) then
+                        name, texture, count, quality, canUse, level, levelColHeader, minBid, minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner, ownerFullName, saleStatus, itemId, hasAllInfo =  GetAuctionItemInfo("list", offset + i);
+                        link = GetAuctionItemLink("list", offset + i);
+                        -- bug fix for blizz since they cannot check this
+                        -- as they don't give a shit
+
+                        -- apparently on TBC hasAllInfo still returns true
+                        -- even if it doesn't have all the info for quality, name, texture etc
+                        -- So, to really verify if we have all the info
+                        -- we need to also check for GetAuctionItemLink("list", offset + i);
+                        -- if the link does not exist, then we really do not have all the info
+
+                        if (not hasAllInfo or not link) then --Bug  145328
+                            shouldHide = true;
+                        end
+                    end
+                    
+                    -- Show or hide auction buttons
+                    if ( shouldHide ) then
+                        button:Hide();
+                        -- If the last button is empty then set isLastSlotEmpty var
+                        if ( i == NUM_BROWSE_TO_DISPLAY ) then
+                            isLastSlotEmpty = 1;
+                        end
+                    else
+                        button:Show();
+        
+                        buttonName = "BrowseButton"..i;
+                        duration = GetAuctionItemTimeLeft("list", offset + i);
+        
+                        -- Resize button if there isn't a scrollbar
+                        buttonHighlight = _G["BrowseButton"..i.."Highlight"];
+                        if ( numBatchAuctions < NUM_BROWSE_TO_DISPLAY ) then
+                            button:SetWidth(625);
+                            buttonHighlight:SetWidth(589);
+                            BrowseCurrentBidSort:SetWidth(207);
+                        elseif ( numBatchAuctions == NUM_BROWSE_TO_DISPLAY and totalAuctions <= NUM_BROWSE_TO_DISPLAY ) then
+                            button:SetWidth(625);
+                            buttonHighlight:SetWidth(589);
+                            BrowseCurrentBidSort:SetWidth(207);
+                        else
+                            button:SetWidth(600);
+                            buttonHighlight:SetWidth(562);
+                            BrowseCurrentBidSort:SetWidth(184);
+                        end
+                        -- Set name and quality color
+                        color = ITEM_QUALITY_COLORS[quality];
+
+                        -- bug fix for blizz since they cannot check this
+                        -- as they are retarded apparently and don't give a shit
+                        if (not color) then
+                            -- turns out quality can be nil in some cases
+                            -- this is due to hasAllInfo not being accurate on TBC
+                            color = ITEM_QUALITY_COLORS[0] or ITEM_QUALITY_COLORS[1];
+                        end
+
+                        itemName = _G[buttonName.."Name"];
+                        itemName:SetText(name);
+                        itemName:SetVertexColor(color.r, color.g, color.b);
+                        local itemButton = _G[buttonName.."Item"];
+        
+                        -- Set level
+                        if ( levelColHeader == "REQ_LEVEL_ABBR" and level > UnitLevel("player") ) then
+                            _G[buttonName.."Level"]:SetText(RED_FONT_COLOR_CODE..level..FONT_COLOR_CODE_CLOSE);
+                        else
+                            _G[buttonName.."Level"]:SetText(level);
+                        end
+                        -- Set closing time
+                        _G[buttonName.."ClosingTimeText"]:SetText(AuctionFrame_GetTimeLeftText(duration));
+                        _G[buttonName.."ClosingTime"].tooltip = AuctionFrame_GetTimeLeftTooltipText(duration);
+                        -- Set item texture, count, and usability
+                        iconTexture = _G[buttonName.."ItemIconTexture"];
+                        iconTexture:SetTexture(texture);
+                        if ( not canUse ) then
+                            iconTexture:SetVertexColor(1.0, 0.1, 0.1);
+                        else
+                            iconTexture:SetVertexColor(1.0, 1.0, 1.0);
+                        end
+                        itemCount = _G[buttonName.."ItemCount"];
+                        if ( count > 1 ) then
+                            itemCount:SetText(count);
+                            itemCount:Show();
+                        else
+                            itemCount:Hide();
+                        end
+                        -- Set high bid
+                        moneyFrame = _G[buttonName.."MoneyFrame"];
+                        -- If not bidAmount set the bid amount to the min bid
+                        if ( bidAmount == 0 ) then
+                            displayedPrice = minBid;
+                            requiredBid = minBid;
+                        else
+                            displayedPrice = bidAmount;
+                            requiredBid = bidAmount + minIncrement ;
+                        end
+                        MoneyFrame_Update(moneyFrame:GetName(), displayedPrice);
+        
+                        yourBidText = _G[buttonName.."YourBidText"];
+                        if ( highBidder ) then
+                            yourBidText:Show();
+                        else
+                            yourBidText:Hide();
+                        end
+                        
+                        if ( requiredBid >= MAXIMUM_BID_PRICE ) then
+                            -- Lie about our buyout price
+                            buyoutPrice = requiredBid;
+                        end
+                        buyoutFrame = _G[buttonName.."BuyoutFrame"];
+                        if ( buyoutPrice > 0 ) then
+                            moneyFrame:SetPoint("RIGHT", button, "RIGHT", 10, 10);
+                            buyoutMoney = _G[buyoutFrame:GetName().."Money"];
+                            MoneyFrame_Update(buyoutMoney, buyoutPrice);
+                            buyoutFrame:Show();
+                        else
+                            moneyFrame:SetPoint("RIGHT", button, "RIGHT", 10, 3);
+                            buyoutFrame:Hide();
+                        end
+                        -- Set high bidder
+                        --if ( not highBidder ) then
+                        --	highBidder = RED_FONT_COLOR_CODE..NO_BIDS..FONT_COLOR_CODE_CLOSE;
+                        --end
+                        local highBidderFrame = _G[buttonName.."HighBidder"]
+                        highBidderFrame.fullName = ownerFullName;
+                        highBidderFrame.Name:SetText(owner);
+                        
+                        -- this is for comparing to the player name to see if they are the owner of this auction
+                        local ownerName;
+                        if (not ownerFullName) then
+                            ownerName = owner;
+                        else
+                            ownerName = ownerFullName
+                        end
+                        
+                        button.bidAmount = displayedPrice;
+                        button.buyoutPrice = buyoutPrice;
+                        button.itemCount = count;
+                        button.itemIndex = index;
+        
+                        -- Set highlight
+                        if ( GetSelectedAuctionItem("list") and (offset + i) == GetSelectedAuctionItem("list") ) then
+                            button:LockHighlight();
+                            
+                            if ( buyoutPrice > 0 and buyoutPrice >= minBid ) then
+                                local canBuyout = 1;
+                                if ( GetMoney() < buyoutPrice ) then
+                                    if ( not highBidder or GetMoney()+bidAmount < buyoutPrice ) then
+                                        canBuyout = nil;
+                                    end
+                                end
+                                if ( canBuyout and (ownerName ~= UnitName("player")) ) then
+                                    BrowseBuyoutButton:Enable();
+                                    AuctionFrame.buyoutPrice = buyoutPrice;
+                                end
+                            else
+                                AuctionFrame.buyoutPrice = nil;
+                            end
+                            -- Set bid
+                            MoneyInputFrame_SetCopper(BrowseBidPrice, requiredBid);
+        
+                            if ( not highBidder and ownerName ~= UnitName("player") and GetMoney() >= MoneyInputFrame_GetCopper(BrowseBidPrice) and MoneyInputFrame_GetCopper(BrowseBidPrice) <= MAXIMUM_BID_PRICE ) then
+                                BrowseBidButton:Enable();
+                            end
+                        else
+                            button:UnlockHighlight();
+                        end
+                    end
+                end
+        
+                -- Update scrollFrame
+                -- If more than one page of auctions show the next and prev arrows when the scrollframe is scrolled all the way down
+                if ( totalAuctions > NUM_AUCTION_ITEMS_PER_PAGE ) then
+                    BrowsePrevPageButton.isEnabled = (AuctionFrameBrowse.page ~= 0);
+                    BrowseNextPageButton.isEnabled = (AuctionFrameBrowse.page ~= (ceil(totalAuctions/NUM_AUCTION_ITEMS_PER_PAGE) - 1));
+                    if ( isLastSlotEmpty ) then
+                        BrowsePrevPageButton:Show();
+                        BrowseNextPageButton:Show();
+                        BrowseSearchCountText:Show();
+                        local itemsMin = AuctionFrameBrowse.page * NUM_AUCTION_ITEMS_PER_PAGE + 1;
+                        local itemsMax = itemsMin + numBatchAuctions - 1;
+                        BrowseSearchCountText:SetFormattedText(NUMBER_OF_RESULTS_TEMPLATE, itemsMin, itemsMax, totalAuctions);
+                    else
+                        BrowsePrevPageButton:Hide();
+                        BrowseNextPageButton:Hide();
+                        BrowseSearchCountText:Hide();
+                    end
+                    
+                    -- Artifically inflate the number of results so the scrollbar scrolls one extra row
+                    numBatchAuctions = numBatchAuctions + 1;
+                else
+                    BrowsePrevPageButton.isEnabled = false;
+                    BrowseNextPageButton.isEnabled = false;
+                    BrowsePrevPageButton:Hide();
+                    BrowseNextPageButton:Hide();
+                    BrowseSearchCountText:Hide();
+                end
+                FauxScrollFrame_Update(BrowseScrollFrame, numBatchAuctions, NUM_BROWSE_TO_DISPLAY, AUCTIONS_BUTTON_HEIGHT);
+            end
+        end
+    end
+end
+
 -- slash commands for hiding minimap icon
 -- and access ans window when icon is hidden
 SlashCmdList["ANS_SLASHANS"] = function(msg)
@@ -176,6 +418,7 @@ function Ans:AddOnLoaded(...)
     local addonName = select(1, ...);
     if (addonName:lower() == "blizzard_auctionhouseui" or addonName:lower() == "blizzard_auctionui") then
         AHFrame = AuctionHouseFrame or AuctionFrame;
+        FixTBCAuctionHouseUpdate();
     end
 end
 

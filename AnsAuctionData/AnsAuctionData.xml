@@ -6,6 +6,7 @@
     <Frame name="AnsAuctionDataCore">
         <Scripts>
             <OnLoad>AnsAuctionData:OnLoad(self);</OnLoad>
+            <OnEvent>AnsAuctionData:OnVarLoad();</OnEvent>
             <OnUpdate>AnsAuctionData:OnUpdate( self, elapsed );</OnUpdate>
         </Scripts>
     </Frame>

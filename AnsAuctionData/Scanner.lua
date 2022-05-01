@@ -1,5 +1,6 @@
 local Core = select(2, ...);
 local Query = Ans.API.Auctions.Query;
+local TempTable = Ans.API.TempTable;
 local Recycler = Ans.API.Auctions.Recycler;
 local Utils = Ans.API.Utils;
 local Config = Ans.API.Config;
@@ -128,9 +129,11 @@ function Scanner:Track()
         auction, wait = query:Next(auction, itemIndex);
         if (wait) then
             tinsert(queue, itemIndex);
-        elseif (auction) then
+        else
             realIndex = realIndex + 1;
-            AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
+            if (auction) then
+                AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
+            end
         end
 
         itemIndex = itemIndex + 1;
@@ -146,9 +149,11 @@ function Scanner:Track()
         auction, wait = query:Next(auction, idx);
         if (wait) then
             tinsert(queue, idx);
-        elseif (auction) then
+        else
             realIndex = realIndex + 1;
-            AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
+            if (auction) then
+                AnsAuctionData:AddTracking(auction.tsmId, auction.ppu);
+            end
         end
         queueCount = queueCount - 1;
         count = count + 1; 

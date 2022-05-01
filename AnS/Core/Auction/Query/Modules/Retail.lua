@@ -866,6 +866,18 @@ function Retail:PurchaseItem(auction)
         if (auc.auctionId == id) then
             self.state:SetVar("sent", true);
             EventManager:Emit("PURCHASE_START", auction);
+
+            if (not C_AuctionHouse.GetAuctionInfoByID(auction.auctionId)) then
+                -- auction not available
+                -- do not even bother trying
+                EventManager:Emit("PURCHASE_MODAL_MSG", "Auction no longer exists - skipping purchase");
+                print("Ans - auction no longer exists - skipping purchase");
+                EventManager:Emit("PURCHASE_COMPLETE", true, auction);
+                EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
+                self:Interrupt();
+                return;
+            end
+
             print("Ans - trying to buy: "..auction.link.." for "..Utils.PriceToString(price));
             C_AuctionHouse.PlaceBid(id, price);
             return;
@@ -886,6 +898,9 @@ function Retail:PurchaseItem(auction)
         if (not self.sent) then
             return false;
         end
+
+        Logger.Log("SNIPER", "Purchase Event: "..name);
+        Logger.Log("SNIPER", "Purchase Enum: "..notif);
 
         if (name == "AUCTION_HOUSE_SHOW_NOTIFICATION"
             or name == "AUCTION_HOUSE_SHOW_FORMATTED_NOTIFICATION") then
@@ -962,10 +977,23 @@ function Retail:PurchaseItem(auction)
     if (hasResults and self:IsReady()) then
         self.state:SetVar("sent", true);
         EventManager:Emit("PURCHASE_START", auction);
+        
+        if (not C_AuctionHouse.GetAuctionInfoByID(auction.auctionId)) then
+            -- auction not available
+            -- do not even bother trying
+            print("Ans - auction no longer exists - skipping purchase");
+            EventManager:Emit("PURCHASE_COMPLETE", true, auction);
+            EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
+            self:Interrupt();
+            return;
+        end
+
         print("Ans - trying to buy: "..auction.link.." for "..Utils.PriceToString(price));
-        C_AuctionHouse.PlaceBid(id, price);
+
+        C_AuctionHouse.PlaceBid(id, price);  
         return;
-    else    
+    else
+        EventManager:Emit("PURCHASE_MODAL_MSG", "Pausing and Looking up item. Please try again in a second.");    
         print("Ans - Pausing and Looking up item. Please try again in a second.");
     end
 end

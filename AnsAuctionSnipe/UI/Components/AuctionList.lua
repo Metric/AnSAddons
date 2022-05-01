@@ -19,20 +19,9 @@ AuctionList.rows = {};
 AuctionList.style = {
     rowHeight = 16
 };
--- AuctionList.isBuying = false;
--- AuctionList.commodity = nil;
--- AuctionList.auction = nil;
--- AuctionList.waitingForSearch = false;
 
-AuctionList.sortMode = {
-    ["ppu"] = false,
-    ["count"] = false,
-    ["name"] = false,
-    ["percent"] = false,
-    ["iLevel"] = false,
-    ["owner"] = false
-};
-
+AuctionList.sortMode = "percent";
+AuctionList.sortAsc = true;
 AuctionList.lastSortMode = "percent";
 
 local BonusTemp = {};
@@ -89,6 +78,10 @@ end
 AuctionList.IsKnown = IsKnown;
 
 function AuctionList:OnLoad(parent)
+    self.sortMode = Config.Sniper().sortMode;
+    self.sortAsc = Config.Sniper().sortAsc;
+    self.lastSortMode = self.sortMode;
+
     self.parent = parent;
     self.buyNowFrame = _G["AnsSnipeBuy"];
     self.frame = _G[parent:GetName().."ResultsItems"];
@@ -436,13 +429,21 @@ local function SortMethod(t, x, y, asc)
 end
 
 function AuctionList:Sort(t, noFlip)
-    table.sort(self.items, function(x,y)
-        return SortMethod(t, x, y, self.sortMode[t]);
-    end);
-    if (not noFlip) then
-        self.sortMode[t] = not self.sortMode[t];
+    if (not noFlip and self.sortMode == t) then
+        self.sortAsc = not self.sortAsc;
+    elseif (not noFlip and self.sortMode ~= t) then
+        self.sortAsc = true;
     end
+    table.sort(self.items, function(x,y)
+        return SortMethod(t, x, y, self.sortAsc);
+    end);
+    
+    Config.Sniper().sortAsc = self.sortAsc;
+    Config.Sniper().sortMode = t;
+
     self.lastSortMode = t;
+    self.sortMode = t;
+
     self:Refresh();
 end
 
@@ -704,6 +705,18 @@ function AuctionList:Click(row, button, down)
 
     self:Refresh();
     self:ShowSelectedItem();
+end
+
+function AuctionList:IgnoreItem()
+    if (not self.frame) then
+        return;
+    end
+    if (self.selectedEntry < 0) then
+        return;
+    end
+
+    self:TempBlacklist(self.selectedEntry);
+    self:ClearSelected(); 
 end
 
 function AuctionList:ShowTip(item)
