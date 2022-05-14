@@ -66,12 +66,12 @@
      </Button>
     <Button name="AnsIconVisibleTemplate" virtual="true">
         <NormalTexture file="Interface\AddOns\AnS\Images\icons2">
-            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <TexCoords left="0" right="0.5" top="0.5" bottom="1" />
             <Size x="18" y="18" />
             <Color r="1" g="1" b="1" a="0.75" />
         </NormalTexture>
         <HighlightTexture file="Interface\AddOns\AnS\Images\icons2">
-            <TexCoords left="0" right="0.5" top="0" bottom="0.5" />
+            <TexCoords left="0" right="0.5" top="0.5" bottom="1" />
             <Size x="18" y="18" />
             <Color r="1" g="1" b="1" a="1" />
         </HighlightTexture>

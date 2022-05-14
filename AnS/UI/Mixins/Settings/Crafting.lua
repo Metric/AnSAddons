@@ -31,6 +31,8 @@ function AnsCraftingSettingsFrameMixin:Init()
     self.materialCost.onTextChanged = self.valueChangedHandler;
 
     self.destroying.AutoDestroy:SetScript("OnClick", self.valueChangedHandler);
+    self.destroying.IgnoreBOP:SetScript("OnClick", self.valueChangedHandler);
+
     self.disenchantMinValue = TextInput:NewFrom(self.destroying.DisenchantMinValue);
     self.disenchantMinValue.onTextChanged = self.valueChangedHandler;
     self.values.HideProfit:SetScript("OnClick", self.valueChangedHandler);
@@ -48,6 +50,7 @@ function AnsCraftingSettingsFrameMixin:Save()
     Config.Crafting().destroyMaxQuality = self.destroyMaxQuality.selected - 1;
     Config.Crafting().hideCost = self.values.HideCost:GetChecked();
     Config.Crafting().hideProfit = self.values.HideProfit:GetChecked();
+    Config.Crafting().destroyIgnoreBOP = self.destroying.IgnoreBOP:GetChecked();
 end
 
 function AnsCraftingSettingsFrameMixin:Refresh()
@@ -58,6 +61,7 @@ function AnsCraftingSettingsFrameMixin:Refresh()
     self.destroyMaxQuality:SetSelected(Config.Crafting().destroyMaxQuality + 1);
     self.values.HideProfit:SetChecked(Config.Crafting().hideProfit);
     self.values.HideCost:SetChecked(Config.Crafting().hideCost);
+    self.destroying.IgnoreBOP:SetChecked(Config.Crafting().destroyIgnoreBOP);
 end
 
 function AnsCraftingSettingsFrameMixin:LoadDropdown()

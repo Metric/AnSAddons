@@ -54,6 +54,11 @@
                             <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.AutoDestroy" x="200" y="0" />
                         </Anchors>
                     </EditBox>
+                    <CheckButton parentKey="IgnoreBOP" text="Ignore BoP" inherits="AnsCheckboxTemplate">
+                        <Anchors>
+                            <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.DisenchantMinValue" x="20" y="0" />
+                        </Anchors>
+                    </CheckButton>
                 </Frames>
                 <Layers>
                     <Layer level="BACKGROUND">

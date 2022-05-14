@@ -494,6 +494,17 @@
                     </OnClick>
                 </Scripts>
             </Button>
+            <Button name="AnsSnipeIgnore1" hidden="true" text="">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:IgnoreFirst();
+                    </OnClick>
+                </Scripts>
+            </Button>
 
             <Frame name="$parentFilterList">
                 <Size x="168" y="394" />
@@ -1034,6 +1045,17 @@
                 <Scripts>
                     <OnClick>
                         AuctionSnipe:BuyFirst();
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="AnsSnipeIgnore1" hidden="true" text="">
+                <Size x="1" y="1" />
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativeTo="$parent" relativePoint="TOPRIGHT" x="0" y="0" />
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        AuctionSnipe:IgnoreFirst();
                     </OnClick>
                 </Scripts>
             </Button>

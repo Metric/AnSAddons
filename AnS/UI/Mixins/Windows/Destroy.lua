@@ -3,6 +3,7 @@ local BagScanner = Ans.BagScanner;
 local Crafting = Ans.Data.Crafting;
 local EventManager = Ans.EventManager;
 local Utils = Ans.Utils;
+local Config = Ans.Config;
 
 local ListView = Ans.UI.ListView;
 local selectedItem = nil;
@@ -34,7 +35,11 @@ function AnsDestroyWindowFrameMixin:Init()
             this:RefreshButton();
         end,
         function(item)
-            ignored[item.id] = true;
+            if (this.selected == item) then
+                this.SelectedPreview:Set(nil);
+                this.selected = nil;
+            end
+            ignored[item.name] = item.tsmId;
             groups[item.id] = nil;
             this:Refresh();
             if (#listItems == 0) then
@@ -42,7 +47,7 @@ function AnsDestroyWindowFrameMixin:Init()
             end
         end, nil, 
         function(row, item)
-            row:SetScript("OnEnter", function(f) Utils.ShowTooltip(f, item.name, item.count); end);
+            row:SetScript("OnEnter", function(f) Utils.ShowTooltip(f, item.name, item.count, "ANCHOR_LEFT"); end);
             row:SetScript("OnLeave", Utils.HideTooltip);
 
             if (row.TextRight) then
@@ -80,7 +85,8 @@ function AnsDestroyWindowFrameMixin:Populate(auto)
     BagScanner.Release();
     BagScanner.Scan();
 
-    BagScanner.GetDestroyable(groups, Crafting);
+    local ignoreBOP = Config.Crafting().destroyIgnoreBOP;
+    BagScanner.GetDestroyable(groups, Crafting, ignoreBOP);
 
     self:Refresh();
     self.listView:SetSelected(lastSelected);
@@ -98,12 +104,12 @@ function AnsDestroyWindowFrameMixin:Refresh()
     wipe(listItems);
 
     for k,v in pairs(groups) do
-        if (not ignored[k] or not autoPopped) then
+        if (v and v[1] and not ignored[v[1].link]) then
             local count = Sum(v);
             if (Crafting.IsProspectable(v[1].tsmId) or Crafting.IsMillable(v[1].tsmId)) then
                 count = math.floor(count / 5);
             end
-            tinsert(listItems, {id = k, name = v[1].link, count = count, data = v, selected = self.selected and self.selected.id == k}) 
+            tinsert(listItems, {id = k, tsmId = v[1].tsmId, name = v[1].link, count = count, data = v, selected = self.selected and self.selected.id == k}) 
         end
     end
 
@@ -213,10 +219,6 @@ function AnsDestroyWindowFrameMixin:OnHide()
     self:Failure();
     
     self.SelectedPreview:Set(nil);
-
-    for k,v in pairs(groups) do
-        ignored[k] = true;
-    end
 end
 
 function AnsDestroyWindowFrameMixin:Listen()
@@ -233,3 +235,7 @@ function AnsDestroyWindowFrameMixin:Stop()
     EventManager:Off("UNIT_SPELLCAST_INTERRUPTED", self.failureHandler);
     EventManager:Off("LOOT_CLOSED", self.lootHandler);
 end
+
+EventManager:On("ANS_DATA_READY", function()
+    ignored = Config.Crafting().destroyBlacklist;
+end);

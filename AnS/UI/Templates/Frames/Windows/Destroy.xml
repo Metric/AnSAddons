@@ -78,7 +78,7 @@
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-10" relativePoint="BOTTOMLEFT" relativeKey="$parent.SelectedPreview" />
                 </Anchors>
-                <Size x="180" y="296" />
+                <Size x="180" y="175" />
             </ScrollFrame>
             <Button parentKey="Destroy" name="AnsDestroy" text="Destroy" inherits="AnsSecureButtonTemplate">
                 <Attributes>

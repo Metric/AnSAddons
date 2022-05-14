@@ -69,6 +69,8 @@ local CRAFTING_DEFAULT = {
     destroyMaxQuality = 2,
     disenchantMinValue = "0c",
     autoShowDestroying = false,
+    destroyBlacklist = {},
+    destroyIgnoreBOP = true,
     hideProfit = false,
     hideCost = false,
 };

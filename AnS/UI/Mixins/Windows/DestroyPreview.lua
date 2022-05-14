@@ -15,7 +15,7 @@ function AnsDestroyPreviewFrameMixin:ShowTip(f, link)
         return;
     end
 
-    Utils.ShowTooltip(f, link, 1);
+    Utils.ShowTooltip(f, link, 1, "ANCHOR_LEFT");
 end
 
 function AnsDestroyPreviewFrameMixin:Init()
@@ -66,6 +66,7 @@ function AnsDestroyPreviewFrameMixin:Set(link)
     self.selected = nil;
 
     if (not link) then
+        self:Hide();
         return;
     end
 
@@ -85,4 +86,5 @@ function AnsDestroyPreviewFrameMixin:Set(link)
     if (tex) then
         self.Icon:SetTexture(tex);
     end
+    self:Show();
 end

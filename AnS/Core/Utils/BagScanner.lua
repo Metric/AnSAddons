@@ -32,7 +32,8 @@ function BagItem:Clone()
         isEquipment = self.isEquipment,
         isCommodity = self.isCommodity,
         itemKey = self.itemKey,
-        tsmId = self.tsmId
+        tsmId = self.tsmId,
+        bindType = self.bindType
     });
 end
 
@@ -73,6 +74,10 @@ function BagItem:IsSoulbound()
     return Utils.IsSoulbound(bag, slot);
 end
 
+function BagItem:IsBoP()
+    return self.bindType == LE_ITEM_BIND_ON_ACQUIRE;
+end
+
 function BagScanner.Release()
     wipe(ITEM_CACHE);
     wipe(AUCTION_CACHE);
@@ -84,7 +89,7 @@ function BagScanner.FullDurability(bag, slot)
     return current == maximum;
 end
 
-function BagScanner.GetDestroyable(result, craftingHandler)
+function BagScanner.GetDestroyable(result, craftingHandler, ignoreBOP)
     wipe(result);
 
     if (not craftingHandler) then
@@ -92,7 +97,9 @@ function BagScanner.GetDestroyable(result, craftingHandler)
     end
 
     for i,v in ipairs(ITEM_CACHE) do
-        if (v and v.tsmId and v.link and v.count > 0 and not v.hidden and v.name and craftingHandler.IsDestroyable(v.tsmId, v.link) and craftingHandler.HasMinimumCount(v)) then
+        local ignore = v and v:IsBoP() and ignoreBOP;
+        local valid = v and v.tsmId and v.link and v.count > 0 and not v.hidden and v.name and craftingHandler.IsDestroyable(v.tsmId, v.link) and craftingHandler.HasMinimumCount(v);
+        if (not ignore and valid) then
             if (not result[v.id]) then
                 result[v.id] = {};
             end
@@ -152,7 +159,11 @@ function BagScanner.Scan(self)
             local _, icount, locked, quality, _, lootable, link, filtered, noValue, id = GetContainerItemInfo(bag, slot);
             link = GetContainerItemLink(bag, slot);
             local itemSellPrice = 0;
-            if (link) then itemSellPrice = select(11, GetItemInfo(link)); end
+            local bindType = LE_ITEM_BIND_NONE;
+            if (link) then 
+                itemSellPrice = select(11, GetItemInfo(link));
+                bindType = select(14, GetItemInfo(link)); 
+            end
             
             if (ITEM_CACHE[idx]) then
                 -- different item than last scan
@@ -172,6 +183,7 @@ function BagScanner.Scan(self)
                     ITEM_CACHE[idx].slot = slot;
                     ITEM_CACHE[idx].tex = _;
                     ITEM_CACHE[idx].id = id;
+                    ITEM_CACHE[idx].bindType = bindType;
                     ITEM_CACHE[idx].children = {};
 
                     if (link) then
@@ -237,6 +249,7 @@ function BagScanner.Scan(self)
                     expanded = false,
                     selected = false,
                     hidden = false,
+                    bindType = bindType,
                     children = {}
                 });
                 tinsert(ITEM_CACHE, item);

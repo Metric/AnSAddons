@@ -707,11 +707,21 @@ function AuctionList:Click(row, button, down)
     self:ShowSelectedItem();
 end
 
+function AuctionList:IgnoreFirst()
+    if (not self:ItemsExist()) then
+        return;
+    end
+    self:TempBlacklist(1);
+    if (self.selectedEntry == 1) then
+        self:ClearSelected();
+    end
+end
+
 function AuctionList:IgnoreItem()
     if (not self.frame) then
         return;
     end
-    if (self.selectedEntry < 0) then
+    if (#self.items == 0 or self.selectedEntry < 0) then
         return;
     end
 

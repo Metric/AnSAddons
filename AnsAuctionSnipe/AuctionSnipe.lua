@@ -435,7 +435,10 @@ end
 
 function AuctionSnipe.OnPurchaseStart()
     Tasker.Clear(TASKER_TAG);
-    AuctionList:OnPurchaseStart();
+
+    if (not Utils.IsClassic()) then
+        AuctionList:OnPurchaseStart();
+    end
 end
 
 function AuctionSnipe.OnGroupScanUpdate(current, total)
@@ -707,7 +710,19 @@ function AuctionSnipe:OnAuctionHouseClosed()
     module.Wipe();
 end
 
+function AuctionSnipe:IgnoreFirst()
+    if (not self.isInited or not AuctionList) then
+        return;
+    end
+    
+    AuctionList:IgnoreFirst();
+end
+
 function AuctionSnipe:IgnoreItem()
+    if (not self.isInited or not AuctionList) then
+        return;
+    end
+
     AuctionList:IgnoreItem();
 end
 

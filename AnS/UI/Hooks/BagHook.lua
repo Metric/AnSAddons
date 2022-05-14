@@ -9,7 +9,7 @@ EventManager:On("BAG_UPDATE_DELAYED",
             return;
         end
 
-        if (AnsDestroyWindow and Config.Crafting().autoShowDestroying) then
+        if (AnsDestroyWindow and not AnsDestroyWindow:IsShown() and Config.Crafting().autoShowDestroying) then
             AnsDestroyWindow:Populate(true);
             AnsDestroyWindow:Show();
         end

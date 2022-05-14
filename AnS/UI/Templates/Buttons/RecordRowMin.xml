@@ -68,6 +68,7 @@
                 <Anchors>
                     <Anchor point="BOTTOMRIGHT" x="-5" y="4" />
                 </Anchors>
+                <Size x="16" y="16" />
             </Button>
         </Frames>
         <Layers>

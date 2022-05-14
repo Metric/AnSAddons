@@ -230,8 +230,12 @@ function Utils.ParseBattlePetLink(link)
     return PET_CACHE;
 end
 
-function Utils.ShowTooltip(f, link, quantity)
-    GameTooltip:SetOwner(f, "ANCHOR_RIGHT");
+function Utils.ShowTooltip(f, link, quantity, anchor)
+    if (not anchor) then
+        anchor = "ANCHOR_RIGHT";
+    end
+
+    GameTooltip:SetOwner(f, anchor);
     if (Utils.IsBattlePetLink(link)) then
         Utils.ShowBattlePetTip(link);
     else
@@ -633,6 +637,10 @@ function Utils.MoneyStringToCopper(str)
     end
 
     return nil, nil;
+end
+
+function Utils.IsBoP(bag, slot)
+    return TooltipScanner:IsBoP(bag, slot);
 end
 
 function Utils.IsSoulbound(bag, slot)

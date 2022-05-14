@@ -282,12 +282,15 @@ function Classic:Purchase(block, count)
     
     if (wait) then
         print("Ans - waiting to purchase");
+        EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
         return;
     end
 
     if (success) then
         tremove(group, 1);
         EventManager:Emit("PURCHASE_COMPLETE", true, block, auction.count);
+        EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
+    else
         EventManager:Emit("QUERY_PREVIOUS_COMPLETED");
     end
 end
