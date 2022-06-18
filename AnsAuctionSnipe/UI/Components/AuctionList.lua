@@ -714,6 +714,8 @@ function AuctionList:IgnoreFirst()
     self:TempBlacklist(1);
     if (self.selectedEntry == 1) then
         self:ClearSelected();
+    else
+        self:Refresh();
     end
 end
 

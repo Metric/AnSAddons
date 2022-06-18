@@ -105,7 +105,7 @@
                     </CheckButton>
                     <CheckButton parentKey="ansDestroy" text="AnS Destroy" inherits="AnsCheckboxTemplate">
                         <Anchors>
-                            <Anchor point="TOPLEFT" x="130" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.ansIgnoreFirst" />
+                            <Anchor point="TOPLEFT" x="150" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.ansIgnoreFirst" />
                         </Anchors>
                     </CheckButton>
                 </Frames>

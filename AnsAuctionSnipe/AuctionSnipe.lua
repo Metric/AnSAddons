@@ -56,11 +56,21 @@ AnsQualityToText[4] = "Epic";
 AnsQualityToText[5] = "Legendary";
 
 local AnsQualityToAuctionEnum = {};
-AnsQualityToAuctionEnum[1] = 5;
-AnsQualityToAuctionEnum[2] = 6;
-AnsQualityToAuctionEnum[3] = 7;
-AnsQualityToAuctionEnum[4] = 8;
-AnsQualityToAuctionEnum[5] = 9;
+
+if (Utils.IsClassic()) then
+    -- this is just a placeholder and does nothing if classic
+    AnsQualityToAuctionEnum[1] = 5;
+    AnsQualityToAuctionEnum[2] = 6;
+    AnsQualityToAuctionEnum[3] = 7;
+    AnsQualityToAuctionEnum[4] = 8;
+    AnsQualityToAuctionEnum[5] = 9;
+else
+    AnsQualityToAuctionEnum[1] = Enum.AuctionHouseFilter.CommonQuality;
+    AnsQualityToAuctionEnum[2] = Enum.AuctionHouseFilter.UncommonQuality;
+    AnsQualityToAuctionEnum[3] = Enum.AuctionHouseFilter.RareQuality;
+    AnsQualityToAuctionEnum[4] = Enum.AuctionHouseFilter.EpicQuality;
+    AnsQualityToAuctionEnum[5] = Enum.AuctionHouseFilter.LegendaryQuality;
+end
 
 AuctionSnipe.AnsQualityToText = AnsQualityToText;
 AuctionSnipe.AnsQualityToAuctionEnum = AnsQualityToAuctionEnum;
@@ -826,8 +836,8 @@ function AuctionSnipe:LoadBaseFilters()
 
     for i,v in pairs(quality) do
         if (v) then
-            tinsert(qualityQueryFilters, i);
-            tinsert(qualityFilters, AnsQualityToAuctionEnum[i]);
+            tinsert(qualityQueryFilters, v);
+            tinsert(qualityFilters, AnsQualityToAuctionEnum[v]);
         end
     end
 

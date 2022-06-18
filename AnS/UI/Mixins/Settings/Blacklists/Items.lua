@@ -70,7 +70,7 @@ function AnsItemBlacklistFrameMixin:AddItem()
                 self:Refresh();
             elseif (t) then
                 local id = t;
-                Config.Sniper().itemBlacklist["i"..id] = tonumber(id);
+                Config.Sniper().itemBlacklist["i:"..id] = tonumber(id);
                 self.idInput:Set("");
                 self:Refresh();
             end
@@ -103,6 +103,14 @@ function AnsItemBlacklistFrameMixin:Refresh()
     for k,v in pairs(blacklist) do
         tinsert(items, {name = k, link = v});
     end
+
+    table.sort(items, function(a,b)
+        if (a.link and b.link) then
+            return a.link < b.link;
+        end
+
+        return a.name < b.name;
+    end);
 
     self.listView.items = items;
     self.listView:Refresh();

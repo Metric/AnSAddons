@@ -85,6 +85,7 @@ local VALUE_CACHE = {};
 
 local VAR_TEMPLATE = "local %s = %s or 0; ";
 
+-- note: redo this again and convert back to old method and remove case sensitivity.
 local TEMPLATE = [[
     return function(sources, ops)
         local ifgte, iflte, iflt, ifgt, ifeq, ifneq, check, avg, first, round,

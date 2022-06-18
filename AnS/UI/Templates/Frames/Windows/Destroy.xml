@@ -1,6 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <Frame name="AnsDestroyWindowTemplate" virtual="true" inherits="AnsWindowTemplate" mixin="AnsDestroyWindowFrameMixin">
-        <Size x="200" y="320" />
+        <Size x="240" y="320" />
         <Frames>
             <Button parentKey="Close" inherits="AnsIconCloseTemplate">
                 <Anchors>
@@ -13,7 +13,7 @@
                 </Scripts>
             </Button>
             <Frame parentKey="Tabs">
-                <Size x="200" y="24" />
+                <Size x="240" y="24" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="28" y="-4" />
                 </Anchors>
@@ -31,7 +31,7 @@
                 </Frames>
             </Frame>
             <Button parentKey="SelectedPreview" mixin="AnsDestroyPreviewFrameMixin">
-                <Size x="180" y="64" />
+                <Size x="220" y="64" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="10" y="-34" />
                 </Anchors>
@@ -64,7 +64,7 @@
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="-5" relativePoint="BOTTOMLEFT" relativeKey="$parent.Text" />
                         </Anchors>
-                        <Size x="138" y="39" />
+                        <Size x="178" y="39" />
                     </ScrollFrame>
                 </Frames>
                 <Scripts>
@@ -78,14 +78,14 @@
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-10" relativePoint="BOTTOMLEFT" relativeKey="$parent.SelectedPreview" />
                 </Anchors>
-                <Size x="180" y="175" />
+                <Size x="220" y="175" />
             </ScrollFrame>
             <Button parentKey="Destroy" name="AnsDestroy" text="Destroy" inherits="AnsSecureButtonTemplate">
                 <Attributes>
                     <Attribute name="type" value="macro" />
                     <Attribute name="macrotext" value="" type="macrotext" />
                 </Attributes>
-                <Size x="180" y="24" />
+                <Size x="220" y="24" />
                 <Anchors>
                     <Anchor point="BOTTOMLEFT" x="10" y="10" />
                 </Anchors> 

@@ -81,7 +81,7 @@ function Classic:IsValid(auction, ignorePercent)
     end
 
     local q = quality[1] or 0;
-    if (auction.quality <= q and q > 0) then
+    if (auction.quality < q and q > 0) then
         return false;
     end
 
@@ -313,8 +313,13 @@ function Classic:Search(filter, autoPage)
         return true;
     end
     fn.process = function(self, state)
-        local ready = this:IsReady();
-        if (not ready) then
+        if (self.delay - GetTime() <= 0) then
+            local ready = this:IsReady();
+            if (not ready) then
+                self.delay = GetTime() + 1;
+                return true;
+            end
+        else
             return true;
         end
 
@@ -327,6 +332,7 @@ function Classic:Search(filter, autoPage)
 
         return false;
     end
+    fn.delay = 0;
     fn.result = function(self, state)
         return nil;
     end
