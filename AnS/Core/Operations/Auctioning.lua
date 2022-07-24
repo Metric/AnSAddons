@@ -136,7 +136,7 @@ function Auctioning.From(config)
         end
     end
 
-    a.totalListed = 0;
+    a.totalListed = {};
     a.config = config;
     a.idCount = Groups.ParseGroups(a.groups, a.ids, true);
 
@@ -181,15 +181,31 @@ function Auctioning:GetReferenceID(item)
     end
 end
 
-function Auctioning:Track(item)
-    if (self:ContainsItem(item) 
-        and (item.isOwnerItem or item.owner == UnitName("player"))) then
-            self.totalListed = self.totalListed + item.count;
+function Auctioning:TrackTotalCount(id, count)
+    if (not count) then
+        count = 1;
+    end
+
+    if (not self.totalListed[id]) then
+        self.totalListed[id] = count;
+    else
+        local c = self.totalListed[id];
+        c = c + count;
+        self.totalListed[id] = c;
     end
 end
 
-function Auctioning:MaxPosted()
-    return self.totalListed > self.maxToPost and self.maxToPost > 0;
+function Auctioning:Track(item)
+    if (self:ContainsItem(item) 
+        and (item.isOwnerItem or item.owner == UnitName("player"))) then
+            local id = self:GetReferenceID(item);
+            self:TrackTotalCount(id, item.count);
+    end
+end
+
+function Auctioning:MaxPosted(item)
+    local id = self:GetReferenceID(item);
+    return self.totalListed[id] and self.totalListed[id] >= self.maxToPost and self.maxToPost > 0;
 end
 
 function Auctioning:IsValid(ppu, id, ignore, defaultValue)
@@ -274,7 +290,7 @@ end
 
 -- items should have had a .ppu assigned to them at this point
 function Auctioning:ApplyPost(item, queue)
-    if (self:MaxPosted()) then
+    if (self:MaxPosted(item)) then
         Logger.Log("AUCTION OP", "Max posted reached for this item: "..self:GetReferenceID(item));
         return;
     end
@@ -294,7 +310,6 @@ end
 
 function Auctioning:ApplyPostRetail(v, queue)
     local total = v.total;
-
     total = total - self.keepInBags;
 
     if (total > self.maxToPost and self.maxToPost > 0) then
@@ -302,7 +317,8 @@ function Auctioning:ApplyPostRetail(v, queue)
     end
 
     if (total > 0) then
-        self.totalListed = self.totalListed + total;
+        local id = self:GetReferenceID(v);
+        self:TrackTotalCount(id, total);
         v.toSell = total;
         tinsert(queue, v);
     end
@@ -318,9 +334,10 @@ function Auctioning:ApplyPostClassic(v, queue)
     end
 
     if (total > 0) then
-        self.totalListed = self.totalListed + total;
         local prevTotal = total;
-        
+        local id = self:GetReferenceID(v);
+        self:TrackTotalCount(id, total);
+
         for i,o in ipairs(v.stacks) do
             if ((self.stackSize > 0 and o.count <= self.stackSize) or self.stackSize <= 0) then
                 prevTotal = total;

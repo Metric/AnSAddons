@@ -117,6 +117,19 @@ function Query.IsTempBlacklisted(auction)
     return blacklist[ItemHash(auction)] == true;
 end
 
+function Query.IsPermBlacklisted(auction)
+    if (not auction) then
+        return false;
+    end
+
+    local blklist = Config.Sniper().itemBlacklist;
+    if (auction.tsmId and blklist[auction.tsmId]) then
+        return true;
+    end
+
+    return false;
+end
+
 function Query.ClearTempBlacklist()
     wipe(blacklist);
 end
@@ -146,7 +159,8 @@ function Query.IsValid(auction, ignorePercent, ilevel, buyout, percent)
 end
 
 function Query.IsBlacklisted(auction)
-    local isBlacklisted = Query.IsTempBlacklisted(auction);
+    local isBlacklisted = Query.IsTempBlacklisted(auction)
+                            or Query.IsPermBlacklisted(auction);
 
     if (isBlacklisted) then
         return true;
@@ -159,9 +173,9 @@ function Query.IsBlacklisted(auction)
     -- this won't hurt anything since
     -- the config already handles if it is in a table
     -- and will fill in the edit box appropriately
-    if (type(blacklist) == "string") then
-        blacklist = {};
-        Config.Sniper().characterBlacklist = blacklist;
+    if (type(blklist) == "string") then
+        blklist = {};
+        Config.Sniper().characterBlacklist = blklist;
     end
 
     if (auction.owner and #blklist > 0) then
