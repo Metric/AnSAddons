@@ -5,9 +5,14 @@ local Sources = Ans.Sources;
 local Utils = Ans.Utils;
 local Query = Ans.Object.Register("Query", Ans.Auctions);
 
-Query.DEFAULT_ITEM_SORT = {
+Query.DEFAULT_COMMODITY_SORT = {
     { sortOrder = 4, reverseSort = false },
     { sortOrder = 3, reverseSort = false }
+};
+
+Query.DEFAULT_ITEM_SORT = {
+    { sortOrder = 0, reverseSort = false },
+    { sortOrder = 4, reverseSort = false },
 };
 
 Query.TASKER_TAG = "QUERY";

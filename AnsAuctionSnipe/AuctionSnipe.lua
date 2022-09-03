@@ -90,6 +90,15 @@ local totalGroups = 0;
 local last = 0;
 local clearNew = true;
 
+-- minor state that is needed for classic
+-- in order to continue to scan if 
+    -- you purchased and there is no more items in list
+    -- so we need to set wait for next scan to 0
+    -- rather than wait like normal
+    -- otherwise if no item was purchased then we wait as normal
+
+local itemWasPurchased = false;
+
 -- local ERR_AUCTION_WON = gsub(ERR_AUCTION_WON_S or "", "%%s", "");
 
 -- this dialog is used when in browse query
@@ -422,6 +431,10 @@ function AuctionSnipe.OnPreviousComplete()
     local itemWasActive = current ~= nil;
     current = nil;
 
+    local noItemsLeft = (not AuctionList:ItemsExist()) and itemWasPurchased;
+    itemWasPurchased = false;
+
+
     -- test for retail vs. classic
     -- retail should in theory have an itemWasActive
     -- unless it had just finished the last price scan
@@ -434,12 +447,13 @@ function AuctionSnipe.OnPreviousComplete()
         -- so we need to just extend the wait more
         -- since the previous tasker was canceled
         -- in some fashion
-        local wait = Config.Sniper().scanDelay;
+        local wait = (not noItemsLeft) and Config.Sniper().scanDelay or 0;
         AuctionSnipe:NextGroupScan(wait);
     end
 end
 
 function AuctionSnipe.OnPurchaseConfirm(remove, auction, count)
+    itemWasPurchased = count and count > 0 and remove and auction;
     AuctionList:OnPurchaseConfirm(remove, auction, count);
 end
 
@@ -591,6 +605,7 @@ function AuctionSnipe:NextGroupScan(wait)
     local module = self.module;
 
     currentItem = nil;
+    itemWasPurchased = false;
     clearNew = true;
     totalResultsFound = 0;
     totalGroups = 0;
@@ -821,8 +836,21 @@ end
 
 function AuctionSnipe:LoadBaseFilters()
     local quality = Config.Sniper().qualities;
+    local qualityRequiresReset = false;
+    local QUALITY_ERROR = "AnS - detected older qualities settings format. Set to last known min quality selected.";
 
-    if (Utils.IsClassic()) then
+    -- note: test quality pairs to ensure it is adhering to newer format
+    -- after updating from older version of AnS
+    for i,v in pairs(quality) do
+        if (type(v) == "boolean") then
+            qualityRequiresReset = true; -- note: flag we need to clean up old quality format
+            print(QUALITY_ERROR);
+            Logger.Log("SNIPER", QUALITY_ERROR);
+            break;
+        end
+    end
+
+    if (Utils.IsClassic() or qualityRequiresReset) then
         local min = Config.Sniper().minQuality;
         wipe(quality);
         quality[min] = min;
@@ -835,13 +863,18 @@ function AuctionSnipe:LoadBaseFilters()
     wipe(qualityQueryFilters);
 
     for i,v in pairs(quality) do
-        if (v) then
+        if (v and type(v) ~= "boolean") then -- note: ensure v is a number to adhere to newer format
             tinsert(qualityQueryFilters, v);
             tinsert(qualityFilters, AnsQualityToAuctionEnum[v]);
         end
     end
 
     table.sort(qualityQueryFilters, function(a,b) 
+        -- ignore anything not a number
+        if (type(a) ~= "number" or type(b) ~= "number") then
+            return false;
+        end
+
         return a > b;
     end);
 

@@ -79,6 +79,8 @@ function OpCodes:Acquire()
     return op;
 end
 
+local REGISTERED_CACHE = {};
+
 local VAR_CACHE = {};
 
 local OP_CACHE = {};
@@ -162,7 +164,13 @@ end
 
 function Sources:Register(name, fn, key)
     local n = name:lower();
+    if (REGISTERED_CACHE[n]) then
+        print("AnS - "..n.." is an already registered data source. Ignoring new source registeration.");
+        return;
+    end
+
     local source = PriceSource:Acquire(n,fn,key);
+    REGISTERED_CACHE[n] = source;
     tinsert(self.items, source);
 end
 

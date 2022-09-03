@@ -113,8 +113,8 @@ function ItemTracker:ScanBags(type)
         local BANK_NUM_SLOTS = GetContainerNumSlots(BANK_CONTAINER);
         for i = 1, BANK_NUM_SLOTS do
             local link = GetContainerItemLink(BANK_CONTAINER, i);
-            local _, count = GetContainerItemInfo(BANK_CONTAINER, i);
-            if (link and count) then
+            local _, count, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID, isBound = GetContainerItemInfo(BANK_CONTAINER, i);
+            if (link and count and not isBound) then
                 local id = Utils.GetID(link);
                 local prev = container[id] or {link = link, count = 0};
                 prev.count = prev.count + count;
@@ -126,8 +126,8 @@ function ItemTracker:ScanBags(type)
             local REAGENT_NUM_SLOTS = GetContainerNumSlots(REAGENTBANK_CONTAINER);
             for i = 1, REAGENT_NUM_SLOTS do
                 local link = GetContainerItemLink(REAGENTBANK_CONTAINER, i);
-                local _, count = GetContainerItemInfo(REAGENTBANK_CONTAINER, i);
-                if (link and count) then
+                local _, count, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID, isBound = GetContainerItemInfo(REAGENTBANK_CONTAINER, i);
+                if (link and count and not isBound) then
                     local id = Utils.GetID(link);
                     local prev = container[id] or {link = link, count = 0};
                     prev.count = prev.count + count;
@@ -140,8 +140,8 @@ function ItemTracker:ScanBags(type)
             local slots = GetContainerNumSlots(i);
             for k = 1, slots do
                 local link = GetContainerItemLink(i, k);
-                local _, count = GetContainerItemInfo(i, k);
-                if (link and count) then
+                local _, count, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID, isBound = GetContainerItemInfo(i, k);
+                if (link and count and not isBound) then
                     local id = Utils.GetID(link);
                     local prev = container[id] or {link = link, count = 0};
                     prev.count = prev.count + count;
@@ -154,8 +154,8 @@ function ItemTracker:ScanBags(type)
             local slots = GetContainerNumSlots(i);
             for k = 1, slots do
                 local link = GetContainerItemLink(i, k);
-                local _, count = GetContainerItemInfo(i, k);
-                if (link and count) then
+                local _, count, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID, isBound = GetContainerItemInfo(i, k);
+                if (link and count and not isBound) then
                     local id = Utils.GetID(link);
                     local prev = container[id] or {link = link, count = 0};
                     prev.count = prev.count + count;

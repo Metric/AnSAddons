@@ -515,6 +515,20 @@ function Ans:MigrateFiltersToSnipingOperations(items, parentName)
     end
 end
 
+local function RegisterTSMCustomDataSources() 
+    if (not TSM_API) then
+        return;
+    end
+
+    local keys = {};
+    TSM_API.GetPriceSourceKeys(keys);
+    for i,v in ipairs(keys) do
+        if (type(v) == "string") then
+            Sources:Register(v, TSMDB.GetPrice, v);
+        end
+    end
+end
+
 function Ans:RegisterPriceSources()
     local tsmEnabled = false;
     local tujEnabled = false;
@@ -579,6 +593,7 @@ function Ans:RegisterPriceSources()
     end
 
     if (tsmEnabled) then
+
         print("AnS: found TSM pricing source");
         Sources:Register("DBMarket", TSMDB.GetPrice, "DBMarket");
         Sources:Register("DBMinBuyout", TSMDB.GetPrice, "DBMinBuyout");
@@ -595,6 +610,8 @@ function Ans:RegisterPriceSources()
         Sources:Register("MaxBuy", TSMDB.GetPrice, "MaxBuy");
         Sources:Register("MaxSell", TSMDB.GetPrice, "MaxSell");
         Sources:Register("NumInventory", TSMDB.GetPrice, "NumInventory");
+
+        RegisterTSMCustomDataSources();
     end
 
     if (tujEnabled) then

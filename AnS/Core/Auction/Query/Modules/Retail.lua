@@ -18,6 +18,7 @@ local Auction = Ans.Auctions.Auction;
 
 local Retail = Ans.Object.Register("Retail", Query);
 
+local DEFAULT_COMMODITY_SORT = Query.DEFAULT_COMMODITY_SORT;
 local DEFAULT_ITEM_SORT = Query.DEFAULT_ITEM_SORT;
 
 if (not Utils.IsClassic()) then
@@ -673,11 +674,13 @@ function Retail:Search(item, sell, first)
         Logger.Log("QUERY", "Sending search query");
         item.isCommodity = info.isCommodity;
 
+        local sortMethod = item.isCommodity and DEFAULT_COMMODITY_SORT or DEFAULT_ITEM_SORT;
+
         Timestamp();
         if (sell) then
-            C_AuctionHouse.SendSellSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+            C_AuctionHouse.SendSellSearchQuery(item.itemKey, sortMethod, true);
         else
-            C_AuctionHouse.SendSearchQuery(item.itemKey, DEFAULT_ITEM_SORT, true);
+            C_AuctionHouse.SendSearchQuery(item.itemKey, sortMethod, true);
         end
 
         self.full = false;

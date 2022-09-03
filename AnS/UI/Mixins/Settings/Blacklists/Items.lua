@@ -95,6 +95,26 @@ function AnsItemBlacklistFrameMixin:Remove(item)
     self.listView:Refresh();
 end
 
+local function TryAndSortByLink(a,b)
+    if (not a.link or not b.link) then
+        return nil;
+    end
+    if (type(a.link) == type(b.link)) then
+        return a.link < b.link;
+    end
+    return nil;
+end
+
+local function TryAndSortByItemstring(a,b)
+    if (not a.name or not b.name) then
+        return nil;
+    end
+    if (type(a.name) == type(b.name)) then
+        return a.name < b.name;
+    end
+    return nil;
+end
+
 function AnsItemBlacklistFrameMixin:Refresh()
     local blacklist = Config.Sniper().itemBlacklist;
 
@@ -105,11 +125,15 @@ function AnsItemBlacklistFrameMixin:Refresh()
     end
 
     table.sort(items, function(a,b)
-        if (a.link and b.link) then
-            return a.link < b.link;
+        local linkSort = TryAndSortByLink(a,b);
+        if (linkSort ~= nil) then
+            return linkSort;
         end
-
-        return a.name < b.name;
+        local idSort = TryAndSortByItemstring(a,b);
+        if (idSort ~= nil) then
+            return idSort;
+        end
+        return false;
     end);
 
     self.listView.items = items;
