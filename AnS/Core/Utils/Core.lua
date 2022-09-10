@@ -60,17 +60,36 @@ local BONUS_ID_NUMS_CACHE = {};
 function Utils.IsClassic()
     local v = GetBuildInfo();
     local f,m = v:match("%d");
-    return f == "1" or f == "2" 
-        or f == "3" or f == "4" 
-        or f == "5" or f == "6"
-        or f == "7" 
-        or (f == "8" and m and m == "0");
+    local n = tonumber(f);
+
+    -- note: it wasn't until the first major patch of 8.x
+    -- that the AH drastically changed
+    return n >= 1 and n <= 7 
+        or (n == 8 and m and m == "0"); 
 end
 
 function Utils.IsTBC()
     local v = GetBuildInfo();
     local f,m = v:match("%d");
-    return f == "2";
+    local n = tonumber(f);
+
+    return n == 2;
+end
+
+function Utils.IsExpansion()
+    local v = GetBuildInfo();
+    local f,m = v:match("%d");
+    local n = tonumber(f);
+
+    return n >= 2;
+end
+
+-- wrath classic
+function Utils.IsWotlk()
+    local v = GetBuildInfo();
+    local f,m = v:match("%d");
+    local n = tonumber(f);
+    return n == 3;
 end
 
 function Utils.GSC(val)

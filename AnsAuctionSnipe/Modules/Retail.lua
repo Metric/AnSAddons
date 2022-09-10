@@ -157,11 +157,9 @@ function Retail:PriceScan(isKnown)
             local preventResult = isKnown and isKnown(v);
             local ignoreSingles = Config.Sniper().ignoreSingleStacks;
         
-            if (ignoreSingles and not v.auctionId) then
-                if (item.count == 1) then
-                    Logger.Log("SNIPER", "Ignoring single stack for commodity");
-                    return false;
-                end
+            if (ignoreSingles and not v.auctionId and v.count == 1) then
+                Logger.Log("SNIPER", "Ignoring single stack for commodity");
+                return false;
             end
             
             if (not preventResult and not v.isOwnerItem) then
