@@ -12,13 +12,3 @@ function TSMDB.GetPrice(link, key, name)
         return TSM_API.GetCustomPriceValue(name, id) or 0;
     end
 end
-
-function TSMDB.GetSaleInfo(link, key, name)
-    local r = TSMDB.GetPrice(link, key, name);
-    if (TSM_MAJOR_VERSION == "3") then
-        if (not r) then r = 0; end;
-        return r / 100;
-    else
-        return r or 0;
-    end
-end

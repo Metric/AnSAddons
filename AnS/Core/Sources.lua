@@ -165,9 +165,11 @@ end
 function Sources:Register(name, fn, key)
     local n = name:lower();
     if (REGISTERED_CACHE[n]) then
-        print("AnS - "..n.." is an already registered data source. Ignoring new source registeration.");
+        print("AnS - "..n.." is an already registered data source. Ignoring new source registration.");
         return;
     end
+
+    print("AnS - "..n.." registering new data source");
 
     local source = PriceSource:Acquire(n,fn,key);
     REGISTERED_CACHE[n] = source;
