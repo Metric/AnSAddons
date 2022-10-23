@@ -335,6 +335,10 @@ function CraftingHook.SetProfit(self, id)
     local totalCost = 0;
 
     local finalItemLink = GetTradeSkillItemLink(id);
+    if (not finalItemLink) then
+        return;
+    end
+
     -- we do this to remove stupid bonus ids 
     -- that show up on the crafting items
     -- that are not really there on AH
@@ -488,6 +492,11 @@ function CraftingHook.StoreClassicReferences()
 end
 
 function CraftingHook.HookClassic()
+    -- temporary fix until we figure out wtf is going on with Wotlk crafting UI changes.
+    if (Utils.IsWotlk()) then
+        return true;
+    end
+
     local scrollFrame = _G["TradeSkillListScrollFrame"];
 
     if (Config.Crafting().hideProfit and Config.Crafting().hideCost) then
