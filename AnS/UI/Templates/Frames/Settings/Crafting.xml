@@ -11,13 +11,13 @@
                 </Anchors>
                 <Size x="555" y="134" />
                 <Frames>
-                    <EditBox parentKey="CraftValue" text="" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="CraftValue" inherits="AnsEditBoxTemplate">
                         <Size x="555" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
                         </Anchors>
                     </EditBox>
-                    <EditBox parentKey="MaterialCost" text="" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="MaterialCost" inherits="AnsEditBoxTemplate">
                         <Size x="555" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.CraftValue" x="0" y="-25" />
@@ -48,7 +48,7 @@
                             <Anchor point="TOPLEFT" x="0" y="-4" />
                         </Anchors>
                     </CheckButton>
-                    <EditBox parentKey="DisenchantMinValue" text="" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="DisenchantMinValue" inherits="AnsEditBoxTemplate">
                         <Size x="128" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.AutoDestroy" x="200" y="0" />

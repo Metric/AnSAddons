@@ -51,8 +51,6 @@ local faction = "";
 
 local ValidIDCache = {};
 
-local CraftIDCache = {};
-
 local hooked = false;
 
 local tracker = {};
@@ -134,10 +132,6 @@ local function ShowData(tooltip, extra)
     AnsAuctionDataTooltip:SetOwner(tooltip, "ANCHOR_BOTTOMLEFT");
 
     local name, link = tooltip:GetItem();
-    
-    if (CraftIDCache[link]) then
-        link = CraftIDCache[link];
-    end
 
     link = extra or link;
 
@@ -216,38 +210,28 @@ local function ShowData(tooltip, extra)
     end
 end
 
-local function CaptureLink(link)
-    if (link) then
-        if (not CraftIDCache[link]) then
-            local _, id = strsplit(":", link);
-            id = tonumber(id);
-            CraftIDCache[link] = id;
-        end 
-    end
-end
-
 local function HookTooltip() 
     if (not hooked) then
         hooked = true;
 
-        GameTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
+        -- note in future retail patch this will break and blizz will likely finish implementing
+        -- the new C_TooltipInfo and ToolipDataProcessor etc...
+
         GameTooltip:HookScript("OnTooltipSetItem", ShowData);
-        ItemRefTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
         ItemRefTooltip:HookScript("OnTooltipSetItem", ShowData);
 
-		if (BattlePetToolTip_Show and BattlePetTooltipTemplate_SetBattlePet and FloatingBattlePet_Show) then
-            
+        GameTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
+        ItemRefTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
+
+		if (Utils.IsRetail()) then
             BattlePetTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
             FloatingBattlePetTooltip:HookScript("OnHide", function() AnsAuctionDataTooltip:Hide(); end);
 
 			hooksecurefunc(_G, "BattlePetTooltipTemplate_SetBattlePet", ShowDataPetFloat);
+
             hooksecurefunc(GameTooltip, "SetRecipeReagentItem", 
                 function(self, recipeID, reagentIndex) 
-                    ShowData(self, C_TradeSkillUI.GetRecipeReagentItemLink(recipeID, reagentIndex));
-                end);
-            hooksecurefunc(GameTooltip, "SetRecipeResultItem", 
-                function(self, recipeID)
-                    CaptureLink(C_TradeSkillUI.GetRecipeItemLink(recipeID));
+                    ShowData(self, C_TradeSkillUI.GetRecipeFixedReagentItemLink(recipeID, reagentIndex));
                 end);
 		end
     end

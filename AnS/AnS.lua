@@ -40,7 +40,7 @@ Ans.API = Core;
 -- fun fact blizzard still has not fixed this fucking issue on Wotlk classic either
 -- so we will fix it for them, since the function is global
 local function FixTBCAuctionHouseUpdate()
-    if (Utils.IsExpansion()) then
+    if (Utils.IsExpansion() and not Utils.IsRetail()) then
         print("Ans - Applying TBC/Wotlk AuctionHouseUpdate Fix");
         local originalBrowseUpdate = _G["AuctionFrameBrowse_Update"];
         _G["AuctionFrameBrowse_Update"] = function()

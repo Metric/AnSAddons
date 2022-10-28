@@ -18,7 +18,7 @@
             </Layer>
         </Layers>
         <Frames>
-             <EditBox parentKey="Total" name="$parentTotal" text="1" letters="22" numeric="true" autoFocus="true" inherits="InputBoxTemplate">
+             <EditBox parentKey="Total" name="$parentTotal" letters="22" numeric="true" autoFocus="true" inherits="InputBoxTemplate">
                 <Size x="64" y="24" />
                 <Anchors>
                     <Anchor point="CENTER" x="-15" y="0"/>

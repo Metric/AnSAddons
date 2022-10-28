@@ -12,7 +12,7 @@
                     <Anchor point="TOPLEFT" x="190" y="-55" />
                 </Anchors>
                 <Frames>
-                    <EditBox name="$parentSearch" autoFocus="false" inherits="InputBoxTemplate" bytes="63">
+                    <EditBox name="$parentSearch" autoFocus="false" inherits="InputBoxTemplate" letters="63">
                         <Size x="100" y="20"/>
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0"/>
@@ -39,7 +39,7 @@
                         </Scripts>
                     </EditBox>
 
-                    <EditBox name="$parentMaxPercent" autoFocus="false" numeric="true" bytes="6" inherits="InputBoxTemplate">
+                    <EditBox name="$parentMaxPercent" autoFocus="false" numeric="true" inherits="InputBoxTemplate">
                         <Size x="48" y="20" />
                         <Anchors>
                             <Anchor point="RIGHT" relativeTo="$parentSearch" relativePoint="LEFT" x="-15" y="0" />
@@ -118,7 +118,7 @@
                         </Layers>
                     </Frame>
 
-                    <EditBox name="$parentLevelRange" text="0-120" letters="7" numeric="false" autoFocus="false" inherits="InputBoxTemplate">
+                    <EditBox name="$parentLevelRange" letters="7" numeric="false" autoFocus="false" inherits="InputBoxTemplate">
                         <Size x="64" y="24" />
                         <Anchors>
 							<Anchor point="LEFT" relativeTo="$parentQuality" relativePoint="RIGHT" x="65" y="0"/>
@@ -448,7 +448,7 @@
                         <Anchor point="CENTER" x="0" y="80" />
                     </Anchors>
                 </ButtonText>
-                <HighlightTexture file="Interface\AddOns\AnS\Images\bgforclassic" mode="ADD">
+                <HighlightTexture file="Interface\AddOns\AnS\Images\bgforclassic" alphaMode="ADD">
                     <Color r="0" g="0.5" b="1" a="0.25" />
                     <TexCoords left="0" right="0.546875" top="0" bottom="0.849609375" />
                     <Anchors>
@@ -656,7 +656,7 @@
                     <Anchor point="TOPLEFT" x="190" y="-55" />
                 </Anchors>
                 <Frames>
-                    <EditBox name="$parentSearch" autoFocus="false" inherits="InputBoxTemplate" bytes="63">
+                    <EditBox name="$parentSearch" autoFocus="false" inherits="InputBoxTemplate" letters="63">
                         <Size x="100" y="20"/>
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0"/>
@@ -683,7 +683,7 @@
                         </Scripts>
                     </EditBox>
 
-                    <EditBox name="$parentMaxPercent" autoFocus="false" numeric="true" bytes="6" inherits="InputBoxTemplate">
+                    <EditBox name="$parentMaxPercent" autoFocus="false" numeric="true" inherits="InputBoxTemplate">
                         <Size x="48" y="20" />
                         <Anchors>
                             <Anchor point="RIGHT" relativeTo="$parentSearch" relativePoint="LEFT" x="-15" y="0" />
@@ -762,7 +762,7 @@
                         </Layers>
                     </Frame>
 
-                    <EditBox name="$parentLevelRange" text="0-120" letters="7" numeric="false" autoFocus="false" inherits="InputBoxTemplate">
+                    <EditBox name="$parentLevelRange" letters="7" numeric="false" autoFocus="false" inherits="InputBoxTemplate">
                         <Size x="64" y="24" />
                         <Anchors>
 							<Anchor point="LEFT" relativeTo="$parentQuality" relativePoint="RIGHT" x="65" y="0"/>
@@ -1069,7 +1069,7 @@
                         <Anchor point="CENTER" x="0" y="80" />
                     </Anchors>
                 </ButtonText>
-                <HighlightTexture file="Interface\AddOns\AnS\Images\bgforclassic"  mode="ADD">
+                <HighlightTexture file="Interface\AddOns\AnS\Images\bgforclassic"  alphaMode="ADD">
                     <Color r="0" g="0.5" b="1" a="0.25" />
                     <Size x="308" y="468" />
                     <Anchors>

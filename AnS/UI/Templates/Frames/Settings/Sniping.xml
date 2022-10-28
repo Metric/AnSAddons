@@ -33,7 +33,7 @@
                     <Anchor point="TOPLEFT" x="530" y="-20" />
                 </Anchors>
             </Button>
-            <EditBox parentKey="Source" text="" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="Source" inherits="AnsEditBoxTemplate">
                 <Size x="200" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.SourceLabel" x="0" y="0" />
@@ -102,7 +102,7 @@
                 </Anchors>
             </CheckButton>
 
-            <EditBox parentKey="ItemsUpdate" text="" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="ItemsUpdate" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeKey="$parent.ChatMessageNew" x="0" y="-30" />
@@ -118,7 +118,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="ScanDelay" text="" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="ScanDelay" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeKey="$parent.ItemsUpdate" x="100" y="0" />

@@ -198,7 +198,7 @@
                 </Anchors>
                 <Size x="565" y="56" />
                 <Frames>
-                    <EditBox parentKey="maxDataLimit" maxBytes="64" numeric="true" text="" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="maxDataLimit" letters="10" numeric="true" inherits="AnsEditBoxTemplate">
                         <Size x="64" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="-12" />

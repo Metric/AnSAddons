@@ -11,7 +11,7 @@
                 </Anchors>
                 <Size x="200" y="376" />
                 <Frames>
-                    <EditBox parentKey="Character" text="" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="Character" inherits="AnsEditBoxTemplate">
                         <Size x="150" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />
@@ -61,7 +61,7 @@
                 </Anchors>
                  <Size x="355" y="376" />
                 <Frames>
-                    <EditBox parentKey="Item" text="" inherits="AnsEditBoxTemplate">
+                    <EditBox parentKey="Item" inherits="AnsEditBoxTemplate">
                         <Size x="150" y="20" />
                         <Anchors>
                             <Anchor point="TOPLEFT" x="0" y="0" />

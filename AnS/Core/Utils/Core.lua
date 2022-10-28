@@ -57,20 +57,25 @@ local BONUS_ID_NUMS_CACHE = {};
 
 --- Standard Utils ---
 
-function Utils.IsClassic()
+function Utils.IsRetail()
     local v = GetBuildInfo();
-    local f,m = v:match("%d");
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
 
-    -- note: it wasn't until the first major patch of 8.x
-    -- that the AH drastically changed
-    return n >= 1 and n <= 7 
-        or (n == 8 and m and m == "0"); 
+    return n > 8;
+end
+
+function Utils.IsClassic()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+
+    return n >= 1 and n <= 8 and not Utils.IsRetail(); 
 end
 
 function Utils.IsTBC()
     local v = GetBuildInfo();
-    local f,m = v:match("%d");
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
 
     return n == 2;
@@ -78,7 +83,7 @@ end
 
 function Utils.IsExpansion()
     local v = GetBuildInfo();
-    local f,m = v:match("%d");
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
 
     return n >= 2;
@@ -87,7 +92,7 @@ end
 -- wrath classic
 function Utils.IsWotlk()
     local v = GetBuildInfo();
-    local f,m = v:match("%d");
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
     return n == 3;
 end

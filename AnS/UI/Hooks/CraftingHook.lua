@@ -304,6 +304,11 @@ function CraftingHook.ShowRetailCost(self, id)
 end
 
 function CraftingHook.HookRetail()
+    -- note: temporary disable until blizz finishes all the necessary changes to the tradeskill ui / apis for Dragon expansion
+    if (Utils.IsRetail()) then
+        return true;
+    end
+
     if (Config.Crafting().hideProfit and Config.Crafting().hideCost) then
         return false;
     end

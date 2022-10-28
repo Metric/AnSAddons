@@ -9,35 +9,124 @@ Ans.BaseData = { path = "" };
 local RUNECARVING = 1000;
 Ans.Data.RUNECARVING = RUNECARVING;
 
-local armorBasicSubtypes = {
+local armorBasicSubtypes = {};
+
+local armorInventoryTypes = {};
+
+local miscArmorInventoryTypes = {};
+
+-- note these variables have been deprecated
+-- however in order to make sure we have proper compat
+-- we will add this here
+
+if (Utils.IsRetail()) then
+    -- Item class/subclass enum conversions
+	LE_ITEM_CLASS_CONSUMABLE = Enum.ItemClass.Consumable;
+	LE_ITEM_CLASS_CONTAINER = Enum.ItemClass.Container;
+	LE_ITEM_CLASS_WEAPON = Enum.ItemClass.Weapon;
+	LE_ITEM_CLASS_GEM = Enum.ItemClass.Gem;
+	LE_ITEM_CLASS_ARMOR = Enum.ItemClass.Armor;
+	LE_ITEM_CLASS_REAGENT = Enum.ItemClass.Reagent;
+	LE_ITEM_CLASS_PROJECTILE = Enum.ItemClass.Projectile;
+	LE_ITEM_CLASS_TRADEGOODS = Enum.ItemClass.Tradegoods;
+	LE_ITEM_CLASS_ITEM_ENHANCEMENT = Enum.ItemClass.ItemEnhancement;
+	LE_ITEM_CLASS_RECIPE = Enum.ItemClass.Recipe;
+	LE_ITEM_CLASS_QUIVER = Enum.ItemClass.Quiver;
+	LE_ITEM_CLASS_QUESTITEM = Enum.ItemClass.Questitem;
+	LE_ITEM_CLASS_KEY = Enum.ItemClass.Key;
+	LE_ITEM_CLASS_MISCELLANEOUS = Enum.ItemClass.Miscellaneous;
+	LE_ITEM_CLASS_GLYPH = Enum.ItemClass.Glyph;
+	LE_ITEM_CLASS_BATTLEPET = Enum.ItemClass.Battlepet;
+	LE_ITEM_CLASS_WOW_TOKEN = Enum.ItemClass.WoWToken;
+
+	LE_ITEM_WEAPON_AXE1H = Enum.ItemWeaponSubclass.Axe1H;
+	LE_ITEM_WEAPON_AXE2H = Enum.ItemWeaponSubclass.Axe2H;
+	LE_ITEM_WEAPON_BOWS = Enum.ItemWeaponSubclass.Bows;
+	LE_ITEM_WEAPON_GUNS = Enum.ItemWeaponSubclass.Guns;
+	LE_ITEM_WEAPON_MACE1H = Enum.ItemWeaponSubclass.Mace1H;
+	LE_ITEM_WEAPON_MACE2H = Enum.ItemWeaponSubclass.Mace2H;
+	LE_ITEM_WEAPON_POLEARM = Enum.ItemWeaponSubclass.Polearm;
+	LE_ITEM_WEAPON_SWORD1H = Enum.ItemWeaponSubclass.Sword1H;
+	LE_ITEM_WEAPON_SWORD2H = Enum.ItemWeaponSubclass.Sword2H;
+	LE_ITEM_WEAPON_WARGLAIVE = Enum.ItemWeaponSubclass.Warglaive;
+	LE_ITEM_WEAPON_STAFF = Enum.ItemWeaponSubclass.Staff;
+	LE_ITEM_WEAPON_BEARCLAW = Enum.ItemWeaponSubclass.Bearclaw;
+	LE_ITEM_WEAPON_CATCLAW = Enum.ItemWeaponSubclass.Catclaw;
+	LE_ITEM_WEAPON_UNARMED = Enum.ItemWeaponSubclass.Unarmed;
+	LE_ITEM_WEAPON_GENERIC = Enum.ItemWeaponSubclass.Generic;
+	LE_ITEM_WEAPON_DAGGER = Enum.ItemWeaponSubclass.Dagger;
+	LE_ITEM_WEAPON_THROWN = Enum.ItemWeaponSubclass.Thrown;
+	LE_ITEM_WEAPON_OBSOLETE3 = Enum.ItemWeaponSubclass.Obsolete3;
+	LE_ITEM_WEAPON_CROSSBOW = Enum.ItemWeaponSubclass.Crossbow;
+	LE_ITEM_WEAPON_WAND = Enum.ItemWeaponSubclass.Wand;
+	LE_ITEM_WEAPON_FISHINGPOLE = Enum.ItemWeaponSubclass.Fishingpole;
+
+	LE_ITEM_ARMOR_GENERIC = Enum.ItemArmorSubclass.Generic;
+	LE_ITEM_ARMOR_CLOTH = Enum.ItemArmorSubclass.Cloth;
+	LE_ITEM_ARMOR_LEATHER = Enum.ItemArmorSubclass.Leather;
+	LE_ITEM_ARMOR_MAIL = Enum.ItemArmorSubclass.Mail;
+	LE_ITEM_ARMOR_PLATE = Enum.ItemArmorSubclass.Plate;
+	LE_ITEM_ARMOR_COSMETIC = Enum.ItemArmorSubclass.Cosmetic;
+	LE_ITEM_ARMOR_SHIELD = Enum.ItemArmorSubclass.Shield;
+	LE_ITEM_ARMOR_LIBRAM = Enum.ItemArmorSubclass.Libram;
+	LE_ITEM_ARMOR_IDOL = Enum.ItemArmorSubclass.Idol;
+	LE_ITEM_ARMOR_TOTEM = Enum.ItemArmorSubclass.Totem;
+	LE_ITEM_ARMOR_SIGIL = Enum.ItemArmorSubclass.Sigil;
+	LE_ITEM_ARMOR_RELIC = Enum.ItemArmorSubclass.Relic;
+
+	LE_ITEM_GEM_INTELLECT = Enum.ItemGemSubclass.Intellect;
+	LE_ITEM_GEM_AGILITY = Enum.ItemGemSubclass.Agility;
+	LE_ITEM_GEM_STRENGTH = Enum.ItemGemSubclass.Strength;
+	LE_ITEM_GEM_STAMINA = Enum.ItemGemSubclass.Stamina;
+	LE_ITEM_GEM_SPIRIT = Enum.ItemGemSubclass.Spirit;
+	LE_ITEM_GEM_CRITICALSTRIKE = Enum.ItemGemSubclass.Criticalstrike;
+	LE_ITEM_GEM_MASTERY = Enum.ItemGemSubclass.Mastery;
+	LE_ITEM_GEM_HASTE = Enum.ItemGemSubclass.Haste;
+	LE_ITEM_GEM_VERSATILITY = Enum.ItemGemSubclass.Versatility;
+	LE_ITEM_GEM_MULTIPLESTATS = Enum.ItemGemSubclass.Multiplestats;
+	LE_ITEM_GEM_ARTIFACTRELIC = Enum.ItemGemSubclass.Artifactrelic;
+
+	LE_ITEM_RECIPE_BOOK = Enum.ItemRecipeSubclass.Book;
+	LE_ITEM_RECIPE_LEATHERWORKING = Enum.ItemRecipeSubclass.Leatherworking;
+	LE_ITEM_RECIPE_TAILORING = Enum.ItemRecipeSubclass.Tailoring;
+	LE_ITEM_RECIPE_ENGINEERING = Enum.ItemRecipeSubclass.Engineering;
+	LE_ITEM_RECIPE_BLACKSMITHING = Enum.ItemRecipeSubclass.Blacksmithing;
+	LE_ITEM_RECIPE_COOKING = Enum.ItemRecipeSubclass.Cooking;
+	LE_ITEM_RECIPE_ALCHEMY = Enum.ItemRecipeSubclass.Alchemy;
+	LE_ITEM_RECIPE_FIRST_AID = Enum.ItemRecipeSubclass.FirstAid;
+	LE_ITEM_RECIPE_ENCHANTING = Enum.ItemRecipeSubclass.Enchanting;
+	LE_ITEM_RECIPE_FISHING = Enum.ItemRecipeSubclass.Fishing;
+	LE_ITEM_RECIPE_JEWELCRAFTING = Enum.ItemRecipeSubclass.Jewelcrafting;
+	LE_ITEM_RECIPE_INSCRIPTION = Enum.ItemRecipeSubclass.Inscription;
+
+	LE_ITEM_MISCELLANEOUS_JUNK = Enum.ItemMiscellaneousSubclass.Junk;
+	LE_ITEM_MISCELLANEOUS_REAGENT = Enum.ItemMiscellaneousSubclass.Reagent;
+	LE_ITEM_MISCELLANEOUS_COMPANION_PET = Enum.ItemMiscellaneousSubclass.CompanionPet;
+	LE_ITEM_MISCELLANEOUS_HOLIDAY = Enum.ItemMiscellaneousSubclass.Holiday;
+	LE_ITEM_MISCELLANEOUS_OTHER = Enum.ItemMiscellaneousSubclass.Other;
+	LE_ITEM_MISCELLANEOUS_MOUNT = Enum.ItemMiscellaneousSubclass.Mount;
+	LE_ITEM_MISCELLANEOUS_MOUNT_EQUIPMENT = Enum.ItemMiscellaneousSubclass.MountEquipment;
+
+    IsDressableItem = C_Item.IsDressableItemByID;
+    GetAuctionItemSubClasses = C_AuctionHouse.GetAuctionItemSubClasses;
+    
+    -- Note: these will be deprecated in a future Dragon Expansion Patch
+    -- GetContainerItemLink = C_Container.GetContainerItemLink
+    -- GetContainerNumSlots = C_Container.GetContainerNumSlots
+    -- GetContainerItemInfo = C_Container.GetContainerItemInfo
+    -- GetContainerItemID = C_Container.GetContainerItemID
+    -- GetContainerItemDurability = C_Container.GetContainerItemDurability
+    -- ContainerIDToInventoryID = C_Container.ContainerIDToInventoryID
+end
+
+armorBasicSubtypes = {
     LE_ITEM_ARMOR_PLATE,
     LE_ITEM_ARMOR_MAIL,
     LE_ITEM_ARMOR_LEATHER,
     LE_ITEM_ARMOR_CLOTH
 };
 
-local armorInventoryTypes = {
-    LE_INVENTORY_TYPE_HEAD_TYPE,
-    LE_INVENTORY_TYPE_SHOULDER_TYPE,
-    LE_INVENTORY_TYPE_CHEST_TYPE,
-    LE_INVENTORY_TYPE_WAIST_TYPE,
-    LE_INVENTORY_TYPE_LEGS_TYPE,
-    LE_INVENTORY_TYPE_FEET_TYPE,
-    LE_INVENTORY_TYPE_WRIST_TYPE,
-    LE_INVENTORY_TYPE_HAND_TYPE,
-};
-
-local miscArmorInventoryTypes = {
-    LE_INVENTORY_TYPE_NECK_TYPE,
-    LE_INVENTORY_TYPE_CLOAK_TYPE,
-    LE_INVENTORY_TYPE_FINGER_TYPE,
-    LE_INVENTORY_TYPE_TRINKET_TYPE,
-    LE_INVENTORY_TYPE_HOLDABLE_TYPE,
-    LE_INVENTORY_TYPE_BODY_TYPE,
-    LE_INVENTORY_TYPE_HEAD_TYPE
-};
-
-if (not Utils.IsClassic()) then
+if (Utils.IsRetail()) then
     armorInventoryTypes = {
         RUNECARVING,
         Enum.InventoryType.IndexHeadType,
@@ -60,6 +149,26 @@ if (not Utils.IsClassic()) then
         Enum.InventoryType.IndexBodyType,
         Enum.InventoryType.IndexHeadType
     };
+else 
+    armorInventoryTypes = {
+        LE_INVENTORY_TYPE_HEAD_TYPE,
+        LE_INVENTORY_TYPE_SHOULDER_TYPE,
+        LE_INVENTORY_TYPE_CHEST_TYPE,
+        LE_INVENTORY_TYPE_WAIST_TYPE,
+        LE_INVENTORY_TYPE_LEGS_TYPE,
+        LE_INVENTORY_TYPE_FEET_TYPE,
+        LE_INVENTORY_TYPE_WRIST_TYPE,
+        LE_INVENTORY_TYPE_HAND_TYPE,
+    };
+    miscArmorInventoryTypes = {
+        LE_INVENTORY_TYPE_NECK_TYPE,
+        LE_INVENTORY_TYPE_CLOAK_TYPE,
+        LE_INVENTORY_TYPE_FINGER_TYPE,
+        LE_INVENTORY_TYPE_TRINKET_TYPE,
+        LE_INVENTORY_TYPE_HOLDABLE_TYPE,
+        LE_INVENTORY_TYPE_BODY_TYPE,
+        LE_INVENTORY_TYPE_HEAD_TYPE
+    }
 end
 
 local function AddBaseData(classID, subClassID, parent, inventoryType)
@@ -103,18 +212,21 @@ local function AddBaseData(classID, subClassID, parent, inventoryType)
 end
 
 local function AddSubBaseData(classID, parent)
-    if (not Utils.IsClassic()) then
-        local subclasses = C_AuctionHouse.GetAuctionItemSubClasses(classID);
-        for i = 1, #subclasses do
-            local subClassID = subclasses[i];
-            AddBaseData(classID, subClassID, parent);
-        end
+    local subclasses = nil;
+
+    if (Utils.IsRetail()) then
+        subclasses = GetAuctionItemSubClasses(classID);
     else
-        local subclasses = {GetAuctionItemSubClasses(classID)};
-        for i = 1, #subclasses do
-            local subClassID = subclasses[i];
-            AddBaseData(classID, subClassID, parent);
-        end
+        subclasses = {GetAuctionItemSubClasses(classID)};
+    end
+
+    if (not subclasses) then 
+        return;
+    end
+
+    for i = 1, #subclasses do
+        local subClassID = subclasses[i];
+        AddBaseData(classID, subClassID, parent);
     end
 end
 

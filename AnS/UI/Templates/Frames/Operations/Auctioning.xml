@@ -15,13 +15,13 @@
             </Layer>
         </Layers>
         <Frames>
-            <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="OpName" name="$parentOpName" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>
             </EditBox>
-            <EditBox parentKey="KeepInBags" text="0" name="$parentKeepInBags" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="KeepInBags" name="$parentKeepInBags" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-25" relativeTo="$parentOpName" relativePoint="BOTTOMLEFT" />
@@ -37,7 +37,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="MaxToPost" text="0" name="$parentMaxToPost" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="MaxToPost" name="$parentMaxToPost" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="10" y="0" relativeTo="$parentKeepInBags" relativePoint="TOPRIGHT" />
@@ -53,7 +53,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="StackSize" maxBytes="64" text="" name="$parentStackSize" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="StackSize" numeric="true" name="$parentStackSize" inherits="AnsEditBoxTemplate">
                 <Size x="100" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="10" y="0" relativePoint="TOPRIGHT" relativeTo="$parentMaxToPost" />
@@ -69,7 +69,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="BidPercent" maxBytes="64" text="" name="$parentBidPercent" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="BidPercent" numeric="true" name="$parentBidPercent" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="10" y="0" relativePoint="TOPRIGHT" relativeTo="$parentStackSize" />
@@ -85,7 +85,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="Undercut" text="0" name="$parentUndercut" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="Undercut" name="$parentUndercut" inherits="AnsEditBoxTemplate">
                 <Size x="125" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-25" relativePoint="BOTTOMLEFT" relativeTo="$parentKeepInBags" />
@@ -101,7 +101,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="MinPrice" text="0" name="$parentMinPrice" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="MinPrice" name="$parentMinPrice" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-25" relativePoint="BOTTOMLEFT" relativeTo="$parentUndercut" />
@@ -123,7 +123,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="MaxPrice" text="0" name="$parentMaxPrice" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="MaxPrice" name="$parentMaxPrice" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-50" relativePoint="BOTTOMLEFT" relativeTo="$parentMinPrice" />
@@ -145,7 +145,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="NormalPrice" text="0" name="$parentNormalPrice" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="NormalPrice" name="$parentNormalPrice" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-50" relativePoint="BOTTOMLEFT" relativeTo="$parentMaxPrice" />

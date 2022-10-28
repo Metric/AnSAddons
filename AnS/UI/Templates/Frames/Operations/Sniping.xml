@@ -45,7 +45,7 @@
                     <Anchor point="TOPLEFT" x="0" y="25" />
                 </Anchors>
             </CheckButton>
-            <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="OpName" name="$parentOpName" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" />
@@ -78,19 +78,19 @@
                     </OnLoad>
                 </Scripts>
             </ScrollFrame>
-            <EditBox parentKey="MaxPercent" text="0" name="$parentMaxPercent" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="MaxPercent" name="$parentMaxPercent" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPercentLabel" />
                 </Anchors>
             </EditBox>
-            <EditBox parentKey="MinLevel" text="0" name="$parentMinLevel" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="MinLevel" name="$parentMinLevel" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentLevelLabel" />
                 </Anchors>
             </EditBox>
-            <EditBox parentKey="Search" maxBytes="64" text="" name="$parentSearch" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="Search" letters="64" name="$parentSearch" inherits="AnsEditBoxTemplate">
                 <Size x="100" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentNameLabel" />
@@ -102,7 +102,7 @@
                     <Anchor point="TOPLEFT" x="25" y="-2" relativePoint="TOPRIGHT" relativeTo="$parentMinLevel" />
                 </Anchors>
             </CheckButton>
-            <EditBox parentKey="MaxPPU" text="0" name="$parentMaxPPU" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="MaxPPU" name="$parentMaxPPU" inherits="AnsEditBoxTemplate">
                 <Size x="125" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" relativePoint="BOTTOMLEFT" relativeTo="$parentPPULabel" />

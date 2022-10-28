@@ -5,13 +5,13 @@
             <Anchor point="TOPLEFT" x="168" y="0" />
         </Anchors>
         <Frames>
-            <EditBox parentKey="OpName" text="" name="$parentOpName" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="OpName" name="$parentOpName" inherits="AnsEditBoxTemplate">
                 <Size x="435" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="0" />
                 </Anchors>
             </EditBox>
-            <EditBox parentKey="KeepInBags" text="0" name="$parentKeepInBags" numeric="true" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="KeepInBags" name="$parentKeepInBags" numeric="true" inherits="AnsEditBoxTemplate">
                 <Size x="64" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="0" y="-25" relativeKey="$parent.OpName" relativePoint="BOTTOMLEFT" />
@@ -27,7 +27,7 @@
                     </Layer>
                 </Layers>
             </EditBox>
-            <EditBox parentKey="To" text="" name="$parentTo" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="To" name="$parentTo" inherits="AnsEditBoxTemplate">
                 <Size x="150" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="10" y="0" relativeKey="$parent.KeepInBags" relativePoint="TOPRIGHT" />
@@ -80,7 +80,7 @@
                     </OnKeyUp>
                 </Scripts>
             </EditBox>
-            <EditBox parentKey="Subject" text="" name="$parentSubject" inherits="AnsEditBoxTemplate">
+            <EditBox parentKey="Subject"  name="$parentSubject" inherits="AnsEditBoxTemplate">
                 <Size x="200" y="20" />
                 <Anchors>
                     <Anchor point="TOPLEFT" x="10" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.To" />
