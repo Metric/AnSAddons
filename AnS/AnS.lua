@@ -370,7 +370,6 @@ local function AddRetailAHTab(name, displayMode)
     frame.displayMode = displayMode;
     frame:HookScript("OnClick", function() AHFrame:SetTitle(name) end);
 
-    tinsert(AuctionHouseFrame.Tabs, frame);
     AuctionHouseFrame.tabsForDisplayMode[displayMode] = n;
 
     PanelTemplates_SetNumTabs(AuctionHouseFrame, n);
