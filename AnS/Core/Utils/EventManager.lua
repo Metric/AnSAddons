@@ -77,7 +77,7 @@ function EventManager:Register(frame)
 
     local events = nil;
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         events = CLASSIC_EVENTS_TO_REGISTER;
     else
         events = RETAIL_EVENTS_TO_REGISTER;

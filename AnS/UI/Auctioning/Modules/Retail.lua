@@ -23,7 +23,7 @@ local ownedIds = PostingView.ownedIds;
 
 local query = Query:Acquire(0,0,{0},0);
 
-if (not Utils.IsClassic()) then
+if (not Utils.IsClassicEra()) then
     PostingView.module = Retail;
 end
 

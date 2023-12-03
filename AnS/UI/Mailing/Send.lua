@@ -2,7 +2,7 @@ local Ans = select(2, ...);
 local Config = Ans.Config;
 local Utils = Ans.Utils;
 local Groups = Utils.Groups;
-local BagScanner = Ans.BagScanner;
+local Bag = Ans.Bag;
 local EventManager = Ans.EventManager;
 local FSM = Ans.FSM;
 local FSMState = Ans.FSMState;
@@ -53,9 +53,9 @@ local function BuildStateMachine()
         SendView.sendBtn:SetText("Scanning");
         SendView.sendBtn:Disable();
 
-        BagScanner.Release();
-        BagScanner.Scan();
-        BagScanner.GetSendable(sendable);
+        Bag.Release();
+        Bag.Scan();
+        Bag.GetSendable(sendable);
 
         for k,v in pairs(activeOps) do
             local op = MailOp.From(v);
@@ -189,7 +189,7 @@ function SendView:Init(f)
     local filterTemplate = "AnsFilterRowTemplate";
     local frameTemplate = "AnsMailingTemplate"
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         frameTemplate = "AnsMailingClassicTemplate";
         filterTemplate = "AnsFilterRowClassicTemplate";
     end

@@ -46,7 +46,10 @@ UI\Templates\Frames\Operations\Mailing.xml
 UI\Templates\Frames\Operations\Sniping.xml
 
 # Settings Editor Templates
-UI\Templates\Frames\Settings\Crafting.xml
+
+## Not loaded at the moment due to downsizing code base temp
+##UI\Templates\Frames\Settings\Crafting.xml
+
 UI\Templates\Frames\Settings\CustomSources.xml
 UI\Templates\Frames\Settings\General.xml
 UI\Templates\Frames\Settings\Macro.xml
@@ -59,7 +62,10 @@ UI\Templates\Frames\Hooks\Posting.xml
 
 # Window Templates
 UI\Templates\Frames\Windows\Window.xml
-UI\Templates\Frames\Windows\Destroy.xml
+
+## Not loaded at the moment due to downsizing code base temp
+## UI\Templates\Frames\Windows\Destroy.xml
+
 UI\Templates\Frames\Windows\Main.xml
 
 ## General Components
@@ -82,7 +88,7 @@ Core\Utils\Logger.lua
 Core\Utils\Importer.lua
 Core\Utils\Exporter.lua
 Core\Utils\FSM.lua
-Core\Utils\BagScanner.lua
+Core\Utils\Bag.lua
 Core\Utils\Macro.lua
 Core\Utils\json.lua
 
@@ -96,8 +102,20 @@ Data\Enchanting.lua
 Data\Fish.lua
 Data\Mounts.lua
 Data\Pets.lua
-Data\ClassicVendor.lua
+
+
+## Vendor Specific Data by Expansion
+Data\Vendor\Core.lua
+Data\Vendor\Classic.lua
+Data\Vendor\TBC.lua
+Data\Vendor\Wrath.lua
+Data\Vendor\Cata.lua
+Data\Vendor\Retail.lua
+Data\Vendor\Shadow.lua
+Data\Vendor\Dragon.lua
+Data\Vendor\Pets.lua
 Data\Vendor.lua
+
 Data\Sockets.lua
 
 ## Auction Database Sources
@@ -112,11 +130,12 @@ Core\Sources.lua
 ## Event State Helper
 Core\EventState.lua
 
+## Not loaded at the moment due to downsizing code base temp
 ## Special Crafting Data for Recipes
 ## This must come after Sources.lua
 ## Since it relies on it for 
 ## Disenchant Values
-Data\Crafting.lua
+## Data\Crafting.lua
 
 ## Auction Queries
 Core\Auction\Core.lua
@@ -131,10 +150,12 @@ Core\Operations\Core.lua
 Core\Operations\Sniping.lua
 Core\Operations\Auctioning.lua
 Core\Operations\Mailing.lua
-Core\Operations\Shopping.lua
-Core\Operations\Vendoring.lua
-Core\Operations\Warehousing.lua
-Core\Operations\Crafting.lua
+
+## Not loaded at the moment due to downsizing code base temp
+## Core\Operations\Shopping.lua
+## Core\Operations\Vendoring.lua
+## Core\Operations\Warehousing.lua
+## Core\Operations\Crafting.lua
 
 ## Analytics
 Core\Analytics\Core.lua
@@ -146,9 +167,10 @@ Core\Analytics\Modules\MailTracker.lua
 Core\Analytics\Modules\TradeTracker.lua
 Core\Analytics\Query.lua
 
+## Not loaded at the moment due to downsizing code base temp
 ## Destroying & Crafting
-Core\Crafting\Core.lua
-Core\Destroy\Core.lua
+## Core\Crafting\Core.lua
+## Core\Destroy\Core.lua
 
 ## UI Mixins
 UI\Mixins\Dashboard.lua
@@ -163,7 +185,10 @@ UI\Mixins\Operations.lua
 UI\Mixins\Settings\Sniping.lua
 UI\Mixins\Settings\General.lua
 UI\Mixins\Settings\CustomSources.lua
-UI\Mixins\Settings\Crafting.lua
+
+## Not loaded at the moment due to downsizing code base temp
+## UI\Mixins\Settings\Crafting.lua
+
 UI\Mixins\Settings\Macro.lua
 UI\Mixins\Settings\Blacklists\Characters.lua
 UI\Mixins\Settings\Blacklists\Items.lua
@@ -172,8 +197,10 @@ UI\Mixins\Settings.lua
 
 ## UI Window Mixins
 UI\Mixins\Windows\Main.lua
-UI\Mixins\Windows\DestroyPreview.lua
-UI\Mixins\Windows\Destroy.lua
+
+## Not loaded at the moment due to downsizing code base temp
+## UI\Mixins\Windows\DestroyPreview.lua
+## UI\Mixins\Windows\Destroy.lua
 
 ## UI for Hooks
 UI\Mailing\Send.lua
@@ -184,7 +211,10 @@ UI\Auctioning\Modules\Classic.lua
 ## Special Hooks
 UI\Hooks\BagHook.lua
 UI\Hooks\AuctionHook.lua
-UI\Hooks\CraftingHook.lua
+
+## Not loaded at the moment due to downsizing code base temp
+## UI\Hooks\CraftingHook.lua
+
 UI\Hooks\MailHook.lua
 
 ## Core Base

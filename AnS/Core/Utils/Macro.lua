@@ -5,7 +5,7 @@ local TempTable = Ans.TempTable;
 local Macro = Ans.Object.Register("Macro");
 
 local MACRO_NAME = "AnSMacro";
-local MACRO_ICON = Utils.IsClassic() and "INV_Misc_Flower_01" or "Achievement_Faction_GoldenLotus";
+local MACRO_ICON = Utils.IsClassicEra() and "INV_Misc_Flower_01" or "Achievement_Faction_GoldenLotus";
 local BINDING_NAME = "MACRO "..MACRO_NAME;
 local BUTTONS = {
     ["tsmCancel"] = "/click TSMCancelAuctionBtn",
@@ -107,11 +107,7 @@ function Macro.Create(commands, modifiers, up, down)
         SetBinding(modifierStr.."MOUSEWHEELUP", BINDING_NAME, mode);
     end
 
-    if (Utils.IsClassic() and not Utils.IsExpansion()) then
-        AttemptToSaveBindings(CHARACTER_BINDING_SET);
-    else
-        SaveBindings(CHARACTER_BINDING_SET);
-    end
+    SaveBindings(CHARACTER_BINDING_SET);
 
     if (#text > MAX_MACRO_LENGTH) then
         print("AnS - Macro truncated. Not all actions will be available.");

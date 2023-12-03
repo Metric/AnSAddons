@@ -251,7 +251,7 @@ local weaponsRoot = AddBaseData(LE_ITEM_CLASS_WEAPON, nil, Ans.BaseData);
 local armorRoot = AddBaseData(LE_ITEM_CLASS_ARMOR, nil, Ans.BaseData);
 local containerRoot = AddBaseData(LE_ITEM_CLASS_CONTAINER, nil, Ans.BaseData);
 
-if (not Utils.IsClassic()) then
+if (Utils.GemsAvailable()) then
     local gemRoot = AddBaseData(LE_ITEM_CLASS_GEM, nil, Ans.BaseData);
     AddSubBaseData(LE_ITEM_CLASS_GEM, gemRoot);
 end
@@ -260,14 +260,14 @@ local enhanceRoot = AddBaseData(LE_ITEM_CLASS_ITEM_ENHANCEMENT, nil, Ans.BaseDat
 local consumableRoot = AddBaseData(LE_ITEM_CLASS_CONSUMABLE, nil, Ans.BaseData);
 local tradeRoot = AddBaseData(LE_ITEM_CLASS_TRADEGOODS, nil, Ans.BaseData);
 
-if (not Utils.IsClassic()) then
+if (Utils.GlyphsAvailable()) then
     local glyphRoot = AddBaseData(LE_ITEM_CLASS_GLYPH, nil, Ans.BaseData);
     AddSubBaseData(LE_ITEM_CLASS_GLYPH, glyphRoot);
 end
 
 local recipeRoot = AddBaseData(LE_ITEM_CLASS_RECIPE, nil, Ans.BaseData);
 
-if (not Utils.IsClassic()) then
+if (Utils.BattlePetsAvailable()) then
     local battlePetRoot = AddBaseData(LE_ITEM_CLASS_BATTLEPET, nil, Ans.BaseData);
     AddSubBaseData(LE_ITEM_CLASS_BATTLEPET, battlePetRoot);
 end

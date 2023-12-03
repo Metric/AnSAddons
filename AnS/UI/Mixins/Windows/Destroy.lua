@@ -1,5 +1,5 @@
 local Ans = select(2, ...);
-local BagScanner = Ans.BagScanner;
+local Bag = Ans.Bag;
 local Crafting = Ans.Data.Crafting;
 local EventManager = Ans.EventManager;
 local Utils = Ans.Utils;
@@ -82,11 +82,11 @@ function AnsDestroyWindowFrameMixin:Populate(auto)
 
     autoPopped = auto;
 
-    BagScanner.Release();
-    BagScanner.Scan();
+    Bag.Release();
+    Bag.Scan();
 
     local ignoreBOP = Config.Crafting().destroyIgnoreBOP;
-    BagScanner.GetDestroyable(groups, Crafting, ignoreBOP);
+    Bag.GetDestroyable(groups, Crafting, ignoreBOP);
 
     self:Refresh();
     self.listView:SetSelected(lastSelected);

@@ -76,7 +76,7 @@ function PostingView.GetInventory()
 
         for i, item in ipairs(items) do
             module:TrackInventory(item);
-            -- if (not Utils.IsClassic()) then
+            -- if (not Utils.IsClassicEra()) then
                 
             -- else
             --    tinsert(inventory, item);
@@ -150,7 +150,7 @@ function PostingView.CalcLowest(item, ref)
 end
 
 function PostingView.TrackItem(v, item, isCancel)
-    if (isCancel and not Utils.IsClassic()) then
+    if (isCancel and not Utils.IsClassicEra()) then
         local first = PostingView.firstMatch;
         if (not first) then
             PostingView.firstMatch = v:Clone();
@@ -183,14 +183,19 @@ function PostingView.ValidateItem(item, isCancel)
 
     if (isCancel) then
         local first = PostingView.firstMatch;
-        local cancelByTime = not Utils.IsClassic() 
+        local cancelByTime = not Utils.IsClassicEra() 
                                 and first and not first.isOwnerItem;
 
         if (v.ppu > 0 or cancelByTime) then
             v.op:ApplyCancel(v, cancelQueue, cancelByTime);
         end
     else
-        v.ppu = v.ppu - (v.ppu % COPPER_PER_SILVER);
+        -- Note: only retail uses silver for lowest 
+        -- classic can still use copper values
+        if (not Utils.IsClassicEra()) then
+            v.ppu = v.ppu - (v.ppu % COPPER_PER_SILVER);
+        end
+        
         if (v.ppu > 0) then
             v.op:ApplyPost(v, postQueue);
         end
@@ -227,7 +232,7 @@ function PostingView:UnhookTabs()
         end
     end
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         AuctionFrameTab3.displayMode = {};
     end
 end
@@ -245,7 +250,7 @@ function PostingView:HookTabs()
         tinsert(AHDisplayMode.Auctions, "AnsPosting");
     end
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         -- assign a tab display mode
         -- to the classic AHTabs
         -- required to show this
@@ -263,7 +268,7 @@ function PostingView:OnLoad(f)
     local filterTemplate = "AnsFilterRowTemplate";
     local frameTemplate = "AnsPostingTemplate"
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         frameTemplate = "AnsPostingClassicTemplate";
         filterTemplate = "AnsFilterRowClassicTemplate";
     end

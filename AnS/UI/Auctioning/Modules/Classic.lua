@@ -31,7 +31,7 @@ DEFAULT_BROWSE_QUERY.quality = 1;
 
 local query = Query:Acquire(0,0,{0},0);
 
-if (Utils.IsClassic()) then
+if (Utils.IsClassicEra()) then
     PostingView.module = Classic;
 end
 

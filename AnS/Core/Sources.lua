@@ -165,11 +165,11 @@ end
 function Sources:Register(name, fn, key)
     local n = name:lower();
     if (REGISTERED_CACHE[n]) then
-        print("AnS - "..n.." is an already registered data source. Ignoring new source registration.");
+        -- print("AnS - "..n.." is an already registered data source. Ignoring new source registration.");
         return;
     end
 
-    print("AnS - "..n.." registering new data source");
+    -- print("AnS - "..n.." registering new data source");
 
     local source = PriceSource:Acquire(n,fn,key);
     REGISTERED_CACHE[n] = source;
@@ -594,7 +594,7 @@ function Sources:QueryID(q, itemId)
         idBonusOnly = t..":"..id;
     end
 
-    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
+    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData.Get(idBonusOnly) or 0;
 
     codes.id = tonumber(id);
     codes.socket = socket or IsSocketCrafted(codes.id);
@@ -775,7 +775,7 @@ function Sources:Query(q, item, isGroup)
     codes.vendorsell = item.vendorsell;
     codes.tsmId = item.tsmId;
     codes.id = item.id;
-    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData[idBonusOnly] or 0;
+    codes.vendorbuy = Config.Vendor()[idBonusOnly] or VendorData.Get(idBonusOnly) or 0;
     codes.isgroup = isGroup;
     codes.socket = socket or IsSocketCrafted(codes.id);
 

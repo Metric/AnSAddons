@@ -147,7 +147,7 @@ function AnsAuctionOperationFrameMixin:LoadDropdowns()
     self.duration:SetSize(125, 20);
 
     local items = retailDurations;
-    if (Utils.IsClassic() and not Utils.IsExpansion()) then
+    if (Utils.IsClassicEra() and not Utils.IsExpansion()) then
         items = classicDurations;
     end
 

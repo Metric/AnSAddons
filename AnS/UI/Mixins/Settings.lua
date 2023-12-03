@@ -3,7 +3,8 @@ local Ans = select(2, ...);
 local ListView = Ans.UI.ListView;
 local listItems = {
     { name = "General", view = "GeneralEdit", selected = true},
-    { name = "Crafting", view = "CraftingEdit", selected = false},
+    -- Not loaded at the moment due to downsizing code base temp
+    -- { name = "Crafting", view = "CraftingEdit", selected = false},
     { name = "Sniper", view = "SniperEdit", selected = false},
     { name = "Custom Sources", view = "CustomSourcesEdit", selected = false},
     { name = "Macro", view = "MacroEdit", selected = false},

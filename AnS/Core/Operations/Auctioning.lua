@@ -7,7 +7,7 @@ local Utils = Ans.Utils;
 local Groups = Utils.Groups;
 local Exporter = Ans.Exporter;
 local TempTable = Ans.TempTable;
-local BagScanner = Ans.BagScanner;
+local Bag = Ans.Bag;
 local Logger = Ans.Logger;
 local Auctioning = Ans.Object.Register("Auctioning", Ans.Operations);
 
@@ -269,9 +269,9 @@ end
 function Auctioning:GetAvailableItems()
     wipe(tempTbl);
 
-    BagScanner.Release();
-    BagScanner.Scan();
-    local auctionable = BagScanner.GetAuctionable();
+    Bag.Release();
+    Bag.Scan();
+    local auctionable = Bag.GetAuctionable();
 
     for i,v in ipairs(auctionable) do
         if (self:ContainsItem(v)) then
@@ -295,7 +295,7 @@ function Auctioning:ApplyPost(item, queue)
         return;
     end
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         self:ApplyPostClassic(item, queue);
     else
         self:ApplyPostRetail(item, queue);

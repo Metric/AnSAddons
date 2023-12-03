@@ -516,7 +516,10 @@
                         </Layers>
                     </Frame>
                     <Frame parentKey="GeneralEdit" inherits="AnsGeneralSettingsTemplate" />
-                    <Frame parentKey="CraftingEdit" inherits="AnsCraftingSettingsTemplate" />
+
+                    <!-- Not loaded at the moment due to downsizing code base temp -->
+                    <!-- <Frame parentKey="CraftingEdit" inherits="AnsCraftingSettingsTemplate" /> -->
+                    
                     <Frame parentKey="SniperEdit" inherits="AnsSniperSettingsTemplate" />
                     <Frame parentKey="CustomSourcesEdit" inherits="AnsCustomSourcesSettingsTemplate" />
                     <Frame parentKey="MacroEdit" inherits="AnsMacroSettingsTemplate" />

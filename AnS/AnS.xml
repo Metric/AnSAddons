@@ -83,5 +83,6 @@
     </Frame>
 
     <Frame name="AnsMainWindow" inherits="AnsMainWindowTemplate" />
-    <Frame name="AnsDestroyWindow" inherits="AnsDestroyWindowTemplate" />
+    <!-- Not loaded at the moment due to downsizing code base temp -->
+    <!-- <Frame name="AnsDestroyWindow" inherits="AnsDestroyWindowTemplate" /> -->
 </Ui>

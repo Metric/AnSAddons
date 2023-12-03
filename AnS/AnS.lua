@@ -19,8 +19,11 @@ local SnipingOperation = Operations.Sniping;
 
 local DefaultGroups = Core.Data;
 local AuctionQuery = Core.Auctions.Query;
-local Crafting = Core.Crafting;
-local Destroy = Core.Destroy;
+
+-- Not loaded at the moment due to downsizing code base temp
+-- local Crafting = Core.Crafting;
+-- local Destroy = Core.Destroy;
+
 local Draggable = Utils.Draggable;
 
 local AHFrame = nil;
@@ -326,7 +329,7 @@ local TUJOnlyPercentFn = "tujmarket";
 local TSMOnlyPercentFn = "dbmarket";
 local AtrOnlyPercentFn = "atrvalue";
 local TUJAndTSMPercentFn = "avg(dbmarket,tujmarket)";
-local AnsOnlyPercentFn = "avg(ansrecent,ansmarket)";
+local AnsOnlyPercentFn = "min(ansmin, avg(ansrecent,ansmarket))";
 local TSMMaterialCost = "min(dbmarket, first(vendorbuy, dbminbuyout))";
 local TSMCraftingValue = "first(dbminbuyout, dbmarket)";
 local AnsMaterialCost = "min(ansmarket, first(vendorbuy, ansrecent))";
@@ -398,7 +401,7 @@ local function AddClassicAHTab(name, displayMode)
 end
 
 function Ans:AddAHTab(name, displayMode)
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         AddClassicAHTab(name, displayMode);
     else
         AddRetailAHTab(name, displayMode);
@@ -453,7 +456,7 @@ local function CreateMiniButton()
         end
     end,
     Draggable.Reset,
-    Ans.SaveMiniButton, Config.MiniButton(), {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move", "Ctrl+Click to Reset Window Positions", "Right Click to Show Destroy Window"});
+    Ans.SaveMiniButton, Config.MiniButton(), {"|cFFCC00FFAnS ["..GetAddOnMetadata("AnS", "Version").."]", "Click to Toggle", "Click & Drag to Move", "Ctrl+Click to Reset Window Positions"}); --"Right Click to Show Destroy Window"});
 
     if (Config.General().minimapShown) then
         Ans.MiniButton:Show();
@@ -581,7 +584,7 @@ function Ans:RegisterPriceSources()
         Config.Sniper().source = TSMOnlyPercentFn;
     elseif (auctionatorEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default auctionator source");
-        Config.Snipe().source = AtrOnlyPercentFn;
+        Config.Sniper().source = AtrOnlyPercentFn;
     elseif (ansEnabled and (not Config.Sniper().source or Config.Sniper().source:len() == 0)) then
         print("AnS: setting default AnsAuctionData source");
         Config.Sniper().source = AnsOnlyPercentFn;

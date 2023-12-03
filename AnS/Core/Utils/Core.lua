@@ -61,8 +61,9 @@ function Utils.IsRetail()
     local v = GetBuildInfo();
     local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
+    local nm = tonumber(m);
 
-    return n > 8;
+    return n > 8 or (n == 8 and nm >= 3);
 end
 
 function Utils.IsClassic()
@@ -70,7 +71,15 @@ function Utils.IsClassic()
     local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
 
-    return n >= 1 and n <= 8 and not Utils.IsRetail(); 
+    return n == 1;
+end
+
+function Utils.IsClassicEra()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+
+    return n >= 1 and n <= 8 and not Utils.IsRetail();
 end
 
 function Utils.IsTBC()
@@ -89,12 +98,88 @@ function Utils.IsExpansion()
     return n >= 2;
 end
 
--- wrath classic
-function Utils.IsWotlk()
+function Utils.IsWrath()
     local v = GetBuildInfo();
     local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
     local n = tonumber(f);
     return n == 3;
+end
+
+function Utils.IsCata()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 4;
+end
+
+function Utils.IsMists()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 5;
+end
+
+function Utils.IsWarlords()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 6;
+end
+
+function Utils.IsLegion()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 7;
+end
+
+function Utils.IsBFA()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 8;
+end
+
+function Utils.IsShadow()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 9;
+end
+
+function Utils.IsDragon()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n == 10;
+end
+
+function Utils.ReagentBankAvailable()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n >= 6;
+end
+
+function Utils.BattlePetsAvailable()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n >= 5;
+end
+
+function Utils.GlyphsAvailable()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n >= 3;
+end
+
+function Utils.GemsAvailable()
+    local v = GetBuildInfo();
+    local f,m,p = v:match("(%d+)%.(%d+)%.(%d+)");
+    local n = tonumber(f);
+    return n >= 2;
 end
 
 function Utils.GSC(val)
@@ -133,7 +218,7 @@ function Utils.CollectGarbage()
 end
 
 function Utils.FormatNumber(amount)
-    local formatted = amount
+    local formatted, k = amount, nil;
     while true do  
         formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
         if (k==0) then
@@ -271,7 +356,7 @@ end
 function Utils.HideTooltip()
     GameTooltip:Hide();
 	
-    if (not Utils.IsClassic()) then
+    if (Utils.BattlePetsAvailable()) then
         BattlePetTooltip:Hide();
     end
 end
@@ -284,7 +369,7 @@ function Utils.ShowTooltipText(f, txt)
 end
 
 function Utils.ShowBattlePetTip(link)
-    if (Utils.IsClassic()) then
+    if (not Utils.BattlePetsAvailable()) then
         return;
     end
 
@@ -316,7 +401,7 @@ end
 function Utils.ToWowItemString(itemString)
 	local _, itemId, rand, extra = strsplit(":", itemString);
 	local level = UnitLevel("player");
-	local spec = not Utils.IsClassic() and GetSpecialization() or nil;
+	local spec = not Utils.IsClassicEra() and GetSpecialization() or nil;
 	spec = spec and GetSpecializationInfo(spec) or "";
 	local extraPart = extra and strmatch(itemString, "i:[0-9]+:[0-9%-]*:(.+)") or "";
 	return "item:"..itemId.."::::::"..(rand or "").."::"..level..":"..spec..":::"..extraPart..":::";
@@ -683,13 +768,17 @@ function Utils.InTable(tbl, val)
     return false;
 end
 
-function Utils.HookSecure(name, fn)
-    hooksecurefunc(_G, name, fn);
+function Utils.HookSecure(name, fn, context)
+    hooksecurefunc(context or _G, name, fn);
 end
 
-function Utils.Hook(name, fn)
-    HOOK_CACHE[name] = _G[name];
-    _G[name] = function(...) fn(HOOK_CACHE[name], ...); end;
+function Utils.Hook(name, fn, context)
+    local ctx = context or _G;
+    local ctxfn = ctx[name];
+    local tmpfn = function(...) fn(HOOK_CACHE[name], ...); end;
+
+    HOOK_CACHE[name] = ctxfn;
+    ctx[name] = tmpfn;
 end
 
 function Utils.Guid()

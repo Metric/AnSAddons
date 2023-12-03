@@ -3,7 +3,7 @@ local Config = Ans.Config;
 local Utils = Ans.Utils;
 local Groups = Utils.Groups;
 local Exporter = Ans.Exporter;
-local BagScanner = Ans.BagScanner;
+local Bag = Ans.Bag;
 local Mailing = Ans.Object.Register("Mailing", Ans.Operations);
 
 local tempTbl = {};

@@ -41,7 +41,7 @@ function CraftingHook.SetUpHeader(self, textWidth, tradeSkillInfo)
 end
 
 function CraftingHook.StoreReference(recipeID)
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         local finalItemLink = GetTradeSkillItemLink(recipeID);
 
         if (not finalItemLink) then
@@ -112,7 +112,7 @@ function CraftingHook.SubCost(link)
     end
 
     local lastReagantCount = 0;
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         local min, nump = GetTradeSkillNumMade(subCraft);
         numProduced = nump;
 
@@ -498,7 +498,7 @@ end
 
 function CraftingHook.HookClassic()
     -- temporary fix until we figure out wtf is going on with Wotlk crafting UI changes.
-    if (Utils.IsWotlk()) then
+    if (Utils.IsWrath()) then
         return true;
     end
 
@@ -557,7 +557,7 @@ EventManager:On("TRADE_SKILL_SHOW",
         end
 
         if (not didHook) then
-            if (Utils.IsClassic()) then
+            if (Utils.IsClassicEra()) then
                 didHook = CraftingHook.HookClassic();
             else
                 didHook = CraftingHook.HookRetail();

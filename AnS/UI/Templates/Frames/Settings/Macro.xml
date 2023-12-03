@@ -103,11 +103,12 @@
                             <Anchor point="TOPLEFT" x="120" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.ansIgnore" />
                         </Anchors>
                     </CheckButton>
-                    <CheckButton parentKey="ansDestroy" text="AnS Destroy" inherits="AnsCheckboxTemplate">
+                    <!-- Not loaded at the moment due to downsizing code base temp -->
+                    <!-- <CheckButton parentKey="ansDestroy" text="AnS Destroy" inherits="AnsCheckboxTemplate">
                         <Anchors>
                             <Anchor point="TOPLEFT" x="150" y="0" relativePoint="TOPRIGHT" relativeKey="$parent.ansIgnoreFirst" />
                         </Anchors>
-                    </CheckButton>
+                    </CheckButton> -->
                 </Frames>
                 <Layers>
                     <Layer level="BACKGROUND">

@@ -1,6 +1,7 @@
 local Ans = select(2, ...);
 local Data = Ans.Data;
 local VendorData = Data.Vendor;
+local Bag = Ans.Bag;
 local MerchantTracker = Ans.Object.Register("MerchantTracker", Ans.Analytics);
 local Config = Ans.Config;
 
@@ -21,7 +22,7 @@ function MerchantTracker:OnLoad()
     Utils.Hook("BuyMerchantItem", self.Buy);
     Utils.Hook("BuybackItem", self.Buyback);
     Utils.Hook("RepairAllItems", self.RepairAll);
-    Utils.HookSecure("UseContainerItem", self.Sell);
+    Utils.HookSecure("UseContainerItem", self.Sell, C_Container);
 end
 
 function MerchantTracker.Buy(ofn, ...)
@@ -78,10 +79,10 @@ function MerchantTracker.Sell(bag, slot)
     end
 
     if (MerchantFrame:IsShown()) then
-        local _, count, locked, quality, readable, lootable, link, isFiltered, noValue, id = GetContainerItemInfo(bag, slot);
+        local _, count, locked, quality, readable, lootable, link, isFiltered, noValue, id = Bag.ItemInfo(bag, slot);
         if (link) then
             local name, ilink, rarity, level, minlevel, type, subtype, stackcount, equiploc, itemicon, itemSellPrice = GetItemInfo(link);
-        
+            
             if (itemSellPrice ~= 0) then
                 tinsert(pending.item, link);
                 tinsert(pending.copper, itemSellPrice);
@@ -126,7 +127,7 @@ function MerchantTracker.Scan()
             local id = Utils.GetID(link);
             if (id) then
                 local bonusOnly = Utils.BonusID(id);
-                local currentValue = Config.Vendor()[bonusOnly] or VendorData[bonusOnly];
+                local currentValue = Config.Vendor()[bonusOnly] or VendorData.Get(bonusOnly) or 0;
                 local newValue = nil;
                 local _, _, price, quantity, _, _, _, extendedCost = GetMerchantItemInfo(i);
                 if (price > 0 and (not extendedCost or GetMerchantItemCostInfo(i) == 0)) then

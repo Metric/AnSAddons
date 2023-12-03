@@ -18,7 +18,7 @@ local Auction = Ans.Auctions.Auction;
 
 local Classic = Ans.Object.Register("Classic", Query);
 
-if (Utils.IsClassic()) then
+if (Utils.IsClassicEra()) then
     Query.module = Classic;
 end
 
@@ -458,7 +458,7 @@ function Classic:PostAuction(v, duration, bidPercent)
     local ppuBid = v.ppu * bidPercent;
     local total = v.count;
 
-    UseContainerItem(v.bag, v.slot);
+    C_Container.UseContainerItem(v.bag, v.slot);
     PostAuction(total * ppuBid, total * ppu, duration, total, 1);
 
     return true, false;

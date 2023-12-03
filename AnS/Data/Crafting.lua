@@ -19,7 +19,7 @@ local PROSPECT_INFO = {};
 local MILL_INFO = {};
 
 -- From TSM so we can be consistent
-if Utils.IsClassic() then
+if Utils.IsClassicEra() then
 	DISENCHANT_INFO = {
 		-- Dust
 		["i:10940"] = { -- Strange Dust
@@ -713,7 +713,7 @@ end
 
 -- From TSM so we can be consistent
 -- added in SL prospect rate so far
-if (not Utils.IsClassic()) then
+if (not Utils.IsClassicEra()) then
 	-- PROSPECT_INFO = { 	
 	-- 	-- ======================================== Uncommon Gems ======================================
 	-- 	["i:774"] = { -- Malachite
@@ -2990,7 +2990,7 @@ end
 
 -- From TSM so we can be conistent
 -- added in SL mill rate so far
-if (not Utils.IsClassic()) then
+if (not Utils.IsClassicEra()) then
 	--MILL_INFO =	{
 		-- ======================================= Common Pigments =======================================
 	--	["i:39151"] = { -- Alabaster Pigment (Ivory / Moonglow Ink)
@@ -4597,7 +4597,7 @@ function CraftingData.IsDisenchantable(id, link)
 		end
 	end
 
-	return itemRarity >= (Utils.IsClassic() and LE_ITEM_QUALITY_UNCOMMON or Enum.ItemQuality.Uncommon);
+	return itemRarity >= (Utils.IsClassicEra() and LE_ITEM_QUALITY_UNCOMMON or Enum.ItemQuality.Uncommon);
 end
 
 function CraftingData.HasMinimumCount(item)

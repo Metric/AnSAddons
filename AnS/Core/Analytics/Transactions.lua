@@ -14,8 +14,8 @@ local ALL_TRANSACTIONS = {};
 Transactions.MAX_COPPER = 9999999999;
 Transactions.SECONDS_PER_DAY = 60 * 60 * 24;
 
-local MAX_TIME_LIMIT = 60 * 60 * 24 * 11;
-local MAX_DATA_LIMIT = 10000;
+local MAX_TIME_LIMIT = 60 * 60 * 24 * 30 * 12 * 2;
+local MAX_DATA_LIMIT = 25000;
 
 function Transactions:GetLog(name)
     if (not name) then
@@ -52,7 +52,7 @@ function Transactions:GetNames(tbl)
 end
 
 function Transactions:OnLoad()
-    MAX_DATA_LIMIT = Config.General().maxDataLimit or 20000;
+    MAX_DATA_LIMIT = Config.General().maxDataLimit or MAX_DATA_LIMIT;
     Data:Find(DEFAULT_TAG, ALL_TRANSACTIONS);
     TRANSACTION_TAG = TRANSACTION_TAG..GetRealmName();
     self.log = Data:Get(TRANSACTION_TAG) or {};

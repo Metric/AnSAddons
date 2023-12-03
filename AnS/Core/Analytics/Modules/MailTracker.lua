@@ -201,7 +201,7 @@ function MailTracker:ProcessMail(idx, itemIndex)
         if (itemIndex) then
             local link = GetInboxItemLink(idx, itemIndex);
 
-            if (not Utils.IsClassic()) then
+            if (Utils.BattlePetsAvailable()) then
                 local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
                 if(speciesID and speciesID > 0) then
                     local pid = "p:"..speciesID..":"..level..":"..breedQuality;
@@ -218,7 +218,7 @@ function MailTracker:ProcessMail(idx, itemIndex)
             for i = 1, ATTACHMENTS_MAX_RECEIVE do
                 local link = GetInboxItemLink(idx, i);
                 
-                if (not Utils.IsClassic()) then
+                if (Utils.BattlePetsAvailable()) then
                     local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, i);
                     if(speciesID and speciesID > 0) then
                         local pid = "p:"..speciesID..":"..level..":"..breedQuality;
@@ -239,7 +239,7 @@ function MailTracker:ProcessMail(idx, itemIndex)
             local link = GetInboxItemLink(idx, itemIndex);
             local count = select(4, GetInboxItem(idx, itemIndex)) or 0;
 
-            if (not Utils.IsClassic()) then
+            if (Utils.BattlePetsAvailable()) then
                 local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
                 if(speciesID and speciesID > 0) then
                     local pid = "p:"..speciesID..":"..level..":"..breedQuality;
@@ -261,7 +261,7 @@ function MailTracker:ProcessMail(idx, itemIndex)
             local link = GetInboxItemLink(idx, itemIndex);
             local qty = select(4, GetInboxItem(idx, itemIndex)) or 0;
 
-            if (not Utils.IsClassic()) then
+            if (Utils.BattlePetsAvailable()) then
                 local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
                 if(speciesID and speciesID > 0) then
                     local pid = "p:"..speciesID..":"..level..":"..breedQuality;
@@ -281,7 +281,7 @@ function MailTracker:ProcessMail(idx, itemIndex)
             local link = GetInboxItemLink(idx, itemIndex);
             local qty = select(4, GetInboxItem(idx, itemIndex)) or 0;
 
-            if (not Utils.IsClassic()) then
+            if (Utils.BattlePetsAvailable()) then
                 local hasCooldown, speciesID, level, breedQuality, maxHealth, power, speed, name = GameTooltip:SetInboxItem(idx, itemIndex);
                 if (speciesID and speciesID > 0) then
                     local pid = "p:"..speciesID..":"..level..":"..breedQuality;

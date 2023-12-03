@@ -21,7 +21,7 @@ local Retail = Ans.Object.Register("Retail", Query);
 local DEFAULT_COMMODITY_SORT = Query.DEFAULT_COMMODITY_SORT;
 local DEFAULT_ITEM_SORT = Query.DEFAULT_ITEM_SORT;
 
-if (not Utils.IsClassic()) then
+if (not Utils.IsClassicEra()) then
     Query.module = Retail;
 end
 

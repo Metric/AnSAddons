@@ -112,7 +112,7 @@ function Query:IsValid(item, ignoreMaxPercent)
         return false;
     end
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         local minquality = self.quality[1] or 0;
         if (item.quality < minquality and minquality > 0) then
             return false;
@@ -348,7 +348,7 @@ end
 -- classic
 
 function Query:IsReady()
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         return CanSendAuctionQuery();
     else
         return C_AuctionHouse.IsThrottledMessageSystemReady();
