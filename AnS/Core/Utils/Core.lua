@@ -376,12 +376,37 @@ function Utils.ShowBattlePetTip(link)
 	BattlePetToolTip_ShowLink(link);
 end
 
+function Utils.GetAddOnMetadata(name, var)
+    if (C_AddOns and C_AddOns.GetAddOnMetadata) then
+        return C_AddOns.GetAddOnMetadata(name, var);
+    else
+        return GetAddOnMetadata(name, var);
+    end
+end
+
+function Utils.GetAddOnInfo(name)
+    if (C_AddOns and C_AddOns.GetAddOnInfo) then
+        return C_AddOns.GetAddOnInfo(name);
+    else
+        return GetAddOnInfo(name);
+    end
+end
+
+function Utils.GetAddOnEnableState(character, name)
+    if (C_AddOns and C_AddOns.GetAddOnEnableState) then
+        -- C_AddOns character is optional
+        return C_AddOns.GetAddOnEnableState(name, character);
+    else
+        return GetAddOnEnableState(character, name);
+    end
+end
+
 function Utils.GetAddonVersion(name)
     if (not Utils.IsAddonInstalled(name)) then
         return "0","0";
     end
 
-    local v = C_AddOns.GetAddOnMetadata(name, "Version");
+    local v = Utils.GetAddOnMetadata(name, "Version");
     if (v) then
         local maj, min = string.match(v, "(%d+).(%d+)");
         return maj, min;
@@ -391,11 +416,11 @@ function Utils.GetAddonVersion(name)
 end
 
 function Utils.IsAddonInstalled(name)
-    return select(2, C_AddOns.GetAddOnInfo(name)) and true or false;
+    return select(2, Utils.GetAddOnInfo(name)) and true or false;
 end
 
 function Utils.IsAddonEnabled(name)
-    return C_AddOns.GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, C_AddOns.GetAddOnInfo(name)) and true or false;
+    return Utils.GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, Utils.GetAddOnInfo(name)) and true or false;
 end
 
 function Utils.ClearCache()
