@@ -34,43 +34,43 @@ function MailTracker:OnLoad()
     EventManager:On("MAIL_INBOX_UPDATE", self.OnMailUpdate);
     EventManager:On("UPDATE", self.onUpdate);
 
-    Utils.Hook("TakeInboxItem", MailTracker.TakeItem);
-    Utils.Hook("TakeInboxMoney", MailTracker.TakeMoney);
-    Utils.Hook("AutoLootMailItem", MailTracker.AutoLoot);
-    Utils.Hook("SendMail", MailTracker.SendMail);
+    Utils.HookSecure("TakeInboxItem", MailTracker.TakeItem);
+    Utils.HookSecure("TakeInboxMoney", MailTracker.TakeMoney);
+    Utils.HookSecure("AutoLootMailItem", MailTracker.AutoLoot);
+    Utils.HookSecure("SendMail", MailTracker.SendMail);
 end
 
-function MailTracker.AutoLoot(ofn, index)
-    oAutoLoot = ofn;
+function MailTracker.AutoLoot(index)
+    -- oAutoLoot = ofn;
 
     if (MailTracker:ProcessMail(index)) then
         autoLootQueue[index] = nil;
 
-        return ofn(index);
+        --return ofn(index);
     else
         autoLootQueue[index] = time();
     end
 end
 
-function MailTracker.TakeMoney(ofn, index)
-    oTakeMoney = ofn;
+function MailTracker.TakeMoney(index)
+    -- oTakeMoney = ofn;
 
     if (MailTracker:ProcessMail(index)) then
         takeMoneyQueue[index] = nil;
 
-        return ofn(index);
+        --return ofn(index);
     else
         takeMoneyQueue[index] = time();
     end
 end
 
-function MailTracker.TakeItem(ofn, index, itemIndex)
-    oTakeItem = ofn;
+function MailTracker.TakeItem(index, itemIndex)
+    --oTakeItem = ofn;
 
     if (MailTracker:ProcessMail(index, itemIndex)) then
         takeItemQueue[index.."."..itemIndex] = nil;
 
-        return ofn(index, itemIndex);
+        -- return ofn(index, itemIndex);
     else
         if (not takeItemQueue[index.."."..itemIndex]) then
             takeItemQueue[index.."."..itemIndex] = {index, itemIndex, time()};
@@ -84,17 +84,17 @@ function MailTracker.OnUpdate()
     if (mailShown) then
         for k,v in pairs(takeItemQueue) do
             if (v and time() - v[3] >= 2) then
-                MailTracker.TakeItem(oTakeItem, v[1], v[2]);
+                MailTracker.TakeItem(v[1], v[2]);
             end
         end
         for k,v in pairs(autoLootQueue) do
             if (v and time() - v >= 2) then
-                MailTracker.AutoLoot(oAutoLoot, k);
+                MailTracker.AutoLoot(k);
             end
         end
         for k,v in pairs(takeMoneyQueue) do
             if (v and time() - v >= 2) then
-                MailTracker.TakeMoney(oTakeMoney, k);
+                MailTracker.TakeMoney(k);
             end
         end
     end
@@ -147,7 +147,7 @@ function MailTracker.OnMailUpdate()
     end
 end
 
-function MailTracker.SendMail(ofn, ...)
+function MailTracker.SendMail(...)
     local destination = select(1, ...);
     local moneyAmount = GetSendMailMoney();
     local mailCost = GetSendMailPrice();
@@ -158,7 +158,7 @@ function MailTracker.SendMail(ofn, ...)
 
     Transactions:InsertPostage(mailCost >= moneyAmount and (mailCost - moneyAmount) or mailCost, destination, time());
 
-    return ofn(...);
+    -- return ofn(...);
 end
 
 function MailTracker:ProcessMail(idx, itemIndex)

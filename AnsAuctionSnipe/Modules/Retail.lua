@@ -16,7 +16,7 @@ local Retail = Ans.API.Object.Register("Retail", Sniper);
 
 local query = Query:Acquire(0,0,{0},0);
 
-if (not Utils.IsClassic()) then
+if (not Utils.IsClassicEra()) then
     Sniper.module = Retail;
 end
 

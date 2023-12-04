@@ -19,15 +19,15 @@ local EventManager = Ans.EventManager;
 
 function MerchantTracker:OnLoad()
     EventManager:On("MERCHANT_UPDATE", self.OnUpdate);
-    Utils.Hook("BuyMerchantItem", self.Buy);
-    Utils.Hook("BuybackItem", self.Buyback);
-    Utils.Hook("RepairAllItems", self.RepairAll);
+    Utils.HookSecure("BuyMerchantItem", self.Buy);
+    Utils.HookSecure("BuybackItem", self.Buyback);
+    Utils.HookSecure("RepairAllItems", self.RepairAll);
     Utils.HookSecure("UseContainerItem", self.Sell, C_Container);
 end
 
-function MerchantTracker.Buy(ofn, ...)
+function MerchantTracker.Buy(...)
     if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
-        return ofn(...);
+        return;
     end
 
     local index, qty = select(1, ...);
@@ -38,13 +38,11 @@ function MerchantTracker.Buy(ofn, ...)
     if (price and isPurchasable and GetMoney() >= price * q and price > 0) then
         Transactions:InsertBuy("vendor", q, Sources.round(price / quantity), link, "MERCHANT", time());
     end
-
-    return ofn(...);
 end
 
-function MerchantTracker.Buyback(ofn, ...)
+function MerchantTracker.Buyback(...)
     if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
-        return ofn(...);
+        return;
     end
 
     local index = select(1, ...);
@@ -54,13 +52,11 @@ function MerchantTracker.Buyback(ofn, ...)
     if (price and price > 0 and index > 0 and index <= GetNumBuybackItems() and GetMoney() >= price) then
         Transactions:InsertBuy("vendor", quantity, Sources.round(price /quantity), link, "MERCHANT", time());
     end
-
-    return ofn(...);
 end
 
-function MerchantTracker.RepairAll(ofn, ...)
+function MerchantTracker.RepairAll(...)
     if (not Config.General().trackDataAnalytics and Config.General().trackDataAnalytics ~= nil) then
-        return ofn(...);
+        return;
     end
 
     local isGuildRepair = select(1, ...);
@@ -69,8 +65,6 @@ function MerchantTracker.RepairAll(ofn, ...)
     if (not isGuildRepair and GetMoney() >= cost and canRepair) then
         Transactions:InsertRepair(cost, time());
     end
-
-    return ofn(...);
 end
 
 function MerchantTracker.Sell(bag, slot) 

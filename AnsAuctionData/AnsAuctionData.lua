@@ -299,7 +299,7 @@ function AnsAuctionData:GetValidID(tsm)
 end
 
 function AnsAuctionData:CheckFaction() 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         faction = UnitFactionGroup("player");
         if (not faction) then
             faction = "";
@@ -339,7 +339,7 @@ function AnsAuctionData.GetRegionValue(link, key)
         local r = AnsAuctionData:GetRawData();
         local cid = fid;
 
-        if (Utils.IsClassic() or not rawDataFromNet) then
+        if (Utils.IsClassicEra() or not rawDataFromNet) then
             cid = vid;
         end
 
@@ -347,7 +347,7 @@ function AnsAuctionData.GetRegionValue(link, key)
             local data = r[cid];
             data = data and data[kindex] or nil;
             return data or 0;
-        elseif (not Utils.IsClassic() and rawDataFromNet) then
+        elseif (not Utils.IsClassicEra() and rawDataFromNet) then
             local _,base = strsplit(":", vid);
             local bid = _..":"..base;
             if (r and r[bid]) then
@@ -398,7 +398,7 @@ function AnsAuctionData.GetRealmValue(link, key)
         local r = AnsAuctionData:GetRawData();
         local cid = fid;
 
-        if (Utils.IsClassic() or not rawDataFromNet) then
+        if (Utils.IsClassicEra() or not rawDataFromNet) then
             cid = vid;
         end
 
@@ -406,7 +406,7 @@ function AnsAuctionData.GetRealmValue(link, key)
             local data = r[cid];
             data = data and data[kindex] or nil;
             return data or 0;
-        elseif (not Utils.IsClassic() and rawDataFromNet) then
+        elseif (not Utils.IsClassicEra() and rawDataFromNet) then
             local _,base = strsplit(":", vid);
             local bid = _..":"..base;
             if (r and r[bid]) then

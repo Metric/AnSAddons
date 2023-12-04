@@ -376,12 +376,26 @@ function Utils.ShowBattlePetTip(link)
 	BattlePetToolTip_ShowLink(link);
 end
 
+function Utils.GetAddonVersion(name)
+    if (not Utils.IsAddonInstalled(name)) then
+        return "0","0";
+    end
+
+    local v = C_AddOns.GetAddOnMetadata(name, "Version");
+    if (v) then
+        local maj, min = string.match(v, "(%d+).(%d+)");
+        return maj, min;
+    end
+
+    return "0","0";
+end
+
 function Utils.IsAddonInstalled(name)
-    return select(2, GetAddOnInfo(name)) and true or false;
+    return select(2, C_AddOns.GetAddOnInfo(name)) and true or false;
 end
 
 function Utils.IsAddonEnabled(name)
-    return GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, GetAddOnInfo(name)) and true or false;
+    return C_AddOns.GetAddOnEnableState(UnitName("player"), name) == 2 and select(4, C_AddOns.GetAddOnInfo(name)) and true or false;
 end
 
 function Utils.ClearCache()
@@ -646,16 +660,6 @@ function Utils.GetID(link)
         ID_CACHE[link] = fresult;
         return fresult;
     end
-end
-
-function Utils.GetAddonVersion(name)
-    local v = GetAddOnMetadata(name, "Version");
-    if (v) then
-        local maj, min = string.match(v, "(%d+).(%d+)");
-        return maj, min;
-    end
-
-    return "0","0";
 end
 
 function Utils.ReplaceTabReturns(str)

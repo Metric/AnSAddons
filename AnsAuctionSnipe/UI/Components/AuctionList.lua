@@ -230,7 +230,7 @@ function AuctionList:Buy(auction)
 
     -- if (self.frame and block) then
     --    if (not self.isBuying and self.commodity == nil and self.auction == nil) then
-    --        if (Utils.IsClassic()) then
+    --        if (Utils.IsClassicEra()) then
     --            self:ClassicPurchase(block);
     --        else
     --            self:Purchase(block, forcePurchase);
@@ -535,7 +535,7 @@ function AuctionList:Recycle()
     module:Recycle(self.items);
 
     -- todo: implemtn this in the module system
-    -- if (Utils.IsClassic()) then
+    -- if (Utils.IsClassicEra()) then
     --    for i,v in ipairs(self.items) do
     --        if (v.auctions) then
     --            for k,c in ipairs(v.auctions) do
@@ -665,7 +665,7 @@ function AuctionList:Click(row, button, down)
         --        Query:Blacklist(block);
         --    end
             
-        --    if (Utils.IsClassic()) then
+        --    if (Utils.IsClassicEra()) then
         --        Recycler:Recycle(table.remove(self.items, id));
         --    else
         --        table.remove(self.items, id);
@@ -681,7 +681,7 @@ function AuctionList:Click(row, button, down)
         -- if (block) then
         --    Config.Sniper().itemBlacklist[block.tsmId] = block.link;
         --    
-        --    if (Utils.IsClassic()) then
+        --    if (Utils.IsClassicEra()) then
         --        Recycler:Recycle(table.remove(self.items, id));
         --    else
         --        table.remove(self.items, id);

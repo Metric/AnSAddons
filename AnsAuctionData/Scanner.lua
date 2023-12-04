@@ -80,7 +80,7 @@ function Scanner:Toggle()
     if (self.frame and self.state == STATES.NONE) then
         local ready, allReady = query:IsReady();
 
-        if (Utils.IsClassic() and not allReady) then
+        if (Utils.IsClassicEra() and not allReady) then
             return;
         elseif (ANS_LAST_DATA_SCAN + MIN_WAIT_TIME > time()) then
             return;

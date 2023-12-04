@@ -22,7 +22,7 @@ local ERRORS = {
 
 local query = Query:Acquire(0,0,{0},0);
 
-if (Utils.IsClassic()) then
+if (Utils.IsClassicEra()) then
     Sniper.module = Classic;
 end
 

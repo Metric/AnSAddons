@@ -57,7 +57,7 @@ AnsQualityToText[5] = "Legendary";
 
 local AnsQualityToAuctionEnum = {};
 
-if (Utils.IsClassic()) then
+if (Utils.IsClassicEra()) then
     -- this is just a placeholder and does nothing if classic
     AnsQualityToAuctionEnum[1] = 5;
     AnsQualityToAuctionEnum[2] = 6;
@@ -125,7 +125,7 @@ local itemWasPurchased = false;
 
 -- local function QualitySelected(self, arg1, arg2, checked)
 --    local qualities = Config.Sniper().qualities;
---    if (not Utils.IsClassic()) then
+--    if (not Utils.IsClassicEra()) then
 --        if (checked) then
 --            Config.Sniper().minQuality = arg1;
 --            if (AuctionSnipe.qualityInput ~= nil) then
@@ -140,7 +140,7 @@ local itemWasPurchased = false;
 --        end
 --    end
 
---    if (Utils.IsClassic()) then
+--    if (Utils.IsClassicEra()) then
 --        CloseDropDownMenus();
 --    end
 -- end
@@ -157,7 +157,7 @@ local function BuildQualityDropDown(frame, level, menuList)
         local c = ITEM_QUALITY_COLORS[i];
         local text = c.hex..AnsQualityToText[i];
         info.text, info.arg1 = text, i;
-        if (not Utils.IsClassic()) then
+        if (not Utils.IsClassicEra()) then
             info.keepShownOnClick = true;
             info.checked = qualities[i];
             info.isNotRadio = true;
@@ -179,7 +179,7 @@ function AuctionSnipe:BuySelected()
     --    and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
         -- interrupt current query fsm
     --    Query.Clear();
-    --    if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId)) or Utils.IsClassic() 
+    --    if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId)) or Utils.IsClassicEra() 
     --    or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH"  and lastItemId and AuctionList:IsSelectedSameAsLastId(lastItemId))) then
     --        AuctionList:BuySelected(true);
     --    else
@@ -201,7 +201,7 @@ function AuctionSnipe:BuyFirst()
     --    and SniperFSM.current ~= "BUYING" and not AuctionList.auction) then
         -- interrupt current query fsm
     --    Query.Clear();
-    --    if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId)) or Utils.IsClassic() 
+    --    if ((SniperFSM.current == "ITEMS" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId)) or Utils.IsClassicEra() 
     --    or (SniperFSM.current == "IDLE" and Query.lastQueryType == "SEARCH" and lastItemId and AuctionList:IsFirstSameAsLastId(lastItemId))) then
     --        AuctionList:BuyFirst(true);
     --    else
@@ -221,17 +221,17 @@ function AuctionSnipe:Init()
     -- sadly your last qualities will be lost on this for the moment
     -- will change this eventually to separate quality configs
     -- for classic / retail
-    if (Config.Sniper().classicMode ~= Utils.IsClassic()) then
+    if (Config.Sniper().classicMode ~= Utils.IsClassicEra()) then
         Config.Sniper().qualities = {};
         Config.Sniper().minQuality = 1;
     end
 
-    Config.Sniper().classicMode = Utils.IsClassic();
+    Config.Sniper().classicMode = Utils.IsClassicEra();
 
     local snipeTemplate = "AnsSnipeBuyTemplate";
     local snipeFilterTemplate = "AnsFilterRowTemplate";
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         snipeTemplate = "AnsSnipeBuyClassicTemplate";
         snipeFilterTemplate = "AnsFilterRowClassicTemplate";
     end
@@ -278,7 +278,7 @@ function AuctionSnipe:Init()
         template = snipeFilterTemplate, multiselect = true
     }, function(item) d:ToggleBase(item.filter) end);
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         self.baseTreeView:Hide();
     end
 
@@ -460,7 +460,7 @@ end
 function AuctionSnipe.OnPurchaseStart()
     Tasker.Clear(TASKER_TAG);
 
-    if (not Utils.IsClassic()) then
+    if (not Utils.IsClassicEra()) then
         AuctionList:OnPurchaseStart();
     end
 end
@@ -477,7 +477,7 @@ function AuctionSnipe.OnGroupScan(count)
 
     -- recycle the items in the auction list
     -- if we are classic only
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         AuctionList:Recycle();
     end
 
@@ -510,7 +510,7 @@ function AuctionSnipe.OnPriceScan(results, left)
     totalResultsFound = totalResultsFound + t;
 
     if (t > 0) then
-        if (not Utils.IsClassic()) then
+        if (not Utils.IsClassicEra()) then
             AuctionList:AddItems(results, clearNew);
             clearNew = false;
         else
@@ -521,14 +521,14 @@ function AuctionSnipe.OnPriceScan(results, left)
         wait = 0;
     end
 
-    if (not Utils.IsClassic()) then
+    if (not Utils.IsClassicEra()) then
         AuctionList:ClearMissing(currentItem, module.known);
     end
 
     last = left;
 
     if (left > 0) then
-        if (not Utils.IsClassic()) then
+        if (not Utils.IsClassicEra()) then
             wait = 0;
         end
 
@@ -611,7 +611,7 @@ function AuctionSnipe:NextGroupScan(wait)
     totalGroups = 0;
     last = 0;
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         local text = module.GetScanText(c, total);
         self.snipeStatusText:SetText(text.." Waiting...");
     else
@@ -779,7 +779,7 @@ function AuctionSnipe:Close()
     self.baseTreeView:ReleaseView();
     self.filterTreeView:ReleaseView();
 
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         AuctionList:Recycle();
     end
 end
@@ -850,7 +850,7 @@ function AuctionSnipe:LoadBaseFilters()
         end
     end
 
-    if (Utils.IsClassic() or qualityRequiresReset) then
+    if (Utils.IsClassicEra() or qualityRequiresReset) then
         local min = Config.Sniper().minQuality;
         wipe(quality);
         quality[min] = min;
@@ -882,7 +882,7 @@ function AuctionSnipe:LoadBaseFilters()
         local item = self.baseFilters[i];
 
         if (item) then
-            if (Utils.IsClassic()) then
+            if (Utils.IsClassicEra()) then
                 tinsert(classFilters, {classID = item.classID, subClassID = item.subClassID, inventoryType = item.inventoryType});
             else
                 if (item.inventoryType == Data.RUNECARVING) then
@@ -927,7 +927,7 @@ function AuctionSnipe:Start()
     -- apply classic sort to get 
     -- item sorted by most recent time
     -- posted
-    if (Utils.IsClassic()) then
+    if (Utils.IsClassicEra()) then
         SortAuctionClearSort("list");
         SortAuctionApplySort("list");
     end

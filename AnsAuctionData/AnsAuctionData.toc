@@ -1,7 +1,7 @@
 ## Interface: 100000
 ## Title: AnS [Auction Data]
 ## License: MIT
-## Version: 2.2.7.beta.7
+## Version: 2.2.7.beta.9
 ## Dependencies: AnS
 ## Notes: A library for tracking auction prices and showing via tooltip
 ## SavedVariables: ANS_AUCTION_DATA, ANS_LAST_DATA_SCAN
