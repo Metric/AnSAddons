@@ -1,9 +1,3 @@
-Discord
-===================
-Need help, have questions, suggestions or just found a bug?
-
-https://discord.gg/DZueXS7
-
 I just updated to 2.1 and stuff is broken
 ==============================================
 If you just updated through curse or twitch, then please restart your WoW Client first. As quite a bit has changed.
